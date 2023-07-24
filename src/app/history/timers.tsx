@@ -1,7 +1,7 @@
 "use client";
 
 import { getTotalTime } from "@/lib/utils";
-import { FileDown } from "lucide-react";
+import { FileDown, RefreshCcw } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -60,6 +60,9 @@ export default function TimerHistory({ data }: { data: I_Time[] }) {
 
   const router = useRouter();
 
+  useEffect(() => {
+    router.refresh()
+  }, [])
   useEffect(() => {
     const refreshIntervalId = setInterval(() => router.refresh(), 10000);
     return () => clearInterval(refreshIntervalId);

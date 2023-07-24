@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:prod": "docker build -t timetrack:prod .",
+    "docker:dev": "docker build -t timetrack:dev .",
+    "docker:prod:file": "npm run docker:prod && docker save --output timetrack.tar timetrack:prod",
+    "docker:dev:file": "npm run docker:dev && docker save --output timetrack.tar timetrack:dev"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

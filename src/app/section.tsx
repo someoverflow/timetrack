@@ -43,8 +43,8 @@ export default function TimerSection() {
         if (result.data.length == 0) {
           setRunning(false);
 
-          setCurrentTimer(undefined);
           setFetchedTimer(undefined);
+          setCurrentTimer(undefined);
         } else {
           var timer: I_Timer = result.data[0];
           setFetchedTimer(timer);
@@ -90,6 +90,7 @@ export default function TimerSection() {
       const data: any = { id: 0, start: new Date().toISOString() };
       setFetchedTimer(data);
       setCurrentTimer(undefined);
+      
       count();
 
       setRunning(true);
@@ -122,15 +123,15 @@ export default function TimerSection() {
       if (!error) fetchCurrentTimer();
     }, 10000);
     return () => clearInterval(requestIntervalId);
-  });
+  }, [error]);
 
   // Timer Effect
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (!error) count();
+      if (!error && running) count();
     }, 300);
     return () => clearInterval(intervalId);
-  });
+  }, [error, running]);
 
   return (
     <>
@@ -174,7 +175,7 @@ export default function TimerSection() {
           </div>
 
           <h1 className="text-5xl font-bold font-mono pt-4">
-            {currentTimer?.time ? currentTimer?.time : "00:00:00"}
+            {running && currentTimer?.time ? currentTimer?.time : "00:00:00"}
           </h1>
 
           <div className="flex w-full justify-center gap-4 pt-4">

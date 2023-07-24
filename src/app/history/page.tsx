@@ -1,4 +1,3 @@
-import AuthInfo from "@/components/AuthInfo";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import TimerHistory from "./timers";
