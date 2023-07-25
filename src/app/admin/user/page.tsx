@@ -5,6 +5,8 @@ import UserAdd from "./useradd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { redirect } from "next/navigation";
+import { Inspect } from "lucide-react";
+import Link from "next/link";
 
 async function getUsers() {
   const users = await prisma.user.findMany({
@@ -61,7 +63,16 @@ export default async function AdminUserPage() {
                   </td>
                   <td>{userData.email}</td>
                   <td>
-                    <UserEdit user={userData} />
+                    <div className="flex flex-row items-center gap-2">
+                      <UserEdit user={userData} />
+
+                      <Link
+                        href={"/history/" + user.username}
+                        className="btn btn-circle"
+                      >
+                        <Inspect className="w-1/2 h-1/2" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               );

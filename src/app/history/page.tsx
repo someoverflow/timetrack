@@ -13,22 +13,13 @@ export const metadata: Metadata = {
 async function getHistory() {
   const session = await getServerSession();
 
-  const user = await prisma.user.findUnique({
-    where: {
-      username: session?.user?.name + "",
-    },
-    select: {
-      username: true,
-    },
-  });
-
   const history = await prisma.times.findMany({
     orderBy: {
       //id: "desc",
       start: "asc",
     },
     where: {
-      user: user?.username,
+      user: session?.user?.name + "",
     },
   });
   return history;
@@ -43,7 +34,11 @@ export default async function History() {
         <div className="w-full font-mono text-left">
           <Header text="History" />
         </div>
-        <TimerHistory data={history} />
+        {history.length == 0 ? (
+          <p className="font-mono font-bold">No data found</p>
+        ) : (
+          <TimerHistory data={history} />
+        )}
       </section>
     </Navigation>
   );
