@@ -25,7 +25,7 @@ export default async function Navigation({
 
   return (
     <main>
-      <div className="flex flex-row sm:gap-10">
+      <div className="flex flex-row">
         <div className={!toggle ? "sm:w-full sm:max-w-[18rem]" : ""}>
           <input
             type="checkbox"
