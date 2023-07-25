@@ -23,20 +23,8 @@ interface I_Time {
   notes: string | null;
 }
 
-function getStartIcon(timer: I_Time) {
-  switch (timer.startType) {
-    case "Website":
-      return <AppWindow className="w-4 h-4" />;
-    case "Chip":
-      return <Diamond className="w-4 h-4" />;
-    case "API":
-      return <Terminal className="w-4 h-4" />;
-    default:
-      return <HelpCircle className="w-4 h-4" />;
-  }
-}
-function getEndIcon(timer: I_Time) {
-  switch (timer.endType) {
+function getIcon(timer: I_Time, start: boolean) {
+  switch (start ? timer.startType : timer.endType) {
     case "Website":
       return <AppWindow className="w-4 h-4" />;
     case "Chip":
@@ -134,7 +122,7 @@ export default function TimerInfo({ data }: { data: I_Time }) {
   return (
     <>
       <div
-        className="w-full font-mono bg-backgroundSecondary rounded-md text-center border border-border hover:scale-105"
+        className="w-full font-mono bg-backgroundSecondary rounded-md text-center border border-border hover:scale-105 cursor-pointer"
         onClick={() => setVisible(!visible)}
       >
         <p className="text-content3 text-xs text-left pt-1 pl-3">
@@ -142,7 +130,7 @@ export default function TimerInfo({ data }: { data: I_Time }) {
         </p>
 
         <div className="flex flex-row justify-evenly items-center">
-          {getStartIcon(data)}
+          {getIcon(data, true)}
 
           <p>{data.start.toLocaleTimeString()}</p>
 
@@ -150,7 +138,7 @@ export default function TimerInfo({ data }: { data: I_Time }) {
 
           <p>{data.end.toLocaleTimeString()}</p>
 
-          {getEndIcon(data)}
+          {getIcon(data, false)}
         </div>
         <p className={`text-sm text-content2 ${data.notes ? "" : "pb-2"}`}>
           {data.time}

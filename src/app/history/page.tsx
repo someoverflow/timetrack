@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import TimerHistory from "./timers";
+import TimerHistory from "./TimerHistory";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { Metadata } from "next";
@@ -18,14 +18,9 @@ async function getHistory() {
       username: session?.user?.name + "",
     },
     select: {
-      chips: true,
       username: true,
     },
   });
-
-  var search = [];
-  search.push(user?.username + "");
-  user?.chips.forEach((c: any) => search.push(c.id));
 
   const history = await prisma.times.findMany({
     orderBy: {
@@ -33,7 +28,7 @@ async function getHistory() {
       start: "asc",
     },
     where: {
-      user: { in: search },
+      user: user?.username,
     },
   });
   return history;

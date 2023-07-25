@@ -1,12 +1,12 @@
 "use client";
 
 import { getTotalTime } from "@/lib/utils";
-import { FileDown, RefreshCcw } from "lucide-react";
+import { FileDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const TimerInfo = dynamic(() => import("./timerinfo"), { ssr: false });
+const TimerInfo = dynamic(() => import("./TimerInfo"), { ssr: false });
 
 interface I_Time {
   id: number;
@@ -61,8 +61,8 @@ export default function TimerHistory({ data }: { data: I_Time[] }) {
   const router = useRouter();
 
   useEffect(() => {
-    router.refresh()
-  }, [])
+    router.refresh();
+  }, []);
   useEffect(() => {
     const refreshIntervalId = setInterval(() => router.refresh(), 10000);
     return () => clearInterval(refreshIntervalId);
@@ -101,7 +101,10 @@ export default function TimerHistory({ data }: { data: I_Time[] }) {
         const totalTime = getTotalTime(timeStrings);
 
         return (
-          <section className="w-full max-w-xl flex flex-col items-start" key={yearMonth}>
+          <section
+            className="w-full max-w-xl flex flex-col items-start"
+            key={yearMonth}
+          >
             <div className="w-full flex flex-row items-center justify-between p-2">
               <h1 className="font-mono text-lg text-content3 font-bold">
                 {yearMonth}{" "}
@@ -117,7 +120,7 @@ export default function TimerHistory({ data }: { data: I_Time[] }) {
             <div className="w-full p-1 rounded-md border border-border">
               {history[yearMonth].reverse().map((time) => {
                 return (
-                  <div className="p-1 cursor-pointer" key={`${yearMonth} ${time.id}`}>
+                  <div className="p-1" key={`${yearMonth} ${time.id}`}>
                     <TimerInfo data={time} />
                   </div>
                 );
