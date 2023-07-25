@@ -60,13 +60,11 @@ export default function TimerHistory({ data }: { data: I_Time[] }) {
 
   const router = useRouter();
 
-  useEffect(() => {
-    router.refresh();
-  }, []);
+  useEffect(() => router.refresh(), [router]);
   useEffect(() => {
     const refreshIntervalId = setInterval(() => router.refresh(), 10000);
     return () => clearInterval(refreshIntervalId);
-  });
+  }, [router]);
 
   const downloadCSV = (yearMonth: string, totalTime: string) => {
     var result = "Start;End;Time;Notes";

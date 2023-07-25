@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   Info,
@@ -35,64 +35,7 @@ export default function TimerSection() {
 
   const [error, setError] = useState(false);
 
-  function fetchCurrentTimer() {
-    fetch("/api/times/current")
-      .then((result) => result.json())
-      .then((result) => {
-        if (!firstRun) {
-          setFirstRun(true);
-          setLoaded(true);
-        }
-
-        if (result.data.length == 0) {
-          setRunning(false);
-
-          setFetchedTimer(undefined);
-          setCurrentTimer(undefined);
-        } else {
-          var timer: I_Timer = result.data[0];
-          setFetchedTimer(timer);
-
-          setRunning(true);
-        }
-        count();
-      })
-      .catch((e) => {
-        setError(true);
-        console.log(e);
-      });
-  }
-
-  function toggleTimer(start: boolean) {
-    setLoaded(false);
-    if (start) {
-      const data: any = { id: 0, start: new Date().toISOString(), startType: "Website" };
-      setFetchedTimer(data);
-      setCurrentTimer(undefined);
-
-      count();
-
-      setRunning(true);
-    } else {
-      setRunning(false);
-
-      setFetchedTimer(undefined);
-      setCurrentTimer(undefined);
-    }
-
-    fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
-      .then((result) => result.json())
-      .then((result) => {
-        setLoaded(true);
-        if (start) fetchCurrentTimer();
-      })
-      .catch((e) => {
-        setError(true);
-        console.log(e);
-      });
-  }
-
-  function count() {
+  const count = useCallback(() => {
     if (!running) return;
 
     if (!currentTimer && !fetchedTimer) return;
@@ -118,6 +61,67 @@ export default function TimerSection() {
     result.time = timePassed;
 
     setCurrentTimer(result);
+  }, [currentTimer, fetchedTimer, running]);
+
+  const fetchCurrentTimer = useCallback(() => {
+    fetch("/api/times/current")
+      .then((result) => result.json())
+      .then((result) => {
+        if (!firstRun) {
+          setFirstRun(true);
+          setLoaded(true);
+        }
+
+        if (result.data.length == 0) {
+          setRunning(false);
+
+          setFetchedTimer(undefined);
+          setCurrentTimer(undefined);
+        } else {
+          var timer: I_Timer = result.data[0];
+          setFetchedTimer(timer);
+
+          setRunning(true);
+        }
+        count();
+      })
+      .catch((e) => {
+        setError(true);
+        console.log(e);
+      });
+  }, [firstRun, count]);
+
+  function toggleTimer(start: boolean) {
+    setLoaded(false);
+    if (start) {
+      const data: any = {
+        id: 0,
+        start: new Date().toISOString(),
+        startType: "Website",
+      };
+      setFetchedTimer(data);
+      setCurrentTimer(undefined);
+
+      count();
+
+      setRunning(true);
+    } else {
+      setRunning(false);
+
+      setFetchedTimer(undefined);
+      setCurrentTimer(undefined);
+    }
+
+    fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
+      .then((result) => result.json())
+      .then((result) => {
+        setLoaded(true);
+        if (start) fetchCurrentTimer();
+      })
+      .catch((e) => {
+        setError(true);
+        console.log(e);
+      });
   }
 
   // First Effect
@@ -131,7 +135,7 @@ export default function TimerSection() {
       if (!error) fetchCurrentTimer();
     }, 10000);
     return () => clearInterval(requestIntervalId);
-  }, [error, firstRun]);
+  }, [error, firstRun, fetchCurrentTimer]);
 
   // Timer Effect
   useEffect(() => {
@@ -139,7 +143,7 @@ export default function TimerSection() {
       if (!error && running) count();
     }, 500);
     return () => clearInterval(intervalId);
-  }, [error, running]);
+  }, [error, firstRun, running, count]);
 
   return (
     <>
