@@ -60,6 +60,7 @@ export default function TimerSection() {
   }
 
   function toggleTimer(start: boolean) {
+    setLoaded(false)
     if (start) {
       const data: any = { id: 0, start: new Date().toISOString() };
       setFetchedTimer(data);
@@ -78,6 +79,7 @@ export default function TimerSection() {
     fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
       .then((result) => result.json())
       .then((result) => {
+        setLoaded(true)
         if (start) fetchCurrentTimer();
       })
       .catch((e) => {
@@ -98,7 +100,9 @@ export default function TimerSection() {
     const startDate = new Date(
       Date.parse(fetchedTimer ? fetchedTimer.start : result.start)
     );
+    startDate.setMilliseconds(0)
     const currentDate = new Date();
+    currentDate.setMilliseconds(0)
 
     const timePassed = getTimePassed(startDate, currentDate);
 
@@ -129,7 +133,7 @@ export default function TimerSection() {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (!error && running) count();
-    }, 100);
+    }, 500);
     return () => clearInterval(intervalId);
   }, [error, running]);
 
