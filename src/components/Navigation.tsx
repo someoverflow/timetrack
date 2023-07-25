@@ -2,7 +2,6 @@ import LogOutButton from "./LogOutButton";
 import prisma from "@/lib/prisma";
 import { Home, Shield, ChevronDown, User, History } from "lucide-react";
 import { getServerSession } from "next-auth";
-import Link from "next/link";
 import ActiveLink from "./ActiveLink";
 
 export default async function Navigation({
@@ -39,8 +38,10 @@ export default async function Navigation({
           ></label>
           <aside
             className={`sidebar sidebar-fixed-left sidebar-mobile h-full justify-start ${
-              !toggle ? "max-sm:" : ""
-            }fixed ${!toggle ? "max-sm:" : ""}-translate-x-full font-mono`}
+              !toggle ? "max-sm:fixed" : "fixed"
+            } ${
+              !toggle ? "max-sm:-translate-x-full" : "-translate-x-full"
+            } font-mono`}
           >
             <section className="sidebar-title items-center p-4">
               <div className="flex flex-col text-xl">
