@@ -12,7 +12,7 @@ export default function Header({ text = "Page" }: { text?: string }) {
         >
           <Menu className="w-1/2 h-1/2" />
         </label>
-        <p className="text-xl">{text}</p>
+        <p className="text-2xl font-mono">{text}</p>
       </div>
     </>
   );

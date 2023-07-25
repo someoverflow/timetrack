@@ -57,7 +57,7 @@ export default async function History({
   function dataFound(): boolean {
     if (history == null) return false;
     if (history.length == 0) return false;
-    if (history.length == 1 && history[0] == null) return false;
+    if (history.length == 1 && history[0].end == null) return false;
     return true;
   }
 
@@ -72,11 +72,11 @@ export default async function History({
             {dataFound() ? (
               <TimerHistory data={history} />
             ) : (
-              <p className="font-mono font-bold">No data found</p>
+              <p className="font-mono font-bold text-xl">No data found</p>
             )}
           </>
         ) : (
-          <p className="font-mono font-bold">User not found</p>
+          <p className="font-mono font-bold text-xl">User not found</p>
         )}
       </section>
     </Navigation>
