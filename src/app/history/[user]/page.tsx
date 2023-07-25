@@ -54,6 +54,13 @@ export default async function History({
 
   const history = await getHistory(params.user);
 
+  function dataFound(): boolean {
+    if (history == null) return false;
+    if (history.length == 0) return false;
+    if (history.length == 1 && history[0] == null) return false;
+    return true;
+  }
+
   return (
     <Navigation>
       <section className="w-full min-h-screen flex flex-col items-center gap-4 p-4">
@@ -62,10 +69,10 @@ export default async function History({
         </div>
         {history != null ? (
           <>
-            {history.length == 0 ? (
-              <p className="font-mono font-bold">No data found</p>
-            ) : (
+            {dataFound() ? (
               <TimerHistory data={history} />
+            ) : (
+              <p className="font-mono font-bold">No data found</p>
             )}
           </>
         ) : (
