@@ -44,18 +44,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  var owns = false;
-  if (user?.chips) {
-    for (var i = 0; i < user?.chips.length; i++) {
-      if (user.chips[i].id == timer?.user) {
-        owns = true;
-        break;
-      }
-    }
-  }
-  if (user?.username === timer?.user) owns = true;
-
-  if (!owns) return NextResponse.error();
+  if(user?.username !== timer?.user) return NextResponse.error();
 
   const data: any = {
     notes: json.notes,
@@ -76,7 +65,7 @@ export async function POST(request: NextRequest) {
       data.startType = startType;
     }
 
-    if (endDate.getTime() != timer?.end?.getTime() || timer.end === null) {
+    if (endDate.getTime() != timer?.end?.getTime() && timer !== null) {
       data.end = endDate;
       data.endType = endType;
     }
