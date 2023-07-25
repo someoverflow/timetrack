@@ -59,6 +59,33 @@ export default function TimerSection() {
       });
   }
 
+  function toggleTimer(start: boolean) {
+    if (start) {
+      const data: any = { id: 0, start: new Date().toISOString() };
+      setFetchedTimer(data);
+      setCurrentTimer(undefined);
+
+      count();
+
+      setRunning(true);
+    } else {
+      setRunning(false);
+
+      setFetchedTimer(undefined);
+      setCurrentTimer(undefined);
+    }
+
+    fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
+      .then((result) => result.json())
+      .then((result) => {
+        if (start) fetchCurrentTimer();
+      })
+      .catch((e) => {
+        setError(true);
+        console.log(e);
+      });
+  }
+
   function count() {
     if (!running) return;
 
@@ -85,33 +112,6 @@ export default function TimerSection() {
     setCurrentTimer(result);
   }
 
-  function toggleTimer(start: boolean) {
-    if (start) {
-      const data: any = { id: 0, start: new Date().toISOString() };
-      setFetchedTimer(data);
-      setCurrentTimer(undefined);
-      
-      count();
-
-      setRunning(true);
-    } else {
-      setRunning(false);
-
-      setFetchedTimer(undefined);
-      setCurrentTimer(undefined);
-    }
-
-    fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
-      .then((result) => result.json())
-      .then((result) => {
-        if (start) fetchCurrentTimer();
-      })
-      .catch((e) => {
-        setError(true);
-        console.log(e);
-      });
-  }
-
   // First Effect
   useEffect(() => {
     fetchCurrentTimer();
@@ -129,7 +129,7 @@ export default function TimerSection() {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (!error && running) count();
-    }, 300);
+    }, 100);
     return () => clearInterval(intervalId);
   }, [error, running]);
 
@@ -196,7 +196,7 @@ export default function TimerSection() {
               data-tooltip={
                 running
                   ? `Started with ${currentTimer?.startType}`
-                  : "Start with Website"
+                  : "Start now with Website"
               }
             >
               <button className="btn btn-circle">

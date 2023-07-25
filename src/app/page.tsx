@@ -1,5 +1,5 @@
 import Navigation from "@/components/Navigation";
-import TimerSection from "./section";
+import TimerSection from "./TimerSection";
 
 export default async function Home() {
   return (
