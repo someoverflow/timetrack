@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import ChipEdit from "./chipedit";
-import ChipAdd from "./chipadd";
+import ChipEdit from "./ChipEdit";
+import ChipAdd from "./ChipAdd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { redirect } from "next/navigation";
@@ -50,11 +50,11 @@ export default async function AdminUserPage() {
 
   return (
     <Navigation>
-      <section className="flex flex-col items-center p-4">
+      <section className="admin-main-section">
         <div className="w-full font-mono text-left pb-4">
           <Header text="Chips" />
         </div>
-        <table className="mt-2 table w-full max-w-xl">
+        <table className="admin-main-table">
           <thead>
             <tr>
               <th>Id</th>

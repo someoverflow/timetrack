@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import UserEdit from "./useredit";
-import UserAdd from "./useradd";
+import UserEdit from "./UserEdit";
+import UserAdd from "./UserAdd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { redirect } from "next/navigation";
@@ -42,11 +42,11 @@ export default async function AdminUserPage() {
 
   return (
     <Navigation>
-      <section className="w-full flex flex-col items-center p-4">
+      <section className="admin-main-section">
         <div className="w-full font-mono text-left pb-4">
           <Header text="Users" />
         </div>
-        <table className="mt-2 table w-full max-w-xl">
+        <table className="admin-main-table">
           <thead>
             <tr>
               <th>Name</th>

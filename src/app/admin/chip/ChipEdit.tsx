@@ -2,48 +2,51 @@
 
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { useState } from "react";
 
-interface UserDetails {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-  chips: {
-    id: string;
-    userId: number;
+interface ChipDetails {
+  id: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    password: string;
+    role: string;
     createdAt: Date;
     updatedAt: Date;
-  }[];
+  };
   updatedAt: Date;
   createdAt: Date;
 }
+interface User {
+  id: number;
+  username: string;
+}
 
-export default function UserEdit({ user }: { user: UserDetails }) {
-  const [username, setUsername] = useState(user.username);
-  const [password, setPassword] = useState("");
-  const [mail, setMail] = useState(user.email);
-  const [role, setRole] = useState(user.role);
-
+export default function ChipEdit({
+  users,
+  chip,
+}: {
+  users: User[];
+  chip: ChipDetails;
+}) {
+  const [user, setUser] = useState(users[0].id);
   const [visible, setVisible] = useState(false);
 
-  const router = useRouter();
+  var router = useRouter();
 
   function sendRequest() {
-    fetch("/api/user", {
+    fetch("/api/chip", {
       method: "POST",
       body: JSON.stringify({
-        id: user.id,
-        username: username,
-        password: password.trim().length === 0 ? null : password,
-        mail: mail,
-        role: role,
+        id: chip.id,
+        userId: user,
       }),
     })
       .then((result) => result.json())
       .then((result) => {
         if (result.result) {
-          setPassword("");
+          setUser(users[0].id);
           setVisible(false);
 
           router.refresh();
@@ -54,16 +57,16 @@ export default function UserEdit({ user }: { user: UserDetails }) {
   }
 
   function sendDeleteRequest() {
-    fetch("/api/user", {
+    fetch("/api/chip", {
       method: "DELETE",
       body: JSON.stringify({
-        id: user.id,
+        id: chip.id,
       }),
     })
       .then((result) => result.json())
       .then((result) => {
         if (result.result) {
-          setPassword("");
+          setUser(users[0].id);
           setVisible(false);
 
           router.refresh();
@@ -75,13 +78,13 @@ export default function UserEdit({ user }: { user: UserDetails }) {
 
   return (
     <>
-      <label className="btn btn-circle" htmlFor={`userEdit-${user.id}`}>
+      <label className="btn btn-circle" htmlFor={`chipEdit-${chip.id}`}>
         <PencilRuler className="w-1/2 h-1/2" />
       </label>
 
       <input
         className="modal-state"
-        id={`userEdit-${user.id}`}
+        id={`chipEdit-${chip.id}`}
         type="checkbox"
         checked={visible}
         onChange={(e) => setVisible(e.target.checked)}
@@ -89,19 +92,14 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       <div className="modal">
         <label
           className="modal-overlay"
-          htmlFor={`userEdit-${user.id}`}
+          htmlFor={`chipEdit-${chip.id}`}
         ></label>
-        <div className="modal-content flex flex-col w-[80%] max-w-sm">
-          <div className="w-full flex flex-row justify-between items-center">
-            <h2 className="text-xl text-content1">
-              {user.username}{" "}
-              <span className="badge badge-flat-primary badge-xs">
-                {user.role}
-              </span>
-            </h2>
+        <div className="admin-main-modal">
+          <div className="admin-main-modal-header">
+            <h2 className="text-xl text-content1">{chip.id}</h2>
             <div>
               <label
-                htmlFor={`userEdit-${user.id}`}
+                htmlFor={`chipEdit-${chip.id}`}
                 className="btn btn-sm btn-circle btn-ghost"
               >
                 <XCircle className="w-1/2 h-1/2" />
@@ -112,43 +110,19 @@ export default function UserEdit({ user }: { user: UserDetails }) {
           <div className="divider"></div>
 
           <div className="flex flex-col gap-2">
-            <p className="pl-2 text-content2 text-left">Username</p>
-            <input
-              className="input input-block"
-              type="text"
-              name="Name"
-              id={`userEdit-name-${user.id}`}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <p className="pl-2 text-content2 text-left">Password</p>
-            <input
-              className="input input-block"
-              type="password"
-              name="Password"
-              id={`userEdit-password-${user.id}`}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <p className="pl-2 text-content2 text-left">Mail</p>
-            <input
-              className="input input-block"
-              type="email"
-              name="Mail"
-              id={`userEdit-mail-${user.id}`}
-              value={mail}
-              onChange={(e) => setMail(e.target.value)}
-            />
-            <p className="pl-2 text-content2 text-left">Role</p>
+            <p className="pl-2 text-content2 text-left">User</p>
             <select
               className="select select-block"
-              name="role"
-              id={`userEdit-role-${user.id}`}
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              name="User"
+              id={`chipEdit-user-${chip.id}`}
+              value={user}
+              onChange={(e) => setUser(parseInt(e.target.value))}
             >
-              <option value="admin">Admin</option>
-              <option value="user">User</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.username}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -161,7 +135,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
               type="datetime"
               name="Updated"
               id="updated"
-              value={user.updatedAt.toLocaleString()}
+              value={chip.updatedAt.toLocaleString()}
               disabled
             />
             <p className="pl-2 text-content2 text-left">Created</p>
@@ -170,7 +144,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
               type="datetime"
               name="Created"
               id="created"
-              value={user.createdAt.toLocaleString()}
+              value={chip.createdAt.toLocaleString()}
               disabled
             />
           </div>

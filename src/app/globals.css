@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.admin-main-section {
+    @apply w-full flex flex-col items-center p-4;
+}
+.admin-main-table {
+    @apply mt-2 table w-full max-w-xl;
+}
+
+.admin-main-modal {
+    @apply modal-content flex flex-col w-[80%] max-w-sm;
+}
+.admin-main-modal-header {
+    @apply w-full flex flex-row justify-between items-center;
+}

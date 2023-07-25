@@ -2,51 +2,48 @@
 
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { use, useState } from "react";
 
-interface ChipDetails {
-  id: string;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    password: string;
-    role: string;
+interface UserDetails {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  chips: {
+    id: string;
+    userId: number;
     createdAt: Date;
     updatedAt: Date;
-  };
+  }[];
   updatedAt: Date;
   createdAt: Date;
 }
-interface User {
-  id: number;
-  username: string;
-}
 
-export default function ChipEdit({
-  users,
-  chip,
-}: {
-  users: User[];
-  chip: ChipDetails;
-}) {
-  const [user, setUser] = useState(users[0].id);
+export default function UserEdit({ user }: { user: UserDetails }) {
+  const [username, setUsername] = useState(user.username);
+  const [password, setPassword] = useState("");
+  const [mail, setMail] = useState(user.email);
+  const [role, setRole] = useState(user.role);
+
   const [visible, setVisible] = useState(false);
 
-  var router = useRouter();
+  const router = useRouter();
 
   function sendRequest() {
-    fetch("/api/chip", {
+    fetch("/api/user", {
       method: "POST",
       body: JSON.stringify({
-        id: chip.id,
-        userId: user,
+        id: user.id,
+        username: username,
+        password: password.trim().length === 0 ? null : password,
+        mail: mail,
+        role: role,
       }),
     })
       .then((result) => result.json())
       .then((result) => {
         if (result.result) {
-          setUser(users[0].id);
+          setPassword("");
           setVisible(false);
 
           router.refresh();
@@ -57,16 +54,16 @@ export default function ChipEdit({
   }
 
   function sendDeleteRequest() {
-    fetch("/api/chip", {
+    fetch("/api/user", {
       method: "DELETE",
       body: JSON.stringify({
-        id: chip.id,
+        id: user.id,
       }),
     })
       .then((result) => result.json())
       .then((result) => {
         if (result.result) {
-          setUser(users[0].id);
+          setPassword("");
           setVisible(false);
 
           router.refresh();
@@ -78,13 +75,13 @@ export default function ChipEdit({
 
   return (
     <>
-      <label className="btn btn-circle" htmlFor={`chipEdit-${chip.id}`}>
+      <label className="btn btn-circle" htmlFor={`userEdit-${user.id}`}>
         <PencilRuler className="w-1/2 h-1/2" />
       </label>
 
       <input
         className="modal-state"
-        id={`chipEdit-${chip.id}`}
+        id={`userEdit-${user.id}`}
         type="checkbox"
         checked={visible}
         onChange={(e) => setVisible(e.target.checked)}
@@ -92,14 +89,19 @@ export default function ChipEdit({
       <div className="modal">
         <label
           className="modal-overlay"
-          htmlFor={`chipEdit-${chip.id}`}
+          htmlFor={`userEdit-${user.id}`}
         ></label>
-        <div className="modal-content flex flex-col w-[80%] max-w-sm">
-          <div className="w-full flex flex-row justify-between items-center">
-            <h2 className="text-xl text-content1">{chip.id}</h2>
+        <div className="admin-main-modal">
+          <div className="admin-main-modal-header">
+            <h2 className="text-xl text-content1">
+              {user.username}{" "}
+              <span className="badge badge-flat-primary badge-xs">
+                {user.role}
+              </span>
+            </h2>
             <div>
               <label
-                htmlFor={`chipEdit-${chip.id}`}
+                htmlFor={`userEdit-${user.id}`}
                 className="btn btn-sm btn-circle btn-ghost"
               >
                 <XCircle className="w-1/2 h-1/2" />
@@ -110,19 +112,43 @@ export default function ChipEdit({
           <div className="divider"></div>
 
           <div className="flex flex-col gap-2">
-            <p className="pl-2 text-content2 text-left">User</p>
+            <p className="pl-2 text-content2 text-left">Username</p>
+            <input
+              className="input input-block"
+              type="text"
+              name="Name"
+              id={`userEdit-name-${user.id}`}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <p className="pl-2 text-content2 text-left">Password</p>
+            <input
+              className="input input-block"
+              type="password"
+              name="Password"
+              id={`userEdit-password-${user.id}`}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <p className="pl-2 text-content2 text-left">Mail</p>
+            <input
+              className="input input-block"
+              type="email"
+              name="Mail"
+              id={`userEdit-mail-${user.id}`}
+              value={mail}
+              onChange={(e) => setMail(e.target.value)}
+            />
+            <p className="pl-2 text-content2 text-left">Role</p>
             <select
               className="select select-block"
-              name="User"
-              id={`chipEdit-user-${chip.id}`}
-              value={user}
-              onChange={(e) => setUser(parseInt(e.target.value))}
+              name="role"
+              id={`userEdit-role-${user.id}`}
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
             >
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.username}
-                </option>
-              ))}
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
             </select>
           </div>
 
@@ -135,7 +161,7 @@ export default function ChipEdit({
               type="datetime"
               name="Updated"
               id="updated"
-              value={chip.updatedAt.toLocaleString()}
+              value={user.updatedAt.toLocaleString()}
               disabled
             />
             <p className="pl-2 text-content2 text-left">Created</p>
@@ -144,7 +170,7 @@ export default function ChipEdit({
               type="datetime"
               name="Created"
               id="created"
-              value={chip.createdAt.toLocaleString()}
+              value={user.createdAt.toLocaleString()}
               disabled
             />
           </div>

@@ -53,8 +53,8 @@ export default function ChipAdd({ users }: { users: User[] }) {
       />
       <div className="modal">
         <label className="modal-overlay" htmlFor="userCreate"></label>
-        <div className="modal-content flex flex-col w-[80%] max-w-sm">
-          <div className="w-full flex flex-row justify-between items-center">
+        <div className="admin-main-modal">
+          <div className="admin-main-modal-header">
             <h2 className="text-xl text-content1">Create User</h2>
             <div>
               <label
