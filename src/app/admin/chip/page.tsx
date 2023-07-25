@@ -4,6 +4,7 @@ import ChipEdit from "./chipedit";
 import ChipAdd from "./chipadd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
+import { redirect } from "next/navigation";
 
 export const revalidate = 5;
 
@@ -33,7 +34,7 @@ async function getChips() {
 export default async function AdminUserPage() {
   const session = await getServerSession();
 
-  if (session == null) return <></>;
+  if (session == null) return redirect("/");
 
   const user = await prisma.user.findUnique({
     where: {
@@ -41,7 +42,7 @@ export default async function AdminUserPage() {
     },
   });
 
-  if (user?.role != "admin") return <></>;
+  if (user?.role != "admin") return redirect("/");
 
   const usersData = getUsers();
   const chipsData = getChips();

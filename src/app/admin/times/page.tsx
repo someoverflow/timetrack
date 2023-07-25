@@ -1,11 +1,12 @@
 import prisma from "@/lib/prisma";
 import Table from "./table";
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const session = await getServerSession();
 
-  if (session == null) return <></>;
+  if (session == null) return redirect("/");
 
   const user = await prisma.user.findUnique({
     where: {
@@ -13,7 +14,7 @@ export default async function Home() {
     },
   });
 
-  if (user?.role != "admin") return <></>;
+  if (user?.role != "admin") return redirect("/");
 
   return (
     <main>

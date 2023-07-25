@@ -4,6 +4,7 @@ import UserEdit from "./useredit";
 import UserAdd from "./useradd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
+import { redirect } from "next/navigation";
 
 async function getUsers() {
   const users = await prisma.user.findMany({
@@ -25,7 +26,7 @@ async function getUsers() {
 export default async function AdminUserPage() {
   const session = await getServerSession();
 
-  if (session == null) return <></>;
+  if (session == null) return redirect("/");
 
   const user = await prisma.user.findUnique({
     where: {
@@ -33,7 +34,7 @@ export default async function AdminUserPage() {
     },
   });
 
-  if (user?.role != "admin") return <></>;
+  if (user?.role != "admin") return redirect("/");
 
   const users = await getUsers();
 
