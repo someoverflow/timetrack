@@ -30,6 +30,7 @@ export default function TimerSection() {
   const [fetchedTimer, setFetchedTimer] = useState<I_Timer>();
 
   const [loaded, setLoaded] = useState(false);
+  const [firstRun, setFirstRun] = useState(false);
   const [running, setRunning] = useState(false);
 
   const [error, setError] = useState(false);
@@ -38,7 +39,10 @@ export default function TimerSection() {
     fetch("/api/times/current")
       .then((result) => result.json())
       .then((result) => {
-        if (!loaded) setLoaded(true);
+        if (!firstRun) {
+          setFirstRun(true);
+          setLoaded(true);
+        }
 
         if (result.data.length == 0) {
           setRunning(false);
@@ -60,9 +64,9 @@ export default function TimerSection() {
   }
 
   function toggleTimer(start: boolean) {
-    setLoaded(false)
+    setLoaded(false);
     if (start) {
-      const data: any = { id: 0, start: new Date().toISOString() };
+      const data: any = { id: 0, start: new Date().toISOString(), startType: "Website" };
       setFetchedTimer(data);
       setCurrentTimer(undefined);
 
@@ -79,7 +83,7 @@ export default function TimerSection() {
     fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
       .then((result) => result.json())
       .then((result) => {
-        setLoaded(true)
+        setLoaded(true);
         if (start) fetchCurrentTimer();
       })
       .catch((e) => {
@@ -100,9 +104,9 @@ export default function TimerSection() {
     const startDate = new Date(
       Date.parse(fetchedTimer ? fetchedTimer.start : result.start)
     );
-    startDate.setMilliseconds(0)
+    startDate.setMilliseconds(0);
     const currentDate = new Date();
-    currentDate.setMilliseconds(0)
+    currentDate.setMilliseconds(0);
 
     const timePassed = getTimePassed(startDate, currentDate);
 
@@ -127,7 +131,7 @@ export default function TimerSection() {
       if (!error) fetchCurrentTimer();
     }, 10000);
     return () => clearInterval(requestIntervalId);
-  }, [error]);
+  }, [error, firstRun]);
 
   // Timer Effect
   useEffect(() => {
