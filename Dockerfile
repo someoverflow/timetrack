@@ -52,9 +52,8 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME localhost
 
-ENV NEXTAUTH_URL http://work:3000/api/auth
+ENV NEXTAUTH_URL http://localhost:3000/api/auth
 
-ENV DATABASE_URL mysql://root:root@172.17.0.2:3306/timetrack
+ENV DATABASE_URL mysql://root:root@localhost:3306/timetrack
 
 CMD ["./docker-start.sh"]
-#CMD ["node", "server.js"]
