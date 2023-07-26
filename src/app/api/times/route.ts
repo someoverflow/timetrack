@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       id: true,
       username: true,
       chips: true,
+      role: true,
     },
   });
 
@@ -44,7 +45,8 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  if(user?.username !== timer?.user) return NextResponse.error();
+  if (user?.role != "admin" && user?.username !== timer?.user)
+    NextResponse.error();
 
   const data: any = {
     notes: json.notes,
@@ -95,6 +97,7 @@ export async function DELETE(request: NextRequest) {
       id: true,
       username: true,
       chips: true,
+      role: true,
     },
   });
 
@@ -108,18 +111,8 @@ export async function DELETE(request: NextRequest) {
     },
   });
 
-  var owns = false;
-  if (user?.chips) {
-    for (var i = 0; i < user?.chips.length; i++) {
-      if (user.chips[i].id == timer?.user) {
-        owns = true;
-        break;
-      }
-    }
-  }
-  if (user?.username === timer?.user) owns = true;
-
-  if (!owns) return NextResponse.error();
+  if (user?.role != "admin" && user?.username !== timer?.user)
+    NextResponse.error();
 
   const result = await prisma.times.delete({
     where: {
