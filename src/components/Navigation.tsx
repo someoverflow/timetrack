@@ -96,18 +96,18 @@ export default async function Navigation({
                           </span>
                         </label>
 
-                        <div className="menu-item-collapse">
-                          <div className="min-h-0">
+                        <div className="menu-item-collapse mt-1 ml-6">
+                          <div className="flex flex-col gap-1 min-h-0">
                             <ActiveLink
                               href="/admin/user"
-                              className="menu-item ml-6"
+                              className="menu-item"
                               activeClassName="menu-active"
                             >
                               Users
                             </ActiveLink>
                             <ActiveLink
                               href="/admin/chip"
-                              className="menu-item ml-6"
+                              className="menu-item"
                               activeClassName="menu-active"
                             >
                               Chips

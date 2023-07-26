@@ -168,10 +168,10 @@ export default function TimerInfo({ data }: { data: I_Time }) {
           className="modal-overlay"
           htmlFor={`timerModal-${data.id}`}
         ></label>
-        <div className="modal-content border border-border flex flex-col w-[80%] max-w-sm">
+        <div className="modal-content border border-border flex flex-col w-[95%] max-w-xl">
           <div className="w-full flex flex-row justify-between items-center">
             <h2 className="text-xl text-content1">
-              Edit <span className="badge badge-flat-primary">{data.user}</span>
+              Edit <span className="badge badge-flat-primary">{data.time}</span>
             </h2>
             <div>
               <label
