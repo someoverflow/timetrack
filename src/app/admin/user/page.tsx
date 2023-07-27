@@ -67,7 +67,7 @@ export default async function AdminUserPage() {
                       <UserEdit user={userData} />
 
                       <Link
-                        href={"/history/" + user.username}
+                        href={"/history/" + userData.username}
                         className="btn btn-circle"
                       >
                         <Inspect className="w-1/2 h-1/2" />

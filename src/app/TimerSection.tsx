@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
+import { getSession } from "next-auth/react";
 
 interface I_Timer {
   id: number;
@@ -25,7 +26,7 @@ interface I_Timer {
   state: string | null;
 }
 
-export default function TimerSection() {
+export default function TimerSection({ username }: { username: string }) {
   const [currentTimer, setCurrentTimer] = useState<I_Timer>();
   const [fetchedTimer, setFetchedTimer] = useState<I_Timer>();
 
