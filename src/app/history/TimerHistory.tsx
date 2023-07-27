@@ -5,6 +5,7 @@ import { FileDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import TimerAdd from "./TimerAdd";
 
 const TimerInfo = dynamic(() => import("./TimerInfo"), { ssr: false });
 
@@ -53,7 +54,7 @@ function formatHistory(data: I_Time[]): Data {
   return result;
 }
 
-export default function TimerHistory({ data }: { data: I_Time[] }) {
+export default function TimerHistory({ data, username }: { data: I_Time[], username: string }) {
   const history: Data = formatHistory(data);
 
   const keys = Object.keys(history);
@@ -89,6 +90,7 @@ export default function TimerHistory({ data }: { data: I_Time[] }) {
 
   return (
     <>
+    <TimerAdd username={username} />
       {keys.map((yearMonth) => {
         const timeStrings: string[] = [];
 

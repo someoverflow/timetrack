@@ -214,7 +214,6 @@ export default function TimerInfo({ data }: { data: I_Time }) {
               type="datetime-local"
               name="Created"
               id="created"
-              min={start}
               step={1}
               value={end}
               onChange={(e) => setEnd(e.target.value)}

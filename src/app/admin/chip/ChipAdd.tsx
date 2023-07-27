@@ -101,7 +101,7 @@ export default function ChipAdd({ users }: { users: User[] }) {
               className="btn btn-success btn-circle"
               onClick={() => sendRequest()}
             >
-              <UserPlus className="w-1/2 h-1/2" />
+              <ListPlus className="w-1/2 h-1/2" />
             </button>
           </div>
         </div>

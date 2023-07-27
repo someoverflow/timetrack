@@ -70,7 +70,7 @@ export default async function History({
         {history != null ? (
           <>
             {dataFound() ? (
-              <TimerHistory data={history} />
+              <TimerHistory data={history} username={session?.user?.name + ''} />
             ) : (
               <p className="font-mono font-bold text-xl">No data found</p>
             )}

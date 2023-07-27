@@ -85,6 +85,64 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ result });
 }
 
+export async function PUT(request: NextRequest) {
+  const session = await getServerSession();
+  if (session == null) return NextResponse.error();
+
+  const user = await prisma.user.findUnique({
+    where: {
+      username: session.user?.name + "",
+    },
+    select: {
+      id: true,
+      username: true,
+      chips: true,
+      role: true,
+    },
+  });
+
+  var json = await request.json();
+
+  if (
+    json.username == null ||
+    json.notes == null ||
+    json.start == null ||
+    json.end == null
+  )
+    return NextResponse.error();
+
+  const setUser = await prisma.user.findUnique({
+    where: {
+      username: json.username,
+    },
+    select: {
+      username: true,
+    },
+  });
+
+  if (user?.role != "admin" && setUser?.username != user?.username)
+    return NextResponse.error();
+
+  const startDate = new Date(Date.parse(json.start));
+  const endDate = new Date(Date.parse(json.end));
+  const timePassed = getTimePassed(startDate, endDate);
+
+  const result = await prisma.times.create({
+    data: {
+      user: json.username,
+      notes: json.notes,
+      start: startDate,
+      end: endDate,
+      startType: json.startType ? json.startType : "API",
+      endType: json.endType ? json.endType : "API",
+      time: timePassed,
+    },
+  });
+
+  console.log(result)
+  return NextResponse.json({ result });
+}
+
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession();
   if (session == null) return NextResponse.error();
