@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { Home, Shield, ChevronDown, User, History } from "lucide-react";
 import { getServerSession } from "next-auth";
 import ActiveLink from "./ActiveLink";
+import Link from "next/link";
 
 export default async function Navigation({
   toggle = false,
@@ -20,6 +21,7 @@ export default async function Navigation({
     select: {
       username: true,
       role: true,
+      name: true,
     },
   });
 
@@ -124,12 +126,13 @@ export default async function Navigation({
               <div className="divider my-0"></div>
               <div className="z-50 flex h-fit w-full">
                 <div className="w-full flex flex-row gap-4 p-4 items-center justify-between">
-                  <button className="btn btn-circle">
+                  <Link href="/profile" className="btn btn-circle">
                     <User className="h-7 w-7 text-content2" />
-                  </button>
+                  </Link>
 
-                  <div className="flex flex-col">
-                    <span>{user?.username}</span>
+                  <div className="flex flex-col items-center text-content2">
+                    <span>{user?.name}</span>
+                    <span className="text-content3">{user?.username}</span>
                   </div>
 
                   <LogOutButton />
