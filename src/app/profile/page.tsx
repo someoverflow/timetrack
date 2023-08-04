@@ -1,8 +1,6 @@
 import Navigation from "@/components/Navigation";
 import prisma from "@/lib/prisma";
-import { Save } from "lucide-react";
 import { getServerSession } from "next-auth";
-import { useState } from "react";
 import SettingSection from "./SettingSection";
 
 export default async function Home() {
@@ -28,6 +26,7 @@ export default async function Home() {
 
         <SettingSection
           title="Name"
+          dbIndicator="name"
           username={user?.username + ""}
           defaultValue={user?.name + ""}
           placeholder="Max Mustermann"
@@ -35,6 +34,7 @@ export default async function Home() {
         <SettingSection
           title="Mail"
           inputType="email"
+          dbIndicator="email"
           username={user?.username + ""}
           defaultValue={user?.email + ""}
           placeholder="max@muster.mann"
@@ -42,6 +42,7 @@ export default async function Home() {
         <SettingSection
           title="Password"
           inputType="password"
+          dbIndicator="password"
           username={user?.username + ""}
           placeholder="Secure123"
         />

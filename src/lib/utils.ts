@@ -1,14 +1,18 @@
+function validatePassword(password: string): boolean {
+  const regex = /^(?=.*[0-9])[a-zA-Z0-9]{8,20}$/;
+  return regex.test(password);
+}
+
 export function getTimePassed(start: Date, end: Date): string {
-  var msPassed = Math.abs(start.getTime() - end.getTime());
+  let msPassed = Math.abs(start.getTime() - end.getTime());
   const date = new Date(Date.UTC(0, 0, 0, 0, 0, 0, msPassed));
-  const timePassed = [
+  return [
     date.getUTCHours(),
     date.getUTCMinutes(),
     date.getUTCSeconds(),
   ]
     .map((s) => String(s).padStart(2, "0"))
     .join(":");
-  return timePassed;
 }
 
 export function getTotalTime(times: string[]): string {
@@ -20,11 +24,10 @@ export function getTotalTime(times: string[]): string {
   const totalHours = Math.floor(totalSeconds / 3600);
   const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
   const remainingSeconds = totalSeconds % 60;
-  const totalMonthTime = `${totalHours
+
+  return `${totalHours
     .toString()
     .padStart(2, "0")}:${totalMinutes
     .toString()
     .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
-
-  return totalMonthTime;
 }
