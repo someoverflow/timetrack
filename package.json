@@ -13,10 +13,10 @@
     "docker:dev:file": "npm run docker:dev && docker save --output timetrack.tar timetrack:dev"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.0.0",
+    "@prisma/client": "^5.1.1",
     "@types/node": "20.4.2",
     "@types/react": "18.2.15",
     "@types/react-dom": "18.2.7",
@@ -36,6 +36,6 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
-    "prisma": "^5.0.0"
+    "prisma": "^5.1.1"
   }
 }
