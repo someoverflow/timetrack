@@ -26,7 +26,7 @@ interface I_Timer {
   state: string | null;
 }
 
-export default function TimerSection({ username }: { username: string }) {
+export default function TimerSection() {
   const [currentTimer, setCurrentTimer] = useState<I_Timer>();
   const [fetchedTimer, setFetchedTimer] = useState<I_Timer>();
 
