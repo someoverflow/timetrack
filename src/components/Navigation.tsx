@@ -131,7 +131,7 @@ export default async function Navigation({
                   </Link>
 
                   <div className="flex flex-col items-center text-content2">
-                    <span>{user?.name}</span>
+                    {user?.name !== "?" ? <span>{user?.name}</span> : null}
                     <span className="text-content3">{user?.username}</span>
                   </div>
 
