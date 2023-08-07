@@ -10,7 +10,7 @@
 }
 
 .admin-main-modal {
-    @apply modal-content flex flex-col w-[80%] max-w-sm;
+    @apply modal-content flex flex-col w-[95%] max-w-sm;
 }
 .admin-main-modal-header {
     @apply w-full flex flex-row justify-between items-center;

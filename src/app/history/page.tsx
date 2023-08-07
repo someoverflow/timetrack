@@ -30,8 +30,7 @@ export default async function History() {
 
   function dataFound(): boolean {
     if (history.length == 0) return false;
-    if (history.length == 1 && history[0].end == null) return false;
-    return true;
+    return !(history.length == 1 && history[0].end == null);
   }
 
   return (
