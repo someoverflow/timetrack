@@ -41,7 +41,7 @@ export default function TimerSection() {
 
     if (!currentTimer && !fetchedTimer) return;
 
-    var result = JSON.parse(
+    let result = JSON.parse(
       JSON.stringify(currentTimer ? currentTimer : fetchedTimer)
     );
 
@@ -79,7 +79,7 @@ export default function TimerSection() {
           setFetchedTimer(undefined);
           setCurrentTimer(undefined);
         } else {
-          var timer: I_Timer = result.data[0];
+          let timer: I_Timer = result.data[0];
           setFetchedTimer(timer);
 
           setRunning(true);
@@ -115,7 +115,7 @@ export default function TimerSection() {
 
     fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
       .then((result) => result.json())
-      .then((result) => {
+      .then(() => {
         setLoaded(true);
         if (start) fetchCurrentTimer();
       })
@@ -148,9 +148,9 @@ export default function TimerSection() {
 
   return (
     <>
-      <div className="w-[80vw] max-w-md bg-backgroundSecondary rounded-xl border border-border p-2">
-        <div className="w-full h-full flex flex-col items-center gap-2 pt-4 pb-2">
-          <div className="flex flex-row gap-2">
+      <div className="w-[80vw] max-w-sm bg-backgroundSecondary rounded-xl border border-border p-2 pt-4 pb-4">
+        <div className="w-full h-full flex flex-col items-center gap-6 pb-2">
+          <div className="flex items-center flex-row gap-2">
             <label
               htmlFor="sidebar-mobile-fixed"
               className="btn btn-outline btn-circle "
@@ -159,26 +159,39 @@ export default function TimerSection() {
             </label>
             {(!loaded && (
               <>
-                <button className="btn btn-solid-warning btn-circle">
-                  <DownloadCloud className="w-1/2 h-1/2" />
+              <button className="btn btn-rounded btn-loading">
+                Updating
+                {/* <DownloadCloud className="w-1/2 h-1/2" /> */}
                 </button>
               </>
             )) || (
               <>
                 {(!running && (
-                  <button
-                    className="btn btn-solid-success btn-circle"
-                    onClick={(e) => toggleTimer(true)}
-                  >
-                    <PlayCircle className="w-1/2 h-1/2" />
-                  </button>
+                  <span
+                    className="tooltip tooltip-bottom"
+                    data-tooltip="Start now with Website"
+                    >
+                    <button
+                      className="btn btn-solid-success btn-rounded font-mono gap-2"
+                      onClick={() => toggleTimer(true)}
+                      >
+                      <PlayCircle className="w-1/2 h-1/2" />
+                      <p>Start</p>
+                    </button>
+                  </span>
                 )) || (
-                  <button
-                    className="btn btn-solid-error btn-circle"
-                    onClick={(e) => toggleTimer(false)}
-                  >
-                    <StopCircle className="w-1/2 h-1/2" />
-                  </button>
+                  <span
+                    className="tooltip tooltip-bottom"
+                    data-tooltip={`Started with ${currentTimer?.startType}`}
+                    >
+                    <button
+                      className="btn btn-solid-error btn-rounded font-mono gap-2"
+                      onClick={() => toggleTimer(false)}
+                      >
+                      <StopCircle className="w-1/2 h-1/2" />
+                      <p>Stop</p>
+                    </button>
+                  </span>
                 )}
               </>
             )}
@@ -187,11 +200,11 @@ export default function TimerSection() {
             </Link>
           </div>
 
-          <h1 className="text-5xl font-bold font-mono pt-4">
+          <h1 className="text-5xl font-bold font-mono">
             {running && currentTimer?.time ? currentTimer?.time : "00:00:00"}
           </h1>
 
-          <div className="flex w-full justify-center gap-4 pt-4">
+          <div className="flex w-full justify-center gap-4">
             {(running && currentTimer?.start && (
               <p className="text-content2">{currentTimer?.start + ""}</p>
             )) || <div className="skeleton h-6 w-1/4 rounded-lg"></div>}
@@ -201,21 +214,6 @@ export default function TimerSection() {
             {(running && currentTimer?.end && (
               <p className="text-content2">{currentTimer?.end + ""}</p>
             )) || <div className="skeleton h-6 w-1/4 rounded-lg"></div>}
-          </div>
-
-          <div className="text-content3 flex items-center">
-            <span
-              className="tooltip tooltip-top"
-              data-tooltip={
-                running
-                  ? `Started with ${currentTimer?.startType}`
-                  : "Start now with Website"
-              }
-            >
-              <button className="btn btn-circle">
-                <Info className="w-1/2 h-1/2" />
-              </button>
-            </span>
           </div>
         </div>
       </div>
