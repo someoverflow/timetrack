@@ -24,8 +24,6 @@ export default function SettingSection({
 
     function change() {
 
-        console.log(value)
-
         fetch("/api/profile", {
             method: "POST",
             body: JSON.stringify({
@@ -47,22 +45,28 @@ export default function SettingSection({
     }
 
     return (
-        <>
-            <p className="text-content3 text-md font-mono">{title}</p>
-            <div className="flex flex-row items-center gap-2">
+        <div>
+            <p className="flex flex-row items-center gap-2 text-content3 text-md font-mono pb-1">
+                <div className="divider divider-vertical h-4 w-2 m-0"/>
+                {title}
+            </p>
+
+            <div className="w-full flex flex-row items-center justify-between gap-1">
                 <input
                     type={inputType}
-                    className="input input-solid"
+                    className="w-full input input-solid input-block"
                     name={title}
                     id={title}
                     placeholder={placeholder}
                     value={value}
                     onChange={(e) => changeValue(e.target.value)}
                 />
-                <button className="btn btn-solid-primary" onClick={() => change()}>
-                    <Save className="w-5 h-5"/>
-                </button>
+                <div>
+                    <button className="btn btn-circle" onClick={() => change()}>
+                        <Save className="w-5 h-5"/>
+                    </button>
+                </div>
             </div>
-        </>
+        </div>
     );
 }
