@@ -64,7 +64,7 @@ export default function TimerInfo({data}: { data: I_Time }) {
 
     if (!data.end) return <>
         <div
-            className="w-full font-mono bg-backgroundSecondary rounded-md text-center pt-1 pb-1"
+            className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1"
             onClick={() => setVisible(!visible)}
         >
             <p className="text-sm text-content2">Running Timer</p>
