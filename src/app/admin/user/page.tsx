@@ -5,14 +5,15 @@ import UserAdd from "./UserAdd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { redirect } from "next/navigation";
-import { Inspect } from "lucide-react";
+import { Eye } from "lucide-react";
 import Link from "next/link";
 
 async function getUsers() {
-  const users = await prisma.user.findMany({
+  return await prisma.user.findMany({
     select: {
       id: true,
       username: true,
+      name: true,
       email: true,
       role: true,
 
@@ -22,7 +23,6 @@ async function getUsers() {
       createdAt: true,
     },
   });
-  return users;
 }
 
 export default async function AdminUserPage() {
@@ -49,9 +49,9 @@ export default async function AdminUserPage() {
         <table className="admin-main-table">
           <thead>
             <tr>
+              <th>Login</th>
               <th>Name</th>
-              <th>Mail</th>
-              <th>Edit</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -61,16 +61,16 @@ export default async function AdminUserPage() {
                   <td>
                     <b>{userData.username}</b>
                   </td>
-                  <td>{userData.email}</td>
+                  <td>{userData.name !== "?" ? userData.name : ""}</td>
                   <td>
-                    <div className="flex flex-row items-center gap-2">
+                    <div className="flex flex-row justify-end items-center gap-2">
                       <UserEdit user={userData} />
 
                       <Link
                         href={"/history/" + userData.username}
                         className="btn btn-circle"
                       >
-                        <Inspect className="w-1/2 h-1/2" />
+                        <Eye className="w-1/2 h-1/2" />
                       </Link>
                     </div>
                   </td>

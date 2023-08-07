@@ -20,6 +20,7 @@ interface ChipDetails {
 }
 interface User {
   id: number;
+  name: string;
   username: string;
 }
 
@@ -33,7 +34,7 @@ export default function ChipEdit({
   const [user, setUser] = useState(users[0].id);
   const [visible, setVisible] = useState(false);
 
-  var router = useRouter();
+  const router = useRouter();
 
   function sendRequest() {
     fetch("/api/chip", {
@@ -120,7 +121,7 @@ export default function ChipEdit({
             >
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.username}
+                  {`${user.username} ${user.name !== "?" ? `(${user.name})` : ""}`}
                 </option>
               ))}
             </select>

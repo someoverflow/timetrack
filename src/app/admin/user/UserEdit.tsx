@@ -2,11 +2,12 @@
 
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { useState } from "react";
 
 interface UserDetails {
   id: number;
   username: string;
+  name: string;
   email: string;
   role: string;
   chips: {
@@ -21,6 +22,7 @@ interface UserDetails {
 
 export default function UserEdit({ user }: { user: UserDetails }) {
   const [username, setUsername] = useState(user.username);
+  const [displayName, setDisplayName] = useState(user.name !== "?" ? user.name : "");
   const [password, setPassword] = useState("");
   const [mail, setMail] = useState(user.email);
   const [role, setRole] = useState(user.role);
@@ -35,6 +37,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       body: JSON.stringify({
         id: user.id,
         username: username,
+        displayName: displayName,
         password: password.trim().length === 0 ? null : password,
         mail: mail,
         role: role,
@@ -112,12 +115,24 @@ export default function UserEdit({ user }: { user: UserDetails }) {
           <div className="divider"></div>
 
           <div className="flex flex-col gap-2">
+            <p className="pl-2 text-content2 text-left">Name</p>
+            <input
+              className="input input-block"
+              type="text"
+              name="DisplayName"
+              id={`userEdit-dname-${user.id}`}
+              placeholder={user.name !== "?" ? user.name : "Max Mustermann"}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+
             <p className="pl-2 text-content2 text-left">Username</p>
             <input
               className="input input-block"
               type="text"
               name="Name"
               id={`userEdit-name-${user.id}`}
+              placeholder={user.username}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -127,15 +142,20 @@ export default function UserEdit({ user }: { user: UserDetails }) {
               type="password"
               name="Password"
               id={`userEdit-password-${user.id}`}
+              placeholder="#SuperSecure123"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
+            <div className="divider m-0"></div>
+
             <p className="pl-2 text-content2 text-left">Mail</p>
             <input
               className="input input-block"
               type="email"
               name="Mail"
               id={`userEdit-mail-${user.id}`}
+              placeholder={user.email}
               value={mail}
               onChange={(e) => setMail(e.target.value)}
             />

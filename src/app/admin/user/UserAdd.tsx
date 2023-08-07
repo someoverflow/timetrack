@@ -6,6 +6,7 @@ import { useState } from "react";
 
 export default function UserAdd() {
   const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [mail, setMail] = useState("");
   const [role, setRole] = useState("user");
@@ -19,6 +20,7 @@ export default function UserAdd() {
       method: "PUT",
       body: JSON.stringify({
         username: username,
+        displayName: displayName,
         email: mail,
         password: password,
         role: role,
@@ -70,30 +72,49 @@ export default function UserAdd() {
           <div className="divider"></div>
 
           <div className="flex flex-col gap-2">
+
+            <p className="pl-2 text-content2 text-left">Name</p>
+            <input
+              className="input input-block"
+              type="text"
+              name="Name"
+              id="name"
+              placeholder="Max Mustermann"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+
             <p className="pl-2 text-content2 text-left">Username</p>
             <input
               className="input input-block"
               type="text"
               name="Name"
               id="name"
+              placeholder="maxmust"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
+
             <p className="pl-2 text-content2 text-left">Password</p>
             <input
               className="input input-block"
               type="password"
               name="Password"
               id="password"
+              placeholder="#SuperSecure123"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
+            <div className="divider m-0"></div>
+
             <p className="pl-2 text-content2 text-left">Mail</p>
             <input
               className="input input-block"
               type="email"
               name="Mail"
               id="mail"
+              placeholder="max@muster.com"
               value={mail}
               onChange={(e) => setMail(e.target.value)}
             />
