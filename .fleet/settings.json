@@ -1,4 +1,6 @@
 {
-    "nodejs.editor.formatOnSave.prettier.mode": "Auto",
-    "nodejs.editor.formatOnSave.eslint.mode": "Auto"
+	"nodejs.editor.formatOnSave.prettier.mode": "Auto",
+	"nodejs.editor.formatOnSave.eslint.mode": "Auto",
+	"autoSave": true,
+	"autoSave.delay": -1
 }
