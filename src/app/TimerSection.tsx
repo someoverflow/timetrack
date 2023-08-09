@@ -2,17 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  Info,
-  History,
-  PlayCircle,
-  StopCircle,
-  DownloadCloud,
-  Menu,
-} from "lucide-react";
+import { History, PlayCircle, StopCircle, Menu } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
-import { getSession } from "next-auth/react";
 
 interface I_Timer {
   id: number;
@@ -34,7 +26,7 @@ export default function TimerSection() {
   const [firstRun, setFirstRun] = useState(false);
   const [running, setRunning] = useState(false);
 
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
   const count = useCallback(() => {
     if (!running) return;
@@ -87,7 +79,7 @@ export default function TimerSection() {
         count();
       })
       .catch((e) => {
-        setError(true);
+        setError("updating");
         console.log(e);
       });
   }, [firstRun, count]);
@@ -120,7 +112,7 @@ export default function TimerSection() {
         if (start) fetchCurrentTimer();
       })
       .catch((e) => {
-        setError(true);
+        setError("toggling");
         console.log(e);
       });
   }
@@ -159,9 +151,9 @@ export default function TimerSection() {
             </label>
             {(!loaded && (
               <>
-              <button className="btn btn-rounded btn-loading">
-                Updating
-                {/* <DownloadCloud className="w-1/2 h-1/2" /> */}
+                <button className="btn btn-rounded btn-loading">
+                  Updating
+                  {/* <DownloadCloud className="w-1/2 h-1/2" /> */}
                 </button>
               </>
             )) || (
@@ -170,11 +162,11 @@ export default function TimerSection() {
                   <span
                     className="tooltip tooltip-bottom"
                     data-tooltip="Start now with Website"
-                    >
+                  >
                     <button
                       className="btn btn-solid-success btn-rounded font-mono gap-2"
                       onClick={() => toggleTimer(true)}
-                      >
+                    >
                       <PlayCircle className="w-1/2 h-1/2" />
                       <p>Start</p>
                     </button>
@@ -183,11 +175,11 @@ export default function TimerSection() {
                   <span
                     className="tooltip tooltip-bottom"
                     data-tooltip={`Started with ${currentTimer?.startType}`}
-                    >
+                  >
                     <button
                       className="btn btn-solid-error btn-rounded font-mono gap-2"
                       onClick={() => toggleTimer(false)}
-                      >
+                    >
                       <StopCircle className="w-1/2 h-1/2" />
                       <p>Stop</p>
                     </button>
@@ -223,7 +215,7 @@ export default function TimerSection() {
           <div className="absolute bottom-2 alert alert-error max-w-sm w-[95vw]">
             <div className="flex flex-col">
               <span>
-                <b>An error occurred</b>
+                <b>An error occurred ({error})</b>
               </span>
               <span className="text-content2">
                 Try to reload the page to fix the problem
