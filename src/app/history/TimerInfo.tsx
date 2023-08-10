@@ -159,9 +159,11 @@ export default function TimerInfo({
     <TrailingActions>
       <SwipeAction destructive={true} onClick={() => sendDeleteRequest()}>
         <div className="flex flex-row items-center justify-between w-full h-full p-2">
+          {/*
           <p className="font-mono text-xs whitespace-nowrap overflow-hidden">
-            {dragProgress < 50 ? "move on" : "delete"}
+            {dragProgress < 50 ? "" : "delete"}
           </p>
+           */}
           <Trash2
             className={`w-1/2 h-1/2 transition-all duration-200 ${
               dragProgress > 50 ? "text-error" : "text-warning scale-50"
