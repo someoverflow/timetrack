@@ -6,11 +6,7 @@ export function validatePassword(password: string): boolean {
 export function getTimePassed(start: Date, end: Date): string {
   let msPassed = Math.abs(start.getTime() - end.getTime());
   const date = new Date(Date.UTC(0, 0, 0, 0, 0, 0, msPassed));
-  return [
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    date.getUTCSeconds(),
-  ]
+  return [date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
     .map((s) => String(s).padStart(2, "0"))
     .join(":");
 }
@@ -25,9 +21,7 @@ export function getTotalTime(times: string[]): string {
   const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
   const remainingSeconds = totalSeconds % 60;
 
-  return `${totalHours
-    .toString()
-    .padStart(2, "0")}:${totalMinutes
+  return `${totalHours.toString().padStart(2, "0")}:${totalMinutes
     .toString()
     .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }

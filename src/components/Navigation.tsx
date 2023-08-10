@@ -1,8 +1,10 @@
-import LogOutButton from "./LogOutButton";
 import prisma from "@/lib/prisma";
+
+import LogOutButton from "./LogOutButton";
+import ActiveLink from "./ActiveLink";
+
 import { Home, Shield, ChevronDown, User, History } from "lucide-react";
 import { getServerSession } from "next-auth";
-import ActiveLink from "./ActiveLink";
 import Link from "next/link";
 
 export default async function Navigation({
