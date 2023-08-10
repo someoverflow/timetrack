@@ -20,7 +20,9 @@ export default async function Home() {
     <Navigation toggle>
       <section className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-mono text-content3">
-          {userDetails?.name !== "?" ? userDetails?.name : userDetails?.username}
+          {userDetails?.name !== "?"
+            ? userDetails?.name
+            : userDetails?.username}
         </h1>
         <TimerSection />
       </section>

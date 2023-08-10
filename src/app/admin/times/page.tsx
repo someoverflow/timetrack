@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import Table from "./table";
+
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 

@@ -1,28 +1,16 @@
 "use client";
 
+import "@/lib/types";
+
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-interface UserDetails {
-  id: number;
-  username: string;
-  name: string;
-  email: string;
-  role: string;
-  chips: {
-    id: string;
-    userId: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
-  updatedAt: Date;
-  createdAt: Date;
-}
-
 export default function UserEdit({ user }: { user: UserDetails }) {
   const [username, setUsername] = useState(user.username);
-  const [displayName, setDisplayName] = useState(user.name !== "?" ? user.name : "");
+  const [displayName, setDisplayName] = useState(
+    user.name !== "?" ? user.name : ""
+  );
   const [password, setPassword] = useState("");
   const [mail, setMail] = useState(user.email);
   const [role, setRole] = useState(user.role);

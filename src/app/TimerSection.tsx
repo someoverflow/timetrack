@@ -1,26 +1,16 @@
 "use client";
 
+import "@/lib/types";
+
 import { useCallback, useEffect, useState } from "react";
 
 import { History, PlayCircle, StopCircle, Menu } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
 
-interface I_Timer {
-  id: number;
-  user: string;
-  start: string;
-  startType: string | null;
-  end: String | null;
-  endType: string | null;
-  time: string | null;
-  notes: string | null;
-  state: string | null;
-}
-
 export default function TimerSection() {
-  const [currentTimer, setCurrentTimer] = useState<I_Timer>();
-  const [fetchedTimer, setFetchedTimer] = useState<I_Timer>();
+  const [currentTimer, setCurrentTimer] = useState<Timer>();
+  const [fetchedTimer, setFetchedTimer] = useState<Timer>();
 
   const [loaded, setLoaded] = useState(false);
   const [firstRun, setFirstRun] = useState(false);
@@ -71,7 +61,7 @@ export default function TimerSection() {
           setFetchedTimer(undefined);
           setCurrentTimer(undefined);
         } else {
-          let timer: I_Timer = result.data[0];
+          let timer: Timer = result.data[0];
           setFetchedTimer(timer);
 
           setRunning(true);

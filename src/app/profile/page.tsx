@@ -1,8 +1,10 @@
 import Navigation from "@/components/Navigation";
 import Header from "@/components/Header";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
+
 import SettingSection from "./SettingSection";
+
+import { getServerSession } from "next-auth";
 
 export default async function Home() {
   const user = await prisma.user.findUnique({
@@ -52,5 +54,5 @@ export default async function Home() {
         </div>
       </section>
     </Navigation>
-    );
+  );
 }

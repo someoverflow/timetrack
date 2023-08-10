@@ -1,34 +1,16 @@
 "use client";
 
+import "@/lib/types";
+
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-interface ChipDetails {
-  id: string;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    password: string;
-    role: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-  updatedAt: Date;
-  createdAt: Date;
-}
-interface User {
-  id: number;
-  name: string;
-  username: string;
-}
 
 export default function ChipEdit({
   users,
   chip,
 }: {
-  users: User[];
+  users: UserMinimal[];
   chip: ChipDetails;
 }) {
   const [user, setUser] = useState(users[0].id);
@@ -121,7 +103,9 @@ export default function ChipEdit({
             >
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {`${user.username} ${user.name !== "?" ? `(${user.name})` : ""}`}
+                  {`${user.username} ${
+                    user.name !== "?" ? `(${user.name})` : ""
+                  }`}
                 </option>
               ))}
             </select>

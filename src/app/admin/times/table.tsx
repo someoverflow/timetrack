@@ -1,20 +1,11 @@
 "use client";
 
+import "@/lib/types";
+
 import { useEffect, useState } from "react";
 
-interface I_Timer {
-  id: number;
-  user: string;
-  start: Date | null;
-  startType: string | null;
-  end: Date | null;
-  endType: string | null;
-  time: string | null;
-  notes: string | null;
-}
-
 export default function Table() {
-  const [posts, setPosts] = useState<I_Timer[]>([]);
+  const [posts, setPosts] = useState<Timer[]>([]);
 
   function fetchPosts() {
     fetch("/api/times/all")

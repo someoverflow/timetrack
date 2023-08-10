@@ -72,7 +72,6 @@ export default function UserAdd() {
           <div className="divider"></div>
 
           <div className="flex flex-col gap-2">
-
             <p className="pl-2 text-content2 text-left">Name</p>
             <input
               className="input input-block"

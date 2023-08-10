@@ -1,5 +1,7 @@
 "use client";
 
+import "@/lib/types";
+
 import {
   AppWindow,
   Diamond,
@@ -17,22 +19,10 @@ import {
   SwipeableListItem,
   SwipeAction,
   TrailingActions,
-  Type,
 } from "react-swipeable-list";
 import "react-swipeable-list/dist/styles.css";
 
-interface I_Time {
-  id: number;
-  user: string;
-  start: Date;
-  startType: string | null;
-  end: Date | null;
-  endType: string | null;
-  time: string | null;
-  notes: string | null;
-}
-
-function getIcon(timer: I_Time, start: boolean) {
+function getIcon(timer: TimerWithDate, start: boolean) {
   switch (start ? timer.startType : timer.endType) {
     case "Website":
       return <AppWindow className="w-4 h-4" />;
@@ -59,7 +49,7 @@ export default function TimerInfo({
   data,
   errorHandler,
 }: {
-  data: I_Time;
+  data: TimerWithDate;
   errorHandler: (error: string) => void;
 }) {
   const [error, setError] = useState<string | undefined>();

@@ -1,30 +1,23 @@
 "use client";
 
+import "@/lib/types";
+
 import { getTotalTime } from "@/lib/utils";
+
+import TimerAdd from "./TimerAdd";
+
 import { FileDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import TimerAdd from "./TimerAdd";
 
 const TimerInfo = dynamic(() => import("./TimerInfo"), { ssr: false });
 
-interface I_Time {
-  id: number;
-  user: string;
-  start: Date;
-  startType: string | null;
-  end: Date | null;
-  endType: string | null;
-  time: string | null;
-  notes: string | null;
-}
-
 interface Data {
-  [yearMonth: string]: I_Time[];
+  [yearMonth: string]: TimerWithDate[];
 }
 
-function formatHistory(data: I_Time[]): Data {
+function formatHistory(data: TimerWithDate[]): Data {
   const months = [
     "January",
     "February",
@@ -42,7 +35,7 @@ function formatHistory(data: I_Time[]): Data {
 
   let result: Data = {};
 
-  data.forEach((item: I_Time) => {
+  data.forEach((item: TimerWithDate) => {
     let date = new Date(item.start);
     let year = date.getFullYear();
     let month = months[date.getMonth()];
@@ -58,7 +51,7 @@ export default function TimerHistory({
   data,
   username,
 }: {
-  data: I_Time[];
+  data: TimerWithDate[];
   username: string;
 }) {
   const history: Data = formatHistory(data);
@@ -125,16 +118,22 @@ export default function TimerHistory({
               </button>
             </div>
             <div className="w-full p-1 rounded-md border border-border">
-                {history[yearMonth].reverse().map((time) => {
-                  return (
-                    <div
-                      className="p-1"
-                      key={`timerHistory-${yearMonth}-${time.id}`}
-                    >
-                      <TimerInfo errorHandler={(e) => {console.log(e)}} data={time} /> {/* Error during: */}
-                    </div>
-                  );
-                })}
+              {history[yearMonth].reverse().map((time) => {
+                return (
+                  <div
+                    className="p-1"
+                    key={`timerHistory-${yearMonth}-${time.id}`}
+                  >
+                    <TimerInfo
+                      errorHandler={(e) => {
+                        console.log(e);
+                      }}
+                      data={time}
+                    />{" "}
+                    {/* Error during: */}
+                  </div>
+                );
+              })}
             </div>
           </section>
         );

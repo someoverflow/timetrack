@@ -1,12 +1,14 @@
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import UserEdit from "./UserEdit";
-import UserAdd from "./UserAdd";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
-import { redirect } from "next/navigation";
+
+import UserEdit from "./UserEdit";
+import UserAdd from "./UserAdd";
+
 import { Eye } from "lucide-react";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 async function getUsers() {
   return await prisma.user.findMany({
