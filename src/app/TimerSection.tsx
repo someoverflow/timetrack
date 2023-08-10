@@ -76,12 +76,14 @@ export default function TimerSection() {
 
   function toggleTimer(start: boolean) {
     setLoaded(false);
+
+    let data: any = {
+      id: 0,
+      start: new Date().toISOString(),
+      startType: "Website",
+    };
+
     if (start) {
-      const data: any = {
-        id: 0,
-        start: new Date().toISOString(),
-        startType: "Website",
-      };
       setFetchedTimer(data);
       setCurrentTimer(undefined);
 
@@ -95,7 +97,11 @@ export default function TimerSection() {
       setCurrentTimer(undefined);
     }
 
-    fetch("/api/times/toggle?value=" + (start ? "start" : "stop"))
+    fetch(
+      `/api/times/toggle?fixTime=${data.start}&value=${
+        start ? "start" : "stop"
+      }`
+    )
       .then((result) => result.json())
       .then(() => {
         setLoaded(true);

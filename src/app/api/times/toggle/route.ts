@@ -20,18 +20,22 @@ export async function GET(request: NextRequest) {
   });
 
   var requestValue = request.nextUrl.searchParams.get("value");
+  var requestTime = request.nextUrl.searchParams.get("fixTime");
   if (
     requestValue == null ||
     !(requestValue == "start" || requestValue == "stop")
   )
     return NextResponse.error();
 
+  let startDate = new Date();
+  if (requestTime) startDate = new Date(Date.parse(requestTime));
+
   if (requestValue == "start") {
     if (data.length == 0) {
       const result = await prisma.times.create({
         data: {
           user: session.user?.name + "",
-          start: new Date(),
+          start: startDate,
           startType: "Website",
         },
       });
