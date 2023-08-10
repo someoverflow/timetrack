@@ -16,11 +16,10 @@ export default function TimerSection() {
   const [firstRun, setFirstRun] = useState(false);
   const [running, setRunning] = useState(false);
 
-  const [error, setError] = useState<string | undefined>();
+  const [error, setError] = useState<ErrorDetails | undefined>();
 
   const count = useCallback(() => {
     if (!running) return;
-
     if (!currentTimer && !fetchedTimer) return;
 
     let result = JSON.parse(
@@ -69,8 +68,12 @@ export default function TimerSection() {
         count();
       })
       .catch((e) => {
-        setError("updating");
-        console.log(e);
+        setError({
+          type: "error",
+          title: "An error occurred while updating",
+          content: "Reloading the page could solve the problem",
+        });
+        console.error(e);
       });
   }, [firstRun, count]);
 
@@ -108,8 +111,12 @@ export default function TimerSection() {
         if (start) fetchCurrentTimer();
       })
       .catch((e) => {
-        setError("toggling");
-        console.log(e);
+        setError({
+          type: "warning",
+          title: `An error occurred while ${start ? "starting" : "stopping"}`,
+          content: "Reloading the page could solve the problem",
+        });
+        console.error(e);
       });
   }
 
@@ -208,14 +215,16 @@ export default function TimerSection() {
 
       {error && (
         <>
-          <div className="absolute bottom-2 alert alert-error max-w-sm w-[95vw]">
+          <div
+            className={`absolute max-w-sm w-[95vw] bottom-2 alert ${
+              error.type == "warning" && "alert-warning"
+            } ${error.type == "error" && "alert-error"}`}
+          >
             <div className="flex flex-col">
-              <span>
-                <b>An error occurred ({error})</b>
+              <span className="text-content1 text-base font-bold">
+                {error.title}
               </span>
-              <span className="text-content2">
-                Try to reload the page to fix the problem
-              </span>
+              <span className="text-content2 text-sm">{error.content}</span>
             </div>
           </div>
         </>

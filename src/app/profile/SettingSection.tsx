@@ -11,6 +11,7 @@ export default function SettingSection({
   defaultValue = "",
   username,
   inputType,
+  error,
 }: {
   title: string;
   username: string;
@@ -18,12 +19,13 @@ export default function SettingSection({
   placeholder?: string | undefined;
   defaultValue?: string;
   inputType?: HTMLInputTypeAttribute | undefined;
+  error?: () => void;
 }) {
   const [value, changeValue] = useState(defaultValue);
   const router = useRouter();
 
   function change() {
-    fetch("/api/profile", {
+    fetch("/api/profilew", {
       method: "POST",
       body: JSON.stringify({
         username: username,
@@ -39,13 +41,16 @@ export default function SettingSection({
         router.refresh();
         console.log(result);
       })
-      .catch(console.error);
+      .catch((e) => {
+        if (error) error();
+        console.error(e);
+      });
   }
 
   return (
     <div>
       <p className="flex flex-row items-center gap-2 text-content3 text-md font-mono pb-1">
-        <div className="divider divider-vertical h-4 w-2 m-0" />
+        <span className="divider divider-vertical h-4 w-2 m-0" />
         {title}
       </p>
 

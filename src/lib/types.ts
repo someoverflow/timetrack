@@ -57,3 +57,9 @@ interface UserDetails {
   updatedAt: Date;
   createdAt: Date;
 }
+
+interface ErrorDetails {
+  type: "error" | "warning";
+  title: string;
+  content: string;
+}
