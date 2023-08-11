@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 
 import TimerHistory from "../TimerHistory";
+import TimerAdd from "../TimerAdd";
 
 import { getServerSession } from "next-auth";
 import { Metadata } from "next";
@@ -13,17 +14,13 @@ export const metadata: Metadata = {
   description: "Track your Time",
 };
 
-async function getHistory(username: string) {
-  const target = await prisma.user.findUnique({
-    where: {
-      username: username,
-    },
-    select: {
-      username: true,
-    },
-  });
-
-  if (!target) return null;
+async function getHistory(
+  user: {
+    username: string;
+    name: string;
+  } | null
+) {
+  if (!user) return null;
 
   const history = await prisma.times.findMany({
     orderBy: {
@@ -31,7 +28,7 @@ async function getHistory(username: string) {
       start: "asc",
     },
     where: {
-      user: username,
+      user: user?.username,
     },
   });
   return history;
@@ -54,7 +51,19 @@ export default async function History({
 
   if (user?.role != "admin") redirect("/history");
 
-  const history = await getHistory(params.user);
+  const target = await prisma.user
+    .findUnique({
+      where: {
+        username: params.user,
+      },
+      select: {
+        username: true,
+        name: true,
+      },
+    })
+    .catch(() => null);
+
+  const history = await getHistory(target);
 
   function dataFound(): boolean {
     if (history == null) return false;
@@ -67,15 +76,14 @@ export default async function History({
     <Navigation>
       <section className="w-full min-h-screen flex flex-col items-center gap-4 p-4">
         <div className="w-full font-mono text-left">
-          <Header text={`History of ${params.user}`} />
+          <Header text={`History of ${target?.name} (${target?.username})`} />
         </div>
         {history != null ? (
           <>
+            <TimerAdd username={target?.username + ""} />
+
             {dataFound() ? (
-              <TimerHistory
-                data={history}
-                username={session?.user?.name + ""}
-              />
+              <TimerHistory data={history} username={target?.username + ""} />
             ) : (
               <p className="font-mono font-bold text-xl">No data found</p>
             )}

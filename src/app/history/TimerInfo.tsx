@@ -52,8 +52,6 @@ export default function TimerInfo({
   data: TimerWithDate;
   errorHandler: (error: string) => void;
 }) {
-  const [error, setError] = useState<string | undefined>();
-
   const [notes, setNotes] = useState(data.notes ? data.notes : "");
 
   const [start, setStart] = useState(
@@ -105,7 +103,7 @@ export default function TimerInfo({
     }
 
     fetch("/api/times", {
-      method: "POST",
+      method: "PUT",
       body: JSON.stringify(request),
     })
       .then((result) => result.json())
@@ -137,7 +135,6 @@ export default function TimerInfo({
 
           router.refresh();
         }
-        console.log(result);
       })
       .catch((e) => {
         errorHandler(`Deleting ${data.id}`);

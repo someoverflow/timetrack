@@ -46,21 +46,31 @@ export default function TimerSection() {
   }, [currentTimer, fetchedTimer, running]);
 
   const fetchCurrentTimer = useCallback(() => {
-    fetch("/api/times/current")
+    fetch("/api/times?indicator=current")
       .then((result) => result.json())
       .then((result) => {
+        if (result.success == false) {
+          setError({
+            type: "error",
+            title: "An error occurred while updating",
+            content: "Reloading the page could solve the problem",
+          });
+          console.error(result);
+          return;
+        }
+
         if (!firstRun) {
           setFirstRun(true);
           setLoaded(true);
         }
 
-        if (result.data.length == 0) {
+        if (result.result.length == 0) {
           setRunning(false);
 
           setFetchedTimer(undefined);
           setCurrentTimer(undefined);
         } else {
-          let timer: Timer = result.data[0];
+          let timer: Timer = result.result[0];
           setFetchedTimer(timer);
 
           setRunning(true);
@@ -101,9 +111,10 @@ export default function TimerSection() {
     }
 
     fetch(
-      `/api/times/toggle?fixTime=${data.start}&value=${
+      `/api/times/toggle?type=Website&fixTime=${data.start}&value=${
         start ? "start" : "stop"
-      }`
+      }`,
+      { method: "PUT" }
     )
       .then((result) => result.json())
       .then(() => {
@@ -123,6 +134,7 @@ export default function TimerSection() {
   // First Effect
   useEffect(() => {
     fetchCurrentTimer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Request Effect
@@ -131,7 +143,7 @@ export default function TimerSection() {
       if (!error) fetchCurrentTimer();
     }, 10000);
     return () => clearInterval(requestIntervalId);
-  }, [error, firstRun, fetchCurrentTimer]);
+  }, [error, fetchCurrentTimer]);
 
   // Timer Effect
   useEffect(() => {
@@ -139,7 +151,7 @@ export default function TimerSection() {
       if (!error && running) count();
     }, 500);
     return () => clearInterval(intervalId);
-  }, [error, firstRun, running, count]);
+  }, [error, running, count]);
 
   return (
     <>

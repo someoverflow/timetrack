@@ -20,7 +20,7 @@ export default function TimerAdd({ username }: { username: string }) {
 
   function sendRequest() {
     fetch("/api/times", {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify({
         username: username,
         notes: notes,

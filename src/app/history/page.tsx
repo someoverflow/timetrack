@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 
 import TimerHistory from "./TimerHistory";
+import TimerAdd from "./TimerAdd";
 
 import { Session, getServerSession } from "next-auth";
 import { Metadata } from "next";
@@ -16,7 +17,7 @@ async function getHistory(session: Session | null) {
   const history = await prisma.times.findMany({
     orderBy: {
       //id: "desc",
-      start: "asc",
+      start: "desc",
     },
     where: {
       user: session?.user?.name + "",
@@ -40,10 +41,13 @@ export default async function History() {
         <div className="w-full font-mono text-left">
           <Header text="History" />
         </div>
+
+        <TimerAdd username={session?.user?.name + ""} />
+
         {dataFound() ? (
           <TimerHistory data={history} username={session?.user?.name + ""} />
         ) : (
-          <p className="font-mono font-bold text-xl">No data found</p>
+          <p className="font-mono font-bold text-base">No data found</p>
         )}
       </section>
     </Navigation>

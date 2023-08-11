@@ -4,8 +4,6 @@ import "@/lib/types";
 
 import { getTotalTime } from "@/lib/utils";
 
-import TimerAdd from "./TimerAdd";
-
 import { FileDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -89,8 +87,6 @@ export default function TimerHistory({
 
   return (
     <>
-      <TimerAdd username={username} />
-
       {keys.map((yearMonth) => {
         const timeStrings: string[] = [];
 
@@ -118,7 +114,7 @@ export default function TimerHistory({
               </button>
             </div>
             <div className="w-full p-1 rounded-md border border-border">
-              {history[yearMonth].reverse().map((time) => {
+              {history[yearMonth].map((time) => {
                 return (
                   <div
                     className="p-1"
@@ -130,7 +126,6 @@ export default function TimerHistory({
                       }}
                       data={time}
                     />{" "}
-                    {/* Error during: */}
                   </div>
                 );
               })}

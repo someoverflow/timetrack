@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
   let result: APIResult = {
     success: true,
-    status: 200,
+    status: 201,
     result: undefined,
   };
 

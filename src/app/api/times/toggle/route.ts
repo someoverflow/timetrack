@@ -3,69 +3,81 @@ import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+const NO_AUTH: APIResult = Object.freeze({
+  success: false,
+  status: 401,
+  result: "Unauthorized",
+});
+
+export async function PUT(request: NextRequest) {
   const session = await getServerSession();
+  if (session == null)
+    return NextResponse.json(NO_AUTH, {
+      status: NO_AUTH.status,
+      statusText: NO_AUTH.result,
+    });
 
-  if (session == null) return NextResponse.error();
+  const data = await prisma.times
+    .findMany({
+      take: 1,
+      orderBy: {
+        id: "desc",
+      },
+      where: {
+        user: session.user?.name + "",
+        end: null,
+      },
+    })
+    .catch(() => null);
 
-  const data = await prisma.times.findMany({
-    take: 1,
-    orderBy: {
-      id: "desc",
-    },
-    where: {
-      user: session.user?.name + "",
-      end: null,
-    },
-  });
+  let result: APIResult = {
+    success: true,
+    status: 200,
+    result: undefined,
+  };
 
-  var requestValue = request.nextUrl.searchParams.get("value");
+  var type = request.nextUrl.searchParams.get("type");
   var requestTime = request.nextUrl.searchParams.get("fixTime");
-  if (
-    requestValue == null ||
-    !(requestValue == "start" || requestValue == "stop")
-  )
-    return NextResponse.error();
 
-  let startDate = new Date();
-  if (requestTime) startDate = new Date(Date.parse(requestTime));
+  let changeDate = new Date();
+  if (requestTime) changeDate = new Date(Date.parse(requestTime));
 
-  if (requestValue == "start") {
-    if (data.length == 0) {
-      const result = await prisma.times.create({
+  if (data == null || data.length == 0) {
+    result.result = await prisma.times
+      .create({
         data: {
           user: session.user?.name + "",
-          start: startDate,
-          startType: "Website",
+          start: changeDate,
+          startType: type ? type : "API",
         },
+      })
+      .catch((e) => {
+        result.success = false;
+        result.status = 500;
+        return e.meta.cause;
       });
+  } else {
+    const item = data[0];
 
-      return NextResponse.json({ result });
-    } else return NextResponse.error();
-  }
+    var timePassed = getTimePassed(item.start, changeDate);
 
-  if (requestValue == "stop") {
-    if (data.length == 1) {
-      const item = data[0];
-
-      const startDate = item.start;
-      const currentDate = new Date();
-
-      var timePassed = getTimePassed(startDate, currentDate);
-
-      const result = await prisma.times.update({
+    const result = await prisma.times
+      .update({
         data: {
-          end: currentDate,
-          endType: "Website",
+          end: changeDate,
+          endType: type ? type : "API",
           time: timePassed,
         },
         where: {
           id: item.id,
         },
+      })
+      .catch((e) => {
+        result.success = false;
+        result.status = 500;
+        return e.meta.cause;
       });
-      return NextResponse.json(result);
-    } else return NextResponse.error();
   }
 
-  return NextResponse.json({ data });
+  return NextResponse.json(result, { status: result.status });
 }
