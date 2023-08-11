@@ -9,12 +9,10 @@ export default function SettingSection({
   placeholder,
   dbIndicator,
   defaultValue = "",
-  username,
   inputType,
   error,
 }: {
   title: string;
-  username: string;
   dbIndicator: string;
   placeholder?: string | undefined;
   defaultValue?: string;
@@ -25,10 +23,9 @@ export default function SettingSection({
   const router = useRouter();
 
   function change() {
-    fetch("/api/profilew", {
-      method: "POST",
+    fetch("/api/profile", {
+      method: "PUT",
       body: JSON.stringify({
-        username: username,
         dbIndicator: dbIndicator,
         value: value,
       }),

@@ -8,7 +8,6 @@ export default function ProfileSection({
   user,
 }: {
   user: {
-    username: string;
     name: string;
     email: string;
     role: string;
@@ -24,7 +23,6 @@ export default function ProfileSection({
       <SettingSection
         title="Name"
         dbIndicator="name"
-        username={user?.username + ""}
         defaultValue={user?.name + ""}
         placeholder="Max Mustermann"
         error={() =>
@@ -39,7 +37,6 @@ export default function ProfileSection({
         title="Mail"
         inputType="email"
         dbIndicator="email"
-        username={user?.username + ""}
         defaultValue={user?.email + ""}
         placeholder="max@muster.mann"
         error={() =>
@@ -54,7 +51,6 @@ export default function ProfileSection({
         title="Password"
         inputType="password"
         dbIndicator="password"
-        username={user?.username + ""}
         placeholder="Secure123"
         error={() =>
           setError({

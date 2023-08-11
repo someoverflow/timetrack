@@ -1,42 +1,94 @@
 import prisma from "@/lib/prisma";
-import {validatePassword} from '@/lib/utils'
-import {hash} from "bcrypt";
-import {getServerSession} from "next-auth";
-import {NextRequest, NextResponse} from "next/server";
+import { validatePassword } from "@/lib/utils";
+import { hash } from "bcrypt";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
-// Update
-export async function POST(request: NextRequest) {
-    const json = await request.json();
+const NO_AUTH: APIResult = Object.freeze({
+  success: false,
+  status: 401,
+  result: "Unauthorized",
+});
 
-    if (
-        json.username == null ||
-        json.dbIndicator == null ||
-        json.value == null
-    )
-        return NextResponse.error();
+const BAD_REQUEST: APIResult = Object.freeze({
+  success: false,
+  status: 400,
+  result: "Bad Request",
+});
 
+// Update profile
+export async function PUT(request: NextRequest) {
+  const session = await getServerSession();
+  if (session == null)
+    return NextResponse.json(NO_AUTH, {
+      status: NO_AUTH.status,
+      statusText: NO_AUTH.result,
+    });
 
-    const session = await getServerSession()
-    if (!session) return NextResponse.error()
+  let result: APIResult = {
+    success: true,
+    status: 200,
+    result: undefined,
+  };
 
-    if (session.user?.name !== json.username)
-        return NextResponse.error()
-    
-    if (json.dbIndicator == "password" && !validatePassword(json.value))
-        return NextResponse.error()
+  var json = await request.json().catch((e) => {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
-    const data = {
-        password: json.dbIndicator == "password" ? (await hash(json.value, 12)) : undefined,
-        name: json.dbIndicator == "name" ? json.value : undefined,
-        email: json.dbIndicator == "email" ? json.value : undefined,
-    }
+    result.result = [result.result, "JSON Body could not be parsed"];
+    console.log(result.result);
 
-    const result = await prisma.user.update({
-        where: {
-            username: json.username
-        },
-        data: data
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  });
+  if (json instanceof NextResponse) return json;
+
+  if (json.dbIndicator == null || json.value == null) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [
+      result.result,
+      json.dbIndicator == null ? "Indicator Missing" : undefined,
+      json.value == null ? "Value Missing" : undefined,
+    ];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  if (json.dbIndicator == "password" && !validatePassword(json.value)) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "Invalid Password"];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  const data = {
+    password:
+      json.dbIndicator == "password" ? await hash(json.value, 12) : undefined,
+    name: json.dbIndicator == "name" ? json.value : undefined,
+    email: json.dbIndicator == "email" ? json.value : undefined,
+  };
+
+  result.result = await prisma.user
+    .update({
+      where: {
+        username: json.username,
+      },
+      data: data,
     })
+    .catch((e) => {
+      result.success = false;
+      result.status = 500;
+      return e.meta.cause;
+    });
 
-    return NextResponse.json({result});
+  return NextResponse.json(result, { status: result.status });
 }
