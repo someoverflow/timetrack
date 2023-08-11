@@ -20,7 +20,7 @@ export default function ChipEdit({
 
   function sendRequest() {
     fetch("/api/chip", {
-      method: "POST",
+      method: "PUT",
       body: JSON.stringify({
         id: chip.id,
         userId: user,

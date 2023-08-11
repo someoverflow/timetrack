@@ -63,3 +63,9 @@ interface ErrorDetails {
   title: string;
   content: string;
 }
+
+interface APIResult {
+  success: boolean;
+  status: number;
+  result: any;
+}

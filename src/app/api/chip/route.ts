@@ -1,12 +1,8 @@
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
+import { Session, getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-async function checkAdmin(): Promise<boolean> {
-  const session = await getServerSession();
-
-  if (session == null) return false;
-
+async function checkAdmin(session: Session): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: {
       username: session.user?.name + "",
@@ -21,60 +17,214 @@ async function checkAdmin(): Promise<boolean> {
   return true;
 }
 
-// Create
-export async function PUT(request: NextRequest) {
-  const isAdmin = await checkAdmin();
-  if (!isAdmin) return NextResponse.error();
+const NO_AUTH: APIResult = Object.freeze({
+  success: false,
+  status: 401,
+  result: "Unauthorized",
+});
+const NOT_ADMIN: APIResult = Object.freeze({
+  success: false,
+  status: 403,
+  result: "Forbidden",
+});
 
-  var json = await request.json();
+const BAD_REQUEST: APIResult = Object.freeze({
+  success: false,
+  status: 400,
+  result: "Bad Request",
+});
 
-  if (json.id == null || json.userId == null) return NextResponse.error();
-
-  const result = await prisma.chip.create({
-    data: {
-      id: json.id,
-      userId: parseInt(json.userId),
-    },
-  });
-
-  return NextResponse.json({ result });
-}
-
-// Update
-export async function POST(request: NextRequest) {
-  const isAdmin = await checkAdmin();
-  if (!isAdmin) return NextResponse.error();
-
-  var json = await request.json();
-
-  if (json.id == null || json.userId == null) return NextResponse.error();
-
-  const result = await prisma.chip.update({
-    where: {
-      id: json.id,
-    },
-    data: {
-      userId: parseInt(json.userId),
-    },
-  });
-
-  return NextResponse.json({ result });
-}
-
-// Delete
+// Delete a chip
 export async function DELETE(request: NextRequest) {
-  const isAdmin = await checkAdmin();
-  if (!isAdmin) return NextResponse.error();
+  const session = await getServerSession();
+  if (session == null)
+    return NextResponse.json(NO_AUTH, {
+      status: NO_AUTH.status,
+      statusText: NO_AUTH.result,
+    });
 
-  var json = await request.json();
+  const isAdmin = await checkAdmin(session);
+  if (!isAdmin)
+    return NextResponse.json(NOT_ADMIN, {
+      status: NOT_ADMIN.status,
+      statusText: NOT_ADMIN.result,
+    });
 
-  if (json.id == null) return NextResponse.error();
+  let result: APIResult = {
+    success: true,
+    status: 200,
+    result: undefined,
+  };
 
-  const result = await prisma.chip.delete({
-    where: {
-      id: json.id,
-    },
+  var json = await request.json().catch((e) => {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "JSON Body could not be parsed"];
+    console.log(result.result);
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
   });
+  if (json instanceof NextResponse) return json;
 
-  return NextResponse.json({ result });
+  if (json.id == null) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "ID Missing"];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  result.result = await prisma.chip
+    .delete({
+      where: {
+        id: json.id,
+      },
+    })
+    .catch((e) => {
+      result.success = false;
+      result.status = 500;
+      return e.meta.cause;
+    });
+
+  return NextResponse.json(result, { status: result.status });
+}
+
+// Create a chip
+export async function POST(request: NextRequest) {
+  const session = await getServerSession();
+  if (session == null)
+    return NextResponse.json(NO_AUTH, {
+      status: NO_AUTH.status,
+      statusText: NO_AUTH.result,
+    });
+
+  const isAdmin = await checkAdmin(session);
+  if (!isAdmin)
+    return NextResponse.json(NOT_ADMIN, {
+      status: NOT_ADMIN.status,
+      statusText: NOT_ADMIN.result,
+    });
+
+  let result: APIResult = {
+    success: true,
+    status: 200,
+    result: undefined,
+  };
+
+  var json = await request.json().catch((e) => {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "JSON Body could not be parsed"];
+    console.log(result.result);
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  });
+  if (json instanceof NextResponse) return json;
+
+  if (json.id == null || json.userId == null) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [
+      result.result,
+      json.id == null ? "ID Missing" : undefined,
+      json.userId == null ? "User ID Missing" : undefined,
+    ];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  result.result = await prisma.chip
+    .create({
+      data: {
+        id: json.id,
+        userId: parseInt(json.userId),
+      },
+    })
+    .catch((e) => {
+      result.success = false;
+      result.status = 500;
+      return e.meta.cause;
+    });
+
+  return NextResponse.json(result, { status: result.status });
+}
+
+// Update a chip
+export async function PUT(request: NextRequest) {
+  const session = await getServerSession();
+  if (session == null)
+    return NextResponse.json(NO_AUTH, {
+      status: NO_AUTH.status,
+      statusText: NO_AUTH.result,
+    });
+
+  const isAdmin = await checkAdmin(session);
+  if (!isAdmin)
+    return NextResponse.json(NOT_ADMIN, {
+      status: NOT_ADMIN.status,
+      statusText: NOT_ADMIN.result,
+    });
+
+  let result: APIResult = {
+    success: true,
+    status: 200,
+    result: undefined,
+  };
+
+  var json = await request.json().catch((e) => {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "JSON Body could not be parsed"];
+    console.log(result.result);
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  });
+  if (json instanceof NextResponse) return json;
+
+  if (json.id == null || json.userId == null) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [
+      result.result,
+      json.id == null ? "ID Missing" : undefined,
+      json.userId == null ? "User ID Missing" : undefined,
+    ];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  result.result = await prisma.chip
+    .update({
+      where: {
+        id: json.id,
+      },
+      data: {
+        userId: parseInt(json.userId),
+      },
+    })
+    .catch((e) => {
+      result.success = false;
+      result.status = 500;
+      return e.meta.cause;
+    });
+
+  return NextResponse.json(result, { status: result.status });
 }

@@ -15,7 +15,7 @@ export default function ChipAdd({ users }: { users: UserMinimal[] }) {
 
   function sendRequest() {
     fetch("/api/chip", {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify({
         id: id,
         userId: user,
