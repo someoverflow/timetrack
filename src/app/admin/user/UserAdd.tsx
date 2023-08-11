@@ -77,7 +77,7 @@ export default function UserAdd() {
               className="input input-block"
               type="text"
               name="Name"
-              id="name"
+              id="userAdd-login-name"
               placeholder="Max Mustermann"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -88,7 +88,7 @@ export default function UserAdd() {
               className="input input-block"
               type="text"
               name="Name"
-              id="name"
+              id="userAdd-username"
               placeholder="maxmust"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -99,7 +99,7 @@ export default function UserAdd() {
               className="input input-block"
               type="password"
               name="Password"
-              id="password"
+              id="userAdd-password"
               placeholder="#SuperSecure123"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -112,7 +112,7 @@ export default function UserAdd() {
               className="input input-block"
               type="email"
               name="Mail"
-              id="mail"
+              id="userAdd-mail"
               placeholder="max@muster.com"
               value={mail}
               onChange={(e) => setMail(e.target.value)}
@@ -121,7 +121,7 @@ export default function UserAdd() {
             <select
               className="select select-block"
               name="role"
-              id="role-select"
+              id="userAdd-role-select"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >

@@ -108,7 +108,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
               className="input input-block"
               type="text"
               name="DisplayName"
-              id={`userEdit-dname-${user.id}`}
+              id={`userEdit-login-name-${user.id}`}
               placeholder={user.name !== "?" ? user.name : "Max Mustermann"}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
