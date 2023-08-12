@@ -47,9 +47,11 @@ const days = [
 
 export default function TimerInfo({
   data,
+  edit,
   errorHandler,
 }: {
   data: TimerWithDate;
+  edit: boolean;
   errorHandler: (error: string) => void;
 }) {
   const [notes, setNotes] = useState(data.notes ? data.notes : "");
@@ -63,7 +65,7 @@ export default function TimerInfo({
       : new Date().toLocaleString("sv").replace(" ", "T")
   );
 
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(edit);
   const [blockVisible, setBlockVisible] = useState(false);
 
   const [dragProgress, setDragProgress] = useState(0);
@@ -144,7 +146,10 @@ export default function TimerInfo({
 
   const trailingAction = () => (
     <TrailingActions>
-      <SwipeAction destructive={true} onClick={() => sendDeleteRequest()}>
+      <SwipeAction
+        destructive={true}
+        onClick={() => setTimeout(() => sendDeleteRequest(), 500)}
+      >
         <div className="flex flex-row items-center justify-between w-full h-full p-2">
           {/*
           <p className="font-mono text-xs whitespace-nowrap overflow-hidden">
@@ -172,6 +177,7 @@ export default function TimerInfo({
         onSwipeProgress={(progress) => setDragProgress(progress)}
         trailingActions={trailingAction()}
         threshold={0.5}
+        className="p-1"
       >
         <div
           className="w-full font-mono bg-backgroundSecondary rounded-md text-center border border-border hover:border-backgroundPrimary cursor-pointer"

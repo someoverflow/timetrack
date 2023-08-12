@@ -4,7 +4,7 @@ import "@/lib/types";
 
 import { useCallback, useEffect, useState } from "react";
 
-import { History, PlayCircle, StopCircle, Menu } from "lucide-react";
+import { History, PlayCircle, StopCircle, Menu, X } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
 
@@ -15,6 +15,9 @@ export default function TimerSection() {
   const [loaded, setLoaded] = useState(false);
   const [firstRun, setFirstRun] = useState(false);
   const [running, setRunning] = useState(false);
+
+  const [changeModal, setChangeModal] = useState(false);
+  const [changeTimer, setChangeTimer] = useState<number | undefined>();
 
   const [error, setError] = useState<ErrorDetails | undefined>();
 
@@ -104,6 +107,9 @@ export default function TimerSection() {
 
       setRunning(true);
     } else {
+      setChangeTimer(currentTimer?.id);
+      setChangeModal(true);
+
       setRunning(false);
 
       setFetchedTimer(undefined);
@@ -166,7 +172,7 @@ export default function TimerSection() {
             </label>
             {(!loaded && (
               <>
-                <button className="btn btn-rounded btn-loading">
+                <button className="btn btn-rounded btn-lg btn-loading">
                   Updating
                   {/* <DownloadCloud className="w-1/2 h-1/2" /> */}
                 </button>
@@ -179,7 +185,7 @@ export default function TimerSection() {
                     data-tooltip="Start now with Website"
                   >
                     <button
-                      className="btn btn-solid-success btn-rounded font-mono gap-2"
+                      className="btn btn-solid-success btn-rounded btn-lg font-mono gap-2"
                       onClick={() => toggleTimer(true)}
                     >
                       <PlayCircle className="w-1/2 h-1/2" />
@@ -192,7 +198,7 @@ export default function TimerSection() {
                     data-tooltip={`Started with ${currentTimer?.startType}`}
                   >
                     <button
-                      className="btn btn-solid-error btn-rounded font-mono gap-2"
+                      className="btn btn-solid-error btn-rounded btn-lg font-mono gap-2"
                       onClick={() => toggleTimer(false)}
                     >
                       <StopCircle className="w-1/2 h-1/2" />
@@ -221,6 +227,43 @@ export default function TimerSection() {
             {(running && currentTimer?.end && (
               <p className="text-content2">{currentTimer?.end + ""}</p>
             )) || <div className="skeleton h-6 w-1/4 rounded-lg"></div>}
+          </div>
+        </div>
+      </div>
+
+      <input
+        className="modal-state"
+        id="editlast-modal"
+        type="checkbox"
+        checked={changeModal}
+        onChange={(e) => setChangeModal(e.target.checked)}
+      />
+      <div className="modal">
+        <label className="modal-overlay" htmlFor="editlast-modal"></label>
+        <div className="modal-content flex flex-col gap-5">
+          <label
+            htmlFor="editlast-modal"
+            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          >
+            <X className="w-1/2 h-1/2" />
+          </label>
+          <h2 className="text-xl">Edit?</h2>
+          <p className="flex flex-col text-content2">
+            <span>You have just stopped a timer.</span>
+            <span>Do you want to edit it directly now?</span>
+          </p>
+          <div className="flex gap-3">
+            <label htmlFor="editlast-modal" className="btn btn-solid-error">
+              Close
+            </label>
+
+            <Link
+              href={`/history?edit=${changeTimer}`}
+              prefetch={false}
+              className="btn btn-solid-primary btn-block"
+            >
+              Edit Now
+            </Link>
           </div>
         </div>
       </div>

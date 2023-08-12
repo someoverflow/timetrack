@@ -6,7 +6,7 @@ import { getTotalTime } from "@/lib/utils";
 
 import { FileDown } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 const TimerInfo = dynamic(() => import("./TimerInfo"), { ssr: false });
@@ -57,6 +57,8 @@ export default function TimerHistory({
   const keys = Object.keys(history);
 
   const router = useRouter();
+
+  const editTime = useSearchParams().get("edit");
 
   useEffect(() => router.refresh(), [router]);
   useEffect(() => {
@@ -114,21 +116,16 @@ export default function TimerHistory({
               </button>
             </div>
             <div className="w-full p-1 rounded-md border border-border">
-              {history[yearMonth].map((time) => {
-                return (
-                  <div
-                    className="p-1"
-                    key={`timerHistory-${yearMonth}-${time.id}`}
-                  >
-                    <TimerInfo
-                      errorHandler={(e) => {
-                        console.log(e);
-                      }}
-                      data={time}
-                    />{" "}
-                  </div>
-                );
-              })}
+              {history[yearMonth].map((time) => (
+                <TimerInfo
+                  key={`timerHistory-${yearMonth}-${time.id}`}
+                  errorHandler={(e) => {
+                    console.log(e);
+                  }}
+                  edit={parseInt(editTime + "") == time.id}
+                  data={time}
+                />
+              ))}
             </div>
           </section>
         );
