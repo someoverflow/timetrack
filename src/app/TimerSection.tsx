@@ -19,7 +19,7 @@ export default function TimerSection() {
   const [changeModal, setChangeModal] = useState(false);
   const [changeTimer, setChangeTimer] = useState<number | undefined>();
 
-  const [error, setError] = useState<ErrorDetails | undefined>();
+  const [error, setError] = useState<InfoDetails | undefined>();
 
   const count = useCallback(() => {
     if (!running) return;

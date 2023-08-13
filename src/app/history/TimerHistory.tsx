@@ -4,10 +4,17 @@ import "@/lib/types";
 
 import { getTotalTime } from "@/lib/utils";
 
-import { FileDown } from "lucide-react";
+import {
+  AlertCircle,
+  AlertOctagon,
+  AlertTriangle,
+  FileDown,
+  Info,
+  X,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const TimerInfo = dynamic(() => import("./TimerInfo"), { ssr: false });
 
@@ -52,9 +59,10 @@ export default function TimerHistory({
   data: TimerWithDate[];
   username: string;
 }) {
-  const history: Data = formatHistory(data);
+  const [info, setInfo] = useState<InfoDetails | undefined>();
 
-  const keys = Object.keys(history);
+  const history: Data = formatHistory(data);
+  const historyKeys = Object.keys(history);
 
   const router = useRouter();
 
@@ -89,7 +97,7 @@ export default function TimerHistory({
 
   return (
     <>
-      {keys.map((yearMonth) => {
+      {historyKeys.map((yearMonth) => {
         const timeStrings: string[] = [];
 
         history[yearMonth].forEach((e) => {
@@ -119,9 +127,7 @@ export default function TimerHistory({
               {history[yearMonth].map((time) => (
                 <TimerInfo
                   key={`timerHistory-${yearMonth}-${time.id}`}
-                  errorHandler={(e) => {
-                    console.log(e);
-                  }}
+                  infoHandler={(details) => setInfo(details)}
                   edit={parseInt(editTime + "") == time.id}
                   data={time}
                 />
@@ -130,6 +136,45 @@ export default function TimerHistory({
           </section>
         );
       })}
+
+      {info && (
+        <div className="fixed bottom-0 w-full p-2 max-w-lg">
+          <div
+            className={`w-full alert 
+            ${info.type == "info" && "alert-info"}
+            ${info.type == "warning" && "alert-warning"} 
+            ${info.type == "error" && "alert-error"}
+            `}
+          >
+            {info.type == "info" && (
+              <AlertCircle className="w-10 h-10 text-primary" />
+            )}
+            {info.type == "warning" && (
+              <AlertOctagon className="w-10 h-10 text-warning" />
+            )}
+            {info.type == "error" && (
+              <AlertTriangle className="w-10 h-10 text-error" />
+            )}
+
+            <div className="flex w-full justify-between items-center">
+              <div className="flex flex-col">
+                <span className="text-content1">{info.title}</span>
+                <span className="text-content2 text-sm">{info.content}</span>
+              </div>
+
+              {(info.type == "info" || info.type == "warning") && (
+                <button
+                  type="button"
+                  className="btn btn-circle btn-solid"
+                  onClick={() => setInfo(undefined)}
+                >
+                  <X className="w-1/2 h-1/2 text-content3" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

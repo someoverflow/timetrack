@@ -58,8 +58,8 @@ interface UserDetails {
   createdAt: Date;
 }
 
-interface ErrorDetails {
-  type: "error" | "warning";
+interface InfoDetails {
+  type: "info" | "warning" | "error";
   title: string;
   content: string;
 }

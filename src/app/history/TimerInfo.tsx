@@ -48,11 +48,11 @@ const days = [
 export default function TimerInfo({
   data,
   edit,
-  errorHandler,
+  infoHandler,
 }: {
   data: TimerWithDate;
   edit: boolean;
-  errorHandler: (error: string) => void;
+  infoHandler: (info: InfoDetails) => void;
 }) {
   const [notes, setNotes] = useState(data.notes ? data.notes : "");
 
@@ -109,16 +109,26 @@ export default function TimerInfo({
       body: JSON.stringify(request),
     })
       .then((result) => result.json())
-      .then((result) => {
-        if (result.result) {
+      .then((result: APIResult) => {
+        if (result.success) {
           setVisible(false);
 
+          infoHandler({
+            type: "info",
+            title: `Successfully updated ${data.id}`,
+            content: "",
+          });
+
           router.refresh();
-        }
-        console.log(result);
+        } else throw new Error(JSON.stringify(result));
       })
       .catch((e) => {
-        errorHandler(`Updating ${data.id}`);
+        infoHandler({
+          type: "error",
+          title: `An error occurred`,
+          content: `While updating ${data.id}. You could try it again.`,
+        });
+
         console.error(e);
       });
   }
@@ -135,11 +145,22 @@ export default function TimerInfo({
         if (result.result) {
           setVisible(false);
 
+          infoHandler({
+            type: "info",
+            title: `Successfully deleted ${data.id}`,
+            content: "",
+          });
+
           router.refresh();
-        }
+        } else throw new Error(JSON.stringify(result));
       })
       .catch((e) => {
-        errorHandler(`Deleting ${data.id}`);
+        infoHandler({
+          type: "error",
+          title: `An error occurred`,
+          content: `While deleting ${data.id}. You could try it again.`,
+        });
+
         console.error(e);
       });
   }

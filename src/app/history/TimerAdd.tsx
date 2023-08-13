@@ -19,6 +19,8 @@ export default function TimerAdd({ username }: { username: string }) {
   const router = useRouter();
 
   function sendRequest() {
+    setVisible(false);
+
     fetch("/api/times", {
       method: "POST",
       body: JSON.stringify({
@@ -31,17 +33,36 @@ export default function TimerAdd({ username }: { username: string }) {
       }),
     })
       .then((result) => result.json())
-      .then((result) => {
+      .then((result: APIResult) => {
+        if (!result.success) throw new Error(JSON.stringify(result));
+
+        /*
+        infoHandler({
+          type: "info",
+          title: `Successfully created ${result.result.id}`,
+          content: "",
+        }); 
+        */
+
         setStart(new Date().toLocaleString("sv").replace(" ", "T"));
         setEnd(new Date().toLocaleString("sv").replace(" ", "T"));
         setNotes("");
 
-        setVisible(false);
-
         router.refresh();
         console.log(result);
       })
-      .catch(console.error);
+      .catch((e) => {
+        /*
+        infoHandler({
+          type: "warning",
+          title: `An error occurred`,
+          content: `While creating. You could try it again.`,
+        });
+        */
+
+        router.refresh();
+        console.error(e);
+      });
   }
 
   return (
