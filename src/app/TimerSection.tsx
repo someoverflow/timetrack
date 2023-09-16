@@ -161,7 +161,7 @@ export default function TimerSection() {
 
   return (
     <>
-      <div className="w-[80vw] max-w-sm bg-backgroundSecondary rounded-xl border border-border p-2 pt-4 pb-4">
+      <div className="w-[80vw] max-w-sm bg-backgroundSecondary rounded-xl  p-2 pt-4 pb-4">
         <div className="w-full h-full flex flex-col items-center gap-6 pb-2">
           <div className="flex items-center flex-row gap-2">
             <label
