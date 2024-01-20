@@ -14,7 +14,7 @@ export default function ProfileSection({
     chips: { id: string; userId: number; createdAt: Date; updatedAt: Date }[];
   } | null;
 }) {
-  const [error, setError] = useState<ErrorDetails | undefined>();
+  const [error, setError] = useState<InfoDetails | undefined>();
 
   const defaultContent = "Try it again or try reloading the page";
 
