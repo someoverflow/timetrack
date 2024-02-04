@@ -2,27 +2,49 @@
 
 import "@/lib/types";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 
-import { History, PlayCircle, StopCircle, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import { toast } from "sonner";
+
+import { PlayCircle, RefreshCcw, StopCircle, X } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
 
 export default function TimerSection() {
+  const [data, updateData] = useReducer(
+    (prev: any, next: any) => ({
+      ...prev,
+      ...next,
+    }),
+    {
+      firstRun: false,
+      loaded: false,
+      running: false,
+      changeModal: false,
+      changeTimer: undefined,
+      stop: false,
+    }
+  );
+
   const [currentTimer, setCurrentTimer] = useState<Timer>();
   const [fetchedTimer, setFetchedTimer] = useState<Timer>();
 
-  const [loaded, setLoaded] = useState(false);
-  const [firstRun, setFirstRun] = useState(false);
-  const [running, setRunning] = useState(false);
-
-  const [changeModal, setChangeModal] = useState(false);
-  const [changeTimer, setChangeTimer] = useState<number | undefined>();
-
-  const [error, setError] = useState<InfoDetails | undefined>();
-
   const count = useCallback(() => {
-    if (!running) return;
+    if (!data.running) return;
     if (!currentTimer && !fetchedTimer) return;
 
     let result = JSON.parse(
@@ -46,29 +68,34 @@ export default function TimerSection() {
     result.time = timePassed;
 
     setCurrentTimer(result);
-  }, [currentTimer, fetchedTimer, running]);
+  }, [currentTimer, fetchedTimer, data.running]);
 
   const fetchCurrentTimer = useCallback(() => {
     fetch("/api/times?indicator=current")
       .then((result) => result.json())
       .then((result) => {
         if (result.success == false) {
-          setError({
-            type: "error",
-            title: "An error occurred while updating",
-            content: "Reloading the page could solve the problem",
+          updateData({
+            stop: true,
+          });
+          toast.error("An error occurred while updating", {
+            description: "Reloading the page could solve the problem",
           });
           console.error(result);
           return;
         }
 
-        if (!firstRun) {
-          setFirstRun(true);
-          setLoaded(true);
+        if (!data.firstRun) {
+          updateData({
+            firstRun: true,
+            loaded: true,
+          });
         }
 
         if (result.result.length == 0) {
-          setRunning(false);
+          updateData({
+            running: false,
+          });
 
           setFetchedTimer(undefined);
           setCurrentTimer(undefined);
@@ -76,22 +103,27 @@ export default function TimerSection() {
           let timer: Timer = result.result[0];
           setFetchedTimer(timer);
 
-          setRunning(true);
+          updateData({
+            running: true,
+          });
         }
         count();
       })
       .catch((e) => {
-        setError({
-          type: "error",
-          title: "An error occurred while updating",
-          content: "Reloading the page could solve the problem",
+        updateData({
+          stop: true,
+        });
+        toast.error("An error occurred while updating", {
+          description: "Reloading the page could solve the problem",
         });
         console.error(e);
       });
-  }, [firstRun, count]);
+  }, [data.firstRun, count]);
 
   function toggleTimer(start: boolean) {
-    setLoaded(false);
+    updateData({
+      loaded: false,
+    });
 
     let data: any = {
       id: 0,
@@ -105,12 +137,15 @@ export default function TimerSection() {
 
       count();
 
-      setRunning(true);
+      updateData({
+        running: true,
+      });
     } else {
-      setChangeTimer(currentTimer?.id);
-      setChangeModal(true);
-
-      setRunning(false);
+      updateData({
+        changeModal: true,
+        changeTimer: currentTimer?.id,
+        running: true,
+      });
 
       setFetchedTimer(undefined);
       setCurrentTimer(undefined);
@@ -124,15 +159,21 @@ export default function TimerSection() {
     )
       .then((result) => result.json())
       .then(() => {
-        setLoaded(true);
+        updateData({
+          loaded: true,
+        });
         if (start) fetchCurrentTimer();
       })
       .catch((e) => {
-        setError({
-          type: "warning",
-          title: `An error occurred while ${start ? "starting" : "stopping"}`,
-          content: "Reloading the page could solve the problem",
+        updateData({
+          stop: true,
         });
+        toast.warning(
+          `An error occurred while ${start ? "starting" : "stopping"}`,
+          {
+            description: "Reloading the page could solve the problem",
+          }
+        );
         console.error(e);
       });
   }
@@ -146,97 +187,110 @@ export default function TimerSection() {
   // Request Effect
   useEffect(() => {
     const requestIntervalId = setInterval(() => {
-      if (!error) fetchCurrentTimer();
+      if (!data.stop) fetchCurrentTimer();
     }, 10000);
     return () => clearInterval(requestIntervalId);
-  }, [error, fetchCurrentTimer]);
+  }, [data.stop, fetchCurrentTimer]);
 
   // Timer Effect
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (!error && running) count();
+      if (!data.stop && data.running) count();
     }, 500);
     return () => clearInterval(intervalId);
-  }, [error, running, count]);
+  }, [data.stop, data.running, count]);
 
   return (
     <>
-      <div className="w-[80vw] max-w-sm bg-backgroundSecondary rounded-xl  p-2 pt-4 pb-4">
-        <div className="w-full h-full flex flex-col items-center gap-6 pb-2">
-          <div className="flex items-center flex-row gap-2">
-            <label
-              htmlFor="sidebar-mobile-fixed"
-              className="btn btn-outline btn-circle "
-            >
-              <Menu className="w-1/2 h-1/2" />
-            </label>
-            {(!loaded && (
-              <>
-                <button className="btn btn-rounded btn-lg btn-loading">
-                  Updating
-                  {/* <DownloadCloud className="w-1/2 h-1/2" /> */}
-                </button>
-              </>
-            )) || (
-              <>
-                {(!running && (
-                  <span
-                    className="tooltip tooltip-bottom"
-                    data-tooltip="Start now with Website"
-                  >
-                    <button
-                      className="btn btn-solid-success btn-rounded btn-lg font-mono gap-2"
-                      onClick={() => toggleTimer(true)}
+      <div>
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Title</CardTitle>
+            <CardDescription>
+              Deploy your new project in one-click.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full flex items-center flex-row gap-2">
+              {(!data.loaded && (
+                <>
+                  <Button className="btn-lg btn-loading" disabled>
+                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                    Updating
+                  </Button>
+                </>
+              )) || (
+                <>
+                  {(!data.running && (
+                    <span
+                      className="tooltip tooltip-bottom"
+                      data-tooltip="Start now with Website"
                     >
-                      <PlayCircle className="w-1/2 h-1/2" />
-                      <p>Start</p>
-                    </button>
-                  </span>
-                )) || (
-                  <span
-                    className="tooltip tooltip-bottom"
-                    data-tooltip={`Started with ${currentTimer?.startType}`}
-                  >
-                    <button
-                      className="btn btn-solid-error btn-rounded btn-lg font-mono gap-2"
-                      onClick={() => toggleTimer(false)}
+                      <Button
+                        className="font-mono"
+                        onClick={() => toggleTimer(true)}
+                      >
+                        <PlayCircle className="mr-2 h-4 w-4" />
+                        <p>Start</p>
+                      </Button>
+                    </span>
+                  )) || (
+                    <span
+                      className="tooltip tooltip-bottom"
+                      data-tooltip={`Started with ${currentTimer?.startType}`}
                     >
-                      <StopCircle className="w-1/2 h-1/2" />
-                      <p>Stop</p>
-                    </button>
-                  </span>
-                )}
-              </>
-            )}
-            <Link href="/history" className="btn btn-solid-primary btn-circle">
-              <History className="w-1/2 h-1/2" />
-            </Link>
-          </div>
+                      <Button
+                        className="font-mono"
+                        onClick={() => toggleTimer(false)}
+                      >
+                        <StopCircle className="mr-2 h-4 w-4" />
+                        <p>Stop</p>
+                      </Button>
+                    </span>
+                  )}
+                </>
+              )}
+              {/* <Link
+                  href="/history"
+                  className="btn btn-solid-primary btn-circle"
+                >
+                  <History className="w-1/2 h-1/2" />
+                </Link> */}
+            </div>
 
-          <h1 className="text-5xl font-bold font-mono">
-            {running && currentTimer?.time ? currentTimer?.time : "00:00:00"}
-          </h1>
+            <div className="w-full h-full flex flex-col items-center gap-6 pb-2">
+              <h1 className="text-5xl font-bold font-mono">
+                {data.running && currentTimer?.time
+                  ? currentTimer?.time
+                  : "00:00:00"}
+              </h1>
 
-          <div className="flex w-full justify-center gap-4">
-            {(running && currentTimer?.start && (
-              <p className="text-content2">{currentTimer?.start + ""}</p>
-            )) || <div className="skeleton h-6 w-1/4 rounded-lg"></div>}
+              <div className="flex w-full justify-center items-center gap-4">
+                {(data.running && currentTimer?.start && (
+                  <p className="text-muted-foreground">
+                    {currentTimer?.start + ""}
+                  </p>
+                )) || <Skeleton className=" h-6 w-1/4 rounded-lg" />}
 
-            <div className="divider divider-vertical mx-0 h-6"></div>
+                <Separator orientation="vertical" className="h-5" />
 
-            {(running && currentTimer?.end && (
-              <p className="text-content2">{currentTimer?.end + ""}</p>
-            )) || <div className="skeleton h-6 w-1/4 rounded-lg"></div>}
-          </div>
-        </div>
+                {(data.running && currentTimer?.end && (
+                  <p className="text-muted-foreground">
+                    {currentTimer?.end + ""}
+                  </p>
+                )) || <Skeleton className=" h-6 w-1/4 rounded-lg" />}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <input
         className="modal-state"
         id="editlast-modal"
         type="checkbox"
-        checked={changeModal}
-        onChange={(e) => setChangeModal(e.target.checked)}
+        checked={data.changeModal}
+        onChange={(e) => updateData({ changeModal: e.target.checked })}
       />
       <div className="modal">
         <label className="modal-overlay" htmlFor="editlast-modal"></label>
@@ -258,7 +312,7 @@ export default function TimerSection() {
             </label>
 
             <Link
-              href={`/history?edit=${changeTimer}`}
+              href={`/history?edit=${data.changeTimer}`}
               prefetch={false}
               className="btn btn-solid-primary btn-block"
             >
@@ -267,23 +321,6 @@ export default function TimerSection() {
           </div>
         </div>
       </div>
-
-      {error && (
-        <>
-          <div
-            className={`absolute max-w-sm w-[95vw] bottom-2 alert ${
-              error.type == "warning" && "alert-warning"
-            } ${error.type == "error" && "alert-error"}`}
-          >
-            <div className="flex flex-col">
-              <span className="text-content1 text-base font-bold">
-                {error.title}
-              </span>
-              <span className="text-content2 text-sm">{error.content}</span>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }

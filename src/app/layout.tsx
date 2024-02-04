@@ -1,6 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { SessionProvider } from "../lib/provider";
+
+import { Toaster } from "@/components/ui/sonner"
+
+import { ThemeProvider } from "@/lib/theme-provider";
+import { SessionProvider } from "@/lib/provider";
 
 export const metadata: Metadata = {
   title: "Time Track",
@@ -13,9 +17,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SessionProvider>
+            {children}
+            <Toaster />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
