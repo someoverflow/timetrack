@@ -1,8 +1,8 @@
 import "./globals.css";
 import type { Metadata } from "next";
 
-import { Toaster } from "@/components/ui/sonner"
-
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SessionProvider } from "@/lib/provider";
 
@@ -21,8 +21,10 @@ export default async function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SessionProvider>
-            {children}
-            <Toaster />
+            <TooltipProvider>
+              {children}
+              <Toaster />
+            </TooltipProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>
