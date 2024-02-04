@@ -1,6 +1,20 @@
 "use client";
 
+// UI
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
 import { XCircle } from "lucide-react";
+
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -24,8 +38,30 @@ export default function SignIn() {
   }
 
   return (
-    <main>
-      <section className="min-h-screen flex flex-col items-center justify-center gap-4">
+    <main className="min-h-dvh flex flex-col items-center justify-center">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Create project</CardTitle>
+          <CardDescription>Deploy your new project in one-click.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" placeholder="Name of your project" />
+              </div>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline">Cancel</Button>
+          <Button>Deploy</Button>
+        </CardFooter>
+      </Card>
+
+      {/**
+       <section className="min-h-screen flex flex-col items-center justify-center gap-4">
         <div className="text-center font-mono text-4xl">Sign In</div>
         <form
           onSubmit={(e) => {
@@ -74,6 +110,7 @@ export default function SignIn() {
           </>
         )}
       </section>
+       */}
     </main>
   );
 }
