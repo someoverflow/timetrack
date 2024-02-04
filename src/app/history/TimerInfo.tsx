@@ -20,7 +20,26 @@ import {
   SwipeAction,
   TrailingActions,
 } from "react-swipeable-list";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import "react-swipeable-list/dist/styles.css";
+import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function getIcon(timer: TimerWithDate, start: boolean) {
   switch (start ? timer.startType : timer.endType) {
@@ -48,11 +67,9 @@ const days = [
 export default function TimerInfo({
   data,
   edit,
-  infoHandler,
 }: {
   data: TimerWithDate;
   edit: boolean;
-  infoHandler: (info: InfoDetails) => void;
 }) {
   const [notes, setNotes] = useState(data.notes ? data.notes : "");
 
@@ -112,23 +129,14 @@ export default function TimerInfo({
       .then((result: APIResult) => {
         if (result.success) {
           setVisible(false);
-
-          infoHandler({
-            type: "info",
-            title: `Successfully updated ${data.id}`,
-            content: "",
-          });
-
+          toast.success(`Successfully updated ${data.id}`);
           router.refresh();
         } else throw new Error(JSON.stringify(result));
       })
       .catch((e) => {
-        infoHandler({
-          type: "error",
-          title: `An error occurred`,
-          content: `While updating ${data.id}. You could try it again.`,
+        toast.error("An error occurred", {
+          description: `While updating ${data.id}. You could try it again.`,
         });
-
         console.error(e);
       });
   }
@@ -144,48 +152,17 @@ export default function TimerInfo({
       .then((result) => {
         if (result.result) {
           setVisible(false);
-
-          infoHandler({
-            type: "info",
-            title: `Successfully deleted ${data.id}`,
-            content: "",
-          });
-
+          toast.info(`Successfully deleted ${data.id}`);
           router.refresh();
         } else throw new Error(JSON.stringify(result));
       })
       .catch((e) => {
-        infoHandler({
-          type: "error",
-          title: `An error occurred`,
-          content: `While deleting ${data.id}. You could try it again.`,
+        toast.error("An error occurred", {
+          description: `While deleting ${data.id}. You could try it again.`,
         });
-
         console.error(e);
       });
   }
-
-  const trailingAction = () => (
-    <TrailingActions>
-      <SwipeAction
-        destructive={true}
-        onClick={() => setTimeout(() => sendDeleteRequest(), 500)}
-      >
-        <div className="flex flex-row items-center justify-between w-full h-full p-2">
-          {/*
-          <p className="font-mono text-xs whitespace-nowrap overflow-hidden">
-            {dragProgress < 50 ? "" : "delete"}
-          </p>
-           */}
-          <Trash2
-            className={`w-1/2 h-1/2 transition-all duration-200 ${
-              dragProgress > 50 ? "text-error" : "text-warning scale-50"
-            }`}
-          />
-        </div>
-      </SwipeAction>
-    </TrailingActions>
-  );
 
   return (
     <>
@@ -196,7 +173,22 @@ export default function TimerInfo({
           setTimeout(() => setBlockVisible(false), 500);
         }}
         onSwipeProgress={(progress) => setDragProgress(progress)}
-        trailingActions={trailingAction()}
+        trailingActions={
+          <TrailingActions>
+            <SwipeAction
+              destructive={true}
+              onClick={() => setTimeout(() => sendDeleteRequest(), 500)}
+            >
+              <div className="flex flex-row items-center justify-between w-full h-full p-2">
+                <Trash2
+                  className={`h-1/2 w-1/2 transition-all duration-200 ${
+                    dragProgress > 50 ? "text-error" : "text-warning scale-50"
+                  }`}
+                />
+              </div>
+            </SwipeAction>
+          </TrailingActions>
+        }
         threshold={0.5}
         className="p-1"
       >
@@ -215,15 +207,21 @@ export default function TimerInfo({
 
             <p>{data.start.toLocaleTimeString()}</p>
 
-            <div className="divider w-1/12"></div>
+            <Separator orientation="horizontal" className="w-1/12" />
 
             <p>{data.end.toLocaleTimeString()}</p>
 
             {getIcon(data, false)}
           </div>
-          <p className={`text-sm text-content2 ${data.notes ? "" : "pb-2"}`}>
+
+          <p
+            className={`text-sm text-muted-foreground ${
+              data.notes ? "" : "pb-2"
+            }`}
+          >
             {data.time}
           </p>
+
           {data.notes && (
             <>
               <div className="flex flex-row items-center p-1 pt-0 gap-1">
@@ -238,88 +236,107 @@ export default function TimerInfo({
         </div>
       </SwipeableListItem>
 
-      <input
-        className="modal-state"
-        id={`timerModal-${data.id}`}
-        type="checkbox"
-        checked={visible}
-        onChange={(e) => setVisible(e.target.checked)}
-      />
-      <section className="modal">
-        <label
-          className="modal-overlay"
-          htmlFor={`timerModal-${data.id}`}
-        ></label>
-        <div className="modal-content border border-border flex flex-col w-[95%] max-w-xl">
-          <div className="w-full flex flex-row justify-between items-center">
-            <h2 className="text-xl text-content1">
-              Edit <span className="badge badge-flat-primary">{data.time}</span>
-            </h2>
-            <div>
-              <label
-                htmlFor={`timerModal-${data.id}`}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
-                <XCircle className="w-1/2 h-1/2" />
-              </label>
-            </div>
+      <AlertDialog
+        key={`timerModal-${data.id}`}
+        open={visible}
+        onOpenChange={(e) => setVisible(e)}
+      >
+        <AlertDialogContent className="w-[95%] max-w-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex flex-row items-center justify-between">
+              <div>Edit tracked time</div>
+              <AlertDialogCancel asChild>
+                <Button variant="ghost" size="icon">
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </AlertDialogCancel>
+            </AlertDialogTitle>
+            <AlertDialogDescription></AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-2 min-h-[45dvh]">
+            <Tabs defaultValue="notes" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+                <TabsTrigger value="time">Time</TabsTrigger>
+              </TabsList>
+              <TabsContent value="notes">
+                <Separator orientation="horizontal" className="w-full" />
+                <div className="grid w-full gap-1.5 py-2">
+                  <Label
+                    htmlFor={`timerModal-notes-${data.id}`}
+                    className="text-muted-foreground"
+                  >
+                    Notes
+                  </Label>
+                  <Textarea
+                    id={`timerModal-notes-${data.id}`}
+                    className="min-h-[25dvh] max-h-[55dvh]"
+                    spellCheck={true}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="time">
+                <Separator orientation="horizontal" className="w-full" />
+                <div className="grid gap-4 py-2">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label
+                      htmlFor="name"
+                      className="text-right text-muted-foreground"
+                    >
+                      Start
+                    </Label>
+                    <Input
+                      className="col-span-3 font-mono"
+                      type="datetime-local"
+                      name="Updated"
+                      id="updated"
+                      step={1}
+                      value={start}
+                      onChange={(e) => setStart(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label
+                      htmlFor="username"
+                      className="text-right text-muted-foreground"
+                    >
+                      End
+                    </Label>
+                    <Input
+                      className="col-span-3 font-mono"
+                      type="datetime-local"
+                      name="Created"
+                      id="created"
+                      step={1}
+                      value={end}
+                      onChange={(e) => setEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <div className="divider"></div>
+          <Separator orientation="horizontal" className="w-full" />
 
-          <div className="w-full flex flex-col gap-2">
-            <p className="pl-2 text-content2 text-left">Notes</p>
-            <textarea
-              className="textarea textarea-block min-h-[25vh]"
-              spellCheck={true}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-
-          <div className="divider"></div>
-
-          <div className="flex flex-col gap-2">
-            <p className="pl-2 text-content2 text-left">Start</p>
-            <input
-              className="input input-block"
-              type="datetime-local"
-              name="Updated"
-              id="updated"
-              step={1}
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-            />
-            <p className="pl-2 text-content2 text-left">End</p>
-            <input
-              className="input input-block"
-              type="datetime-local"
-              name="Created"
-              id="created"
-              step={1}
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-            />
-          </div>
-
-          <div className="divider"></div>
-
-          <div className="w-full flex flex-row justify-center gap-2">
-            <button
-              className="btn btn-solid-error btn-circle"
-              onClick={() => sendDeleteRequest()}
-            >
-              <Trash className="w-1/2 h-1/2" />
-            </button>
-            <button
-              className="btn btn-solid-success btn-circle"
-              onClick={() => sendRequest()}
-            >
-              <SaveAll className="w-1/2 h-1/2" />
-            </button>
-          </div>
-        </div>
-      </section>
+          <AlertDialogFooter>
+            <AlertDialogAction asChild variant="destructive">
+              <Button onClick={() => sendDeleteRequest()}>
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </AlertDialogAction>
+            <AlertDialogAction asChild variant="outline">
+              <Button onClick={() => sendRequest()}>
+                <SaveAll className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

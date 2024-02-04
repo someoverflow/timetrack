@@ -42,7 +42,7 @@ export default async function History() {
           <Header text="History" />
         </div>
 
-        <TimerAdd username={session?.user?.name + ""} />
+        {/* <TimerAdd username={session?.user?.name + ""} /> */}
 
         {dataFound() ? (
           <TimerHistory data={history} username={session?.user?.name + ""} />

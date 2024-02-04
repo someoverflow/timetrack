@@ -29,6 +29,9 @@ export default async function Navigation({
 
   return (
     <main>
+      {children}
+      {/**
+       
       <div className="flex flex-row">
         <div className={!toggle ? "sm:w-full sm:max-w-[18rem]" : ""}>
           <input
@@ -144,8 +147,9 @@ export default async function Navigation({
           </aside>
         </div>
 
-        <div className="w-full">{children}</div>
+        <div className="w-full"></div>
       </div>
+       */}
     </main>
   );
 }
