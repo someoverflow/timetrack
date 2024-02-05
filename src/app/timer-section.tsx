@@ -222,7 +222,7 @@ export default function TimerSection() {
           </CardHeader>
           <CardContent>
             <div className="w-full h-full flex flex-col items-center gap-6 pb-2">
-              <h1 className="text-5xl font-bold font-mono select-none">
+              <h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
                 {data.running && currentTimer?.time
                   ? currentTimer?.time
                   : "00:00:00"}
@@ -322,18 +322,22 @@ function CurrentTimerTime({
   if (running && currentTimer) {
     return (
       <div className="flex w-full justify-center items-center gap-4">
-        <p className="text-muted-foreground">{currentTimer.start + ""}</p>
+        <p className="text-muted-foreground text-center h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
+          {currentTimer.start + ""}
+        </p>
         <Separator orientation="vertical" className="h-5" />
-        <p className="text-muted-foreground">{currentTimer.end + ""}</p>
+        <p className="text-muted-foreground text-center h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
+          {currentTimer.end + ""}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="flex w-full justify-center items-center gap-4">
-      <Skeleton className=" h-6 w-1/4 rounded-lg" />
+      <Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
       <Separator orientation="vertical" className="h-5" />
-      <Skeleton className=" h-6 w-1/4 rounded-lg" />
+      <Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
     </div>
   );
 }
