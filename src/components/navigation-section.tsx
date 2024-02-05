@@ -23,6 +23,7 @@ import {
 import { useTheme } from "next-themes";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function NavigationSection({
   user,
@@ -34,19 +35,20 @@ export default function NavigationSection({
   } | null;
 }) {
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
 
   return (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger asChild>
-          <Link className="hover:bg-accent !cursor-pointer" href="/">
+          <Link href="/" className={`${pathname == "/" ? "bg-accent" : "hover:bg-accent"} !cursor-pointer`}>
             <Home className="h-5 w-5" />
           </Link>
         </MenubarTrigger>
       </MenubarMenu>
       <MenubarMenu>
         <MenubarTrigger asChild>
-          <Link className="hover:bg-accent !cursor-pointer" href="/history">
+          <Link href="/history" className={`${pathname == "/history" ? "bg-accent" : "hover:bg-accent"} !cursor-pointer`}>
             <History className="h-5 w-5" />
           </Link>
         </MenubarTrigger>

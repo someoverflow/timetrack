@@ -20,8 +20,10 @@ export default function SignIn() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function start() {
+    setLoading(true);
     var result = await signIn("credentials", {
       username: username,
       password: password,
@@ -42,6 +44,7 @@ export default function SignIn() {
       toast.error("No result data", {
         description: "Try again now or later",
       });
+    setLoading(false);
   }
 
   return (
@@ -49,7 +52,6 @@ export default function SignIn() {
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
-          {/* <CardDescription></CardDescription> */}
         </CardHeader>
         <CardContent>
           <form
@@ -78,8 +80,8 @@ export default function SignIn() {
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </div>
-              <Button type="submit" variant="outline">
-                Signin
+              <Button type="submit" variant="outline" disabled={loading}>
+                Sign In
               </Button>
             </div>
           </form>
