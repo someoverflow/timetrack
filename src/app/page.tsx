@@ -1,4 +1,4 @@
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/navigation";
 import TimerSection from "./TimerSection";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";

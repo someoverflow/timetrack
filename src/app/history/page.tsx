@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/navigation";
 
 import TimerHistory from "./TimerHistory";
 import TimerAdd from "./TimerAdd";
