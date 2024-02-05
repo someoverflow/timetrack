@@ -5,8 +5,6 @@ import "@/lib/types";
 import { useCallback, useEffect, useReducer, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Tooltip,
@@ -209,27 +206,6 @@ export default function TimerSection() {
     return () => clearInterval(intervalId);
   }, [data.stop, data.running, count]);
 
-  // Bottom Section
-  function CurrentTimerTimeA() {
-    if (data.running && currentTimer) {
-      return (
-        <div className="flex w-full justify-center items-center gap-4">
-          <p className="text-muted-foreground">{currentTimer.start + ""}</p>
-          <Separator orientation="vertical" className="h-5" />
-          <p className="text-muted-foreground">{currentTimer.end + ""}</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex w-full justify-center items-center gap-4">
-        <Skeleton className=" h-6 w-1/4 rounded-lg" />
-        <Separator orientation="vertical" className="h-5" />
-        <Skeleton className=" h-6 w-1/4 rounded-lg" />
-      </div>
-    );
-  }
-
   return (
     <>
       <div>
@@ -242,12 +218,6 @@ export default function TimerSection() {
                 startType={currentTimer?.startType + ""}
                 toggleTimer={toggleTimer}
               />
-              {/* <Link
-                  href="/history"
-                  className="btn btn-solid-primary btn-circle"
-                >
-                  <History className="w-1/2 h-1/2" />
-                </Link> */}
             </div>
           </CardHeader>
           <CardContent>
