@@ -29,7 +29,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import "react-swipeable-list/dist/styles.css";
@@ -89,17 +88,16 @@ export default function TimerInfo({
 
   const router = useRouter();
 
-  if (!data.end)
+  if (!data.end) {
     return (
-      <>
-        <div
-          className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1"
-          onClick={() => setVisible(!visible)}
-        >
-          <p className="text-sm text-content2">Running Timer</p>
-        </div>
-      </>
+      <div
+        className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1"
+        onClick={() => setVisible(!visible)}
+      >
+        <p className="text-sm text-muted-foreground">Running Timer</p>
+      </div>
     );
+  }
 
   function sendRequest() {
     let request: any = {
@@ -164,6 +162,8 @@ export default function TimerInfo({
       });
   }
 
+  // TODO: Visualize changes
+
   return (
     <>
       <SwipeableListItem
@@ -193,7 +193,7 @@ export default function TimerInfo({
         className="p-1"
       >
         <div
-          className="w-full font-mono bg-backgroundSecondary rounded-md text-center border border-border hover:border-backgroundPrimary cursor-pointer"
+          className="w-full font-mono rounded-md text-center border border-border hover:border-ring cursor-pointer"
           onClick={() => {
             if (!blockVisible) setVisible(true);
           }}
@@ -312,6 +312,22 @@ export default function TimerInfo({
                       step={1}
                       value={end}
                       onChange={(e) => setEnd(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label
+                      htmlFor="id"
+                      className="text-right text-muted-foreground"
+                    >
+                      ID
+                    </Label>
+                    <Input
+                      disabled
+                      className="col-span-3 font-mono"
+                      type="number"
+                      name="Id"
+                      id="id"
+                      value={data.id}
                     />
                   </div>
                 </div>

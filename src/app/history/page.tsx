@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import Header from "@/components/Header";
 import Navigation from "@/components/navigation";
 
-import TimerHistory from "./TimerHistory";
+import TimerSection from "./timer-section";
 import TimerAdd from "./TimerAdd";
 
 import { Session, getServerSession } from "next-auth";
@@ -45,7 +45,7 @@ export default async function History() {
         {/* <TimerAdd username={session?.user?.name + ""} /> */}
 
         {dataFound() ? (
-          <TimerHistory data={history} username={session?.user?.name + ""} />
+          <TimerSection data={history} />
         ) : (
           <p className="font-mono font-bold text-base">No data found</p>
         )}
