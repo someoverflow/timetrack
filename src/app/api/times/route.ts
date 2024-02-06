@@ -137,6 +137,21 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  const startDate = new Date(Date.parse(json.start));
+  const endDate = new Date(Date.parse(json.end));
+  if (endDate < startDate) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "The end time is before the start time"];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  const timePassed = getTimePassed(startDate, endDate);
+
   let dbUser: string | undefined;
 
   if (user?.username == json.username) dbUser = user?.username;
@@ -172,10 +187,6 @@ export async function POST(request: NextRequest) {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
     });
-
-  const startDate = new Date(Date.parse(json.start));
-  const endDate = new Date(Date.parse(json.end));
-  const timePassed = getTimePassed(startDate, endDate);
 
   result.result = await prisma.times
     .create({
@@ -283,6 +294,18 @@ export async function PUT(request: NextRequest) {
   if (json.start && json.end) {
     const startDate = new Date(Date.parse(json.start));
     const endDate = new Date(Date.parse(json.end));
+
+    if (endDate < startDate) {
+      result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+      result.result = [result.result, "The end time is before the start time"];
+
+      return NextResponse.json(result, {
+        status: BAD_REQUEST.status,
+        statusText: BAD_REQUEST.result,
+      });
+    }
+
     const timePassed = getTimePassed(startDate, endDate);
 
     if (startDate.getTime() != timer?.start.getTime()) {
