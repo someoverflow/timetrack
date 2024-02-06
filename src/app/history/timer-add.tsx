@@ -45,12 +45,12 @@ export default function TimerAdd({
 
   const router = useRouter();
 
-  function sendRequest() {
+  async function sendRequest() {
     setData({
       loading: true,
     });
 
-    fetch("/api/times", {
+    const result = await fetch("/api/times", {
       method: "POST",
       body: JSON.stringify({
         username: username,
@@ -60,31 +60,51 @@ export default function TimerAdd({
         startType: "Website",
         endType: "Website",
       }),
-    })
-      .then((result) => result.json())
-      .then((result: APIResult) => {
-        if (!result.success) throw new Error(JSON.stringify(result));
+    });
 
-        toast.success("Successfully created new entry");
+    setData({
+      loading: false,
+    });
 
-        setData({
-          start: new Date().toLocaleString("sv").replace(" ", "T"),
-          end: new Date().toLocaleString("sv").replace(" ", "T"),
-          notes: "",
-        });
-        setVisible(false);
-
-        router.refresh();
-        console.log(result);
-      })
-      .catch((e) => {
-        toast.warning("An error occurred", {
-          description: "While creating entry. You could try it again.",
-        });
-
-        router.refresh();
-        console.error(e);
+    if (result.ok) {
+      setData({
+        start: new Date().toLocaleString("sv").replace(" ", "T"),
+        end: new Date().toLocaleString("sv").replace(" ", "T"),
+        notes: "",
       });
+      setVisible(false);
+
+      toast.success("Successfully created new entry", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json();
+    if (!resultData) {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    }
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
   }
 
   return (
@@ -169,12 +189,15 @@ export default function TimerAdd({
         <Separator orientation="horizontal" className="w-full" />
 
         <AlertDialogFooter>
-          <AlertDialogAction asChild variant="outline">
-            <Button onClick={() => sendRequest()}>
-              <SaveAll className="mr-2 h-4 w-4" />
-              Create Entry
-            </Button>
-          </AlertDialogAction>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => sendRequest()}
+            disabled={data.loading}
+          >
+            <SaveAll className="mr-2 h-4 w-4" />
+            Create Entry
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

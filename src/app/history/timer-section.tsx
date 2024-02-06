@@ -24,6 +24,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -128,7 +129,7 @@ export default function TimerSection({
 
   return (
     <section
-      className="w-full max-w-md flex flex-col items-start"
+      className="w-full max-w-md max-h-[80dvh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
       key={yearMonth}
     >
       <div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
@@ -182,7 +183,7 @@ export default function TimerSection({
           <Tooltip delayDuration={500}>
             <TooltipTrigger asChild>
               <Button
-                variant="secondary"
+                variant="outline"
                 size="icon"
                 onClick={() => downloadCSV(yearMonth, totalTime)}
               >
@@ -219,7 +220,10 @@ export default function TimerSection({
           />
         </div>
       </div>
-      <div className="w-full p-1 rounded-md border border-border animate__animated animate__fadeIn">
+      <ScrollArea
+        className="h-[80dvh] w-full rounded-sm border p-1.5 overflow-hidden"
+        type="scroll"
+      >
         {history[yearMonth].map((time) => (
           <TimerInfo
             key={`timerHistory-${yearMonth}-${time.id}`}
@@ -227,7 +231,7 @@ export default function TimerSection({
             data={time}
           />
         ))}
-      </div>
+      </ScrollArea>
     </section>
   );
 }

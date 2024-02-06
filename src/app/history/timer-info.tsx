@@ -2,18 +2,9 @@
 
 import "@/lib/types";
 
-import {
-  AppWindow,
-  Diamond,
-  HelpCircle,
-  SaveAll,
-  Terminal,
-  Trash,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { SaveAll, Trash, Trash2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 import {
   SwipeableListItem,
@@ -40,19 +31,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-function getIcon(timer: TimerWithDate, start: boolean) {
-  switch (start ? timer.startType : timer.endType) {
-    case "Website":
-      return <AppWindow className="w-4 h-4" />;
-    case "Chip":
-      return <Diamond className="w-4 h-4" />;
-    case "API":
-      return <Terminal className="w-4 h-4" />;
-    default:
-      return <HelpCircle className="w-4 h-4" />;
-  }
-}
-
 const days = [
   "Sunday",
   "Monday",
@@ -70,18 +48,34 @@ export default function TimerInfo({
   data: TimerWithDate;
   edit: boolean;
 }) {
-  const [notes, setNotes] = useState(data.notes ? data.notes : "");
-
-  const [start, setStart] = useState(
-    data.start.toLocaleString("sv").replace(" ", "T")
-  );
-  const [end, setEnd] = useState(
-    data.end
-      ? data.end.toLocaleString("sv").replace(" ", "T")
-      : new Date().toLocaleString("sv").replace(" ", "T")
+  const [state, setState] = useReducer(
+    (prev: any, next: any) => ({
+      ...prev,
+      ...next,
+    }),
+    {
+      notes: data.notes ? data.notes : "",
+      start: data.start.toLocaleString("sv").replace(" ", "T"),
+      end: data.end
+        ? data.end.toLocaleString("sv").replace(" ", "T")
+        : new Date().toLocaleString("sv").replace(" ", "T"),
+      loading: false,
+    }
   );
 
   const [visible, setVisible] = useState(edit);
+  useEffect(() => {
+    if (visible) {
+      setState({
+        notes: data.notes ? data.notes : "",
+        start: data.start.toLocaleString("sv").replace(" ", "T"),
+        end: data.end
+          ? data.end.toLocaleString("sv").replace(" ", "T")
+          : new Date().toLocaleString("sv").replace(" ", "T"),
+      });
+    }
+  }, [visible]);
+
   const [blockVisible, setBlockVisible] = useState(false);
 
   const [dragProgress, setDragProgress] = useState(0);
@@ -91,7 +85,7 @@ export default function TimerInfo({
   if (!data.end) {
     return (
       <div
-        className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1"
+        className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1 animate__animated animate__fadeIn"
         onClick={() => setVisible(!visible)}
       >
         <p className="text-sm text-muted-foreground">Running Timer</p>
@@ -99,70 +93,135 @@ export default function TimerInfo({
     );
   }
 
-  function sendRequest() {
+  async function sendRequest() {
+    setState({
+      loading: true,
+    });
+
     let request: any = {
       id: data.id,
-      notes: notes,
+      notes: state.notes,
     };
 
     let startChanged =
-      start !== data.start.toLocaleString("sv").replace(" ", "T");
-    let endChanged = end !== data.end?.toLocaleString("sv").replace(" ", "T");
+      state.start !== data.start.toLocaleString("sv").replace(" ", "T");
+    let endChanged =
+      state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
 
     if (startChanged || endChanged) {
       if (startChanged) request.startType = "Website";
       if (endChanged) request.endType = "Website";
 
-      if (start.trim() !== "") request.start = new Date(start).toUTCString();
-      else return;
-      if (end.trim() !== "") request.end = new Date(end).toUTCString();
-      else return;
+      if (state.start.trim() == "" || state.end.trim() == "") {
+        toast.warning("Missing data", {
+          description: "Start or End time not set",
+        });
+        setState({
+          loading: false,
+        });
+        return;
+      }
+
+      request.start = new Date(state.start).toUTCString();
+      request.end = new Date(state.end).toUTCString();
     }
 
-    fetch("/api/times", {
+    const result = await fetch("/api/times", {
       method: "PUT",
       body: JSON.stringify(request),
-    })
-      .then((result) => result.json())
-      .then((result: APIResult) => {
-        if (result.success) {
-          setVisible(false);
-          toast.success(`Successfully updated ${data.id}`);
-          router.refresh();
-        } else throw new Error(JSON.stringify(result));
-      })
-      .catch((e) => {
-        toast.error("An error occurred", {
-          description: `While updating ${data.id}. You could try it again.`,
-        });
-        console.error(e);
+    });
+
+    setState({
+      loading: false,
+    });
+
+    if (result.ok) {
+      setVisible(false);
+
+      toast.success("Successfully updated entry", {
+        duration: 3000,
       });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json();
+    if (!resultData) {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    }
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
   }
 
-  function sendDeleteRequest() {
-    fetch("/api/times", {
+  async function sendDeleteRequest() {
+    setState({
+      loading: true,
+    });
+
+    const result = await fetch("/api/times", {
       method: "DELETE",
       body: JSON.stringify({
         id: data.id,
       }),
-    })
-      .then((result) => result.json())
-      .then((result) => {
-        if (result.result) {
-          setVisible(false);
-          toast.info(`Successfully deleted ${data.id}`);
-          router.refresh();
-        } else throw new Error(JSON.stringify(result));
-      })
-      .catch((e) => {
-        toast.error("An error occurred", {
-          description: `While deleting ${data.id}. You could try it again.`,
-        });
-        console.error(e);
-      });
-  }
+    });
 
-  // TODO: Visualize changes
+    setState({
+      loading: false,
+    });
+
+    if (result.ok) {
+      setVisible(false);
+
+      toast.success("Successfully deleted entry", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json();
+    if (!resultData) {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    }
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
+  }
 
   return (
     <>
@@ -181,7 +240,7 @@ export default function TimerInfo({
             >
               <div className="flex flex-row items-center justify-between w-full h-full p-2">
                 <Trash2
-                  className={`h-1/2 w-1/2 transition-all duration-200 ${
+                  className={`text-destructive h-1/2 w-1/2 transition-all duration-200 ${
                     dragProgress > 50 ? "text-error" : "text-warning scale-50"
                   }`}
                 />
@@ -193,38 +252,30 @@ export default function TimerInfo({
         className="p-1"
       >
         <div
-          className="w-full font-mono select-none rounded-md text-center border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
+          className="w-full font-mono p-4 md:py-3 select-none rounded-sm text-center border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
           onClick={() => {
             if (!blockVisible) setVisible(true);
           }}
         >
-          <p className="text-content3 text-xs text-left pt-1 pl-3">
-            {days[data.start.getDay()]} ({data.start.getDate()})
+          <p className="font-semibold text-xs text-muted-foreground text-left pb-2">
+            {`${data.start.getDate().toString().padStart(2, "0")}.${(
+              data.start.getMonth() + 1
+            )
+              .toString()
+              .padStart(2, "0")} ${days[data.start.getDay()]}`}
           </p>
 
-          <div className="flex flex-row justify-evenly items-center">
-            {getIcon(data, true)}
-
+          <div className="flex flex-row justify-evenly items-center text-lg">
             <p>{data.start.toLocaleTimeString()}</p>
-
-            <Separator orientation="horizontal" className="w-1/12" />
-
+            <Separator orientation="horizontal" className="w-[5%]" />
             <p>{data.end.toLocaleTimeString()}</p>
-
-            {getIcon(data, false)}
           </div>
 
-          <p
-            className={`text-sm text-muted-foreground ${
-              data.notes ? "" : "pb-2"
-            }`}
-          >
-            {data.time}
-          </p>
+          <p className="text-xs text-muted-foreground">{data.time!}</p>
 
           {data.notes && (
             <>
-              <div className="flex flex-row items-center p-1 pt-0 gap-1">
+              <div className="flex flex-row items-center p-2 gap-1">
                 <div className="divider divider-vertical h-3 w-2 ml-0 mr-0"></div>
                 <p className="text-xs text-content3 text-left">
                   {data.notes?.split("\n")[0]}
@@ -268,10 +319,13 @@ export default function TimerInfo({
                   </Label>
                   <Textarea
                     id={`timerModal-notes-${data.id}`}
-                    className="min-h-[25dvh] max-h-[55dvh]"
+                    className={`min-h-[25dvh] max-h-[55dvh] border-2 transition-all duration-300 ${
+                      state.notes != (data.notes ? data.notes : "") &&
+                      "border-sky-700"
+                    }`}
                     spellCheck={true}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    value={state.notes}
+                    onChange={(e) => setState({ notes: e.target.value })}
                   />
                 </div>
               </TabsContent>
@@ -286,13 +340,17 @@ export default function TimerInfo({
                       Start
                     </Label>
                     <Input
-                      className="w-full font-mono"
+                      className={`w-full font-mono border-2 transition-all duration-300 ${
+                        state.start !=
+                          data.start.toLocaleString("sv").replace(" ", "T") &&
+                        "border-sky-700"
+                      }`}
                       type="datetime-local"
                       name="Updated"
                       id="updated"
                       step={1}
-                      value={start}
-                      onChange={(e) => setStart(e.target.value)}
+                      value={state.start}
+                      onChange={(e) => setState({ start: e.target.value })}
                     />
                   </div>
                   <div className="grid w-full items-center gap-1.5">
@@ -303,20 +361,62 @@ export default function TimerInfo({
                       End
                     </Label>
                     <Input
-                      className="w-full font-mono"
+                      className={`w-full font-mono border-2 transition-all duration-300 ${
+                        state.end !=
+                          (data.end
+                            ? data.end.toLocaleString("sv").replace(" ", "T")
+                            : new Date()
+                                .toLocaleString("sv")
+                                .replace(" ", "T")) && "border-sky-700"
+                      }`}
                       type="datetime-local"
                       name="Created"
                       id="created"
                       step={1}
-                      value={end}
-                      onChange={(e) => setEnd(e.target.value)}
+                      value={state.end}
+                      onChange={(e) => setState({ end: e.target.value })}
+                    />
+                  </div>
+
+                  <div id="divider" className="h-1" />
+
+                  <div className="grid w-full items-center gap-1.5">
+                    <Label
+                      htmlFor="start-w"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      Started with
+                    </Label>
+                    <Input
+                      disabled
+                      className="w-full font-mono"
+                      type="text"
+                      name="started-with"
+                      id="start-w"
+                      value={data.startType + ""}
                     />
                   </div>
                   <div className="grid w-full items-center gap-1.5">
                     <Label
-                      htmlFor="id"
+                      htmlFor="stopped-w"
                       className="pl-2 text-muted-foreground"
                     >
+                      Stopped with
+                    </Label>
+                    <Input
+                      disabled
+                      className="w-full font-mono"
+                      type="text"
+                      name="stopped-with"
+                      id="stopped-w"
+                      value={data.endType + ""}
+                    />
+                  </div>
+
+                  <div id="divider" className="h-1" />
+
+                  <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="id" className="pl-2 text-muted-foreground">
                       ID
                     </Label>
                     <Input
@@ -336,18 +436,22 @@ export default function TimerInfo({
           <Separator orientation="horizontal" className="w-full" />
 
           <AlertDialogFooter>
-            <AlertDialogAction asChild variant="destructive">
-              <Button onClick={() => sendDeleteRequest()}>
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </AlertDialogAction>
-            <AlertDialogAction asChild variant="outline">
-              <Button onClick={() => sendRequest()}>
-                <SaveAll className="mr-2 h-4 w-4" />
-                Save Changes
-              </Button>
-            </AlertDialogAction>
+            <Button
+              variant="destructive"
+              onClick={() => sendDeleteRequest()}
+              disabled={state.loading}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => sendRequest()}
+              disabled={state.loading}
+            >
+              <SaveAll className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
