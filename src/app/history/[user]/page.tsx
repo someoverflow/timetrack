@@ -1,9 +1,7 @@
 import prisma from "@/lib/prisma";
-import Header from "@/components/Header";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/navigation";
 
-import TimerHistory from "../TimerHistory";
-import TimerAdd from "../TimerAdd";
+import TimerSection from "../timer-section";
 
 import { getServerSession } from "next-auth";
 import { Metadata } from "next";
@@ -25,7 +23,7 @@ async function getHistory(
   const history = await prisma.times.findMany({
     orderBy: {
       //id: "desc",
-      start: "asc",
+      start: "desc",
     },
     where: {
       user: user?.username,
@@ -75,21 +73,22 @@ export default async function History({
   return (
     <Navigation>
       <section className="w-full min-h-screen flex flex-col items-center gap-4 p-4">
-        <div className="w-full font-mono text-left">
-          <Header text={`History of ${target?.name} (${target?.username})`} />
+        <div className="w-full font-mono text-center pt-2">
+          <p className="text-2xl font-mono">{`History of ${
+            target ? target.name : "?"
+          }`}</p>
         </div>
+
         {history != null ? (
           <>
-            <TimerAdd username={target?.username + ""} />
-
             {dataFound() ? (
-              <TimerHistory data={history} username={target?.username + ""} />
+              <TimerSection data={history} username={target?.username + ""} />
             ) : (
               <p className="font-mono font-bold text-xl">No data found</p>
             )}
           </>
         ) : (
-          <p className="font-mono font-bold text-xl">User not found</p>
+          <p className="font-mono font-bold text-4xl">User not found</p>
         )}
       </section>
     </Navigation>
