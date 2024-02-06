@@ -18,7 +18,7 @@ export default async function Home() {
 
   return (
     <Navigation>
-      <section className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <section className="min-h-[100dvh] flex flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-mono text-content3">
           {userDetails?.name !== "?"
             ? userDetails?.name

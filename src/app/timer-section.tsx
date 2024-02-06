@@ -285,13 +285,17 @@ function ToggleSection({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button className="font-mono" onClick={() => toggleTimer(false)}>
+          <Button
+            variant="destructive"
+            className="font-mono"
+            onClick={() => toggleTimer(false)}
+          >
             <StopCircle className="mr-2 h-4 w-4" />
             <p>Stop</p>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{`Started with ${startType}`}</p>
+          <p>Started with {startType}</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -300,7 +304,11 @@ function ToggleSection({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button className="font-mono" onClick={() => toggleTimer(true)}>
+        <Button
+          variant="secondary"
+          className="font-mono"
+          onClick={() => toggleTimer(true)}
+        >
           <PlayCircle className="mr-2 h-4 w-4" />
           <p>Start</p>
         </Button>

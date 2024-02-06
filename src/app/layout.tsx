@@ -23,7 +23,7 @@ export default async function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SessionProvider>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={100}>
               {children}
               <Toaster />
             </TooltipProvider>
