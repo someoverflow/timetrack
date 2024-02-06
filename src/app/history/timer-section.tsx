@@ -18,7 +18,7 @@ import {
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const TimerInfo = dynamic(() => import("./TimerInfo"), { ssr: false });
+const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 interface Data {
   [yearMonth: string]: TimerWithDate[];
@@ -144,7 +144,7 @@ export default function TimerSection({ data }: { data: TimerWithDate[] }) {
           </Button>
         </div>
       </div>
-      <div className="w-full p-1 rounded-md border border-border">
+      <div className="w-full p-1 rounded-md border border-border animate__animated animate__fadeIn">
         {history[yearMonth].map((time) => (
           <TimerInfo
             key={`timerHistory-${yearMonth}-${time.id}`}

@@ -193,7 +193,7 @@ export default function TimerInfo({
         className="p-1"
       >
         <div
-          className="w-full font-mono rounded-md text-center border border-border hover:border-ring cursor-pointer"
+          className="w-full font-mono rounded-md text-center border border-border hover:border-ring cursor-pointer animate__animated animate__slideInLeft"
           onClick={() => {
             if (!blockVisible) setVisible(true);
           }}
@@ -241,14 +241,12 @@ export default function TimerInfo({
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <AlertDialogContent className="w-[95%] max-w-xl">
+        <AlertDialogContent className="w-[95%] max-w-xl rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex flex-row items-center justify-between">
               <div>Edit tracked time</div>
-              <AlertDialogCancel asChild>
-                <Button variant="ghost" size="icon">
-                  <XCircle className="w-4 h-4" />
-                </Button>
+              <AlertDialogCancel variant="ghost" size="icon">
+                <XCircle className="w-5 h-5" />
               </AlertDialogCancel>
             </AlertDialogTitle>
             <AlertDialogDescription></AlertDialogDescription>
