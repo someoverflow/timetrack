@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import Navigation from "@/components/navigation";
 
 import TimerSection from "./timer-section";
-import TimerAdd from "./TimerAdd";
 
 import { Session, getServerSession } from "next-auth";
 import { Metadata } from "next";
@@ -42,10 +41,8 @@ export default async function History() {
           <Header text="History" />
         </div>
 
-        {/* <TimerAdd username={session?.user?.name + ""} /> */}
-
         {dataFound() ? (
-          <TimerSection data={history} />
+          <TimerSection data={history} username={session?.user?.name!} />
         ) : (
           <p className="font-mono font-bold text-base">No data found</p>
         )}

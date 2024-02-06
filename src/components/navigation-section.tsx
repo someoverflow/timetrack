@@ -36,6 +36,7 @@ export default function NavigationSection({
         <MenubarTrigger asChild>
           <Link
             href="/"
+            prefetch={true}
             className={`${
               pathname == "/" ? "bg-accent" : "hover:bg-accent"
             } !cursor-pointer aspect-square !p-2`}
@@ -48,6 +49,7 @@ export default function NavigationSection({
         <MenubarTrigger asChild>
           <Link
             href="/history"
+            prefetch={true}
             className={`${
               pathname == "/history" ? "bg-accent" : "hover:bg-accent"
             } !cursor-pointer aspect-square !p-2`}
@@ -62,7 +64,9 @@ export default function NavigationSection({
         </MenubarTrigger>
         <MenubarContent>
           <MenubarItem asChild>
-            <Link href="/profile">Profile</Link>
+            <Link href="/profile" prefetch={true}>
+              Profile
+            </Link>
           </MenubarItem>
           <MenubarItem onClick={() => signOut()}>Sign Out</MenubarItem>
 

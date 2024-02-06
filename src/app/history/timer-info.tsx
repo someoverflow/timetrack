@@ -193,7 +193,7 @@ export default function TimerInfo({
         className="p-1"
       >
         <div
-          className="w-full font-mono rounded-md text-center border border-border hover:border-ring cursor-pointer animate__animated animate__slideInLeft"
+          className="w-full font-mono select-none rounded-md text-center border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
           onClick={() => {
             if (!blockVisible) setVisible(true);
           }}
@@ -244,7 +244,7 @@ export default function TimerInfo({
         <AlertDialogContent className="w-[95%] max-w-xl rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex flex-row items-center justify-between">
-              <div>Edit tracked time</div>
+              <div>Edit entry</div>
               <AlertDialogCancel variant="ghost" size="icon">
                 <XCircle className="w-5 h-5" />
               </AlertDialogCancel>
@@ -259,10 +259,10 @@ export default function TimerInfo({
               </TabsList>
               <TabsContent value="notes">
                 <Separator orientation="horizontal" className="w-full" />
-                <div className="grid w-full gap-1.5 py-2">
+                <div className="grid w-full gap-1.5 py-4">
                   <Label
                     htmlFor={`timerModal-notes-${data.id}`}
-                    className="text-muted-foreground"
+                    className="text-muted-foreground pl-2"
                   >
                     Notes
                   </Label>
@@ -277,16 +277,16 @@ export default function TimerInfo({
               </TabsContent>
               <TabsContent value="time">
                 <Separator orientation="horizontal" className="w-full" />
-                <div className="grid gap-4 py-2">
-                  <div className="grid grid-cols-4 items-center gap-4">
+                <div className="grid gap-4 py-4 w-full">
+                  <div className="grid w-full items-center gap-1.5">
                     <Label
                       htmlFor="name"
-                      className="text-right text-muted-foreground"
+                      className="pl-2 text-muted-foreground"
                     >
                       Start
                     </Label>
                     <Input
-                      className="col-span-3 font-mono"
+                      className="w-full font-mono"
                       type="datetime-local"
                       name="Updated"
                       id="updated"
@@ -295,15 +295,15 @@ export default function TimerInfo({
                       onChange={(e) => setStart(e.target.value)}
                     />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="grid w-full items-center gap-1.5">
                     <Label
                       htmlFor="username"
-                      className="text-right text-muted-foreground"
+                      className="pl-2 text-muted-foreground"
                     >
                       End
                     </Label>
                     <Input
-                      className="col-span-3 font-mono"
+                      className="w-full font-mono"
                       type="datetime-local"
                       name="Created"
                       id="created"
@@ -312,16 +312,16 @@ export default function TimerInfo({
                       onChange={(e) => setEnd(e.target.value)}
                     />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="grid w-full items-center gap-1.5">
                     <Label
                       htmlFor="id"
-                      className="text-right text-muted-foreground"
+                      className="pl-2 text-muted-foreground"
                     >
                       ID
                     </Label>
                     <Input
                       disabled
-                      className="col-span-3 font-mono"
+                      className="w-full font-mono"
                       type="number"
                       name="Id"
                       id="id"

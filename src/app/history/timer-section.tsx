@@ -2,22 +2,34 @@
 
 import "@/lib/types";
 
-import { getTotalTime } from "@/lib/utils";
+import { cn, getTotalTime } from "@/lib/utils";
 
-import { FileDown } from "lucide-react";
+import { Check, ChevronDown, FileDown, ListPlus, Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
 
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import TimerAdd from "./timer-add";
+import React, { useState } from "react";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 interface Data {
@@ -54,7 +66,13 @@ function formatHistory(data: TimerWithDate[]): Data {
   return result;
 }
 
-export default function TimerSection({ data }: { data: TimerWithDate[] }) {
+export default function TimerSection({
+  data,
+  username,
+}: {
+  data: TimerWithDate[];
+  username: string;
+}) {
   const history: Data = formatHistory(data);
   const historyKeys = Object.keys(history);
 
@@ -64,6 +82,8 @@ export default function TimerSection({ data }: { data: TimerWithDate[] }) {
   const searchParams = useSearchParams();
   const editTime = searchParams.get("edit");
   const yearMonth = searchParams.get("ym");
+
+  const [editVisible, setEditVisible] = useState(false);
 
   function changeYearMonth(change: string) {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -113,35 +133,90 @@ export default function TimerSection({ data }: { data: TimerWithDate[] }) {
     >
       <div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
         <div className="font-bold w-full">
-          <Select value={yearMonth} onValueChange={changeYearMonth}>
-            <SelectTrigger>
-              <div className="flex flex-row items-center justify-start gap-2">
-                <SelectValue />
-                <p className="font-mono text-muted-foreground">({totalTime})</p>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {historyKeys.map((key) => (
-                <SelectItem
-                  key={`history-${key}`}
-                  value={key}
-                  className="font-mono"
-                >
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-full justify-between"
+              >
+                <div className="flex flex-row items-center justify-start gap-2">
+                  {yearMonth}
+                  <p className="font-mono text-muted-foreground">
+                    ({totalTime})
+                  </p>
+                </div>
+                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-1">
+              <Command>
+                <CommandInput
+                  placeholder="Search year/month..."
+                  className="h-8"
+                />
+                <CommandEmpty>No data found.</CommandEmpty>
+                <CommandGroup>
+                  {historyKeys.map((key) => (
+                    <CommandItem
+                      key={`history-${key}`}
+                      value={key}
+                      className="font-mono"
+                      onSelect={() => changeYearMonth(key)}
+                    >
+                      {key}
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          yearMonth === key ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="w-max">
-          {/** TODO: Tooltip */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => downloadCSV(yearMonth, totalTime)}
-          >
-            <FileDown className="h-4 w-4" />
-          </Button>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => downloadCSV(yearMonth, totalTime)}
+              >
+                <FileDown className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-center">
+                Download a <code>.csv</code> containing all
+                <br /> the current visible entries
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <div className="w-max">
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setEditVisible(true)}
+              >
+                <ListPlus className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-center">Add a new entry</p>
+            </TooltipContent>
+          </Tooltip>
+          <TimerAdd
+            username={username}
+            visible={editVisible}
+            setVisible={setEditVisible}
+          />
         </div>
       </div>
       <div className="w-full p-1 rounded-md border border-border animate__animated animate__fadeIn">
