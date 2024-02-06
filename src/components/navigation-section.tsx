@@ -12,14 +12,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 
-import {
-  History,
-  Home,
-  Moon,
-  Sun,
-  SunMoon,
-  User,
-} from "lucide-react";
+import { History, Moon, Sun, SunMoon, Timer, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -38,24 +31,34 @@ export default function NavigationSection({
   const pathname = usePathname();
 
   return (
-    <Menubar>
+    <Menubar className="h-13">
       <MenubarMenu>
         <MenubarTrigger asChild>
-          <Link href="/" className={`${pathname == "/" ? "bg-accent" : "hover:bg-accent"} !cursor-pointer`}>
-            <Home className="h-5 w-5" />
+          <Link
+            href="/"
+            className={`${
+              pathname == "/" ? "bg-accent" : "hover:bg-accent"
+            } !cursor-pointer aspect-square !p-2`}
+          >
+            <Timer className="h-6 w-6" />
           </Link>
         </MenubarTrigger>
       </MenubarMenu>
       <MenubarMenu>
         <MenubarTrigger asChild>
-          <Link href="/history" className={`${pathname == "/history" ? "bg-accent" : "hover:bg-accent"} !cursor-pointer`}>
-            <History className="h-5 w-5" />
+          <Link
+            href="/history"
+            className={`${
+              pathname == "/history" ? "bg-accent" : "hover:bg-accent"
+            } !cursor-pointer aspect-square !p-2`}
+          >
+            <History className="h-6 w-6" />
           </Link>
         </MenubarTrigger>
       </MenubarMenu>
       <MenubarMenu>
-        <MenubarTrigger className="hover:bg-accent !cursor-pointer">
-          <User className="h-5 w-5" />
+        <MenubarTrigger className="hover:!bg-accent !bg-background !cursor-pointer aspect-square !p-2">
+          <User className="h-6 w-6" />
         </MenubarTrigger>
         <MenubarContent>
           <MenubarItem asChild>
