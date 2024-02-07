@@ -81,15 +81,15 @@ export default function TimerAdd({
       return;
     }
 
-    const resultData: APIResult = await result.json();
-    if (!resultData) {
+    const resultData: APIResult = await result.json().catch(() => {
       toast.error("An error occurred", {
         description: "Result could not be proccessed",
         important: true,
         duration: 8000,
       });
       return;
-    }
+    });
+    if (!resultData) return;
 
     if (result.status == 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {

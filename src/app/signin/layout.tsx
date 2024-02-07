@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "Track your Time",
 };
 
-export default async function RootLayout({
+export default async function SignInLayout({
   children,
 }: {
   children: React.ReactNode;
