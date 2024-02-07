@@ -31,12 +31,9 @@ export async function PUT(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  var json = await request.json().catch(() => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
     result.result = [result.result, "JSON Body could not be parsed"];
-    console.log(result.result);
-
     return NextResponse.json(result, {
       status: BAD_REQUEST.status,
       statusText: BAD_REQUEST.result,
@@ -44,51 +41,77 @@ export async function PUT(request: NextRequest) {
   });
   if (json instanceof NextResponse) return json;
 
-  if (json.dbIndicator == null || json.value == null) {
+  const containsName = json.name != null;
+  const containsMail = json.mail != null;
+  const containsPassword = json.password != null;
+
+  if (!(containsName || containsMail || containsPassword)) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-    result.result = [
-      result.result,
-      json.dbIndicator == null ? "Indicator Missing" : undefined,
-      json.value == null ? "Value Missing" : undefined,
-    ];
-
+    result.result = [result.result, "Data missing (name, mail or password)"];
     return NextResponse.json(result, {
       status: BAD_REQUEST.status,
       statusText: BAD_REQUEST.result,
     });
   }
 
-  if (json.dbIndicator == "password" && !validatePassword(json.value)) {
-    result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-    result.result = [result.result, "Invalid Password"];
-
-    return NextResponse.json(result, {
-      status: BAD_REQUEST.status,
-      statusText: BAD_REQUEST.result,
-    });
-  }
-
-  const data = {
-    password:
-      json.dbIndicator == "password" ? await hash(json.value, 12) : undefined,
-    name: json.dbIndicator == "name" ? json.value : undefined,
-    email: json.dbIndicator == "email" ? json.value : undefined,
+  var data: {
+    password: string | undefined;
+    name: string | undefined;
+    email: string | undefined;
+  } = {
+    password: undefined,
+    name: undefined,
+    email: undefined,
   };
 
-  result.result = await prisma.user
+  if (containsName) {
+    const name: string = json.name;
+    if (name.trim() == "") {
+      result = JSON.parse(JSON.stringify(BAD_REQUEST));
+      result.result = [result.result, "Your name should not be empty..."];
+      return NextResponse.json(result, {
+        status: BAD_REQUEST.status,
+        statusText: BAD_REQUEST.result,
+      });
+    }
+    data.name = name;
+  }
+  if (containsMail) data.email = json.mail;
+  if (containsPassword) {
+    const password: string = json.password;
+
+    if (!validatePassword(json.value)) {
+      result = JSON.parse(JSON.stringify(BAD_REQUEST));
+      result.result = [
+        result.result,
+        "Invalid Password (8-20 chars, a-z, A-Z, 0-9)",
+      ];
+      return NextResponse.json(result, {
+        status: BAD_REQUEST.status,
+        statusText: BAD_REQUEST.result,
+      });
+    }
+
+    data.password = await hash(password, 12);
+  }
+
+  const res = await prisma.user
     .update({
       where: {
-        username: json.username,
+        username: session.user?.name!,
       },
       data: data,
+      select: {
+        id: true,
+        updatedAt: true,
+      },
     })
     .catch((e) => {
       result.success = false;
       result.status = 500;
-      return e.meta.cause;
+      return `System error "${e.message}"`;
     });
+  result.result = res;
 
   return NextResponse.json(result, { status: result.status });
 }
