@@ -1,20 +1,27 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import "@/lib/types";
 
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useReducer, useState } from "react";
 
 export default function UserEdit({ user }: { user: UserDetails }) {
-  const [username, setUsername] = useState(user.username);
-  const [displayName, setDisplayName] = useState(
-    user.name !== "?" ? user.name : ""
+  const [data, setData] = useReducer(
+    (prev: any, next: any) => ({
+      ...prev,
+      ...next,
+    }),
+    {
+      loading: false,
+      username: user.username,
+      displayName: user.name != "?" ? user.name : "",
+      mail: user.email,
+      role: user.role,
+      password: "",
+    }
   );
-  const [password, setPassword] = useState("");
-  const [mail, setMail] = useState(user.email);
-  const [role, setRole] = useState(user.role);
-
   const [visible, setVisible] = useState(false);
 
   const router = useRouter();
@@ -24,17 +31,19 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       method: "POST",
       body: JSON.stringify({
         id: user.id,
-        username: username,
-        displayName: displayName,
-        password: password.trim().length === 0 ? null : password,
-        mail: mail,
-        role: role,
+        username: data.username,
+        displayName: data.displayName,
+        mail: data.mail,
+        role: data.role,
+        password: data.password.trim().length === 0 ? undefined : data.password,
       }),
     })
       .then((result) => result.json())
       .then((result) => {
         if (result.result) {
-          setPassword("");
+          setData({
+            password: "",
+          });
           setVisible(false);
 
           router.refresh();
@@ -54,7 +63,9 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       .then((result) => result.json())
       .then((result) => {
         if (result.result) {
-          setPassword("");
+          setData({
+            password: "",
+          });
           setVisible(false);
 
           router.refresh();
@@ -66,11 +77,11 @@ export default function UserEdit({ user }: { user: UserDetails }) {
 
   return (
     <>
-      <label className="btn btn-circle" htmlFor={`userEdit-${user.id}`}>
-        <PencilRuler className="w-1/2 h-1/2" />
-      </label>
+      <Button variant="secondary" size="icon">
+        <PencilRuler className="h-5 w-5" />
+      </Button>
 
-      <input
+      {/* <input
         className="modal-state"
         id={`userEdit-${user.id}`}
         type="checkbox"
@@ -200,7 +211,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

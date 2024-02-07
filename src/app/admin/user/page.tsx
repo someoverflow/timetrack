@@ -1,17 +1,65 @@
 import prisma from "@/lib/prisma";
-import Header from "@/components/Header";
-import Navigation from "@/components/Navigation";
 
-import UserEdit from "./UserEdit";
-import UserAdd from "./UserAdd";
+import UserEdit from "./user-edit";
+
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { Eye } from "lucide-react";
 import { getServerSession } from "next-auth";
+import { cache } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import Navigation from "@/components/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import TableInfo from "./table-info";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-async function getUsers() {
+type User = {
+  id: number;
+  role: string;
+  name: string;
+  username: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+  chips: {
+    id: string;
+    userId: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+};
+
+export const getUserCount = cache(async () => {
+  const count = await prisma.user.count();
+  return count;
+});
+
+export const revalidate = 60;
+
+async function getUsers(skip: number, take: number) {
   return await prisma.user.findMany({
+    skip: skip,
+    take: take,
     select: {
       id: true,
       username: true,
@@ -23,67 +71,99 @@ async function getUsers() {
 
       updatedAt: true,
       createdAt: true,
+
+      _count: true,
     },
   });
 }
 
-export default async function AdminUserPage() {
+export default async function AdminUserPage({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: string;
+  };
+}) {
   const session = await getServerSession();
 
   if (session == null) return redirect("/");
-
   const user = await prisma.user.findUnique({
     where: {
       username: session.user?.name + "",
     },
   });
-
   if (user?.role != "admin") return redirect("/");
 
-  const users = await getUsers();
+  var currentPage = Number(searchParams?.page) || 1;
+
+  const userCount = await getUserCount();
+  const pages = Math.ceil(userCount / 15);
+
+  if (currentPage > pages) currentPage = pages;
+
+  const users = await getUsers(15 * (currentPage - 1), 15);
 
   return (
     <Navigation>
-      <section className="admin-main-section">
-        <div className="w-full font-mono text-left pb-4">
-          <Header text="Users" />
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
+        <div className="w-full font-mono text-center pt-2">
+          <p className="text-2xl font-mono">Users</p>
         </div>
-        <table className="admin-main-table">
-          <thead>
-            <tr>
-              <th>Login</th>
-              <th>Name</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((userData: any) => {
-              return (
-                <tr key={userData.id}>
-                  <td>
-                    <b>{userData.username}</b>
-                  </td>
-                  <td>{userData.name !== "?" ? userData.name : ""}</td>
-                  <td>
+
+        <ScrollArea
+          className="w-[90vw] max-w-xl h-[75svh] rounded-md border p-2.5"
+          type="scroll"
+        >
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Login</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((userData: User) => (
+                <TableRow key={userData.id}>
+                  <TableCell className="font-medium">
+                    {userData.username}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {userData.name}
+                  </TableCell>
+                  <TableCell className="text-right">
                     <div className="flex flex-row justify-end items-center gap-2">
                       <UserEdit user={userData} />
 
-                      <Link
-                        href={"/history/" + userData.username}
-                        className="btn btn-circle"
-                      >
-                        <Eye className="w-1/2 h-1/2" />
-                      </Link>
+                      <Button variant="secondary" size="icon" asChild>
+                        <Link href={"/history/" + userData.username}>
+                          <Eye className="w-5 h-5" />
+                        </Link>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={2} className="p-2">
+                  <p className="text-muted-foreground">{`${users.length}/${userCount} Users shown`}</p>
+                </TableCell>
+                <TableCell className="p-2">
+                  <TableInfo page={currentPage} pages={pages} />
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </ScrollArea>
+
+        {/*
         <section className="pt-4">
-          <UserAdd />
-        </section>
+        <UserAdd />
+      </section> 
+      */}
       </section>
     </Navigation>
   );
