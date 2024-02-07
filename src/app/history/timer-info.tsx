@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const days = [
   "Sunday",
@@ -302,140 +303,152 @@ export default function TimerInfo({
             </AlertDialogTitle>
             <AlertDialogDescription></AlertDialogDescription>
           </AlertDialogHeader>
+
           <div className="flex flex-col gap-2 min-h-[45dvh]">
-            <Tabs defaultValue="notes" className="w-full">
+            <Tabs defaultValue="notes" className="w-full items-start">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="notes">Notes</TabsTrigger>
                 <TabsTrigger value="time">Time</TabsTrigger>
               </TabsList>
               <TabsContent value="notes">
-                <Separator orientation="horizontal" className="w-full" />
-                <div className="grid w-full gap-1.5 py-4">
-                  <Label
-                    htmlFor={`timerModal-notes-${data.id}`}
-                    className="text-muted-foreground pl-2"
-                  >
-                    Notes
-                  </Label>
-                  <Textarea
-                    id={`timerModal-notes-${data.id}`}
-                    className={`min-h-[25dvh] max-h-[55dvh] border-2 transition-all duration-300 ${
-                      state.notes != (data.notes ? data.notes : "") &&
-                      "border-sky-700"
-                    }`}
-                    spellCheck={true}
-                    value={state.notes}
-                    onChange={(e) => setState({ notes: e.target.value })}
-                  />
-                </div>
+                <ScrollArea
+                  className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
+                  type="always"
+                >
+                  <div className="grid w-full py-1 gap-1.5">
+                    <Label
+                      htmlFor={`timerModal-notes-${data.id}`}
+                      className="text-muted-foreground pl-2"
+                    >
+                      Notes
+                    </Label>
+                    <div className="h-[35svh] p-1">
+                      <Textarea
+                        id={`timerModal-notes-${data.id}`}
+                        className={`h-full min-h-[10svh] max-h-[50svh] border-2 transition-all duration-300 ${
+                          state.notes != (data.notes ? data.notes : "") &&
+                          "border-sky-700"
+                        }`}
+                        spellCheck={true}
+                        value={state.notes}
+                        onChange={(e) => setState({ notes: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </ScrollArea>
               </TabsContent>
               <TabsContent value="time">
-                <Separator orientation="horizontal" className="w-full" />
-                <div className="grid gap-4 py-4 w-full">
-                  <div className="grid w-full items-center gap-1.5">
-                    <Label
-                      htmlFor="name"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      Start
-                    </Label>
-                    <Input
-                      className={`w-full font-mono border-2 transition-all duration-300 ${
-                        state.start !=
-                          data.start.toLocaleString("sv").replace(" ", "T") &&
-                        "border-sky-700"
-                      }`}
-                      type="datetime-local"
-                      name="Updated"
-                      id="updated"
-                      step={1}
-                      value={state.start}
-                      onChange={(e) => setState({ start: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid w-full items-center gap-1.5">
-                    <Label
-                      htmlFor="username"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      End
-                    </Label>
-                    <Input
-                      className={`w-full font-mono border-2 transition-all duration-300 ${
-                        state.end !=
-                          (data.end
-                            ? data.end.toLocaleString("sv").replace(" ", "T")
-                            : new Date()
-                                .toLocaleString("sv")
-                                .replace(" ", "T")) && "border-sky-700"
-                      }`}
-                      type="datetime-local"
-                      name="Created"
-                      id="created"
-                      step={1}
-                      value={state.end}
-                      onChange={(e) => setState({ end: e.target.value })}
-                    />
-                  </div>
+                <ScrollArea
+                  className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
+                  type="always"
+                >
+                  <div className="grid gap-4 py-1 w-full">
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="name"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Start
+                      </Label>
+                      <Input
+                        className={`!w-full font-mono border-2 transition-all duration-300 ${
+                          state.start !=
+                            data.start.toLocaleString("sv").replace(" ", "T") &&
+                          "border-sky-700"
+                        }`}
+                        type="datetime-local"
+                        name="Updated"
+                        id="updated"
+                        step={1}
+                        value={state.start}
+                        onChange={(e) => setState({ start: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="username"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        End
+                      </Label>
+                      <Input
+                        className={`w-full font-mono border-2 transition-all duration-300 ${
+                          state.end !=
+                            (data.end
+                              ? data.end.toLocaleString("sv").replace(" ", "T")
+                              : new Date()
+                                  .toLocaleString("sv")
+                                  .replace(" ", "T")) && "border-sky-700"
+                        }`}
+                        type="datetime-local"
+                        name="Created"
+                        id="created"
+                        step={1}
+                        value={state.end}
+                        onChange={(e) => setState({ end: e.target.value })}
+                      />
+                    </div>
 
-                  <div id="divider" className="h-1" />
+                    <div id="divider" className="h-1" />
 
-                  <div className="grid w-full items-center gap-1.5">
-                    <Label
-                      htmlFor="start-w"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      Started with
-                    </Label>
-                    <Input
-                      disabled
-                      className="w-full font-mono"
-                      type="text"
-                      name="started-with"
-                      id="start-w"
-                      value={data.startType + ""}
-                    />
-                  </div>
-                  <div className="grid w-full items-center gap-1.5">
-                    <Label
-                      htmlFor="stopped-w"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      Stopped with
-                    </Label>
-                    <Input
-                      disabled
-                      className="w-full font-mono"
-                      type="text"
-                      name="stopped-with"
-                      id="stopped-w"
-                      value={data.endType + ""}
-                    />
-                  </div>
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="start-w"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Started with
+                      </Label>
+                      <Input
+                        disabled
+                        className="w-full font-mono appearance-none"
+                        type="text"
+                        name="started-with"
+                        id="start-w"
+                        value={data.startType + ""}
+                      />
+                    </div>
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="stopped-w"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Stopped with
+                      </Label>
+                      <Input
+                        disabled
+                        className="w-full font-mono"
+                        type="text"
+                        name="stopped-with"
+                        id="stopped-w"
+                        value={data.endType + ""}
+                      />
+                    </div>
 
-                  <div id="divider" className="h-1" />
+                    <div id="divider" className="h-1" />
 
-                  <div className="grid w-full items-center gap-1.5">
-                    <Label htmlFor="id" className="pl-2 text-muted-foreground">
-                      ID
-                    </Label>
-                    <Input
-                      disabled
-                      className="w-full font-mono"
-                      type="number"
-                      name="Id"
-                      id="id"
-                      value={data.id}
-                    />
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="id"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        ID
+                      </Label>
+                      <Input
+                        disabled
+                        className="w-full font-mono"
+                        type="number"
+                        name="Id"
+                        id="id"
+                        value={data.id}
+                      />
+                    </div>
                   </div>
-                </div>
+                </ScrollArea>
               </TabsContent>
             </Tabs>
           </div>
 
-          <Separator orientation="horizontal" className="w-full" />
-
-          <AlertDialogFooter>
+          <AlertDialogFooter className="items-end">
             <Button
               variant="destructive"
               onClick={() => sendDeleteRequest()}

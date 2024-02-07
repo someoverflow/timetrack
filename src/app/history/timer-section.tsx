@@ -84,7 +84,7 @@ export default function TimerSection({
   const editTime = searchParams.get("edit");
   const yearMonth = searchParams.get("ym");
 
-  const [editVisible, setEditVisible] = useState(false);
+  const [addVisible, setAddVisible] = useState(false);
 
   function changeYearMonth(change: string) {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -129,7 +129,7 @@ export default function TimerSection({
 
   return (
     <section
-      className="w-full max-w-md max-h-[80dvh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
+      className="w-full max-w-md max-h-[75dvh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
       key={yearMonth}
     >
       <div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
@@ -204,7 +204,7 @@ export default function TimerSection({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setEditVisible(true)}
+                onClick={() => setAddVisible(true)}
               >
                 <ListPlus className="h-5 w-5" />
               </Button>
@@ -215,13 +215,13 @@ export default function TimerSection({
           </Tooltip>
           <TimerAdd
             username={username}
-            visible={editVisible}
-            setVisible={setEditVisible}
+            visible={addVisible}
+            setVisible={setAddVisible}
           />
         </div>
       </div>
       <ScrollArea
-        className="h-[80dvh] w-full rounded-sm border p-1.5 overflow-hidden"
+        className="h-[65dvh] w-full rounded-sm border p-1.5 overflow-hidden"
         type="scroll"
       >
         {history[yearMonth].map((time) => (

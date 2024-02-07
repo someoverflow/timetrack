@@ -35,10 +35,12 @@ export default async function History() {
 
   return (
     <Navigation>
-      <section className="w-full min-h-screen flex flex-col items-center gap-4 p-4">
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
         <div className="w-full font-mono text-center pt-2">
           <p className="text-2xl font-mono">History</p>
         </div>
+
+        {/** Add button when no data found */}
 
         {dataFound() ? (
           <TimerSection data={history} username={session?.user?.name!} />
