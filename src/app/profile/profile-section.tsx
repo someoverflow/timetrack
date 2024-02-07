@@ -102,7 +102,7 @@ export default function ProfileSection({
 
   return (
     <Card className="w-[90vw] max-w-sm">
-      <CardContent className="pt-4 pb-2">
+      <CardContent className="py-2">
         <div className="flex flex-col gap-4 py-2">
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="input-name">Name</Label>
