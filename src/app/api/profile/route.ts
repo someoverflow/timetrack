@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
   if (containsPassword) {
     const password: string = json.password;
 
-    if (!validatePassword(json.value)) {
+    if (!validatePassword(password)) {
       result = JSON.parse(JSON.stringify(BAD_REQUEST));
       result.result = [
         result.result,
