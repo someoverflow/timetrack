@@ -1,37 +1,31 @@
 import prisma from "@/lib/prisma";
 
 import UserEdit from "./user-edit";
+import UserTableHeader from "./table-header";
 
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
 import { Eye } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { cache } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import TableInfo from "./table-info";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type User = {
   id: number;
@@ -56,10 +50,17 @@ export const getUserCount = cache(async () => {
 
 export const revalidate = 60;
 
-async function getUsers(skip: number, take: number) {
-  return await prisma.user.findMany({
+async function getUsers(skip: number, take: number, search: string | null) {
+  var searchValid = /^[A-Za-z\s]*$/.test(search!);
+  if (!search) searchValid = true;
+  const result = await prisma.user.findMany({
     skip: skip,
     take: take,
+    where: {
+      name: {
+        contains: search && searchValid ? search : undefined,
+      },
+    },
     select: {
       id: true,
       username: true,
@@ -75,6 +76,10 @@ async function getUsers(skip: number, take: number) {
       _count: true,
     },
   });
+  return {
+    users: result,
+    searchValid: searchValid,
+  };
 }
 
 export default async function AdminUserPage({
@@ -82,6 +87,7 @@ export default async function AdminUserPage({
 }: {
   searchParams?: {
     query?: string;
+    search?: string;
     page?: string;
   };
 }) {
@@ -96,13 +102,18 @@ export default async function AdminUserPage({
   if (user?.role != "admin") return redirect("/");
 
   var currentPage = Number(searchParams?.page) || 1;
+  var searchName = searchParams?.search || null;
 
   const userCount = await getUserCount();
   const pages = Math.ceil(userCount / 15);
 
   if (currentPage > pages) currentPage = pages;
 
-  const users = await getUsers(15 * (currentPage - 1), 15);
+  const { users, searchValid } = await getUsers(
+    15 * (currentPage - 1),
+    15,
+    searchName
+  );
 
   return (
     <Navigation>
@@ -111,18 +122,27 @@ export default async function AdminUserPage({
           <p className="text-2xl font-mono">Users</p>
         </div>
 
-        <ScrollArea type="always" className="w-[90vw] max-w-xl h-[75svh] rounded-md border p-2.5">
-          <Table>
-            <TableHeader className="sticky top-0 bg-secondary">
-              <TableRow>
-                <TableHead className="w-[100px]">Login</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-                {users.map((userData: User) => (
-                  <TableRow key={userData.id}>
+        <div className="flex flex-col w-[90vw] max-w-xl">
+          <UserTableHeader searchValid={searchValid} />
+
+          <ScrollArea
+            type="always"
+            className="h-[70svh] rounded-md border p-2.5"
+          >
+            <Table className="rounded-none min-h-[67svh]">
+              <TableHeader className="sticky z-10 top-0 bg-secondary">
+                <TableRow>
+                  <TableHead className="w-min">Login</TableHead>
+                  <TableHead className="w-full">Name</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(users as User[]).map((userData) => (
+                  <TableRow
+                    key={userData.id}
+                    className="animate__animated animate__fadeIn"
+                  >
                     <TableCell className="font-medium">
                       {userData.username}
                     </TableCell>
@@ -131,36 +151,39 @@ export default async function AdminUserPage({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex flex-row justify-end items-center gap-2">
-                        <UserEdit user={userData} />
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button variant="secondary" size="icon" asChild>
+                              <Link href={"/history/" + userData.username}>
+                                <Eye className="w-5 h-5" />
+                              </Link>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            <p>View User-History</p>
+                          </TooltipContent>
+                        </Tooltip>
 
-                        <Button variant="secondary" size="icon" asChild>
-                          <Link href={"/history/" + userData.username}>
-                            <Eye className="w-5 h-5" />
-                          </Link>
-                        </Button>
+                        <UserEdit user={userData} />
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-            </TableBody>
-            <TableFooter className="sticky bottom-0">
-              <TableRow>
-                <TableCell colSpan={2} className="p-2">
-                  <p className="text-muted-foreground">{`${users.length}/${userCount} Users shown`}</p>
-                </TableCell>
-                <TableCell className="p-2">
-                  <TableInfo page={currentPage} pages={pages} />
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </ScrollArea>
-
-        {/*
-        <section className="pt-4">
-        <UserAdd />
-      </section> 
-      */}
+                <tr className="h-full"></tr>
+              </TableBody>
+              <TableFooter className="sticky bottom-0">
+                <TableRow>
+                  <TableCell className="p-2">
+                    <p className="text-muted-foreground">{`${users.length}/${userCount} shown`}</p>
+                  </TableCell>
+                  <TableCell colSpan={2} className="p-2">
+                    <TableInfo page={currentPage} pages={pages} />
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </ScrollArea>
+        </div>
       </section>
     </Navigation>
   );

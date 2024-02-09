@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -21,16 +22,18 @@ model times {
 }
 
 model user {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  name     String @default("?")
-  email    String @unique
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  name     String?
+  email    String  @unique
   password String
   role     String
   chips    chip[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@fulltext([name])
 }
 
 model chip {
