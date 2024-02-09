@@ -111,12 +111,9 @@ export default async function AdminUserPage({
           <p className="text-2xl font-mono">Users</p>
         </div>
 
-        <ScrollArea
-          className="w-[90vw] max-w-xl h-[75svh] rounded-md border p-2.5"
-          type="scroll"
-        >
+        <ScrollArea type="always" className="w-[90vw] max-w-xl h-[75svh] rounded-md border p-2.5">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-secondary">
               <TableRow>
                 <TableHead className="w-[100px]">Login</TableHead>
                 <TableHead>Name</TableHead>
@@ -124,29 +121,29 @@ export default async function AdminUserPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((userData: User) => (
-                <TableRow key={userData.id}>
-                  <TableCell className="font-medium">
-                    {userData.username}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {userData.name}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-row justify-end items-center gap-2">
-                      <UserEdit user={userData} />
+                {users.map((userData: User) => (
+                  <TableRow key={userData.id}>
+                    <TableCell className="font-medium">
+                      {userData.username}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {userData.name}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex flex-row justify-end items-center gap-2">
+                        <UserEdit user={userData} />
 
-                      <Button variant="secondary" size="icon" asChild>
-                        <Link href={"/history/" + userData.username}>
-                          <Eye className="w-5 h-5" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Button variant="secondary" size="icon" asChild>
+                          <Link href={"/history/" + userData.username}>
+                            <Eye className="w-5 h-5" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
-            <TableFooter>
+            <TableFooter className="sticky bottom-0">
               <TableRow>
                 <TableCell colSpan={2} className="p-2">
                   <p className="text-muted-foreground">{`${users.length}/${userCount} Users shown`}</p>
