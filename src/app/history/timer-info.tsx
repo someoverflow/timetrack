@@ -315,14 +315,14 @@ export default function TimerInfo({
                   className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
                   type="always"
                 >
-                  <div className="grid w-full py-1 gap-1.5">
+                  <div className="grid w-full p-1 gap-1.5">
                     <Label
                       htmlFor={`timerModal-notes-${data.id}`}
                       className="text-muted-foreground pl-2"
                     >
                       Notes
                     </Label>
-                    <div className="h-[35svh] p-1">
+                    <div className="h-[35svh]">
                       <Textarea
                         id={`timerModal-notes-${data.id}`}
                         className={`h-full min-h-[10svh] max-h-[50svh] border-2 transition-all duration-300 ${
@@ -342,7 +342,7 @@ export default function TimerInfo({
                   className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
                   type="always"
                 >
-                  <div className="grid gap-4 py-1 w-full">
+                  <div className="grid gap-4 p-1 w-full">
                     <div className="grid w-full items-center gap-1.5">
                       <Label
                         htmlFor="name"

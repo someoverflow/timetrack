@@ -1,6 +1,19 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import "@/lib/types";
 
 import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
@@ -77,10 +90,122 @@ export default function UserEdit({ user }: { user: UserDetails }) {
 
   return (
     <>
-      <Button variant="secondary" size="icon">
+      <Button
+        variant="secondary"
+        size="icon"
+        onClick={() => setVisible(!visible)}
+      >
         <PencilRuler className="h-5 w-5" />
       </Button>
 
+      <AlertDialog
+        key={`userModal-${user.id}`}
+        open={visible}
+        onOpenChange={(e) => setVisible(e)}
+      >
+        <AlertDialogContent className="w-[95%] max-w-xl rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex flex-row items-center justify-between">
+              <div>Edit entry</div>
+              <AlertDialogCancel variant="ghost" size="icon">
+                <XCircle className="w-5 h-5" />
+              </AlertDialogCancel>
+            </AlertDialogTitle>
+            <AlertDialogDescription></AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex flex-col gap-2 min-h-[45dvh]">
+            <Tabs defaultValue="preferences" className="w-full items-start">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                <TabsTrigger value="chips">Chips?</TabsTrigger>
+              </TabsList>
+              <TabsContent value="preferences">
+                <ScrollArea
+                  className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
+                  type="always"
+                >
+                  <div className="grid gap-4 p-1 w-full">
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="loginName"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Login Name
+                      </Label>
+                      <Input
+                        className="w-full"
+                        type="text"
+                        name="Login Name"
+                        id="loginName"
+                        value={data.username}
+                        onChange={(e) => setData({ username: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="name"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Name
+                      </Label>
+                      <Input
+                        className="w-full"
+                        type="text"
+                        name="Name"
+                        id="name"
+                        value={data.displayName}
+                        onChange={(e) =>
+                          setData({ displayName: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div id="divider" className="h-1" />
+
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="id"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        ID
+                      </Label>
+                      <Input
+                        disabled
+                        className="w-full font-mono"
+                        type="number"
+                        name="Id"
+                        id="id"
+                        value={user.id}
+                      />
+                    </div>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+              <TabsContent value="chips">{/** TODO */}</TabsContent>
+            </Tabs>
+          </div>
+
+          <AlertDialogFooter className="items-end">
+            <Button
+              variant="destructive"
+              onClick={() => sendDeleteRequest()}
+              disabled={data.loading}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => sendRequest()}
+              disabled={data.loading}
+            >
+              <SaveAll className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* <input
         className="modal-state"
         id={`userEdit-${user.id}`}
