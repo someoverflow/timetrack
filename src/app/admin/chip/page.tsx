@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
-import Header from "@/components/Header";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/navigation";
 
 import ChipEdit from "./ChipEdit";
 import ChipAdd from "./ChipAdd";
@@ -50,9 +49,9 @@ export default async function AdminUserPage() {
 
   return (
     <Navigation>
-      <section className="admin-main-section">
-        <div className="w-full font-mono text-left pb-4">
-          <Header text="Chips" />
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
+        <div className="w-full font-mono text-center pt-2">
+          <p className="text-2xl font-mono">Chips</p>
         </div>
         <table className="admin-main-table">
           <thead>
