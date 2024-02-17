@@ -249,11 +249,11 @@ export default function TimerSection() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Later</AlertDialogCancel>
-            <AlertDialogAction asChild variant="outline">
+            <Button asChild>
               <Link href={`/history?edit=${data.changeTimer}`} prefetch={false}>
                 Now
               </Link>
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
