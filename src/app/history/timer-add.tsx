@@ -1,24 +1,21 @@
 "use client";
 
-import {
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ListPlus, SaveAll, XCircle } from "lucide-react";
+import { SaveAll } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useReducer, useState } from "react";
+import { useReducer } from "react";
 import { toast } from "sonner";
 
 export default function TimerAdd({
@@ -108,98 +105,118 @@ export default function TimerAdd({
   }
 
   return (
-    <AlertDialog
+    <Dialog
       key={`timerModal-${data.id}`}
       open={visible}
       onOpenChange={(e) => setVisible(e)}
     >
-      <AlertDialogContent className="w-[95%] max-w-xl rounded-lg">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex flex-row items-center justify-between">
+      <DialogContent className="max-w-xl rounded-lg flex flex-col justify-between">
+        <DialogHeader>
+          <DialogTitle>
             <div>Create entry</div>
-            <AlertDialogCancel variant="ghost" size="icon">
-              <XCircle className="w-5 h-5" />
-            </AlertDialogCancel>
-          </AlertDialogTitle>
-          <AlertDialogDescription></AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="flex flex-col gap-2 min-h-[45dvh]">
-          <Tabs defaultValue="time" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          </DialogTitle>
+          <DialogDescription></DialogDescription>
+        </DialogHeader>
+
+        <div className="w-full flex flex-col gap-2">
+          <Tabs defaultValue="time">
+            <TabsList className="grid w-full grid-cols-2 h-fit">
               <TabsTrigger value="notes">Notes</TabsTrigger>
               <TabsTrigger value="time">Time</TabsTrigger>
             </TabsList>
             <TabsContent value="notes">
-              <Separator orientation="horizontal" className="w-full" />
-              <div className="grid w-full gap-1.5 py-4">
-                <Label
-                  htmlFor={`timerModal-notes-${data.id}`}
-                  className="text-muted-foreground pl-2"
-                >
-                  Notes
-                </Label>
-                <Textarea
-                  id={`timerModal-notes-${data.id}`}
-                  className="min-h-[25dvh] max-h-[55dvh]"
-                  spellCheck={true}
-                  value={data.notes}
-                  onChange={(e) => setData({ notes: e.target.value })}
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="time">
-              <Separator orientation="horizontal" className="w-full" />
-              <div className="grid gap-4 py-4 w-full">
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="name" className="pl-2 text-muted-foreground">
-                    Start
-                  </Label>
-                  <Input
-                    className="w-full font-mono"
-                    type="datetime-local"
-                    name="Updated"
-                    id="updated"
-                    step={1}
-                    value={data.start}
-                    onChange={(e) => setData({ start: e.target.value })}
-                  />
-                </div>
-                <div className="grid w-full items-center gap-1.5">
+              <ScrollArea
+                className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                type="always"
+              >
+                <div className="h-full w-full grid p-1 gap-1.5">
                   <Label
-                    htmlFor="username"
-                    className="pl-2 text-muted-foreground"
+                    htmlFor={`timerModal-notes-${data.id}`}
+                    className="text-muted-foreground pl-2"
                   >
-                    End
+                    Notes
                   </Label>
-                  <Input
-                    className="w-full font-mono"
-                    type="datetime-local"
-                    name="Created"
-                    id="created"
-                    step={1}
-                    value={data.end}
-                    onChange={(e) => setData({ end: e.target.value })}
+                  <Textarea
+                    id={`timerModal-notes-${data.id}`}
+                    className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
+                      data.notes != (data.notes ? data.notes : "") &&
+                      "border-sky-700"
+                    }`}
+                    spellCheck={true}
+                    value={data.notes}
+                    onChange={(e) => setData({ notes: e.target.value })}
                   />
                 </div>
-              </div>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="time" className="h-full">
+              <ScrollArea
+                className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                type="always"
+              >
+                <div className="grid gap-4 p-1 w-full">
+                  <div className="grid w-full items-center gap-1.5">
+                    <Label
+                      htmlFor="name"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      Start
+                    </Label>
+                    <Input
+                      className={`!w-full font-mono border-2 transition-all duration-300 ${
+                        data.start !=
+                          data.start.toLocaleString("sv").replace(" ", "T") &&
+                        "border-sky-700"
+                      }`}
+                      type="datetime-local"
+                      name="Updated"
+                      id="updated"
+                      step={1}
+                      value={data.start}
+                      onChange={(e) => setData({ start: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid w-full items-center gap-1.5">
+                    <Label
+                      htmlFor="username"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      End
+                    </Label>
+                    <Input
+                      className={`w-full font-mono border-2 transition-all duration-300 ${
+                        data.end !=
+                          (data.end
+                            ? data.end.toLocaleString("sv").replace(" ", "T")
+                            : new Date()
+                                .toLocaleString("sv")
+                                .replace(" ", "T")) && "border-sky-700"
+                      }`}
+                      type="datetime-local"
+                      name="Created"
+                      id="created"
+                      step={1}
+                      value={data.end}
+                      onChange={(e) => setData({ end: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
             </TabsContent>
           </Tabs>
+
+          <div className="w-full gap-2 flex flex-row justify-end">
+            <Button
+              variant="outline"
+              onClick={() => sendRequest()}
+              disabled={data.loading}
+            >
+              <SaveAll className="mr-2 h-4 w-4" />
+              Create Entry
+            </Button>
+          </div>
         </div>
-
-        <Separator orientation="horizontal" className="w-full" />
-
-        <AlertDialogFooter>
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => sendRequest()}
-            disabled={data.loading}
-          >
-            <SaveAll className="mr-2 h-4 w-4" />
-            Create Entry
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   );
 }

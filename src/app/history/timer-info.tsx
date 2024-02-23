@@ -12,15 +12,13 @@ import {
   TrailingActions,
 } from "react-swipeable-list";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import "react-swipeable-list/dist/styles.css";
 import { toast } from "sonner";
@@ -31,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const days = [
   "Sunday",
@@ -288,58 +287,53 @@ export default function TimerInfo({
         </div>
       </SwipeableListItem>
 
-      <AlertDialog
+      <Dialog
         key={`timerModal-${data.id}`}
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <AlertDialogContent className="w-[95%] max-w-xl rounded-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex flex-row items-center justify-between">
+        <DialogContent className="max-w-xl rounded-lg flex flex-col justify-between">
+          <DialogHeader>
+            <DialogTitle>
               <div>Edit entry</div>
-              <AlertDialogCancel variant="ghost" size="icon">
-                <XCircle className="w-5 h-5" />
-              </AlertDialogCancel>
-            </AlertDialogTitle>
-            <AlertDialogDescription></AlertDialogDescription>
-          </AlertDialogHeader>
+            </DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
 
-          <div className="flex flex-col gap-2 min-h-[45dvh]">
-            <Tabs defaultValue="notes" className="w-full items-start">
-              <TabsList className="grid w-full grid-cols-2">
+          <div className="w-full flex flex-col gap-2">
+            <Tabs defaultValue="notes">
+              <TabsList className="grid w-full grid-cols-2 h-fit">
                 <TabsTrigger value="notes">Notes</TabsTrigger>
                 <TabsTrigger value="time">Time</TabsTrigger>
               </TabsList>
               <TabsContent value="notes">
                 <ScrollArea
-                  className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
+                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
                   type="always"
                 >
-                  <div className="grid w-full p-1 gap-1.5">
+                  <div className="h-full w-full grid p-1 gap-1.5">
                     <Label
                       htmlFor={`timerModal-notes-${data.id}`}
                       className="text-muted-foreground pl-2"
                     >
                       Notes
                     </Label>
-                    <div className="h-[35svh]">
-                      <Textarea
-                        id={`timerModal-notes-${data.id}`}
-                        className={`h-full min-h-[10svh] max-h-[50svh] border-2 transition-all duration-300 ${
-                          state.notes != (data.notes ? data.notes : "") &&
-                          "border-sky-700"
-                        }`}
-                        spellCheck={true}
-                        value={state.notes}
-                        onChange={(e) => setState({ notes: e.target.value })}
-                      />
-                    </div>
+                    <Textarea
+                      id={`timerModal-notes-${data.id}`}
+                      className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
+                        state.notes != (data.notes ? data.notes : "") &&
+                        "border-sky-700"
+                      }`}
+                      spellCheck={true}
+                      value={state.notes}
+                      onChange={(e) => setState({ notes: e.target.value })}
+                    />
                   </div>
                 </ScrollArea>
               </TabsContent>
-              <TabsContent value="time">
+              <TabsContent value="time" className="h-full">
                 <ScrollArea
-                  className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
+                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
                   type="always"
                 >
                   <div className="grid gap-4 p-1 w-full">
@@ -446,28 +440,28 @@ export default function TimerInfo({
                 </ScrollArea>
               </TabsContent>
             </Tabs>
-          </div>
 
-          <AlertDialogFooter className="items-end">
-            <Button
-              variant="destructive"
-              onClick={() => sendDeleteRequest()}
-              disabled={state.loading}
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => sendRequest()}
-              disabled={state.loading}
-            >
-              <SaveAll className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <div className="w-full gap-2 flex flex-row justify-end">
+              <Button
+                variant="destructive"
+                onClick={() => sendDeleteRequest()}
+                disabled={state.loading}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => sendRequest()}
+                disabled={state.loading}
+              >
+                <SaveAll className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
