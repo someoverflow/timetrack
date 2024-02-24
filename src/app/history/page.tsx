@@ -5,6 +5,40 @@ import TimerSection from "./timer-section";
 
 import { Session, getServerSession } from "next-auth";
 import { Metadata } from "next";
+import { getTotalTime } from "@/lib/utils";
+
+interface Data {
+  [yearMonth: string]: TimerWithDate[];
+}
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function formatHistory(data: TimerWithDate[]): Data {
+  let result: Data = {};
+
+  data.forEach((item: TimerWithDate) => {
+    let date = new Date(item.start);
+    let year = date.getFullYear();
+    let month = months[date.getMonth()];
+
+    if (!result[`${year} ${month}`]) result[`${year} ${month}`] = [];
+    result[`${year} ${month}`].push(item);
+  });
+
+  return result;
+}
 
 export const metadata: Metadata = {
   title: "Time Track - History",
@@ -24,7 +58,14 @@ async function getHistory(session: Session | null) {
   return history;
 }
 
-export default async function History() {
+export default async function History({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    ym?: string;
+  };
+}) {
   const session = await getServerSession();
   const history = await getHistory(session);
 
@@ -32,6 +73,18 @@ export default async function History() {
     if (history.length == 0) return false;
     return !(history.length == 1 && history[0].end == null);
   }
+
+  const historyData = formatHistory(history);
+
+  const timeStrings: string[] = [];
+  try {
+    if (searchParams && searchParams.ym) {
+      historyData[searchParams.ym].forEach((e) => {
+        if (e.time) timeStrings.push(e.time);
+      });
+    }
+  } catch (err: any) {}
+  const totalTime = timeStrings.length == 0 ? "" : getTotalTime(timeStrings);
 
   return (
     <Navigation>
@@ -43,7 +96,11 @@ export default async function History() {
         {/** Add button when no data found */}
 
         {dataFound() ? (
-          <TimerSection data={history} username={session?.user?.name!} />
+          <TimerSection
+            history={historyData}
+            totalTime={totalTime}
+            username={session?.user?.name!}
+          />
         ) : (
           <p className="font-mono font-bold text-base">No data found</p>
         )}

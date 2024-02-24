@@ -37,44 +37,15 @@ interface Data {
   [yearMonth: string]: TimerWithDate[];
 }
 
-function formatHistory(data: TimerWithDate[]): Data {
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  let result: Data = {};
-
-  data.forEach((item: TimerWithDate) => {
-    let date = new Date(item.start);
-    let year = date.getFullYear();
-    let month = months[date.getMonth()];
-
-    if (!result[`${year} ${month}`]) result[`${year} ${month}`] = [];
-    result[`${year} ${month}`].push(item);
-  });
-
-  return result;
-}
-
 export default function TimerSection({
-  data,
   username,
+  history,
+  totalTime,
 }: {
-  data: TimerWithDate[];
   username: string;
+  history: Data;
+  totalTime: string;
 }) {
-  const history: Data = formatHistory(data);
   const historyKeys = Object.keys(history);
 
   const router = useRouter();
@@ -120,12 +91,6 @@ export default function TimerSection({
     document.body.appendChild(element);
     element.click();
   };
-
-  const timeStrings: string[] = [];
-  history[yearMonth].forEach((e) => {
-    if (e.time) timeStrings.push(e.time);
-  });
-  const totalTime = getTotalTime(timeStrings);
 
   return (
     <section
