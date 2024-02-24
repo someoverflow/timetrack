@@ -1,24 +1,29 @@
 "use client";
 
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import "@/lib/types";
-
-import { PencilRuler, SaveAll, Trash, XCircle } from "lucide-react";
+import { PencilRuler, SaveAll, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
+import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import "@/lib/types";
 
 export default function UserEdit({ user }: { user: UserDetails }) {
   const [data, setData] = useReducer(
@@ -39,8 +44,12 @@ export default function UserEdit({ user }: { user: UserDetails }) {
 
   const router = useRouter();
 
-  function sendRequest() {
-    fetch("/api/user", {
+  async function sendRequest() {
+    setData({
+      loading: true,
+    });
+
+    const result = await fetch("/api/user", {
       method: "POST",
       body: JSON.stringify({
         id: user.id,
@@ -50,42 +59,106 @@ export default function UserEdit({ user }: { user: UserDetails }) {
         role: data.role,
         password: data.password.trim().length === 0 ? undefined : data.password,
       }),
-    })
-      .then((result) => result.json())
-      .then((result) => {
-        if (result.result) {
-          setData({
-            password: "",
-          });
-          setVisible(false);
+    });
 
-          router.refresh();
-        }
-        console.log(result);
-      })
-      .catch(console.error);
+    setData({
+      loading: false,
+    });
+
+    if (result.ok) {
+      setVisible(false);
+
+      setData({
+        password: "",
+      });
+
+      toast.success("Successfully changed entry", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json().catch(() => {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    });
+    if (!resultData) return;
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
   }
 
-  function sendDeleteRequest() {
-    fetch("/api/user", {
+  async function sendDeleteRequest() {
+    setData({
+      loading: true,
+    });
+
+    const result = await fetch("/api/user", {
       method: "DELETE",
       body: JSON.stringify({
         id: user.id,
       }),
-    })
-      .then((result) => result.json())
-      .then((result) => {
-        if (result.result) {
-          setData({
-            password: "",
-          });
-          setVisible(false);
+    });
 
-          router.refresh();
-        }
-        console.log(result);
-      })
-      .catch(console.error);
+    setData({
+      loading: false,
+    });
+
+    if (result.ok) {
+      setVisible(false);
+
+      setData({
+        password: "",
+      });
+
+      toast.success("Successfully deleted entry", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json().catch(() => {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    });
+    if (!resultData) return;
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
   }
 
   return (
@@ -93,36 +166,43 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       <Button
         variant="secondary"
         size="icon"
-        onClick={() => setVisible(!visible)}
+        onClick={() => {
+          setVisible(!visible);
+
+          setData({
+            username: user.username,
+            displayName: user.name != "?" ? user.name : "",
+            mail: user.email,
+            role: user.role,
+            password: "",
+          });
+        }}
       >
         <PencilRuler className="h-5 w-5" />
       </Button>
 
-      <AlertDialog
+      <Dialog
         key={`userModal-${user.id}`}
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <AlertDialogContent className="w-[95%] max-w-xl rounded-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex flex-row items-center justify-between">
-              <div>Edit entry</div>
-              <AlertDialogCancel variant="ghost" size="icon">
-                <XCircle className="w-5 h-5" />
-              </AlertDialogCancel>
-            </AlertDialogTitle>
-            <AlertDialogDescription></AlertDialogDescription>
-          </AlertDialogHeader>
+        <DialogContent className="max-w-xl rounded-lg flex flex-col justify-between">
+          <DialogHeader>
+            <DialogTitle>
+              <div>Create entry</div>
+            </DialogTitle>
+            <DialogDescription></DialogDescription>
+          </DialogHeader>
 
-          <div className="flex flex-col gap-2 min-h-[45dvh]">
-            <Tabs defaultValue="preferences" className="w-full items-start">
-              <TabsList className="grid w-full grid-cols-2">
+          <div className="w-full flex flex-col gap-2">
+            <Tabs defaultValue="preferences">
+              <TabsList className="grid w-full grid-cols-2 h-fit">
                 <TabsTrigger value="preferences">Preferences</TabsTrigger>
                 <TabsTrigger value="chips">Chips?</TabsTrigger>
               </TabsList>
               <TabsContent value="preferences">
                 <ScrollArea
-                  className="h-[45svh] w-full rounded-sm border border-border p-2.5 overflow-hidden"
+                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
                   type="always"
                 >
                   <div className="grid gap-4 p-1 w-full">
@@ -134,7 +214,11 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                         Login Name
                       </Label>
                       <Input
-                        className="w-full"
+                        className={`w-full border-2 transition duration-300 ${
+                          user.username !=
+                            (data.username ? data.username : "") &&
+                          "border-sky-700"
+                        }`}
                         type="text"
                         name="Login Name"
                         id="loginName"
@@ -150,7 +234,11 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                         Name
                       </Label>
                       <Input
-                        className="w-full"
+                        className={`w-full border-2 transition duration-300 ${
+                          user.name !=
+                            (data.displayName ? data.displayName : "") &&
+                          "border-sky-700"
+                        }`}
                         type="text"
                         name="Name"
                         id="name"
@@ -159,6 +247,52 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                           setData({ displayName: e.target.value })
                         }
                       />
+                    </div>
+
+                    <div id="divider" className="h-1" />
+
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="userAdd-mail"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Mail
+                      </Label>
+                      <Input
+                        className={`w-full border-2 transition duration-300 ${
+                          user.email != (data.mail ? data.mail : "") &&
+                          "border-sky-700"
+                        }`}
+                        type="email"
+                        name="Mail"
+                        id="userAdd-mail"
+                        placeholder="max@muster.com"
+                        value={data.mail}
+                        onChange={(e) => setData({ mail: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="userAdd-role"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Role
+                      </Label>
+                      {/* TODO: Add changed indication */}
+                      <Select
+                        key="userAdd-role"
+                        value={data.role}
+                        onValueChange={(role) => setData({ role: role })}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Theme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="user">User</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div id="divider" className="h-1" />
@@ -182,161 +316,37 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                   </div>
                 </ScrollArea>
               </TabsContent>
-              <TabsContent value="chips">{/** TODO */}</TabsContent>
+              <TabsContent value="chips" className="h-full">
+                <ScrollArea
+                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  type="always"
+                >
+                  {/** TODO **/}
+                </ScrollArea>
+              </TabsContent>
             </Tabs>
-          </div>
 
-          <AlertDialogFooter className="items-end">
-            <Button
-              variant="destructive"
-              onClick={() => sendDeleteRequest()}
-              disabled={data.loading}
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => sendRequest()}
-              disabled={data.loading}
-            >
-              <SaveAll className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* <input
-        className="modal-state"
-        id={`userEdit-${user.id}`}
-        type="checkbox"
-        checked={visible}
-        onChange={(e) => setVisible(e.target.checked)}
-      />
-      <div className="modal">
-        <label
-          className="modal-overlay"
-          htmlFor={`userEdit-${user.id}`}
-        ></label>
-        <div className="admin-main-modal">
-          <div className="admin-main-modal-header">
-            <h2 className="text-xl text-content1">
-              {user.username}{" "}
-              <span className="badge badge-flat-primary badge-xs">
-                {user.role}
-              </span>
-            </h2>
-            <div>
-              <label
-                htmlFor={`userEdit-${user.id}`}
-                className="btn btn-sm btn-circle btn-ghost"
+            <div className="w-full gap-2 flex flex-row justify-end">
+              <Button
+                variant="destructive"
+                onClick={() => sendDeleteRequest()}
+                disabled={data.loading}
               >
-                <XCircle className="w-1/2 h-1/2" />
-              </label>
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => sendRequest()}
+                disabled={data.loading}
+              >
+                <SaveAll className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
             </div>
           </div>
-
-          <div className="divider"></div>
-
-          <div className="flex flex-col gap-2">
-            <p className="pl-2 text-content2 text-left">Name</p>
-            <input
-              className="input input-block"
-              type="text"
-              name="DisplayName"
-              id={`userEdit-login-name-${user.id}`}
-              placeholder={user.name !== "?" ? user.name : "Max Mustermann"}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-
-            <p className="pl-2 text-content2 text-left">Username</p>
-            <input
-              className="input input-block"
-              type="text"
-              name="Name"
-              id={`userEdit-name-${user.id}`}
-              placeholder={user.username}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <p className="pl-2 text-content2 text-left">Password</p>
-            <input
-              className="input input-block"
-              type="password"
-              name="Password"
-              id={`userEdit-password-${user.id}`}
-              placeholder="#SuperSecure123"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            <div className="divider m-0"></div>
-
-            <p className="pl-2 text-content2 text-left">Mail</p>
-            <input
-              className="input input-block"
-              type="email"
-              name="Mail"
-              id={`userEdit-mail-${user.id}`}
-              placeholder={user.email}
-              value={mail}
-              onChange={(e) => setMail(e.target.value)}
-            />
-            <p className="pl-2 text-content2 text-left">Role</p>
-            <select
-              className="select select-block"
-              name="role"
-              id={`userEdit-role-${user.id}`}
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="admin">Admin</option>
-              <option value="user">User</option>
-            </select>
-          </div>
-
-          <div className="divider"></div>
-
-          <div className="flex flex-col gap-2">
-            <p className="pl-2 text-content2 text-left">Updated</p>
-            <input
-              className="input input-block"
-              type="datetime"
-              name="Updated"
-              id="updated"
-              value={user.updatedAt.toLocaleString()}
-              disabled
-            />
-            <p className="pl-2 text-content2 text-left">Created</p>
-            <input
-              className="input input-block"
-              type="datetime"
-              name="Created"
-              id="created"
-              value={user.createdAt.toLocaleString()}
-              disabled
-            />
-          </div>
-
-          <div className="divider"></div>
-
-          <div className="w-full flex flex-row justify-center gap-2">
-            <button
-              className="btn btn-error btn-circle"
-              onClick={() => sendDeleteRequest()}
-            >
-              <Trash className="w-1/2 h-1/2" />
-            </button>
-            <button
-              className="btn btn-success btn-circle"
-              onClick={() => sendRequest()}
-            >
-              <SaveAll className="w-1/2 h-1/2" />
-            </button>
-          </div>
-        </div>
-      </div> */}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

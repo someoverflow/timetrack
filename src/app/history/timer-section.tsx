@@ -97,7 +97,7 @@ export default function TimerSection({
   // Set selected yearMonth if not set
   if (yearMonth == null || !historyKeys.includes(yearMonth)) {
     changeYearMonth(historyKeys[0]);
-    return null;
+    return <></>;
   }
 
   const downloadCSV = (yearMonth: string, totalTime: string) => {
