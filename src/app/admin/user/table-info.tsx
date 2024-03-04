@@ -18,11 +18,6 @@ export default function TableInfo({
   const { push } = useRouter();
   const searchParams = useSearchParams();
 
-  var searchPage = searchParams.get("page");
-  useEffect(() => {
-    if (searchPage !== page.toString()) changePage(page.toString());
-  }, []);
-
   const changePage = useDebouncedCallback((value: string) => {
     const change = Number(value);
     if (change > pages) return;
@@ -35,6 +30,11 @@ export default function TableInfo({
     if (input.current) input.current.value = value;
     push(`/admin/user${query}`);
   }, 100);
+
+  var searchPage = searchParams.get("page");
+  useEffect(() => {
+    if (searchPage !== page.toString()) changePage(page.toString());
+  }, [changePage, page, searchPage]);
 
   return (
     <div className="flex flex-row items-center justify-end pr-4 gap-2 w-full">

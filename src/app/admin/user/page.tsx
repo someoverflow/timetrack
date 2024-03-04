@@ -43,11 +43,6 @@ type User = {
   }[];
 };
 
-export const getUserCount = cache(async () => {
-  const count = await prisma.user.count();
-  return count;
-});
-
 export const revalidate = 60;
 
 async function getUsers(skip: number, take: number, search: string | null) {
@@ -104,7 +99,8 @@ export default async function AdminUserPage({
   var currentPage = Number(searchParams?.page) || 1;
   var searchName = searchParams?.search || null;
 
-  const userCount = await getUserCount();
+  const userCount = await prisma.user.count();
+  //const userCount = await getUserCount();
   const pages = Math.ceil(userCount / 15);
 
   if (currentPage > pages) currentPage = pages;
