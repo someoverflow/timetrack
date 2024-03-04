@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Time Track - Signin",
@@ -10,5 +11,5 @@ export default async function SignInLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <><Suspense>{children}</Suspense></>;
 }
