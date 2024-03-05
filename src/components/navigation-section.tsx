@@ -23,7 +23,7 @@ export default function NavigationSection({
 }: {
   user: {
     username: string;
-    name: string;
+    name: string | null;
     role: string;
   } | null;
 }) {

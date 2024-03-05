@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 async function getHistory(
   user: {
     username: string;
-    name: string;
+    name: string | null;
   } | null
 ) {
   if (!user) return null;

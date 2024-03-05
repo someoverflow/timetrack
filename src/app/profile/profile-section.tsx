@@ -17,7 +17,7 @@ export default function ProfileSection({
   userData: {
     role: string;
     email: string;
-    name: string;
+    name: string | null;
     username: string;
     chips: {
       id: string;

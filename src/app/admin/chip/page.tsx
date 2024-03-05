@@ -75,7 +75,7 @@ export default async function AdminUserPage() {
                   </td>
                   <td>
                     <div className="flex flex-row justify-end items-center gap-2">
-                      <ChipEdit users={users} chip={chipData} />
+                      {/* <ChipEdit users={users} chip={chipData} /> */}
                     </div>
                   </td>
                 </tr>
@@ -84,7 +84,7 @@ export default async function AdminUserPage() {
           </tbody>
         </table>
         <section className="p-2">
-          <ChipAdd users={users} />
+          {/** <ChipAdd users={users} /> */}
         </section>
       </section>
     </Navigation>
