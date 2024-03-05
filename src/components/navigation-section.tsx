@@ -36,7 +36,7 @@ export default function NavigationSection({
         <MenubarTrigger asChild>
           <Link
             href="/"
-            prefetch={true}
+            prefetch
             className={`${
               pathname == "/" ? "bg-accent" : "hover:bg-accent"
             } !cursor-pointer aspect-square !p-2`}
@@ -49,7 +49,7 @@ export default function NavigationSection({
         <MenubarTrigger asChild>
           <Link
             href="/history"
-            prefetch={true}
+            prefetch
             className={`${
               pathname == "/history" ? "bg-accent" : "hover:bg-accent"
             } !cursor-pointer aspect-square !p-2`}
@@ -60,33 +60,17 @@ export default function NavigationSection({
       </MenubarMenu>
       {user?.role == "admin" && (
         <MenubarMenu>
-          <MenubarTrigger className="hover:!bg-accent !bg-background !cursor-pointer aspect-square !p-2">
-            <Shield className="h-6 w-6" />
+          <MenubarTrigger asChild>
+            <Link
+              href="/admin/user"
+              prefetch
+              className={`${
+                pathname == "/admin/user" ? "bg-accent" : "hover:bg-accent"
+              } !cursor-pointer aspect-square !p-2`}
+            >
+              <Shield className="h-6 w-6" />
+            </Link>
           </MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem disabled>Admin Section</MenubarItem>
-
-            <MenubarSeparator />
-
-            <MenubarItem asChild>
-              <Link
-                href="/admin/user"
-                prefetch={true}
-                className={pathname == "/admin/user" ? "bg-accent" : ""}
-              >
-                Users
-              </Link>
-            </MenubarItem>
-            <MenubarItem asChild>
-              <Link
-                href="/admin/chip"
-                prefetch={true}
-                className={pathname == "/admin/chip" ? "bg-accent" : ""}
-              >
-                Chips
-              </Link>
-            </MenubarItem>
-          </MenubarContent>
         </MenubarMenu>
       )}
       <MenubarMenu>
@@ -97,7 +81,7 @@ export default function NavigationSection({
           <MenubarItem asChild>
             <Link
               href="/profile"
-              prefetch={true}
+              prefetch
               className={pathname == "/profile" ? "bg-accent" : ""}
             >
               Profile
