@@ -1,4 +1,4 @@
-FROM node:18-alpine AS base
+FROM node:current-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
@@ -20,12 +20,12 @@ WORKDIR /app
 
 RUN apk add --no-cache openssl
 
+RUN npm install -g npm@latest
+
 ENV NODE_ENV production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-
-#COPY --from=builder /app/public ./public
 
 RUN mkdir .next
 RUN chown nextjs:nodejs /app
