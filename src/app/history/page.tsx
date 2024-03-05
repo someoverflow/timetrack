@@ -45,19 +45,6 @@ export const metadata: Metadata = {
   description: "Track your Time",
 };
 
-async function getHistory(session: Session | null) {
-  const history = await prisma.times.findMany({
-    orderBy: {
-      //id: "desc",
-      start: "desc",
-    },
-    where: {
-      user: session?.user?.name + "",
-    },
-  });
-  return history;
-}
-
 export default async function History({
   searchParams,
 }: {
@@ -67,7 +54,15 @@ export default async function History({
   };
 }) {
   const session = await getServerSession();
-  const history = await getHistory(session);
+  const history = await prisma.times.findMany({
+    orderBy: {
+      //id: "desc",
+      start: "desc",
+    },
+    where: {
+      user: session?.user?.name + "",
+    },
+  });
 
   function dataFound(): boolean {
     if (history.length == 0) return false;

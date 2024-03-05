@@ -6,35 +6,55 @@ import TimerSection from "../timer-section";
 import { getServerSession } from "next-auth";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTotalTime } from "@/lib/utils";
+
+interface Data {
+  [yearMonth: string]: TimerWithDate[];
+}
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function formatHistory(data: TimerWithDate[]): Data {
+  let result: Data = {};
+
+  data.forEach((item: TimerWithDate) => {
+    let date = new Date(item.start);
+    let year = date.getFullYear();
+    let month = months[date.getMonth()];
+
+    if (!result[`${year} ${month}`]) result[`${year} ${month}`] = [];
+    result[`${year} ${month}`].push(item);
+  });
+
+  return result;
+}
 
 export const metadata: Metadata = {
   title: "Time Track - History",
   description: "Track your Time",
 };
 
-async function getHistory(
-  user: {
-    username: string;
-    name: string | null;
-  } | null
-) {
-  if (!user) return null;
-
-  const history = await prisma.times.findMany({
-    orderBy: {
-      //id: "desc",
-      start: "desc",
-    },
-    where: {
-      user: user?.username,
-    },
-  });
-  return history;
-}
-
 export default async function History({
+  searchParams,
   params,
 }: {
+  searchParams?: {
+    query?: string;
+    ym?: string;
+    user: string;
+  };
   params: { user: string };
 }) {
   const session = await getServerSession();
@@ -61,14 +81,32 @@ export default async function History({
     })
     .catch(() => null);
 
-  const history = await getHistory(target);
+  const history = await prisma.times.findMany({
+    orderBy: {
+      //id: "desc",
+      start: "desc",
+    },
+    where: {
+      user: target?.name + "",
+    },
+  });
 
   function dataFound(): boolean {
-    if (history == null) return false;
     if (history.length == 0) return false;
-    if (history.length == 1 && history[0].end == null) return false;
-    return true;
+    return !(history.length == 1 && history[0].end == null);
   }
+
+  const historyData = formatHistory(history);
+
+  const timeStrings: string[] = [];
+  try {
+    if (searchParams && searchParams.ym) {
+      historyData[searchParams.ym].forEach((e) => {
+        if (e.time) timeStrings.push(e.time);
+      });
+    }
+  } catch (err: any) {}
+  const totalTime = timeStrings.length == 0 ? "" : getTotalTime(timeStrings);
 
   return (
     <Navigation>
@@ -82,7 +120,11 @@ export default async function History({
         {history != null ? (
           <>
             {dataFound() ? (
-              <TimerSection data={history} username={target?.username + ""} />
+              <TimerSection
+                history={historyData}
+                totalTime={totalTime}
+                username={session?.user?.name!}
+              />
             ) : (
               <p className="font-mono font-bold text-xl">No data found</p>
             )}
