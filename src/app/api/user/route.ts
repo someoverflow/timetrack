@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
   const isAdmin = await checkAdmin();
   if (!isAdmin) return NextResponse.error();
 
+  // TODO: Check for default user
+
   let json = await request.json();
 
   if (
@@ -116,6 +118,8 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const isAdmin = await checkAdmin();
   if (!isAdmin) return NextResponse.error();
+
+  // TODO: Check for default user
 
   let json = await request.json();
 

@@ -80,17 +80,40 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  result.result = await prisma.chip
+  const check = await prisma.chip.findUnique({
+    where: {
+      id: json.id,
+    },
+  });
+
+  if (!check) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [result.result, "Chip ID not found"];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  const res = await prisma.chip
     .delete({
       where: {
         id: json.id,
       },
     })
-    .catch((e) => {
-      result.success = false;
-      result.status = 500;
-      return e.meta.cause;
+    .catch(() => {
+      return null;
     });
+
+  if (!res) {
+    result.success = false;
+    result.status = 500;
+    return NextResponse.json(result, { status: result.status });
+  }
+
+  result.result = res;
 
   return NextResponse.json(result, { status: result.status });
 }
@@ -145,18 +168,45 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  result.result = await prisma.chip
+  const check = await prisma.chip.findUnique({
+    where: {
+      id: json.id,
+    },
+  });
+
+  if (check) {
+    result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+    result.result = [
+      result.result,
+      "Chip ID is already in use by " +
+        (check.userId === json.userId ? "this user" : check.userId),
+    ];
+
+    return NextResponse.json(result, {
+      status: BAD_REQUEST.status,
+      statusText: BAD_REQUEST.result,
+    });
+  }
+
+  const res = await prisma.chip
     .create({
       data: {
         id: json.id,
         userId: parseInt(json.userId),
       },
     })
-    .catch((e) => {
-      result.success = false;
-      result.status = 500;
-      return e.meta.cause;
+    .catch(() => {
+      return null;
     });
+
+  if (!res) {
+    result.success = false;
+    result.status = 500;
+    return NextResponse.json(result, { status: result.status });
+  }
+
+  result.result = res;
 
   return NextResponse.json(result, { status: result.status });
 }
