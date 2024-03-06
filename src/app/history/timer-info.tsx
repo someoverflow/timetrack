@@ -57,7 +57,7 @@ export default function TimerInfo({
         ? data.end.toLocaleString("sv").replace(" ", "T")
         : new Date().toLocaleString("sv").replace(" ", "T"),
       loading: false,
-    }
+    },
   );
 
   const [visible, setVisible] = useState(edit);

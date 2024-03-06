@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SessionProvider } from "@/lib/provider";
 
-import 'animate.css';
+import "animate.css";
 
 export const metadata: Metadata = {
   title: "Time Track",

@@ -39,7 +39,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       role: user.role,
       password: "",
       chipAdd: "",
-    }
+    },
   );
   const [visible, setVisible] = useState(false);
 
@@ -468,7 +468,10 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                     <div id="divider" className="h-1" />
 
                     {user.chips.map((chip) => (
-                      <div className="flex w-full items-center space-x-2">
+                      <div
+                        key={"chip-list-" + chip.id}
+                        className="flex w-full items-center space-x-2"
+                      >
                         <div className="w-full rounded-md border px-4 py-2 font-mono text-sm shadow-sm">
                           {chip.id}
                         </div>

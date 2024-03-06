@@ -40,7 +40,7 @@ export default function UserAdd() {
       password: "",
       mail: "",
       role: "user",
-    }
+    },
   );
 
   const [visible, setVisible] = useState(false);

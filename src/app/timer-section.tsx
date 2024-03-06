@@ -43,7 +43,7 @@ export default function TimerSection() {
       changeModal: false,
       changeTimer: undefined,
       stop: false,
-    }
+    },
   );
 
   const [currentTimer, setCurrentTimer] = useState<Timer>();
@@ -54,11 +54,11 @@ export default function TimerSection() {
     if (!currentTimer && !fetchedTimer) return;
 
     let result = JSON.parse(
-      JSON.stringify(currentTimer ? currentTimer : fetchedTimer)
+      JSON.stringify(currentTimer ? currentTimer : fetchedTimer),
     );
 
     const startDate = new Date(
-      Date.parse(fetchedTimer ? fetchedTimer.start : result.start)
+      Date.parse(fetchedTimer ? fetchedTimer.start : result.start),
     );
     startDate.setMilliseconds(0);
     const currentDate = new Date();
@@ -161,7 +161,7 @@ export default function TimerSection() {
       `/api/times/toggle?type=Website&fixTime=${data.start}&value=${
         start ? "start" : "stop"
       }`,
-      { method: "PUT" }
+      { method: "PUT" },
     )
       .then((result) => result.json())
       .then(() => {
@@ -178,7 +178,7 @@ export default function TimerSection() {
           `An error occurred while ${start ? "starting" : "stopping"}`,
           {
             description: "Reloading the page could solve the problem",
-          }
+          },
         );
         console.error(e);
       });

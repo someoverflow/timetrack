@@ -108,7 +108,7 @@ export default async function AdminUserPage({
   const { users, searchValid } = await getUsers(
     15 * (currentPage - 1),
     15,
-    searchName
+    searchName,
   );
 
   return (

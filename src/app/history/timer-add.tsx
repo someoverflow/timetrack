@@ -37,7 +37,7 @@ export default function TimerAdd({
       end: new Date().toLocaleString("sv").replace(" ", "T"),
       notes: "",
       loading: false,
-    }
+    },
   );
 
   const router = useRouter();
