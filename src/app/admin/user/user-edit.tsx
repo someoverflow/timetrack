@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PencilRuler, SaveAll, Trash } from "lucide-react";
+import { Minus, PencilRuler, Plus, SaveAll, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       mail: user.email,
       role: user.role,
       password: "",
+      chipAdd: "",
     }
   );
   const [visible, setVisible] = useState(false);
@@ -161,6 +162,115 @@ export default function UserEdit({ user }: { user: UserDetails }) {
     });
   }
 
+  async function sendChipCreateRequest() {
+    setData({
+      loading: true,
+    });
+
+    const result = await fetch("/api/chip", {
+      method: "POST",
+      body: JSON.stringify({
+        id: data.chipAdd,
+        userId: user.id,
+      }),
+    });
+
+    setData({
+      loading: false,
+    });
+
+    if (result.ok) {
+      setData({
+        chipAdd: "",
+      });
+
+      toast.success("Successfully linked chip", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json().catch(() => {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    });
+    if (!resultData) return;
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
+  }
+
+  async function sendChipDeleteRequest(chip: string) {
+    setData({
+      loading: true,
+    });
+
+    const result = await fetch("/api/chip", {
+      method: "DELETE",
+      body: JSON.stringify({
+        id: chip,
+      }),
+    });
+
+    setData({
+      loading: false,
+    });
+
+    if (result.ok) {
+      setData({
+        chipAdd: "",
+      });
+
+      toast.success("Successfully removed chip", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json().catch(() => {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    });
+    if (!resultData) return;
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
+  }
+
   return (
     <>
       <Button
@@ -198,7 +308,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
             <Tabs defaultValue="preferences">
               <TabsList className="grid w-full grid-cols-2 h-fit">
                 <TabsTrigger value="preferences">Preferences</TabsTrigger>
-                <TabsTrigger value="chips">Chips?</TabsTrigger>
+                <TabsTrigger value="chips">Chips</TabsTrigger>
               </TabsList>
               <TabsContent value="preferences">
                 <ScrollArea
@@ -219,6 +329,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                             (data.username ? data.username : "") &&
                           "border-sky-700"
                         }`}
+                        disabled={data.username === "admin"}
                         type="text"
                         name="Login Name"
                         id="loginName"
@@ -282,6 +393,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                       {/* TODO: Add changed indication */}
                       <Select
                         key="userAdd-role"
+                        disabled={data.username === "admin"}
                         value={data.role}
                         onValueChange={(role) => setData({ role: role })}
                       >
@@ -321,7 +433,55 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                   className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
                   type="always"
                 >
-                  {/** TODO **/}
+                  <div className="grid gap-4 p-1 w-full">
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="id"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        Add new chip
+                      </Label>
+                      <div className="flex w-full items-center space-x-2">
+                        <Input
+                          className="w-full font-mono"
+                          type="text"
+                          name="Chip Add"
+                          id="chip-add"
+                          value={data.chipAdd}
+                          onChange={(e) => setData({ chipAdd: e.target.value })}
+                        />
+                        <div className="w-max">
+                          <Button
+                            disabled={data.loading}
+                            size="icon"
+                            onClick={() => sendChipCreateRequest()}
+                          >
+                            <Plus className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div id="divider" className="h-1" />
+
+                    {user.chips.map((chip) => (
+                      <div className="flex w-full items-center space-x-2">
+                        <div className="w-full rounded-md border px-4 py-2 font-mono text-sm shadow-sm">
+                          {chip.id}
+                        </div>
+                        <div className="w-max">
+                          <Button
+                            disabled={data.loading}
+                            variant="secondary"
+                            size="icon"
+                            onClick={() => sendChipDeleteRequest(chip.id)}
+                          >
+                            <Minus className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </ScrollArea>
               </TabsContent>
             </Tabs>

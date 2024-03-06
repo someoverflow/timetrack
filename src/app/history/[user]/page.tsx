@@ -87,7 +87,7 @@ export default async function History({
       start: "desc",
     },
     where: {
-      user: target?.name + "",
+      user: target?.username + "",
     },
   });
 
