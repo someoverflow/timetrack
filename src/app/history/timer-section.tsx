@@ -72,15 +72,16 @@ export default function TimerSection({
   }
 
   const downloadCSV = (yearMonth: string, totalTime: string) => {
-    let result = "Start;End;Time;Notes";
+    let result = "Date;Start;End;Time;Notes";
 
-    history[yearMonth].forEach((time) => {
-      result = `${result}\n${time.start.toLocaleString()};${time.end?.toLocaleString()};${
+    history[yearMonth].reverse().forEach((time) => {
+      if (!time.end) return;
+      result = `${result}\n${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
         time.time
       };"${time.notes ? time.notes : ""}"`;
     });
 
-    result = `${result}\n\n;;${totalTime};`;
+    result = `${result}\n\n;;;${totalTime};`;
 
     const element = document.createElement("a");
     const file = new Blob([result], {
