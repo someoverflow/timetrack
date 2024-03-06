@@ -60,7 +60,6 @@ export async function DELETE(request: NextRequest) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
-    console.log(result.result);
 
     return NextResponse.json(result, {
       status: BAD_REQUEST.status,
@@ -144,7 +143,6 @@ export async function POST(request: NextRequest) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
-    console.log(result.result);
 
     return NextResponse.json(result, {
       status: BAD_REQUEST.status,
@@ -237,7 +235,6 @@ export async function PUT(request: NextRequest) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
-    console.log(result.result);
 
     return NextResponse.json(result, {
       status: BAD_REQUEST.status,

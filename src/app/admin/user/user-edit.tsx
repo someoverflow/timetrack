@@ -390,14 +390,17 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                       >
                         Role
                       </Label>
-                      {/* TODO: Add changed indication */}
                       <Select
                         key="userAdd-role"
                         disabled={data.username === "admin"}
                         value={data.role}
                         onValueChange={(role) => setData({ role: role })}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger
+                          className={`w-full border-2 transition duration-300 ${
+                            user.role != data.role && "border-sky-700"
+                          }`}
+                        >
                           <SelectValue placeholder="Theme" />
                         </SelectTrigger>
                         <SelectContent>

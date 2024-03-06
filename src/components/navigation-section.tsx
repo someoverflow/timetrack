@@ -77,7 +77,7 @@ export default function NavigationSection({
         <MenubarTrigger className="hover:!bg-accent !bg-background !cursor-pointer aspect-square !p-2">
           <User className="h-6 w-6" />
         </MenubarTrigger>
-        <MenubarContent>
+        <MenubarContent className="space-y-1">
           <MenubarItem asChild>
             <Link
               href="/profile"
