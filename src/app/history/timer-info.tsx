@@ -288,7 +288,7 @@ export default function TimerInfo({
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <DialogContent className="max-w-xl rounded-lg flex flex-col justify-between">
+        <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
           <DialogHeader>
             <DialogTitle>
               <div>Edit entry</div>
