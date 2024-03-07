@@ -118,7 +118,7 @@ export default async function AdminUserPage({
           <p className="text-2xl font-mono">Users</p>
         </div>
 
-        <div className="flex flex-col w-[90vw] max-w-xl">
+        <div className="flex flex-col max-w-md max-h-[75dvh]">
           <UserTableHeader searchValid={searchValid} />
 
           <ScrollArea
