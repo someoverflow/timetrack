@@ -37,7 +37,7 @@ export default function ProfileSection({
       name: userData.name,
       mail: userData.email,
       password: "",
-    }
+    },
   );
 
   const router = useRouter();

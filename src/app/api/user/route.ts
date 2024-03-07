@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
   const isAdmin = await checkAdmin();
   if (!isAdmin) return NextResponse.error();
 
+  // TODO: Check for default user
+
   let json = await request.json();
 
   if (
@@ -78,22 +80,38 @@ export async function POST(request: NextRequest) {
     updateData.password = await hash(json.password, 12);
   }
 
-  const result = await prisma.user.update({
-    where: {
-      id: parseInt(json.id),
-    },
-    data: updateData,
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      role: true,
-      updatedAt: true,
-      createdAt: true,
-    },
+  const user = await prisma.user.findUnique({
+    where: { id: json.id },
   });
 
-  return NextResponse.json({ result });
+  if (!user) return NextResponse.error();
+
+  const [userResult, timesResult] = await prisma.$transaction([
+    prisma.user.update({
+      where: {
+        id: parseInt(json.id),
+      },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        updatedAt: true,
+        createdAt: true,
+      },
+    }),
+    prisma.times.updateMany({
+      where: {
+        user: user.username,
+      },
+      data: {
+        user: updateData.username,
+      },
+    }),
+  ]);
+
+  return NextResponse.json({ userResult, timesResult });
 }
 
 // Delete
@@ -101,17 +119,26 @@ export async function DELETE(request: NextRequest) {
   const isAdmin = await checkAdmin();
   if (!isAdmin) return NextResponse.error();
 
+  // TODO: Check for default user
+
   let json = await request.json();
 
   if (json.id == null) return NextResponse.error();
 
   if (json.id == 1) return NextResponse.error();
 
-  const result = await prisma.user.delete({
-    where: {
-      id: parseInt(json.id),
-    },
-  });
+  const userToDelete = await prisma.user.findUnique({ where: { id: json.id } });
 
-  return NextResponse.json({ result });
+  if (!userToDelete) return NextResponse.error();
+
+  const [timesResult, userResult] = await prisma.$transaction([
+    prisma.times.deleteMany({ where: { user: userToDelete.username } }),
+    prisma.user.delete({
+      where: {
+        id: userToDelete.id,
+      },
+    }),
+  ]);
+
+  return NextResponse.json({ timesResult, userResult });
 }

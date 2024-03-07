@@ -11,5 +11,9 @@ export default async function SignInLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <><Suspense>{children}</Suspense></>;
+  return (
+    <>
+      <Suspense>{children}</Suspense>
+    </>
+  );
 }

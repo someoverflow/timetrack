@@ -37,7 +37,7 @@ export default function TimerAdd({
       end: new Date().toLocaleString("sv").replace(" ", "T"),
       notes: "",
       loading: false,
-    }
+    },
   );
 
   const router = useRouter();
@@ -110,7 +110,7 @@ export default function TimerAdd({
       open={visible}
       onOpenChange={(e) => setVisible(e)}
     >
-      <DialogContent className="max-w-xl rounded-lg flex flex-col justify-between">
+      <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
         <DialogHeader>
           <DialogTitle>
             <div>Create entry</div>

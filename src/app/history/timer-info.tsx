@@ -15,7 +15,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -58,7 +57,7 @@ export default function TimerInfo({
         ? data.end.toLocaleString("sv").replace(" ", "T")
         : new Date().toLocaleString("sv").replace(" ", "T"),
       loading: false,
-    }
+    },
   );
 
   const [visible, setVisible] = useState(edit);
@@ -255,13 +254,24 @@ export default function TimerInfo({
             if (!blockVisible) setVisible(true);
           }}
         >
-          <p className="font-semibold text-xs text-muted-foreground text-left pb-2">
-            {`${data.start.getDate().toString().padStart(2, "0")}.${(
-              data.start.getMonth() + 1
-            )
-              .toString()
-              .padStart(2, "0")} ${days[data.start.getDay()]}`}
-          </p>
+          <div className="flex flex-row items-center justify-between pb-2">
+            <p className="font-semibold text-xs text-muted-foreground text-left">
+              {`${data.start.getDate().toString().padStart(2, "0")}.${(
+                data.start.getMonth() + 1
+              )
+                .toString()
+                .padStart(2, "0")} ${days[data.start.getDay()]}`}
+            </p>
+            {data.notes && (
+              <p className="text-xs text-muted-foreground/50 text-right">
+                {data.notes?.split("\n")[0].slice(0, 20) +
+                  (data.notes?.split("\n").length > 1 ||
+                  data.notes?.split("\n")[0].length > 20
+                    ? "…"
+                    : "")}
+              </p>
+            )}
+          </div>
 
           <div className="flex flex-row justify-evenly items-center text-lg">
             <p>{data.start.toLocaleTimeString()}</p>
@@ -269,19 +279,7 @@ export default function TimerInfo({
             <p>{data.end.toLocaleTimeString()}</p>
           </div>
 
-          <p className="text-xs text-muted-foreground">{data.time!}</p>
-
-          {data.notes && (
-            <>
-              <div className="flex flex-row items-center p-2 gap-1">
-                <div className="divider divider-vertical h-3 w-2 ml-0 mr-0"></div>
-                <p className="text-xs text-content3 text-left">
-                  {data.notes?.split("\n")[0]}
-                  {data.notes?.split("\n").length > 1 ? "…" : ""}
-                </p>
-              </div>
-            </>
-          )}
+          <p className="text-xs text-muted-foreground/80">{data.time!}</p>
         </div>
       </SwipeableListItem>
 
@@ -290,7 +288,7 @@ export default function TimerInfo({
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <DialogContent className="max-w-xl rounded-lg flex flex-col justify-between">
+        <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
           <DialogHeader>
             <DialogTitle>
               <div>Edit entry</div>

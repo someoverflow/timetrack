@@ -1,12 +1,12 @@
 {
-    "recommendations": [
-        "dsznajder.es7-react-js-snippets",
-        "mhutchie.git-graph",
-        "wix.vscode-import-cost",
-        "christian-kohler.npm-intellisense",
-        "esbenp.prettier-vscode",
-        "yoavbls.pretty-ts-errors",
-        "prisma.prisma",
-        "bradlc.vscode-tailwindcss"
-    ]
+  "recommendations": [
+    "dsznajder.es7-react-js-snippets",
+    "mhutchie.git-graph",
+    "wix.vscode-import-cost",
+    "christian-kohler.npm-intellisense",
+    "esbenp.prettier-vscode",
+    "yoavbls.pretty-ts-errors",
+    "prisma.prisma",
+    "bradlc.vscode-tailwindcss"
+  ]
 }
