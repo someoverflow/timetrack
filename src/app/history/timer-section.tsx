@@ -1,11 +1,6 @@
 "use client";
 
-import "@/lib/types";
-
-import { cn, getTotalTime } from "@/lib/utils";
-
-import { Check, ChevronDown, FileDown, ListPlus, Plus } from "lucide-react";
-
+// UI
 import {
   Tooltip,
   TooltipContent,
@@ -25,24 +20,34 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Check, ChevronDown, FileDown, ListPlus } from "lucide-react";
+import TimerAdd from "./timer-add";
 
-import dynamic from "next/dynamic";
+// Database
+import { Prisma } from "@prisma/client";
+
+// Navigation
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import TimerAdd from "./timer-add";
+// React
 import React, { useState } from "react";
+
+import { cn } from "@/lib/utils";
+
+import dynamic from "next/dynamic";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
+type Timer = Prisma.timeGetPayload<{}>;
 interface Data {
-  [yearMonth: string]: TimerWithDate[];
+  [yearMonth: string]: Timer[];
 }
 
 export default function TimerSection({
-  username,
+  tag,
   history,
   totalTime,
 }: {
-  username: string;
+  tag: string;
   history: Data;
   totalTime: string;
 }) {
@@ -95,7 +100,7 @@ export default function TimerSection({
 
   return (
     <section
-      className="w-full max-w-md max-h-[75dvh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
+      className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
       key={yearMonth}
     >
       <div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
@@ -135,7 +140,7 @@ export default function TimerSection({
                       <Check
                         className={cn(
                           "ml-auto h-4 w-4",
-                          yearMonth === key ? "opacity-100" : "opacity-0",
+                          yearMonth === key ? "opacity-100" : "opacity-0"
                         )}
                       />
                     </CommandItem>
@@ -179,15 +184,11 @@ export default function TimerSection({
               <p className="text-center">Add a new entry</p>
             </TooltipContent>
           </Tooltip>
-          <TimerAdd
-            username={username}
-            visible={addVisible}
-            setVisible={setAddVisible}
-          />
+          <TimerAdd tag={tag} visible={addVisible} setVisible={setAddVisible} />
         </div>
       </div>
       <ScrollArea
-        className="h-[65dvh] w-full rounded-sm border p-1.5 overflow-hidden"
+        className="h-[calc(80svh-80px)] w-full rounded-sm border p-1.5 overflow-hidden"
         type="scroll"
       >
         {history[yearMonth].map((time) => (

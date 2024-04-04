@@ -1,15 +1,27 @@
-import prisma from "@/lib/prisma";
+//UI
 import Navigation from "@/components/navigation";
-
 import TimerSection from "../timer-section";
 
-import { getServerSession } from "next-auth";
-import { Metadata } from "next";
+// Navigation
 import { redirect } from "next/navigation";
+
+// Auth
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+// Database
+import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+
+// React
+import { Metadata } from "next";
+
+// Utils
 import { getTotalTime } from "@/lib/utils";
 
+type Timer = Prisma.timeGetPayload<{}>;
 interface Data {
-  [yearMonth: string]: TimerWithDate[];
+  [yearMonth: string]: Timer[];
 }
 const months = [
   "January",
@@ -26,10 +38,10 @@ const months = [
   "December",
 ];
 
-function formatHistory(data: TimerWithDate[]): Data {
+function formatHistory(data: Timer[]): Data {
   let result: Data = {};
 
-  data.forEach((item: TimerWithDate) => {
+  data.forEach((item: Timer) => {
     let date = new Date(item.start);
     let year = date.getFullYear();
     let month = months[date.getMonth()];
@@ -57,55 +69,61 @@ export default async function History({
   };
   params: { user: string };
 }) {
-  const session = await getServerSession();
-
-  if (session == null) return redirect("/");
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return redirect("/signin");
 
   const user = await prisma.user.findUnique({
     where: {
-      username: session.user?.name + "",
+      id: session.user.id,
     },
   });
 
-  if (user?.role != "admin") redirect("/history");
+  if (!user) return redirect("/");
+  if (user.role != "admin") redirect("/history");
 
   const target = await prisma.user
     .findUnique({
       where: {
-        username: params.user,
+        tag: params.user,
       },
       select: {
-        username: true,
+        id: true,
+        tag: true,
         name: true,
       },
     })
     .catch(() => null);
 
-  const history = await prisma.times.findMany({
-    orderBy: {
-      //id: "desc",
-      start: "desc",
-    },
-    where: {
-      user: target?.username + "",
-    },
-  });
+  const history = await prisma.time
+    .findMany({
+      orderBy: {
+        //id: "desc",
+        start: "desc",
+      },
+      where: {
+        userId: target?.id,
+      },
+    })
+    .catch(() => null);
 
   function dataFound(): boolean {
+    if (!history) return false;
     if (history.length == 0) return false;
     return !(history.length == 1 && history[0].end == null);
   }
 
-  const historyData = formatHistory(history);
+  const historyData = history ? formatHistory(history) : null;
 
   const timeStrings: string[] = [];
-  try {
-    if (searchParams && searchParams.ym) {
-      historyData[searchParams.ym].forEach((e) => {
-        if (e.time) timeStrings.push(e.time);
-      });
-    }
-  } catch (err: any) {}
+  if (historyData) {
+    try {
+      if (searchParams && searchParams.ym) {
+        historyData[searchParams.ym].forEach((e) => {
+          if (e.time) timeStrings.push(e.time);
+        });
+      }
+    } catch (err: any) {}
+  }
   const totalTime = timeStrings.length == 0 ? "" : getTotalTime(timeStrings);
 
   return (
@@ -117,13 +135,13 @@ export default async function History({
           }`}</p>
         </div>
 
-        {history != null ? (
+        {target ? (
           <>
-            {dataFound() ? (
+            {dataFound() && historyData != null ? (
               <TimerSection
                 history={historyData}
                 totalTime={totalTime}
-                username={session?.user?.name!}
+                tag={target.tag}
               />
             ) : (
               <p className="font-mono font-bold text-xl">No data found</p>

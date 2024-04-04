@@ -1,7 +1,5 @@
 "use client";
 
-import "@/lib/types";
-
 import { useCallback, useEffect, useReducer, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -43,7 +40,8 @@ export default function TimerSection() {
       changeModal: false,
       changeTimer: undefined,
       stop: false,
-    },
+      delay: 60,
+    }
   );
 
   const [currentTimer, setCurrentTimer] = useState<Timer>();
@@ -54,11 +52,11 @@ export default function TimerSection() {
     if (!currentTimer && !fetchedTimer) return;
 
     let result = JSON.parse(
-      JSON.stringify(currentTimer ? currentTimer : fetchedTimer),
+      JSON.stringify(currentTimer ? currentTimer : fetchedTimer)
     );
 
     const startDate = new Date(
-      Date.parse(fetchedTimer ? fetchedTimer.start : result.start),
+      Date.parse(fetchedTimer ? fetchedTimer.start : result.start)
     );
     startDate.setMilliseconds(0);
     const currentDate = new Date();
@@ -161,7 +159,7 @@ export default function TimerSection() {
       `/api/times/toggle?type=Website&fixTime=${data.start}&value=${
         start ? "start" : "stop"
       }`,
-      { method: "PUT" },
+      { method: "PUT" }
     )
       .then((result) => result.json())
       .then(() => {
@@ -178,7 +176,7 @@ export default function TimerSection() {
           `An error occurred while ${start ? "starting" : "stopping"}`,
           {
             description: "Reloading the page could solve the problem",
-          },
+          }
         );
         console.error(e);
       });
@@ -190,21 +188,22 @@ export default function TimerSection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Request Effect
-  useEffect(() => {
-    const requestIntervalId = setInterval(() => {
-      if (!data.stop) fetchCurrentTimer();
-    }, 10000);
-    return () => clearInterval(requestIntervalId);
-  }, [data.stop, fetchCurrentTimer]);
-
   // Timer Effect
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (!data.stop && data.running) count();
-    }, 500);
+      if (!data.stop) {
+        updateData({ delay: data.delay + 1 });
+        if (data.delay > 60) {
+          data.delay = 0;
+          updateData({ delay: 0 });
+          fetchCurrentTimer();
+          console.log("fetch", "new data");
+        }
+        if (data.running) count();
+      }
+    }, 250);
     return () => clearInterval(intervalId);
-  }, [data.stop, data.running, count]);
+  }, [data.stop, data.running, data.delay, count]);
 
   return (
     <>
@@ -240,7 +239,7 @@ export default function TimerSection() {
         open={data.changeModal}
         onOpenChange={(e) => updateData({ changeModal: e })}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-lg w-[95vw] rounded-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Edit time and notes</AlertDialogTitle>
             <AlertDialogDescription>

@@ -1,11 +1,6 @@
 "use client";
 
-import "@/lib/types";
-
-import { SaveAll, Trash, Trash2, XCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useReducer, useState } from "react";
-
+// UI
 import {
   SwipeableListItem,
   SwipeAction,
@@ -27,7 +22,18 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SaveAll, Trash, Trash2, XCircle } from "lucide-react";
 
+// Database
+import { Prisma } from "@prisma/client";
+
+// Navigation
+import { useRouter } from "next/navigation";
+
+// React
+import { useEffect, useReducer, useState } from "react";
+
+type Timer = Prisma.timeGetPayload<{}>;
 const days = [
   "Sunday",
   "Monday",
@@ -42,7 +48,7 @@ export default function TimerInfo({
   data,
   edit,
 }: {
-  data: TimerWithDate;
+  data: Timer;
   edit: boolean;
 }) {
   const [state, setState] = useReducer(
@@ -57,7 +63,7 @@ export default function TimerInfo({
         ? data.end.toLocaleString("sv").replace(" ", "T")
         : new Date().toLocaleString("sv").replace(" ", "T"),
       loading: false,
-    },
+    }
   );
 
   const [visible, setVisible] = useState(edit);

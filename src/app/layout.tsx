@@ -1,17 +1,19 @@
-import "./globals.css";
-import type { Metadata } from "next";
-
+// UI
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/lib/theme-provider";
-import { SessionProvider } from "@/lib/provider";
 
-import "animate.css";
+// Provider
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessionProvider, ThemeProvider } from "@/lib/provider";
+
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Time Track",
   description: "Track your Time",
 };
+
+import "./globals.css";
+import "animate.css";
 
 export default async function RootLayout({
   children,

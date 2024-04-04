@@ -1,5 +1,6 @@
 "use client";
 
+// UI
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,16 +15,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { SaveAll } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useReducer } from "react";
 import { toast } from "sonner";
 
+// Navigation
+import { useRouter } from "next/navigation";
+
+// React
+import { useReducer } from "react";
+
 export default function TimerAdd({
-  username,
+  tag,
   visible,
   setVisible,
 }: {
-  username: string;
+  tag: string;
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }) {
@@ -50,7 +55,7 @@ export default function TimerAdd({
     const result = await fetch("/api/times", {
       method: "POST",
       body: JSON.stringify({
-        username: username,
+        tag: tag,
         notes: data.notes,
         start: new Date(data.start).toUTCString(),
         end: new Date(data.end).toUTCString(),

@@ -1,5 +1,6 @@
 "use client";
 
+// UI
 import {
   Menubar,
   MenubarContent,
@@ -14,7 +15,11 @@ import {
 
 import { History, Moon, Shield, Sun, SunMoon, Timer, User } from "lucide-react";
 import { useTheme } from "next-themes";
+
+// React
 import { signOut } from "next-auth/react";
+
+// Navigation
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -22,10 +27,10 @@ export default function NavigationSection({
   user,
 }: {
   user: {
-    username: string;
-    name: string | null;
+    id: number;
+    tag: string;
     role: string;
-  } | null;
+  };
 }) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();

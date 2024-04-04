@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { Eye } from "lucide-react";
 import { getServerSession } from "next-auth";
-import { cache } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Navigation from "@/components/navigation";
@@ -26,24 +25,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Prisma } from "@prisma/client";
+import { authOptions } from "@/lib/auth";
 
-type User = {
-  id: number;
-  role: string;
-  name: string;
-  username: string;
-  email: string;
-  createdAt: Date;
-  updatedAt: Date;
-  chips: {
-    id: string;
-    userId: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
-};
-
-export const revalidate = 60;
+type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
 
 async function getUsers(skip: number, take: number, search: string | null) {
   var searchValid = /^[A-Za-z\s]*$/.test(search!);
@@ -58,17 +43,16 @@ async function getUsers(skip: number, take: number, search: string | null) {
     },
     select: {
       id: true,
-      username: true,
+      tag: true,
       name: true,
       email: true,
       role: true,
 
-      chips: true,
-
-      updatedAt: true,
       createdAt: true,
+      updatedAt: true,
 
-      _count: true,
+      projects: true,
+      chips: true,
     },
   });
   return {
@@ -86,21 +70,14 @@ export default async function AdminUserPage({
     page?: string;
   };
 }) {
-  const session = await getServerSession();
-
-  if (session == null) return redirect("/");
-  const user = await prisma.user.findUnique({
-    where: {
-      username: session.user?.name + "",
-    },
-  });
-  if (user?.role != "admin") return redirect("/");
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return redirect("/");
+  if (session.user.role != "admin") return redirect("/");
 
   var currentPage = Number(searchParams?.page) || 1;
   var searchName = searchParams?.search || null;
 
   const userCount = await prisma.user.count();
-  //const userCount = await getUserCount();
   const pages = Math.ceil(userCount / 15);
 
   if (currentPage > pages) currentPage = pages;
@@ -108,64 +85,85 @@ export default async function AdminUserPage({
   const { users, searchValid } = await getUsers(
     15 * (currentPage - 1),
     15,
-    searchName,
+    searchName
   );
+
+  if (users.length != 15) {
+    for (var i = 0; i < 15; i++) {
+      if (!users[i]) {
+        users[i] = {
+          id: i * -1,
+          tag: "<null>",
+          name: null,
+          email: "<null>",
+          role: "<null>",
+          projects: [],
+          chips: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+      }
+    }
+  }
 
   return (
     <Navigation>
-      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
+      <section className="flex flex-col items-center gap-4 p-4 ">
         <div className="w-full font-mono text-center pt-2">
           <p className="text-2xl font-mono">Users</p>
         </div>
 
-        <div className="flex flex-col max-w-md max-h-[75dvh]">
+        <div className="flex flex-col max-h-[90svh] w-full max-w-md animate__animated animate__fadeIn">
           <UserTableHeader searchValid={searchValid} />
 
           <ScrollArea
             type="always"
-            className="h-[70svh] rounded-md border p-2.5"
+            className="h-[calc(80svh-80px)] rounded-md border p-2.5 w-full"
           >
-            <Table className="rounded-none min-h-[67svh]">
+            <Table className="rounded-none">
               <TableHeader className="sticky z-10 top-0 bg-secondary">
                 <TableRow>
-                  <TableHead className="w-min">Login</TableHead>
+                  <TableHead className="w-fit">Login</TableHead>
                   <TableHead className="w-full">Name</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(users as User[]).map((userData) => (
+                {(users as User[]).map((user) => (
                   <TableRow
-                    key={userData.id}
-                    className="animate__animated animate__fadeIn"
+                    key={user.id}
+                    className="animate__animated animate__slideInLeft"
                   >
-                    <TableCell className="font-medium">
-                      {userData.username}
+                    <TableCell className="whitespace-nowrap font-medium w-fit">
+                      {user.tag != "<null>" && user.tag}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {userData.name}
+                      {user.name != "<null>" && user.name}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex flex-row justify-end items-center gap-2">
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button variant="secondary" size="icon" asChild>
-                              <Link href={"/history/" + userData.username}>
-                                <Eye className="w-5 h-5" />
-                              </Link>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            <p>View User-History</p>
-                          </TooltipContent>
-                        </Tooltip>
+                      {user.tag == "<null>" ? (
+                        <div className="h-10 w-1"></div>
+                      ) : (
+                        <div className="flex flex-row justify-end items-center gap-2">
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button variant="secondary" size="icon" asChild>
+                                <Link href={"/history/" + user.tag}>
+                                  <Eye className="w-5 h-5" />
+                                </Link>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              <p>View History</p>
+                            </TooltipContent>
+                          </Tooltip>
 
-                        <UserEdit user={userData} />
-                      </div>
+                          <UserEdit user={user} />
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
-                <tr className="h-full"></tr>
               </TableBody>
               <TableFooter className="sticky bottom-0">
                 <TableRow>

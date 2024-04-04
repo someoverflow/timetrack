@@ -1,3 +1,4 @@
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { validatePassword } from "@/lib/utils";
 import { hash } from "bcrypt";
@@ -18,8 +19,8 @@ const BAD_REQUEST: APIResult = Object.freeze({
 
 // Update profile
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -98,7 +99,7 @@ export async function PUT(request: NextRequest) {
   const res = await prisma.user
     .update({
       where: {
-        username: session.user?.name!,
+        id: session.user.id,
       },
       data: data,
       select: {

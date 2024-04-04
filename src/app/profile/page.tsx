@@ -1,23 +1,16 @@
+// UI
 import Navigation from "@/components/navigation";
-import prisma from "@/lib/prisma";
-
-import { getServerSession } from "next-auth";
-
 import ProfileSection from "./profile-section";
 
+// Auth
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
 export default async function Profile() {
-  const user = await prisma.user.findUnique({
-    where: {
-      username: (await getServerSession())?.user?.name + "",
-    },
-    select: {
-      chips: true,
-      email: true,
-      name: true,
-      role: true,
-      username: true,
-    },
-  });
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return redirect("/signin");
+  const user = session.user;
 
   return (
     <Navigation>
@@ -25,11 +18,11 @@ export default async function Profile() {
         <div className="w-full font-mono text-center pt-2">
           <p className="text-2xl font-mono">Profile</p>
           <p className="text-content3 text-md">
-            {user?.name} aka. {user?.username}
+            {user.name} aka. {user.tag}
           </p>
         </div>
 
-        <ProfileSection userData={user!} />
+        <ProfileSection userData={user} />
       </section>
     </Navigation>
   );

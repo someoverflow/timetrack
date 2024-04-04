@@ -1,3 +1,4 @@
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
@@ -10,21 +11,21 @@ const NO_AUTH: APIResult = Object.freeze({
 });
 
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
     });
 
-  const data = await prisma.times
+  const data = await prisma.time
     .findMany({
       take: 1,
       orderBy: {
         id: "desc",
       },
       where: {
-        user: session.user?.name + "",
+        userId: session.user.id,
         end: null,
       },
     })
@@ -43,10 +44,10 @@ export async function PUT(request: NextRequest) {
   if (requestTime) changeDate = new Date(Date.parse(requestTime));
 
   if (data == null || data.length == 0) {
-    result.result = await prisma.times
+    result.result = await prisma.time
       .create({
         data: {
-          user: session.user?.name + "",
+          userId: session.user.id,
           start: changeDate,
           startType: type ? type : "API",
         },
@@ -61,7 +62,7 @@ export async function PUT(request: NextRequest) {
 
     var timePassed = getTimePassed(item.start, changeDate);
 
-    const result = await prisma.times
+    const result = await prisma.time
       .update({
         data: {
           end: changeDate,

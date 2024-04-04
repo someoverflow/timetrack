@@ -1,3 +1,4 @@
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
@@ -23,8 +24,8 @@ const BAD_REQUEST: APIResult = Object.freeze({
 // Get current    timer
 // Get all        timers
 export async function GET(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -38,17 +39,17 @@ export async function GET(request: NextRequest) {
     result: undefined,
   };
 
-  const user = session.user?.name + "";
+  const userId = parseInt(session.user.id + "");
 
   if (indicator == "current") {
-    result.result = await prisma.times
+    result.result = await prisma.time
       .findMany({
         take: 1,
         orderBy: {
           id: "desc",
         },
         where: {
-          user: user,
+          userId: userId,
           end: null,
         },
       })
@@ -58,13 +59,13 @@ export async function GET(request: NextRequest) {
         return e.meta.cause;
       });
   } else {
-    result.result = await prisma.times
+    result.result = await prisma.time
       .findMany({
         orderBy: {
           id: "desc",
         },
         where: {
-          user: user,
+          userId: userId,
         },
       })
       .catch((e) => {
@@ -79,8 +80,8 @@ export async function GET(request: NextRequest) {
 
 // Create timer
 export async function POST(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -88,13 +89,20 @@ export async function POST(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: {
-      username: session.user?.name + "",
+      id: session.user.id,
     },
     select: {
-      username: true,
+      tag: true,
       role: true,
+      id: true,
     },
   });
+
+  if (user == null)
+    return NextResponse.json(NO_AUTH, {
+      status: NO_AUTH.status,
+      statusText: NO_AUTH.result,
+    });
 
   let result: APIResult = {
     success: true,
@@ -116,7 +124,7 @@ export async function POST(request: NextRequest) {
   if (json instanceof NextResponse) return json;
 
   if (
-    json.username == null ||
+    json.tag == null ||
     json.notes == null ||
     json.start == null ||
     json.end == null
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     result.result = [
       result.result,
-      json.username == null ? "Username Missing" : undefined,
+      json.tag == null ? "Tag Missing" : undefined,
       json.notes == null ? "Notes Missing" : undefined,
       json.start == null ? "Start Missing" : undefined,
       json.end == null ? "End Missing" : undefined,
@@ -152,26 +160,25 @@ export async function POST(request: NextRequest) {
 
   const timePassed = getTimePassed(startDate, endDate);
 
-  let dbUser: string | undefined;
+  let targetUser: number | undefined;
+  if (user.tag == json.tag) targetUser = user.id;
 
-  if (user?.username == json.username) dbUser = user?.username;
-
-  if (!dbUser) {
-    dbUser = (
+  if (!targetUser) {
+    targetUser = (
       await prisma.user
         .findUnique({
           where: {
-            username: json.username,
+            tag: json.tag,
           },
           select: {
-            username: true,
+            id: true,
           },
         })
         .catch(() => undefined)
-    )?.username;
+    )?.id;
   }
 
-  if (!dbUser) {
+  if (!targetUser) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "User not found"];
@@ -182,16 +189,16 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  if (user?.role != "admin" && dbUser != user?.username)
+  if (user?.role != "admin" && targetUser != user.id)
     return NextResponse.json(FORBIDDEN, {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
     });
 
-  result.result = await prisma.times
+  result.result = await prisma.time
     .create({
       data: {
-        user: json.username,
+        userId: targetUser,
         notes: json.notes,
         start: startDate,
         end: endDate,
@@ -211,8 +218,8 @@ export async function POST(request: NextRequest) {
 
 // Update timer
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -220,10 +227,11 @@ export async function PUT(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: {
-      username: session.user?.name + "",
+      id: session.user.id,
     },
     select: {
-      username: true,
+      id: true,
+      tag: true,
       role: true,
     },
   });
@@ -262,7 +270,7 @@ export async function PUT(request: NextRequest) {
     });
   }
 
-  const timer = await prisma.times
+  const timer = await prisma.time
     .findUnique({
       where: {
         id: parseInt(json.id),
@@ -281,7 +289,7 @@ export async function PUT(request: NextRequest) {
     });
   }
 
-  if (user?.role != "admin" && user?.username !== timer?.user)
+  if (user?.role != "admin" && user?.id !== timer?.userId)
     return NextResponse.json(FORBIDDEN, {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
@@ -321,7 +329,7 @@ export async function PUT(request: NextRequest) {
     data.time = timePassed;
   }
 
-  result.result = await prisma.times
+  result.result = await prisma.time
     .update({
       where: {
         id: parseInt(json.id),
@@ -340,7 +348,7 @@ export async function PUT(request: NextRequest) {
 // Delete timer
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession();
-  if (session == null)
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -348,10 +356,11 @@ export async function DELETE(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: {
-      username: session.user?.name + "",
+      id: session.user.id,
     },
     select: {
-      username: true,
+      tag: true,
+      id: true,
       role: true,
     },
   });
@@ -386,7 +395,7 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  const timer = await prisma.times
+  const timer = await prisma.time
     .findUnique({
       where: {
         id: parseInt(json.id),
@@ -405,13 +414,13 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  if (user?.role != "admin" && user?.username !== timer?.user)
+  if (user?.role != "admin" && user?.id !== timer?.userId)
     return NextResponse.json(FORBIDDEN, {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
     });
 
-  result.result = await prisma.times
+  result.result = await prisma.time
     .delete({
       where: {
         id: parseInt(json.id),

@@ -23,9 +23,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import "@/lib/types";
+import { Prisma } from "@prisma/client";
 
-export default function UserEdit({ user }: { user: UserDetails }) {
+type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
+
+export default function UserEdit({ user }: { user: User }) {
   const [data, setData] = useReducer(
     (prev: any, next: any) => ({
       ...prev,
@@ -33,13 +35,13 @@ export default function UserEdit({ user }: { user: UserDetails }) {
     }),
     {
       loading: false,
-      username: user.username,
-      displayName: user.name != "?" ? user.name : "",
+      tag: user.tag,
+      name: user.name != "?" ? user.name : "",
       mail: user.email,
       role: user.role,
       password: "",
       chipAdd: "",
-    },
+    }
   );
   const [visible, setVisible] = useState(false);
 
@@ -54,8 +56,8 @@ export default function UserEdit({ user }: { user: UserDetails }) {
       method: "POST",
       body: JSON.stringify({
         id: user.id,
-        username: data.username,
-        displayName: data.displayName,
+        tag: data.tag,
+        name: data.name,
         mail: data.mail,
         role: data.role,
         password: data.password.trim().length === 0 ? undefined : data.password,
@@ -280,7 +282,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
           setVisible(!visible);
 
           setData({
-            username: user.username,
+            tag: user.tag,
             displayName: user.name != "?" ? user.name : "",
             mail: user.email,
             role: user.role,
@@ -325,16 +327,15 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                       </Label>
                       <Input
                         className={`w-full border-2 transition duration-300 ${
-                          user.username !=
-                            (data.username ? data.username : "") &&
+                          user.tag != (data.tag ? data.tag : "") &&
                           "border-sky-700"
                         }`}
-                        disabled={data.username === "admin"}
+                        disabled={data.tag === "admin"}
                         type="text"
                         name="Login Name"
                         id="loginName"
-                        value={data.username}
-                        onChange={(e) => setData({ username: e.target.value })}
+                        value={data.tag}
+                        onChange={(e) => setData({ tag: e.target.value })}
                       />
                     </div>
                     <div className="grid w-full items-center gap-1.5">
@@ -392,7 +393,7 @@ export default function UserEdit({ user }: { user: UserDetails }) {
                       </Label>
                       <Select
                         key="userAdd-role"
-                        disabled={data.username === "admin"}
+                        disabled={data.tag === "admin"}
                         value={data.role}
                         onValueChange={(role) => setData({ role: role })}
                       >

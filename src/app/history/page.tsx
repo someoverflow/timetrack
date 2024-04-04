@@ -1,14 +1,25 @@
-import prisma from "@/lib/prisma";
+// UI
 import Navigation from "@/components/navigation";
-
 import TimerSection from "./timer-section";
 
-import { Session, getServerSession } from "next-auth";
-import { Metadata } from "next";
-import { getTotalTime } from "@/lib/utils";
+// Database
+import { Prisma } from "@prisma/client";
+import prisma from "@/lib/prisma";
 
+// Navigation
+import { redirect } from "next/navigation";
+
+// React
+import { Metadata } from "next";
+import { getServerSession } from "next-auth";
+
+// Utils
+import { getTotalTime } from "@/lib/utils";
+import { authOptions } from "@/lib/auth";
+
+type Timer = Prisma.timeGetPayload<{}>;
 interface Data {
-  [yearMonth: string]: TimerWithDate[];
+  [yearMonth: string]: Timer[];
 }
 const months = [
   "January",
@@ -25,10 +36,10 @@ const months = [
   "December",
 ];
 
-function formatHistory(data: TimerWithDate[]): Data {
+function formatHistory(data: Timer[]): Data {
   let result: Data = {};
 
-  data.forEach((item: TimerWithDate) => {
+  data.forEach((item) => {
     let date = new Date(item.start);
     let year = date.getFullYear();
     let month = months[date.getMonth()];
@@ -53,14 +64,17 @@ export default async function History({
     ym?: string;
   };
 }) {
-  const session = await getServerSession();
-  const history = await prisma.times.findMany({
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return redirect("/signin");
+  const user = session.user;
+
+  const history = await prisma.time.findMany({
     orderBy: {
       //id: "desc",
       start: "desc",
     },
     where: {
-      user: session?.user?.name + "",
+      userId: user.id,
     },
   });
 
@@ -94,7 +108,7 @@ export default async function History({
           <TimerSection
             history={historyData}
             totalTime={totalTime}
-            username={session?.user?.name!}
+            tag={user.tag}
           />
         ) : (
           <p className="font-mono font-bold text-base">No data found</p>

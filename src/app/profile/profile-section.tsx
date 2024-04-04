@@ -1,30 +1,28 @@
 "use client";
 
-import { Save, SaveAll } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+// UI
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { SaveAll } from "lucide-react";
+
+// React
+import { useRouter } from "next/navigation";
 import { useReducer } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function ProfileSection({
   userData,
 }: {
   userData: {
+    id: number;
+    tag: string;
     role: string;
-    email: string;
-    name: string | null;
-    username: string;
-    chips: {
-      id: string;
-      userId: number;
-      createdAt: Date;
-      updatedAt: Date;
-    }[];
+    name?: string | null | undefined;
+    email?: string | null | undefined;
   };
 }) {
   const [data, setData] = useReducer(
@@ -37,10 +35,12 @@ export default function ProfileSection({
       name: userData.name,
       mail: userData.email,
       password: "",
-    },
+    }
   );
 
   const router = useRouter();
+
+  const { update } = useSession();
 
   async function updateData() {
     setData({
@@ -62,14 +62,21 @@ export default function ProfileSection({
     });
 
     if (result.ok) {
-      toast.success(`Successfully updated profile`, {
+      toast.success("Successfully updated profile.", {
+        description: "Session is getting updated",
         duration: 3000,
       });
 
+      await update({ name: data.name });
+
       if (changePassword) {
+        toast.success("Password changed. Please sign in again.", {
+          duration: 3000,
+        });
         signOut();
         return;
       }
+
       router.refresh();
       return;
     }

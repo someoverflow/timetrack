@@ -8,8 +8,13 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "sonner";
 
+// Auth
 import { signIn } from "next-auth/react";
+
+// Navigation
 import { useRouter, useSearchParams } from "next/navigation";
+
+// React
 import { useState } from "react";
 
 export default function SignIn() {
@@ -48,7 +53,7 @@ export default function SignIn() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center">
+    <main className="min-h-[90svh] flex flex-col items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>

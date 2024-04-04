@@ -1,3 +1,4 @@
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
@@ -6,13 +7,12 @@ import { NextRequest, NextResponse } from "next/server";
 // TODO: Add result info
 
 async function checkAdmin(): Promise<boolean> {
-  const session = await getServerSession();
-
-  if (session == null) return false;
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return false;
 
   const user = await prisma.user.findUnique({
     where: {
-      username: session.user?.name + "",
+      id: session.user.id,
     },
   });
 
@@ -29,8 +29,8 @@ export async function PUT(request: NextRequest) {
   if (
     json.email == null ||
     json.password == null ||
-    json.username == null ||
-    json.displayName == null
+    json.tag == null ||
+    json.name == null
   )
     return NextResponse.error();
 
@@ -39,8 +39,8 @@ export async function PUT(request: NextRequest) {
 
   const result = await prisma.user.create({
     data: {
-      username: json.username,
-      name: json.displayName,
+      tag: json.tag,
+      name: json.name,
       email: json.email,
       password: await hash(json.password, 12),
       role: json.role,
@@ -55,22 +55,20 @@ export async function POST(request: NextRequest) {
   const isAdmin = await checkAdmin();
   if (!isAdmin) return NextResponse.error();
 
-  // TODO: Check for default user
-
   let json = await request.json();
 
   if (
     json.id == null ||
-    json.username == null ||
+    json.tag == null ||
     json.mail == null ||
     json.role == null ||
-    json.displayName == null
+    json.name == null
   )
     return NextResponse.error();
 
   const updateData: any = {
-    username: json.username,
-    name: json.displayName,
+    tag: json.tag,
+    name: json.name,
     email: json.mail,
     role: json.role == "admin" || json.role == "user" ? json.role : "user",
   };
@@ -83,10 +81,13 @@ export async function POST(request: NextRequest) {
   const user = await prisma.user.findUnique({
     where: { id: json.id },
   });
-
   if (!user) return NextResponse.error();
+  if (user.tag == "admin") {
+    if (updateData.tag != "admin" || updateData.role != "admin")
+      return NextResponse.error();
+  }
 
-  const [userResult, timesResult] = await prisma.$transaction([
+  const [userResult] = await prisma.$transaction([
     prisma.user.update({
       where: {
         id: parseInt(json.id),
@@ -94,32 +95,22 @@ export async function POST(request: NextRequest) {
       data: updateData,
       select: {
         id: true,
-        username: true,
+        tag: true,
         email: true,
         role: true,
         updatedAt: true,
         createdAt: true,
       },
     }),
-    prisma.times.updateMany({
-      where: {
-        user: user.username,
-      },
-      data: {
-        user: updateData.username,
-      },
-    }),
   ]);
 
-  return NextResponse.json({ userResult, timesResult });
+  return NextResponse.json({ userResult });
 }
 
 // Delete
 export async function DELETE(request: NextRequest) {
   const isAdmin = await checkAdmin();
   if (!isAdmin) return NextResponse.error();
-
-  // TODO: Check for default user
 
   let json = await request.json();
 
@@ -128,17 +119,25 @@ export async function DELETE(request: NextRequest) {
   if (json.id == 1) return NextResponse.error();
 
   const userToDelete = await prisma.user.findUnique({ where: { id: json.id } });
-
   if (!userToDelete) return NextResponse.error();
+  if (userToDelete?.tag == "admin") return NextResponse.error();
 
-  const [timesResult, userResult] = await prisma.$transaction([
-    prisma.times.deleteMany({ where: { user: userToDelete.username } }),
-    prisma.user.delete({
-      where: {
-        id: userToDelete.id,
-      },
-    }),
-  ]);
+  const [timeResult, projectResult, chipResult, userResult] =
+    await prisma.$transaction([
+      prisma.time.deleteMany({ where: { userId: userToDelete.id } }),
+      prisma.project.deleteMany({ where: { userId: userToDelete.id } }),
+      prisma.chip.deleteMany({ where: { userId: userToDelete.id } }),
+      prisma.user.delete({
+        where: {
+          id: userToDelete.id,
+        },
+      }),
+    ]);
 
-  return NextResponse.json({ timesResult, userResult });
+  return NextResponse.json({
+    timeResult,
+    projectResult,
+    chipResult,
+    userResult,
+  });
 }

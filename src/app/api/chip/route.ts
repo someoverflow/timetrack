@@ -1,3 +1,4 @@
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Session, getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -5,16 +6,14 @@ import { NextRequest, NextResponse } from "next/server";
 async function checkAdmin(session: Session): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: {
-      username: session.user?.name + "",
+      tag: session.user?.name + "",
     },
     select: {
       role: true,
     },
   });
 
-  if (user?.role != "admin") return false;
-
-  return true;
+  return user?.role == "admin";
 }
 
 const NO_AUTH: APIResult = Object.freeze({
@@ -36,8 +35,8 @@ const BAD_REQUEST: APIResult = Object.freeze({
 
 // Delete a chip
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -119,8 +118,8 @@ export async function DELETE(request: NextRequest) {
 
 // Create a chip
 export async function POST(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
@@ -211,8 +210,8 @@ export async function POST(request: NextRequest) {
 
 // Update a chip
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession();
-  if (session == null)
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
