@@ -6,26 +6,42 @@ const prisma = new PrismaClient();
 async function main() {
   const password = await hash("admin", 12);
 
-  const admin = await prisma.user.upsert({
-    where: { username: "admin" },
+  const result = await prisma.user.upsert({
+    where: { tag: "admin" },
     update: {},
     create: {
+      tag: "admin",
       name: "admin",
       email: "admin@example.com",
-      username: "admin",
       password: password,
       role: "admin",
     },
     select: {
       id: true,
+      tag: true,
       name: true,
-      username: true,
       role: true,
       createdAt: true,
       updatedAt: true,
     },
   });
-  console.log({ admin });
+
+  var data = [];
+  for (var i = 0; i < 50; i++) {
+    data.push({
+      tag: "test" + i,
+      name: "Test-" + i,
+      role: "user",
+      password: await hash("test" + i, 12),
+      email: "test" + i + "@test.de",
+    });
+  }
+
+  const res = await prisma.user.createMany({
+    data: data,
+  });
+
+  console.log({ result, res });
 }
 main()
   .then(async () => {

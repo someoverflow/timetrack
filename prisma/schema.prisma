@@ -40,12 +40,12 @@ model project {
 model user {
   id Int @id @default(autoincrement())
 
-  tag  String  @unique
+  tag      String @unique
   password String
 
-  name     String?
-  email    String @unique
-  role     String
+  name  String?
+  email String  @unique
+  role  String
 
   chips    chip[]
   times    time[]
