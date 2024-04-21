@@ -476,7 +476,8 @@ export default function UserEdit({ user }: { user: User }) {
                             size="icon"
                             onClick={() => sendChipCreateRequest()}
                           >
-                            {data.loadingIndicator == "chipCreate" ? (
+                            {data.loading &&
+                            data.loadingIndicator == "chipCreate" ? (
                               <RefreshCw className="h-4 w-4 animate-spin" />
                             ) : (
                               <Plus className="h-5 w-5" />
@@ -503,8 +504,8 @@ export default function UserEdit({ user }: { user: User }) {
                             size="icon"
                             onClick={() => sendChipDeleteRequest(chip.id)}
                           >
-                            {data.loadingIndicator ==
-                            `chipDelete-${chip.id}` ? (
+                            {data.loading &&
+                            data.loadingIndicator == `chipDelete-${chip.id}` ? (
                               <RefreshCw className="h-4 w-4 animate-spin" />
                             ) : (
                               <Minus className="h-5 w-5" />
@@ -522,9 +523,9 @@ export default function UserEdit({ user }: { user: User }) {
               <Button
                 variant="destructive"
                 onClick={() => sendDeleteRequest()}
-                disabled={data.loading}
+                disabled={data.loading || user.id == 1}
               >
-                {data.loadingIndicator == "delete" ? (
+                {data.loading && data.loadingIndicator == "delete" ? (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Trash className="mr-2 h-4 w-4" />
@@ -536,7 +537,7 @@ export default function UserEdit({ user }: { user: User }) {
                 onClick={() => sendRequest()}
                 disabled={data.loading}
               >
-                {data.loadingIndicator == "update" ? (
+                {data.loading && data.loadingIndicator == "update" ? (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <SaveAll className="mr-2 h-4 w-4" />
