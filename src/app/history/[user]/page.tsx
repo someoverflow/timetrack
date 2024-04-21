@@ -18,6 +18,7 @@ import { Metadata } from "next";
 
 // Utils
 import { getTotalTime } from "@/lib/utils";
+import { TimerAddServer } from "../timer-add";
 
 type Timer = Prisma.timeGetPayload<{}>;
 interface Data {
@@ -144,7 +145,7 @@ export default async function History({
                 tag={target.tag}
               />
             ) : (
-              <p className="font-mono font-bold text-xl">No data found</p>
+              <TimerAddServer tag={target.tag} />
             )}
           </>
         ) : (

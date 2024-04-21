@@ -127,7 +127,7 @@ export default function TimerSection({
                   placeholder="Search year/month..."
                   className="h-8"
                 />
-                <CommandEmpty>No data found.</CommandEmpty>
+                <CommandEmpty>Nothing found.</CommandEmpty>
                 <CommandGroup>
                   {historyKeys.map((key) => (
                     <CommandItem

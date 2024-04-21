@@ -16,6 +16,7 @@ import { getServerSession } from "next-auth";
 // Utils
 import { getTotalTime } from "@/lib/utils";
 import { authOptions } from "@/lib/auth";
+import TimerAdd, { TimerAddServer } from "./timer-add";
 
 type Timer = Prisma.timeGetPayload<{}>;
 interface Data {
@@ -111,7 +112,7 @@ export default async function History({
             tag={user.tag}
           />
         ) : (
-          <p className="font-mono font-bold text-base">No data found</p>
+          <TimerAddServer tag={user.tag} />
         )}
       </section>
     </Navigation>
