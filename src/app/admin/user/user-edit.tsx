@@ -11,7 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Minus, PencilRuler, Plus, SaveAll, Trash } from "lucide-react";
+import {
+  Minus,
+  PencilRuler,
+  Plus,
+  SaveAll,
+  Trash,
+  RefreshCw,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
 import { toast } from "sonner";
@@ -35,6 +42,7 @@ export default function UserEdit({ user }: { user: User }) {
     }),
     {
       loading: false,
+      loadingIndicator: "",
       tag: user.tag,
       name: user.name != "?" ? user.name : "",
       mail: user.email,
@@ -50,6 +58,7 @@ export default function UserEdit({ user }: { user: User }) {
   async function sendRequest() {
     setData({
       loading: true,
+      loadingIndicator: "update",
     });
 
     const result = await fetch("/api/user", {
@@ -73,6 +82,7 @@ export default function UserEdit({ user }: { user: User }) {
 
       setData({
         password: "",
+        loadingIndicator: "",
       });
 
       toast.success("Successfully changed entry", {
@@ -111,6 +121,7 @@ export default function UserEdit({ user }: { user: User }) {
   async function sendDeleteRequest() {
     setData({
       loading: true,
+      loadingIndicator: "delete",
     });
 
     const result = await fetch("/api/user", {
@@ -128,6 +139,7 @@ export default function UserEdit({ user }: { user: User }) {
       setVisible(false);
 
       setData({
+        loadingIndicator: "",
         password: "",
       });
 
@@ -167,6 +179,7 @@ export default function UserEdit({ user }: { user: User }) {
   async function sendChipCreateRequest() {
     setData({
       loading: true,
+      loadingIndicator: "chipCreate",
     });
 
     const result = await fetch("/api/chip", {
@@ -178,6 +191,7 @@ export default function UserEdit({ user }: { user: User }) {
     });
 
     setData({
+      loadingIndicator: "",
       loading: false,
     });
 
@@ -222,6 +236,7 @@ export default function UserEdit({ user }: { user: User }) {
   async function sendChipDeleteRequest(chip: string) {
     setData({
       loading: true,
+      loadingIndicator: "chipDelete-" + chip,
     });
 
     const result = await fetch("/api/chip", {
@@ -232,6 +247,7 @@ export default function UserEdit({ user }: { user: User }) {
     });
 
     setData({
+      loadingIndicator: "",
       loading: false,
     });
 
@@ -460,7 +476,11 @@ export default function UserEdit({ user }: { user: User }) {
                             size="icon"
                             onClick={() => sendChipCreateRequest()}
                           >
-                            <Plus className="h-5 w-5" />
+                            {data.loadingIndicator == "chipCreate" ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Plus className="h-5 w-5" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -483,7 +503,12 @@ export default function UserEdit({ user }: { user: User }) {
                             size="icon"
                             onClick={() => sendChipDeleteRequest(chip.id)}
                           >
-                            <Minus className="h-5 w-5" />
+                            {data.loadingIndicator ==
+                            `chipDelete-${chip.id}` ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Minus className="h-5 w-5" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -499,7 +524,11 @@ export default function UserEdit({ user }: { user: User }) {
                 onClick={() => sendDeleteRequest()}
                 disabled={data.loading}
               >
-                <Trash className="mr-2 h-4 w-4" />
+                {data.loadingIndicator == "delete" ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash className="mr-2 h-4 w-4" />
+                )}
                 Delete
               </Button>
               <Button
@@ -507,7 +536,11 @@ export default function UserEdit({ user }: { user: User }) {
                 onClick={() => sendRequest()}
                 disabled={data.loading}
               >
-                <SaveAll className="mr-2 h-4 w-4" />
+                {data.loadingIndicator == "update" ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <SaveAll className="mr-2 h-4 w-4" />
+                )}
                 Save Changes
               </Button>
             </div>

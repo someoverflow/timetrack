@@ -26,6 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListPlus, UserPlus, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
+import { toast } from "sonner";
 
 export default function UserAdd() {
   const [data, setData] = useReducer(
@@ -35,45 +36,80 @@ export default function UserAdd() {
     }),
     {
       loading: false,
-      username: "",
-      displayName: "",
+      tag: "",
+      name: "",
       password: "",
       mail: "",
       role: "user",
-    },
+    }
   );
 
   const [visible, setVisible] = useState(false);
 
   const router = useRouter();
 
-  function sendRequest() {
-    fetch("/api/user", {
+  async function sendRequest() {
+    setData({
+      loading: true,
+    });
+
+    const result = await fetch("/api/user", {
       method: "PUT",
       body: JSON.stringify({
-        username: data.username,
-        displayName: data.displayName,
+        tag: data.tag,
+        name: data.name,
         email: data.mail,
         password: data.password,
         role: data.role,
       }),
-    })
-      .then((result) => result.json())
-      .then((result) => {
-        setData({
-          username: "",
-          displayName: "",
-          password: "",
-          mail: "",
-          role: "user",
-        });
+    });
 
-        setVisible(false);
+    setData({
+      loading: false,
+    });
 
-        router.refresh();
-        console.log(result);
-      })
-      .catch(console.error);
+    if (result.ok) {
+      setVisible(false);
+
+      setData({
+        tag: "",
+        name: "",
+        password: "",
+        mail: "",
+        role: "user",
+      });
+
+      toast.success("Successfully created user", {
+        duration: 3000,
+      });
+      router.refresh();
+      return;
+    }
+
+    const resultData: APIResult = await result.json().catch(() => {
+      toast.error("An error occurred", {
+        description: "Result could not be proccessed",
+        important: true,
+        duration: 8000,
+      });
+      return;
+    });
+    if (!resultData) return;
+
+    if (result.status == 400 && !!resultData.result[1]) {
+      toast.warning(`An error occurred (${resultData.result[0]})`, {
+        description: resultData.result[1],
+        important: true,
+        duration: 10000,
+      });
+      return;
+    }
+
+    toast.error("An error occurred", {
+      description: "Error could not be identified. You can try again.",
+      important: true,
+      duration: 8000,
+    });
   }
 
   return (
@@ -125,8 +161,8 @@ export default function UserAdd() {
                     name="Name"
                     id="userAdd-login-name"
                     placeholder="Max Mustermann"
-                    value={data.displayName}
-                    onChange={(e) => setData({ displayName: e.target.value })}
+                    value={data.name}
+                    onChange={(e) => setData({ name: e.target.value })}
                   />
                 </div>
                 <div className="grid w-full items-center gap-1.5">
@@ -142,8 +178,8 @@ export default function UserAdd() {
                     name="Name"
                     id="userAdd-username"
                     placeholder="maxmust"
-                    value={data.username}
-                    onChange={(e) => setData({ username: e.target.value })}
+                    value={data.tag}
+                    onChange={(e) => setData({ tag: e.target.value })}
                   />
                 </div>
                 <div className="grid w-full items-center gap-1.5">
