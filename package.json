@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "docker:prod": "docker build -t timetrack:prod .",
-    "docker:dev": "docker build -t timetrack:dev .",
+    "docker:prod": "docker build -t some/timetrack:prod .",
+    "docker:dev": "docker build -t some/timetrack:dev .",
     "docker:prod:file": "npm run docker:prod && docker save --output timetrack.tar timetrack:prod",
     "docker:dev:file": "npm run docker:dev && docker save --output timetrack.tar timetrack:dev"
   },
