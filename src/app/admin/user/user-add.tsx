@@ -150,6 +150,26 @@ export default function UserAdd() {
               <div className="grid gap-4 p-1 w-full">
                 <div className="grid w-full items-center gap-1.5">
                   <Label
+                    htmlFor="userAdd-username"
+                    className="pl-2 text-muted-foreground"
+                  >
+                    Login Name
+                  </Label>
+                  <Input
+                    className="!w-full font-mono border-2"
+                    type="text"
+                    name="Name"
+                    id="userAdd-username"
+                    placeholder="maxmust"
+                    value={data.tag}
+                    onChange={(e) => setData({ tag: e.target.value })}
+                  />
+                </div>
+
+                <div id="divider" className="h-1" />
+                
+                <div className="grid w-full items-center gap-1.5">
+                  <Label
                     htmlFor="userAdd-login-name"
                     className="pl-2 text-muted-foreground"
                   >
@@ -163,23 +183,6 @@ export default function UserAdd() {
                     placeholder="Max Mustermann"
                     value={data.name}
                     onChange={(e) => setData({ name: e.target.value })}
-                  />
-                </div>
-                <div className="grid w-full items-center gap-1.5">
-                  <Label
-                    htmlFor="userAdd-username"
-                    className="pl-2 text-muted-foreground"
-                  >
-                    Username
-                  </Label>
-                  <Input
-                    className="!w-full font-mono border-2"
-                    type="text"
-                    name="Name"
-                    id="userAdd-username"
-                    placeholder="maxmust"
-                    value={data.tag}
-                    onChange={(e) => setData({ tag: e.target.value })}
                   />
                 </div>
                 <div className="grid w-full items-center gap-1.5">

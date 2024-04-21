@@ -347,13 +347,14 @@ export async function PUT(request: NextRequest) {
 
 // Delete timer
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session || !session.user)
     return NextResponse.json(NO_AUTH, {
       status: NO_AUTH.status,
       statusText: NO_AUTH.result,
     });
 
+    console.log(session)
   const user = await prisma.user.findUnique({
     where: {
       id: session.user.id,

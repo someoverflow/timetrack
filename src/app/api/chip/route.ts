@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 async function checkAdmin(session: Session): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: {
-      tag: session.user?.name + "",
+      tag: session.user.tag,
     },
     select: {
       role: true,
@@ -169,6 +169,11 @@ export async function POST(request: NextRequest) {
     where: {
       id: json.id,
     },
+    select: {
+      id: true,
+      userId: true,
+      user: true,
+    },
   });
 
   if (check) {
@@ -177,7 +182,7 @@ export async function POST(request: NextRequest) {
     result.result = [
       result.result,
       "Chip ID is already in use by " +
-        (check.userId === json.userId ? "this user" : check.userId),
+        (check.userId === json.userId ? "this user" : check.user.name),
     ];
 
     return NextResponse.json(result, {

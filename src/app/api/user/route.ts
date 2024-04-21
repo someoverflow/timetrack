@@ -4,11 +4,6 @@ import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-const NO_AUTH: APIResult = Object.freeze({
-  success: false,
-  status: 401,
-  result: "Unauthorized",
-});
 const FORBIDDEN: APIResult = Object.freeze({
   success: false,
   status: 403,
