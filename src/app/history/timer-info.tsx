@@ -6,6 +6,8 @@ import {
   SwipeAction,
   TrailingActions,
 } from "react-swipeable-list";
+import "react-swipeable-list/dist/styles.css";
+
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import "react-swipeable-list/dist/styles.css";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,7 +89,9 @@ export default function TimerInfo({
   if (!data.end) {
     return (
       <div className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1 animate__animated animate__fadeIn">
-        <p className="text-sm text-muted-foreground">Running Timer {data.start.toLocaleTimeString()}</p>
+        <p className="text-sm text-muted-foreground">
+          Running Timer {data.start.toLocaleTimeString()}
+        </p>
       </div>
     );
   }

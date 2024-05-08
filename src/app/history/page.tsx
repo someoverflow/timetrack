@@ -16,7 +16,7 @@ import { getServerSession } from "next-auth";
 // Utils
 import { getTotalTime } from "@/lib/utils";
 import { authOptions } from "@/lib/auth";
-import TimerAdd, { TimerAddServer } from "./timer-add";
+import { TimerAddServer } from "./timer-add";
 
 type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
 interface Data {
@@ -92,7 +92,8 @@ export default async function History({
       if (data.time) timeStrings.push(data.time);
     }
   }
-  const totalTime = timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
+  const totalTime =
+    timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
 
   return (
     <Navigation>
