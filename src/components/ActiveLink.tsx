@@ -4,26 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function ActiveLink({
-  href,
-  className,
-  activeClassName,
-  children,
+	href,
+	className,
+	activeClassName,
+	children,
 }: {
-  href: string;
-  className: string;
-  activeClassName: string;
-  children: React.ReactNode;
+	href: string;
+	className: string;
+	activeClassName: string;
+	children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+	const pathname = usePathname();
 
-  return (
-    <Link
-      href={href}
-      className={
-        pathname === href ? `${className} ${activeClassName}` : className
-      }
-    >
-      {children}
-    </Link>
-  );
+	return (
+		<Link
+			href={href}
+			className={
+				pathname === href ? `${className} ${activeClassName}` : className
+			}
+		>
+			{children}
+		</Link>
+	);
 }
