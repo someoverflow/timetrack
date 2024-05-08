@@ -11,45 +11,31 @@ import { authOptions } from "@/lib/auth";
 
 // Database
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 // React
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 // Utils
-import { getTotalTime } from "@/lib/utils";
+import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "../timer-add";
 
-type Timer = Prisma.timeGetPayload<{}>;
+type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
 interface Data {
   [yearMonth: string]: Timer[];
 }
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 function formatHistory(data: Timer[]): Data {
-  let result: Data = {};
+  const result: Data = {};
 
-  data.forEach((item: Timer) => {
-    let date = new Date(item.start);
-    let year = date.getFullYear();
-    let month = months[date.getMonth()];
+  for (const item of data) {
+    const date = new Date(item.start);
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
 
     if (!result[`${year} ${month}`]) result[`${year} ${month}`] = [];
     result[`${year} ${month}`].push(item);
-  });
+  }
 
   return result;
 }
@@ -80,7 +66,7 @@ export default async function History({
   });
 
   if (!user) return redirect("/");
-  if (user.role != "admin") redirect("/history");
+  if (user.role !== "admin") redirect("/history");
 
   const target = await prisma.user
     .findUnique({
@@ -109,23 +95,21 @@ export default async function History({
 
   function dataFound(): boolean {
     if (!history) return false;
-    if (history.length == 0) return false;
-    return !(history.length == 1 && history[0].end == null);
+    if (history.length === 0) return false;
+    return !(history.length === 1 && history[0].end == null);
   }
 
   const historyData = history ? formatHistory(history) : null;
 
   const timeStrings: string[] = [];
   if (historyData) {
-    try {
-      if (searchParams && searchParams.ym) {
-        historyData[searchParams.ym].forEach((e) => {
-          if (e.time) timeStrings.push(e.time);
-        });
+    if (searchParams?.ym) {
+      for (const data of historyData[searchParams.ym]) {
+        if (data.time) timeStrings.push(data.time);
       }
-    } catch (err: any) {}
+    }
   }
-  const totalTime = timeStrings.length == 0 ? "" : getTotalTime(timeStrings);
+  const totalTime = timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
 
   return (
     <Navigation>

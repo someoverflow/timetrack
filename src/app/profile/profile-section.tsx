@@ -14,6 +14,13 @@ import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { signOut, useSession } from "next-auth/react";
 
+interface profileSectionState {
+  loading: boolean;
+  name: string | undefined;
+  mail: string | undefined;
+  password: string;
+}
+
 export default function ProfileSection({
   userData,
 }: {
@@ -26,14 +33,14 @@ export default function ProfileSection({
   };
 }) {
   const [data, setData] = useReducer(
-    (prev: any, next: any) => ({
+    (prev: profileSectionState, next: Partial<profileSectionState>) => ({
       ...prev,
       ...next,
     }),
     {
       loading: false,
-      name: userData.name,
-      mail: userData.email,
+      name: userData.name ?? "",
+      mail: userData.email ?? "",
       password: "",
     }
   );
@@ -47,12 +54,12 @@ export default function ProfileSection({
       loading: true,
     });
 
-    const changePassword = data.password != "";
+    const changePassword = data.password !== "";
     const result = await fetch("/api/profile", {
       method: "PUT",
       body: JSON.stringify({
-        name: data.name != userData.name ? data.name : undefined,
-        mail: data.mail != userData.email ? data.mail : undefined,
+        name: data.name !== userData.name ? data.name : undefined,
+        mail: data.mail !== userData.email ? data.mail : undefined,
         password: changePassword ? data.password : undefined,
       }),
     });
@@ -91,7 +98,7 @@ export default function ProfileSection({
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -119,7 +126,7 @@ export default function ProfileSection({
               id="input-name"
               placeholder="Max Mustermann"
               className={`transition-all duration-300 ${
-                data.name != userData.name && "border-sky-700"
+                data.name !== userData.name && "border-sky-700"
               }`}
               value={data.name}
               onChange={(e) => setData({ name: e.target.value })}
@@ -133,7 +140,7 @@ export default function ProfileSection({
               id="input-mail"
               placeholder="max@example.com"
               className={`transition-all duration-300 ${
-                data.mail != userData.email && "border-sky-700"
+                data.mail !== userData.email && "border-sky-700"
               }`}
               value={data.mail}
               onChange={(e) => setData({ mail: e.target.value })}
@@ -147,7 +154,7 @@ export default function ProfileSection({
               id="input-password"
               placeholder="Secure123"
               className={`transition-all duration-300 ${
-                data.password != "" && "border-sky-700"
+                data.password !== "" && "border-sky-700"
               }`}
               value={data.password}
               onChange={(e) => setData({ password: e.target.value })}

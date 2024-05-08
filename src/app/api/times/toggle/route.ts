@@ -2,7 +2,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 const NO_AUTH: APIResult = Object.freeze({
   success: false,
@@ -31,19 +31,19 @@ export async function PUT(request: NextRequest) {
     })
     .catch(() => null);
 
-  let result: APIResult = {
+  const result: APIResult = {
     success: true,
     status: 200,
     result: undefined,
   };
 
-  var type = request.nextUrl.searchParams.get("type");
-  var requestTime = request.nextUrl.searchParams.get("fixTime");
+  const type = request.nextUrl.searchParams.get("type");
+  const requestTime = request.nextUrl.searchParams.get("fixTime");
 
   let changeDate = new Date();
   if (requestTime) changeDate = new Date(Date.parse(requestTime));
 
-  if (data == null || data.length == 0) {
+  if (data == null || data.length === 0) {
     result.result = await prisma.time
       .create({
         data: {
@@ -60,7 +60,7 @@ export async function PUT(request: NextRequest) {
   } else {
     const item = data[0];
 
-    var timePassed = getTimePassed(item.start, changeDate);
+    const timePassed = getTimePassed(item.start, changeDate);
 
     const result = await prisma.time
       .update({

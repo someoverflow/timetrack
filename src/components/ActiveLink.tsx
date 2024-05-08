@@ -20,7 +20,7 @@ export default function ActiveLink({
     <Link
       href={href}
       className={
-        pathname == href ? `${className} ${activeClassName}` : className
+        pathname === href ? `${className} ${activeClassName}` : className
       }
     >
       {children}

@@ -43,7 +43,7 @@ export default function NavigationSection({
             href="/"
             prefetch
             className={`${
-              pathname == "/" ? "bg-accent" : "hover:bg-accent"
+              pathname === "/" ? "bg-accent" : "hover:bg-accent"
             } !cursor-pointer aspect-square !p-2`}
           >
             <Timer className="h-6 w-6" />
@@ -56,21 +56,21 @@ export default function NavigationSection({
             href="/history"
             prefetch
             className={`${
-              pathname == "/history" ? "bg-accent" : "hover:bg-accent"
+              pathname === "/history" ? "bg-accent" : "hover:bg-accent"
             } !cursor-pointer aspect-square !p-2`}
           >
             <History className="h-6 w-6" />
           </Link>
         </MenubarTrigger>
       </MenubarMenu>
-      {user?.role == "admin" && (
+      {user?.role === "admin" && (
         <MenubarMenu>
           <MenubarTrigger asChild>
             <Link
               href="/admin/user"
               prefetch
               className={`${
-                pathname == "/admin/user" ? "bg-accent" : "hover:bg-accent"
+                pathname === "/admin/user" ? "bg-accent" : "hover:bg-accent"
               } !cursor-pointer aspect-square !p-2`}
             >
               <Shield className="h-6 w-6" />
@@ -87,7 +87,7 @@ export default function NavigationSection({
             <Link
               href="/profile"
               prefetch
-              className={pathname == "/profile" ? "bg-accent" : ""}
+              className={pathname === "/profile" ? "bg-accent" : ""}
             >
               Profile
             </Link>
@@ -100,19 +100,19 @@ export default function NavigationSection({
             <MenubarSubTrigger>Theme</MenubarSubTrigger>
             <MenubarSubContent>
               <MenubarItem
-                disabled={theme == "light"}
+                disabled={theme === "light"}
                 onClick={() => setTheme("light")}
               >
                 <Sun className="mr-2 h-4 w-4" /> Light
               </MenubarItem>
               <MenubarItem
-                disabled={theme == "dark"}
+                disabled={theme === "dark"}
                 onClick={() => setTheme("dark")}
               >
                 <Moon className="mr-2 h-4 w-4" /> Dark
               </MenubarItem>
               <MenubarItem
-                disabled={theme == "system"}
+                disabled={theme === "system"}
                 onClick={() => setTheme("system")}
               >
                 <SunMoon className="mr-2 h-4 w-4" /> System

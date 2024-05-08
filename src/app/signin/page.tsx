@@ -29,14 +29,14 @@ export default function SignIn() {
 
   async function start() {
     setLoading(true);
-    var result = await signIn("credentials", {
+    const result = await signIn("credentials", {
       username: username,
       password: password,
       callbackUrl: callbackUrl,
       redirect: false,
     });
     if (result) {
-      if (result.status == 200) {
+      if (result.status === 200) {
         router.push(result.url ? result.url : callbackUrl);
         return;
       }

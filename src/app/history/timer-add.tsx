@@ -28,6 +28,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+interface timerAddState {
+  start: string;
+  end: string;
+  notes: string;
+  loading: boolean;
+}
+
 export default function TimerAdd({
   tag,
   visible,
@@ -38,7 +45,7 @@ export default function TimerAdd({
   setVisible: (visible: boolean) => void;
 }) {
   const [data, setData] = useReducer(
-    (prev: any, next: any) => ({
+    (prev: timerAddState, next: Partial<timerAddState>) => ({
       ...prev,
       ...next,
     }),
@@ -98,7 +105,7 @@ export default function TimerAdd({
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -116,7 +123,7 @@ export default function TimerAdd({
 
   return (
     <Dialog
-      key={`timerModal-${data.id}`}
+      key="timerModal-add"
       open={visible}
       onOpenChange={(e) => setVisible(e)}
     >
@@ -125,7 +132,6 @@ export default function TimerAdd({
           <DialogTitle>
             <div>Create entry</div>
           </DialogTitle>
-          <DialogDescription></DialogDescription>
         </DialogHeader>
 
         <div className="w-full flex flex-col gap-2">
@@ -141,16 +147,15 @@ export default function TimerAdd({
               >
                 <div className="h-full w-full grid p-1 gap-1.5">
                   <Label
-                    htmlFor={`timerModal-notes-${data.id}`}
+                    htmlFor="timerModal-notes-add"
                     className="text-muted-foreground pl-2"
                   >
                     Notes
                   </Label>
                   <Textarea
-                    id={`timerModal-notes-${data.id}`}
+                    id="timerModal-notes-add"
                     className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-                      data.notes != (data.notes ? data.notes : "") &&
-                      "border-sky-700"
+                      data.notes !== (data.notes ?? "") && "border-sky-700"
                     }`}
                     spellCheck={true}
                     value={data.notes}
@@ -174,7 +179,7 @@ export default function TimerAdd({
                     </Label>
                     <Input
                       className={`!w-full font-mono border-2 transition-all duration-300 ${
-                        data.start !=
+                        data.start !==
                           data.start.toLocaleString("sv").replace(" ", "T") &&
                         "border-sky-700"
                       }`}
@@ -195,7 +200,7 @@ export default function TimerAdd({
                     </Label>
                     <Input
                       className={`w-full font-mono border-2 transition-all duration-300 ${
-                        data.end !=
+                        data.end !==
                           (data.end
                             ? data.end.toLocaleString("sv").replace(" ", "T")
                             : new Date()
@@ -234,7 +239,7 @@ export default function TimerAdd({
 export function TimerAddServer({ tag }: { tag: string }) {
   const [visible, setVisible] = useState(false);
   const [data, setData] = useReducer(
-    (prev: any, next: any) => ({
+    (prev: timerAddState, next: Partial<timerAddState>) => ({
       ...prev,
       ...next,
     }),
@@ -294,7 +299,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -327,7 +332,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
         </TooltipContent>
       </Tooltip>
       <Dialog
-        key={`timerModal-${data.id}`}
+        key="timerModal-add"
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
@@ -336,7 +341,6 @@ export function TimerAddServer({ tag }: { tag: string }) {
             <DialogTitle>
               <div>Create entry</div>
             </DialogTitle>
-            <DialogDescription></DialogDescription>
           </DialogHeader>
 
           <div className="w-full flex flex-col gap-2">
@@ -352,16 +356,15 @@ export function TimerAddServer({ tag }: { tag: string }) {
                 >
                   <div className="h-full w-full grid p-1 gap-1.5">
                     <Label
-                      htmlFor={`timerModal-notes-${data.id}`}
+                      htmlFor="timerModal-notes-add"
                       className="text-muted-foreground pl-2"
                     >
                       Notes
                     </Label>
                     <Textarea
-                      id={`timerModal-notes-${data.id}`}
+                      id="timerModal-notes-add"
                       className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-                        data.notes != (data.notes ? data.notes : "") &&
-                        "border-sky-700"
+                        data.notes !== (data.notes ?? "") && "border-sky-700"
                       }`}
                       spellCheck={true}
                       value={data.notes}
@@ -385,7 +388,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
                       </Label>
                       <Input
                         className={`!w-full font-mono border-2 transition-all duration-300 ${
-                          data.start !=
+                          data.start !==
                             data.start.toLocaleString("sv").replace(" ", "T") &&
                           "border-sky-700"
                         }`}
@@ -406,7 +409,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
                       </Label>
                       <Input
                         className={`w-full font-mono border-2 transition-all duration-300 ${
-                          data.end !=
+                          data.end !==
                             (data.end
                               ? data.end.toLocaleString("sv").replace(" ", "T")
                               : new Date()

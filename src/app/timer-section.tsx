@@ -27,9 +27,19 @@ import { PlayCircle, RefreshCcw, StopCircle, X } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
 
+interface timerSectionState {
+  firstRun: boolean;
+  loaded: boolean;
+  running: boolean;
+  changeModal: boolean;
+  changeTimer: number | undefined;
+  stop: boolean;
+  delay: number;
+}
+
 export default function TimerSection() {
   const [data, updateData] = useReducer(
-    (prev: any, next: any) => ({
+    (prev: timerSectionState, next: Partial<timerSectionState>) => ({
       ...prev,
       ...next,
     }),
@@ -51,7 +61,7 @@ export default function TimerSection() {
     if (!data.running) return;
     if (!currentTimer && !fetchedTimer) return;
 
-    let result = JSON.parse(
+    const result = JSON.parse(
       JSON.stringify(currentTimer ? currentTimer : fetchedTimer)
     );
 
@@ -78,7 +88,7 @@ export default function TimerSection() {
     fetch("/api/times?indicator=current")
       .then((result) => result.json())
       .then((result) => {
-        if (result.success == false) {
+        if (result.success === false) {
           updateData({
             stop: true,
           });
@@ -96,7 +106,7 @@ export default function TimerSection() {
           });
         }
 
-        if (result.result.length == 0) {
+        if (result.result.length === 0) {
           updateData({
             running: false,
           });
@@ -104,7 +114,7 @@ export default function TimerSection() {
           setFetchedTimer(undefined);
           setCurrentTimer(undefined);
         } else {
-          let timer: Timer = result.result[0];
+          const timer: Timer = result.result[0];
           setFetchedTimer(timer);
 
           updateData({
@@ -129,14 +139,14 @@ export default function TimerSection() {
       loaded: false,
     });
 
-    let data: any = {
+    const data: Partial<Timer> = {
       id: 0,
       start: new Date().toISOString(),
       startType: "Website",
     };
 
     if (start) {
-      setFetchedTimer(data);
+      setFetchedTimer(data as Timer);
       setCurrentTimer(undefined);
 
       count();
@@ -183,9 +193,9 @@ export default function TimerSection() {
   }
 
   // First Effect
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
   useEffect(() => {
     fetchCurrentTimer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Timer Effect
@@ -203,7 +213,7 @@ export default function TimerSection() {
       }
     }, 250);
     return () => clearInterval(intervalId);
-  }, [data.stop, data.running, data.delay, count]);
+  }, [data, data.stop, data.running, data.delay, count, fetchCurrentTimer]);
 
   return (
     <>
@@ -214,7 +224,7 @@ export default function TimerSection() {
               <ToggleSection
                 loaded={data.loaded}
                 running={data.running}
-                startType={currentTimer?.startType + ""}
+                startType={`${currentTimer?.startType}`}
                 toggleTimer={toggleTimer}
               />
             </div>
@@ -269,7 +279,7 @@ function ToggleSection({
   loaded: boolean;
   running: boolean;
   startType: string;
-  toggleTimer: Function;
+  toggleTimer: (toggle: boolean) => void;
 }) {
   if (!loaded) {
     return (
@@ -330,11 +340,11 @@ function CurrentTimerTime({
     return (
       <div className="flex w-full justify-center items-center gap-4">
         <p className="text-muted-foreground text-center h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
-          {currentTimer.start + ""}
+          {`${currentTimer.start}`}
         </p>
         <Separator orientation="vertical" className="h-5" />
         <p className="text-muted-foreground text-center h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
-          {currentTimer.end + ""}
+          {`${currentTimer.end}`}
         </p>
       </div>
     );

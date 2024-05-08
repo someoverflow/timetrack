@@ -24,7 +24,7 @@ import { Check, ChevronDown, FileDown, ListPlus } from "lucide-react";
 import TimerAdd from "./timer-add";
 
 // Database
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 // Navigation
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
-type Timer = Prisma.timeGetPayload<{}>;
+type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
 interface Data {
   [yearMonth: string]: Timer[];
 }
@@ -79,13 +79,13 @@ export default function TimerSection({
   const downloadCSV = (yearMonth: string, totalTime: string) => {
     let result = "Date;Start;End;Time;Notes";
 
-    history[yearMonth].reverse().forEach((time) => {
+    for (const time of history[yearMonth].reverse()) {
       if (!time.end) return;
       result = `${result}\n${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
         time.time
       };"${time.notes ? time.notes : ""}"`;
-    });
-
+    }
+    
     result = `${result}\n\n;;;${totalTime};`;
 
     const element = document.createElement("a");
@@ -194,7 +194,7 @@ export default function TimerSection({
         {history[yearMonth].map((time) => (
           <TimerInfo
             key={`timerHistory-${yearMonth}-${time.id}`}
-            edit={parseInt(editTime + "") == time.id}
+            edit={Number.parseInt(editTime ?? "-1") === time.id}
             data={time}
           />
         ))}

@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -28,9 +27,17 @@ import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
 import { toast } from "sonner";
 
+interface userAddState {
+  loading: boolean;
+  tag: string;
+  name: string;
+  password: string;
+  mail: string;
+  role: string;
+}
 export default function UserAdd() {
   const [data, setData] = useReducer(
-    (prev: any, next: any) => ({
+    (prev: userAddState, next: Partial<userAddState>) => ({
       ...prev,
       ...next,
     }),
@@ -96,7 +103,7 @@ export default function UserAdd() {
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -130,7 +137,7 @@ export default function UserAdd() {
       </Tooltip>
 
       <Dialog
-        key={`userAddModal`}
+        key={"userAddModal"}
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
@@ -139,7 +146,6 @@ export default function UserAdd() {
             <DialogTitle>
               <div>Create entry</div>
             </DialogTitle>
-            <DialogDescription></DialogDescription>
           </DialogHeader>
 
           <div className="w-full flex flex-col gap-2">
@@ -167,7 +173,7 @@ export default function UserAdd() {
                 </div>
 
                 <div id="divider" className="h-1" />
-                
+
                 <div className="grid w-full items-center gap-1.5">
                   <Label
                     htmlFor="userAdd-login-name"

@@ -2,7 +2,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 const FORBIDDEN: APIResult = Object.freeze({
   success: false,
@@ -25,7 +25,7 @@ async function checkAdmin(): Promise<boolean> {
     },
   });
 
-  return user?.role == "admin";
+  return user?.role === "admin";
 }
 
 // Create
@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest) {
     result: undefined,
   };
 
-  let json = await request.json();
+  const json = await request.json();
 
   if (
     json.email == null ||
@@ -68,7 +68,7 @@ export async function PUT(request: NextRequest) {
   }
 
   if (json.role == null) json.role = "user";
-  if (!(json.role == "user" || json.role == "admin")) json.role = "user";
+  if (!(json.role === "user" || json.role === "admin")) json.role = "user";
 
   result.result = await prisma.user.create({
     data: {
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       statusText: FORBIDDEN.result,
     });
 
-  let json = await request.json();
+  const json = await request.json();
 
   let result: APIResult = {
     success: true,
@@ -126,11 +126,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // TODO: Do this
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const updateData: any = {
     tag: json.tag,
     name: json.name,
     email: json.mail,
-    role: json.role == "admin" || json.role == "user" ? json.role : "user",
+    role: json.role === "admin" || json.role === "user" ? json.role : "user",
   };
 
   if (json.password) {
@@ -160,8 +162,8 @@ export async function POST(request: NextRequest) {
       statusText: BAD_REQUEST.result,
     });
   }
-  if (user.tag == "admin") {
-    if (updateData.tag != "admin" || updateData.role != "admin") {
+  if (user.tag === "admin") {
+    if (updateData.tag !== "admin" || updateData.role !== "admin") {
       result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
       result.result = [result.result, "Tag of admin cannot be changed"];
@@ -173,9 +175,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  result.result = prisma.user.update({
+  result.result = await prisma.user.update({
     where: {
-      id: parseInt(json.id),
+      id: Number.parseInt(json.id),
     },
     data: updateData,
     select: {
@@ -206,7 +208,7 @@ export async function DELETE(request: NextRequest) {
     result: undefined,
   };
 
-  let json = await request.json();
+  const json = await request.json();
 
   if (json.id == null) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
@@ -219,7 +221,7 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  if (json.id == 1) {
+  if (json.id === 1) {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "The admin account cannot be deleted"];
@@ -241,7 +243,7 @@ export async function DELETE(request: NextRequest) {
       statusText: BAD_REQUEST.result,
     });
   }
-  if (userToDelete?.tag == "admin") {
+  if (userToDelete?.tag === "admin") {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "The admin account cannot be deleted"];

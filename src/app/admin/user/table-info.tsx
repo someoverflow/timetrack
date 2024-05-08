@@ -31,7 +31,7 @@ export default function TableInfo({
     push(`/admin/user${query}`);
   }, 100);
 
-  var searchPage = searchParams.get("page");
+  const searchPage = searchParams.get("page");
   useEffect(() => {
     if (searchPage !== page.toString()) changePage(page.toString());
   }, [changePage, page, searchPage]);

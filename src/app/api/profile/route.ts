@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { validatePassword } from "@/lib/utils";
 import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 const NO_AUTH: APIResult = Object.freeze({
   success: false,
@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch(() => {
+  const json = await request.json().catch(() => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
     result.result = [result.result, "JSON Body could not be parsed"];
     return NextResponse.json(result, {
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
     });
   }
 
-  var data: {
+  const data: {
     password: string | undefined;
     name: string | undefined;
     email: string | undefined;
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
 
   if (containsName) {
     const name: string = json.name;
-    if (name.trim() == "") {
+    if (name.trim() === "") {
       result = JSON.parse(JSON.stringify(BAD_REQUEST));
       result.result = [result.result, "Your name should not be empty..."];
       return NextResponse.json(result, {

@@ -2,7 +2,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 const NO_AUTH: APIResult = Object.freeze({
   success: false,
@@ -33,15 +33,15 @@ export async function GET(request: NextRequest) {
 
   const indicator = request.nextUrl.searchParams.get("indicator");
 
-  let result: APIResult = {
+  const result: APIResult = {
     success: true,
     status: 200,
     result: undefined,
   };
 
-  const userId = parseInt(session.user.id + "");
+  const userId = Number.parseInt(`${session.user.id}`);
 
-  if (indicator == "current") {
+  if (indicator === "current") {
     result.result = await prisma.time
       .findMany({
         take: 1,
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  const json = await request.json().catch((e) => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
   const timePassed = getTimePassed(startDate, endDate);
 
   let targetUser: number | undefined;
-  if (user.tag == json.tag) targetUser = user.id;
+  if (user.tag === json.tag) targetUser = user.id;
 
   if (!targetUser) {
     targetUser = (
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  if (user?.role != "admin" && targetUser != user.id)
+  if (user?.role !== "admin" && targetUser !== user.id)
     return NextResponse.json(FORBIDDEN, {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
@@ -242,7 +242,7 @@ export async function PUT(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  const json = await request.json().catch((e) => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
@@ -273,7 +273,7 @@ export async function PUT(request: NextRequest) {
   const timer = await prisma.time
     .findUnique({
       where: {
-        id: parseInt(json.id),
+        id: Number.parseInt(json.id),
       },
     })
     .catch(() => null);
@@ -289,12 +289,14 @@ export async function PUT(request: NextRequest) {
     });
   }
 
-  if (user?.role != "admin" && user?.id !== timer?.userId)
+  if (user?.role !== "admin" && user?.id !== timer?.userId)
     return NextResponse.json(FORBIDDEN, {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
     });
 
+  // TODO: Do this
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const data: any = {
     notes: json.notes,
   };
@@ -316,12 +318,12 @@ export async function PUT(request: NextRequest) {
 
     const timePassed = getTimePassed(startDate, endDate);
 
-    if (startDate.getTime() != timer?.start.getTime()) {
+    if (startDate.getTime() !== timer?.start.getTime()) {
       data.start = startDate;
       data.startType = json.startType ? json.startType : "API";
     }
 
-    if (endDate.getTime() != timer?.end?.getTime()) {
+    if (endDate.getTime() !== timer?.end?.getTime()) {
       data.end = endDate;
       data.endType = json.endType ? json.endType : "API";
     }
@@ -332,7 +334,7 @@ export async function PUT(request: NextRequest) {
   result.result = await prisma.time
     .update({
       where: {
-        id: parseInt(json.id),
+        id: Number.parseInt(json.id),
       },
       data: data,
     })
@@ -354,7 +356,7 @@ export async function DELETE(request: NextRequest) {
       statusText: NO_AUTH.result,
     });
 
-    console.log(session)
+  console.log(session);
   const user = await prisma.user.findUnique({
     where: {
       id: session.user.id,
@@ -372,7 +374,7 @@ export async function DELETE(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  const json = await request.json().catch((e) => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
@@ -399,7 +401,7 @@ export async function DELETE(request: NextRequest) {
   const timer = await prisma.time
     .findUnique({
       where: {
-        id: parseInt(json.id),
+        id: Number.parseInt(json.id),
       },
     })
     .catch(() => null);
@@ -415,7 +417,7 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  if (user?.role != "admin" && user?.id !== timer?.userId)
+  if (user?.role !== "admin" && user?.id !== timer?.userId)
     return NextResponse.json(FORBIDDEN, {
       status: FORBIDDEN.status,
       statusText: FORBIDDEN.result,
@@ -424,7 +426,7 @@ export async function DELETE(request: NextRequest) {
   result.result = await prisma.time
     .delete({
       where: {
-        id: parseInt(json.id),
+        id: Number.parseInt(json.id),
       },
     })
     .catch((e) => {

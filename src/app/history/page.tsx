@@ -3,14 +3,14 @@ import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
 
 // Database
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 
 // Navigation
 import { redirect } from "next/navigation";
 
 // React
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 
 // Utils
@@ -18,7 +18,7 @@ import { getTotalTime } from "@/lib/utils";
 import { authOptions } from "@/lib/auth";
 import TimerAdd, { TimerAddServer } from "./timer-add";
 
-type Timer = Prisma.timeGetPayload<{}>;
+type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
 interface Data {
   [yearMonth: string]: Timer[];
 }
@@ -38,16 +38,16 @@ const months = [
 ];
 
 function formatHistory(data: Timer[]): Data {
-  let result: Data = {};
+  const result: Data = {};
 
-  data.forEach((item) => {
-    let date = new Date(item.start);
-    let year = date.getFullYear();
-    let month = months[date.getMonth()];
+  for (const item of data) {
+    const date = new Date(item.start);
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
 
     if (!result[`${year} ${month}`]) result[`${year} ${month}`] = [];
     result[`${year} ${month}`].push(item);
-  });
+  }
 
   return result;
 }
@@ -80,21 +80,19 @@ export default async function History({
   });
 
   function dataFound(): boolean {
-    if (history.length == 0) return false;
-    return !(history.length == 1 && history[0].end == null);
+    if (history.length === 0) return false;
+    return !(history.length === 1 && history[0].end == null);
   }
 
   const historyData = formatHistory(history);
 
   const timeStrings: string[] = [];
-  try {
-    if (searchParams && searchParams.ym) {
-      historyData[searchParams.ym].forEach((e) => {
-        if (e.time) timeStrings.push(e.time);
-      });
+  if (searchParams?.ym) {
+    for (const data of historyData[searchParams.ym]) {
+      if (data.time) timeStrings.push(data.time);
     }
-  } catch (err: any) {}
-  const totalTime = timeStrings.length == 0 ? "" : getTotalTime(timeStrings);
+  }
+  const totalTime = timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
 
   return (
     <Navigation>

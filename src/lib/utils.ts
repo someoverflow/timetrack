@@ -5,13 +5,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const days = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+export const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 export function validatePassword(password: string): boolean {
   const regex = /^(?=.*[0-9])[a-zA-Z0-9]{8,20}$/;
   return regex.test(password);
 }
 
 export function getTimePassed(start: Date, end: Date): string {
-  let msPassed = Math.abs(start.getTime() - end.getTime());
+  const msPassed = Math.abs(start.getTime() - end.getTime());
   const date = new Date(Date.UTC(0, 0, 0, 0, 0, 0, msPassed));
   return [date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
     .map((s) => String(s).padStart(2, "0"))

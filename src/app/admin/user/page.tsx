@@ -25,13 +25,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 
 type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
 
 async function getUsers(skip: number, take: number, search: string | null) {
-  var searchValid = /^[A-Za-z\s]*$/.test(search!);
+  let searchValid = /^[A-Za-z\s]*$/.test(search ?? "");
   if (!search) searchValid = true;
   const result = await prisma.user.findMany({
     skip: skip,
@@ -72,10 +72,10 @@ export default async function AdminUserPage({
 }) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) return redirect("/");
-  if (session.user.role != "admin") return redirect("/");
+  if (session.user.role !== "admin") return redirect("/");
 
-  var currentPage = Number(searchParams?.page) || 1;
-  var searchName = searchParams?.search || null;
+  let currentPage = Number(searchParams?.page) || 1;
+  const searchName = searchParams?.search || null;
 
   const userCount = await prisma.user.count();
   const pages = Math.ceil(userCount / 15);
@@ -88,8 +88,8 @@ export default async function AdminUserPage({
     searchName
   );
 
-  if (users.length != 15) {
-    for (var i = 0; i < 15; i++) {
+  if (users.length !== 15) {
+    for (let i = 0; i < 15; i++) {
       if (!users[i]) {
         users[i] = {
           id: i * -1,
@@ -135,20 +135,20 @@ export default async function AdminUserPage({
                     className="animate__animated animate__slideInLeft"
                   >
                     <TableCell className="whitespace-nowrap font-medium w-fit">
-                      {user.tag != "<null>" && user.tag}
+                      {user.tag !== "<null>" && user.tag}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {user.name != "<null>" && user.name}
+                      {user.name !== "<null>" && user.name}
                     </TableCell>
                     <TableCell className="text-right">
-                      {user.tag == "<null>" ? (
-                        <div className="h-10 w-1"></div>
+                      {user.tag === "<null>" ? (
+                        <div className="h-10 w-1" />
                       ) : (
                         <div className="flex flex-row justify-end items-center gap-2">
                           <Tooltip>
                             <TooltipTrigger>
                               <Button variant="secondary" size="icon" asChild>
-                                <Link href={"/history/" + user.tag}>
+                                <Link href={`/history/${user.tag}`}>
                                   <Eye className="w-5 h-5" />
                                 </Link>
                               </Button>

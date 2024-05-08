@@ -26,14 +26,14 @@ async function main() {
     },
   });
 
-  var data = [];
-  for (var i = 0; i < 50; i++) {
+  const data = [];
+  for (let i = 0; i < 50; i++) {
     data.push({
-      tag: "test" + i,
-      name: "Test-" + i,
+      tag: `test${i}`,
+      name: `Test-${i}`,
       role: "user",
-      password: await hash("test" + i, 12),
-      email: "test" + i + "@test.de",
+      password: await hash(`test${i}`, 12),
+      email: `test${i}@test.de`,
     });
   }
 

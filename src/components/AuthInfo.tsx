@@ -18,7 +18,11 @@ export default function AuthInfo({
           <p className="text-xl">
             {text} {showName && <b>{session.user?.name}</b>}
           </p>
-          <button className="btn btn-circle btn-sm" onClick={() => signOut()}>
+          <button
+            type="button"
+            className="btn btn-circle btn-sm"
+            onClick={() => signOut()}
+          >
             <LogOut className="w-1/2 h-1/2" />
           </button>
         </div>
@@ -30,9 +34,10 @@ export default function AuthInfo({
       <div className="w-[80vw] flex flex-row justify-between items-center">
         <div className="flex flex-row items-center gap-2">
           <p className="text-xl">{text}</p>
-          {showName && <div className="h-6 w-24 skeleton rounded-md"></div>}
+          {showName && <div className="h-6 w-24 skeleton rounded-md" />}
         </div>
         <button
+          type="button"
           title="login"
           className="btn btn-circle btn-sm"
           onClick={() => signIn()}

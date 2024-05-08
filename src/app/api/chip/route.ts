@@ -1,7 +1,7 @@
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { Session, getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { type Session, getServerSession } from "next-auth";
+import { type NextRequest, NextResponse } from "next/server";
 
 async function checkAdmin(session: Session): Promise<boolean> {
   const user = await prisma.user.findUnique({
@@ -13,7 +13,7 @@ async function checkAdmin(session: Session): Promise<boolean> {
     },
   });
 
-  return user?.role == "admin";
+  return user?.role === "admin";
 }
 
 const NO_AUTH: APIResult = Object.freeze({
@@ -55,7 +55,7 @@ export async function DELETE(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  const json = await request.json().catch((e) => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  const json = await request.json().catch((e) => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
@@ -181,8 +181,7 @@ export async function POST(request: NextRequest) {
 
     result.result = [
       result.result,
-      "Chip ID is already in use by " +
-        (check.userId === json.userId ? "this user" : check.user.name),
+      `Chip ID is already in use by ${check.userId === json.userId ? "this user" : check.user.name}`,
     ];
 
     return NextResponse.json(result, {
@@ -195,7 +194,7 @@ export async function POST(request: NextRequest) {
     .create({
       data: {
         id: json.id,
-        userId: parseInt(json.userId),
+        userId: Number.parseInt(json.userId),
       },
     })
     .catch(() => {
@@ -235,7 +234,7 @@ export async function PUT(request: NextRequest) {
     result: undefined,
   };
 
-  var json = await request.json().catch((e) => {
+  const json = await request.json().catch((e) => {
     result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
     result.result = [result.result, "JSON Body could not be parsed"];
@@ -268,7 +267,7 @@ export async function PUT(request: NextRequest) {
         id: json.id,
       },
       data: {
-        userId: parseInt(json.userId),
+        userId: Number.parseInt(json.userId),
       },
     })
     .catch((e) => {

@@ -13,11 +13,11 @@ export default function UserTableHeader({
 }) {
   const { push } = useRouter();
   const searchParams = useSearchParams();
-  var searchPage = searchParams.get("search");
+  const searchPage = searchParams.get("search");
 
   const changePage = useDebouncedCallback((value: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
-    if (value.trim() == "") current.delete("search");
+    if (value.trim() === "") current.delete("search");
     else current.set("search", value);
     const search = current.toString();
     const query = search ? `?${search}` : "";
@@ -31,7 +31,7 @@ export default function UserTableHeader({
         <Input
           placeholder="Search for name..."
           onChange={(e) => changePage(e.target.value)}
-          defaultValue={searchPage!}
+          defaultValue={searchPage ?? ""}
           className={`pl-10 transition-all duration-150 ${
             !searchValid && "border-destructive"
           }`}

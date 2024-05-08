@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 
 import prisma from "@/lib/prisma";
 import { compare } from "bcrypt";
@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
         if (!isPasswordValid) return null;
 
         return {
-          id: user.id + "",
+          id: `${user.id}`,
           tag: user.tag,
           name: user.name,
           email: user.email,
@@ -65,9 +65,9 @@ export const authOptions: NextAuthOptions = {
         });
         if (
           !user ||
-          user.tag != session.user.tag ||
-          user.role != session.user.role ||
-          user.email != session.user.email
+          user.tag !== session.user.tag ||
+          user.role !== session.user.role ||
+          user.email !== session.user.email
         )
           return { expires: "", user: undefined };
       } catch (e) {
@@ -82,7 +82,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (user) {
-        token.id = parseInt(user.id);
+        token.id = Number.parseInt(user.id);
         token.tag = (user as any).tag;
         token.role = (user as any).role;
       }

@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -30,13 +29,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
 
+interface userEditState {
+  loading: boolean;
+  loadingIndicator: string;
+  tag: string;
+  name: string | null;
+  mail: string;
+  role: string;
+  password: string;
+  chipAdd: string;
+}
 export default function UserEdit({ user }: { user: User }) {
   const [data, setData] = useReducer(
-    (prev: any, next: any) => ({
+    (prev: userEditState, next: Partial<userEditState>) => ({
       ...prev,
       ...next,
     }),
@@ -44,7 +53,7 @@ export default function UserEdit({ user }: { user: User }) {
       loading: false,
       loadingIndicator: "",
       tag: user.tag,
-      name: user.name != "?" ? user.name : "",
+      name: user.name !== "?" ? user.name : "",
       mail: user.email,
       role: user.role,
       password: "",
@@ -102,7 +111,7 @@ export default function UserEdit({ user }: { user: User }) {
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -160,7 +169,7 @@ export default function UserEdit({ user }: { user: User }) {
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -217,7 +226,7 @@ export default function UserEdit({ user }: { user: User }) {
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -236,7 +245,7 @@ export default function UserEdit({ user }: { user: User }) {
   async function sendChipDeleteRequest(chip: string) {
     setData({
       loading: true,
-      loadingIndicator: "chipDelete-" + chip,
+      loadingIndicator: `chipDelete-${chip}`,
     });
 
     const result = await fetch("/api/chip", {
@@ -273,7 +282,7 @@ export default function UserEdit({ user }: { user: User }) {
     });
     if (!resultData) return;
 
-    if (result.status == 400 && !!resultData.result[1]) {
+    if (result.status === 400 && !!resultData.result[1]) {
       toast.warning(`An error occurred (${resultData.result[0]})`, {
         description: resultData.result[1],
         important: true,
@@ -299,7 +308,7 @@ export default function UserEdit({ user }: { user: User }) {
 
           setData({
             tag: user.tag,
-            displayName: user.name != "?" ? user.name : "",
+            name: user.name !== "?" ? user.name : "",
             mail: user.email,
             role: user.role,
             password: "",
@@ -319,7 +328,6 @@ export default function UserEdit({ user }: { user: User }) {
             <DialogTitle>
               <div>Edit entry</div>
             </DialogTitle>
-            <DialogDescription></DialogDescription>
           </DialogHeader>
 
           <div className="w-full flex flex-col gap-2">
@@ -343,7 +351,7 @@ export default function UserEdit({ user }: { user: User }) {
                       </Label>
                       <Input
                         className={`w-full border-2 transition duration-300 ${
-                          user.tag != (data.tag ? data.tag : "") &&
+                          user.tag !== (data.tag ? data.tag : "") &&
                           "border-sky-700"
                         }`}
                         disabled={data.tag === "admin"}
@@ -363,17 +371,14 @@ export default function UserEdit({ user }: { user: User }) {
                       </Label>
                       <Input
                         className={`w-full border-2 transition duration-300 ${
-                          user.name !=
-                            (data.displayName ? data.displayName : "") &&
+                          user.name !== (data.name ? data.name : "") &&
                           "border-sky-700"
                         }`}
                         type="text"
                         name="Name"
                         id="name"
-                        value={data.displayName}
-                        onChange={(e) =>
-                          setData({ displayName: e.target.value })
-                        }
+                        value={data.name ?? ""}
+                        onChange={(e) => setData({ name: e.target.value })}
                       />
                     </div>
 
@@ -388,7 +393,7 @@ export default function UserEdit({ user }: { user: User }) {
                       </Label>
                       <Input
                         className={`w-full border-2 transition duration-300 ${
-                          user.email != (data.mail ? data.mail : "") &&
+                          user.email !== (data.mail ? data.mail : "") &&
                           "border-sky-700"
                         }`}
                         type="email"
@@ -415,7 +420,7 @@ export default function UserEdit({ user }: { user: User }) {
                       >
                         <SelectTrigger
                           className={`w-full border-2 transition duration-300 ${
-                            user.role != data.role && "border-sky-700"
+                            user.role !== data.role && "border-sky-700"
                           }`}
                         >
                           <SelectValue placeholder="Theme" />
@@ -477,7 +482,7 @@ export default function UserEdit({ user }: { user: User }) {
                             onClick={() => sendChipCreateRequest()}
                           >
                             {data.loading &&
-                            data.loadingIndicator == "chipCreate" ? (
+                            data.loadingIndicator === "chipCreate" ? (
                               <RefreshCw className="h-4 w-4 animate-spin" />
                             ) : (
                               <Plus className="h-5 w-5" />
@@ -491,7 +496,7 @@ export default function UserEdit({ user }: { user: User }) {
 
                     {user.chips.map((chip) => (
                       <div
-                        key={"chip-list-" + chip.id}
+                        key={`chip-list-${chip.id}`}
                         className="flex w-full items-center space-x-2"
                       >
                         <div className="w-full rounded-md border px-4 py-2 font-mono text-sm shadow-sm">
@@ -505,7 +510,8 @@ export default function UserEdit({ user }: { user: User }) {
                             onClick={() => sendChipDeleteRequest(chip.id)}
                           >
                             {data.loading &&
-                            data.loadingIndicator == `chipDelete-${chip.id}` ? (
+                            data.loadingIndicator ===
+                              `chipDelete-${chip.id}` ? (
                               <RefreshCw className="h-4 w-4 animate-spin" />
                             ) : (
                               <Minus className="h-5 w-5" />
@@ -523,9 +529,9 @@ export default function UserEdit({ user }: { user: User }) {
               <Button
                 variant="destructive"
                 onClick={() => sendDeleteRequest()}
-                disabled={data.loading || user.id == 1}
+                disabled={data.loading || user.id === 1}
               >
-                {data.loading && data.loadingIndicator == "delete" ? (
+                {data.loading && data.loadingIndicator === "delete" ? (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Trash className="mr-2 h-4 w-4" />
@@ -537,7 +543,7 @@ export default function UserEdit({ user }: { user: User }) {
                 onClick={() => sendRequest()}
                 disabled={data.loading}
               >
-                {data.loading && data.loadingIndicator == "update" ? (
+                {data.loading && data.loadingIndicator === "update" ? (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <SaveAll className="mr-2 h-4 w-4" />
