@@ -120,7 +120,7 @@ export default async function AdminUserPage({
 						type="always"
 						className="h-[calc(80svh-80px)] rounded-md border p-2.5 w-full"
 					>
-						<Table className="rounded-none">
+						<Table className="rounded-none h-[calc(80svh-80px)]">
 							<TableHeader className="sticky z-10 top-0 bg-secondary">
 								<TableRow>
 									<TableHead className="w-fit">Login</TableHead>

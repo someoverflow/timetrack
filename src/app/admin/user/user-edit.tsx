@@ -436,6 +436,28 @@ export default function UserEdit({ user }: { user: User }) {
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
+												htmlFor="userAdd-password"
+												className="pl-2 text-muted-foreground"
+											>
+												Password
+											</Label>
+											<Input
+												className={`!w-full transition duration-300 border-2 ${
+													data.password !== "" && "border-sky-700"
+												}`}
+												type="password"
+												name="Password"
+												id="userAdd-password"
+												placeholder="New password"
+												value={data.password}
+												onChange={(e) => setData({ password: e.target.value })}
+											/>
+										</div>
+
+										<div id="divider" className="h-1" />
+
+										<div className="grid w-full items-center gap-1.5">
+											<Label
 												htmlFor="id"
 												className="pl-2 text-muted-foreground"
 											>

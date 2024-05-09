@@ -162,7 +162,7 @@ export default function UserAdd() {
 										Login Name
 									</Label>
 									<Input
-										className="!w-full font-mono border-2"
+										className="!w-full border-2"
 										type="text"
 										name="Name"
 										id="userAdd-username"
@@ -182,7 +182,7 @@ export default function UserAdd() {
 										Name
 									</Label>
 									<Input
-										className="!w-full font-mono border-2"
+										className="!w-full border-2"
 										type="text"
 										name="Name"
 										id="userAdd-login-name"
@@ -219,7 +219,7 @@ export default function UserAdd() {
 										Mail
 									</Label>
 									<Input
-										className="!w-full font-mono border-2"
+										className="!w-full border-2"
 										type="email"
 										name="Mail"
 										id="userAdd-mail"
