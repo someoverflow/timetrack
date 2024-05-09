@@ -48,7 +48,10 @@ export async function PUT(request: NextRequest) {
 
 	if (!(containsName || containsMail || containsPassword)) {
 		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-		result.result = [result.result, "Data missing (name, mail or password)"];
+		result.result = [
+			result.result,
+			"Nothing to change (name, mail or password)",
+		];
 		return NextResponse.json(result, {
 			status: BAD_REQUEST.status,
 			statusText: BAD_REQUEST.result,

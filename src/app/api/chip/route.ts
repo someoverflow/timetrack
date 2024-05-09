@@ -165,6 +165,17 @@ export async function POST(request: NextRequest) {
 		});
 	}
 
+	if ((json.id as string).trim().length === 0) {
+		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+		result.result = [result.result, "ID is empty"];
+
+		return NextResponse.json(result, {
+			status: BAD_REQUEST.status,
+			statusText: BAD_REQUEST.result,
+		});
+	}
+
 	const check = await prisma.chip.findUnique({
 		where: {
 			id: json.id,
