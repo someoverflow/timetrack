@@ -15,7 +15,7 @@ export default function TableInfo({
 	pages: number;
 }) {
 	const input = useRef<HTMLInputElement | null>(null);
-	const { push } = useRouter();
+	const { replace } = useRouter();
 	const searchParams = useSearchParams();
 
 	const changePage = useDebouncedCallback((value: string) => {
@@ -28,11 +28,12 @@ export default function TableInfo({
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 		if (input.current) input.current.value = value;
-		push(`/admin/user${query}`);
+		replace(`/admin/user${query}`);
 	}, 100);
 
 	const searchPage = searchParams.get("page");
 	useEffect(() => {
+		if (searchPage == null) return;
 		if (searchPage !== page.toString()) changePage(page.toString());
 	}, [changePage, page, searchPage]);
 

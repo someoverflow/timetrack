@@ -11,7 +11,7 @@ export default function UserTableHeader({
 }: {
 	searchValid: boolean;
 }) {
-	const { push } = useRouter();
+	const { replace } = useRouter();
 	const searchParams = useSearchParams();
 	const searchPage = searchParams.get("search");
 
@@ -21,7 +21,7 @@ export default function UserTableHeader({
 		else current.set("search", value);
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
-		push(`/admin/user${query}`);
+		replace(`/admin/user${query}`);
 	}, 300);
 
 	return (

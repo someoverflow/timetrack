@@ -88,6 +88,7 @@ export default async function AdminUserPage({
 		searchName,
 	);
 
+	const visibleUsers = users.length;
 	if (users.length !== 15) {
 		for (let i = 0; i < 15; i++) {
 			if (!users[i]) {
@@ -168,7 +169,8 @@ export default async function AdminUserPage({
 							<TableFooter className="sticky bottom-0">
 								<TableRow>
 									<TableCell className="p-2">
-										<p className="text-muted-foreground">{`${users.length}/${userCount} shown`}</p>
+										<p className="text-muted-foreground whitespace-nowrap">{`${visibleUsers} of ${users.length} visible`}</p>
+										<p className="text-muted-foreground whitespace-nowrap">{`${userCount} users`}</p>
 									</TableCell>
 									<TableCell colSpan={2} className="p-2">
 										<TableInfo page={currentPage} pages={pages} />
