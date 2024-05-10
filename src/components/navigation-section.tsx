@@ -85,6 +85,16 @@ export default function NavigationSection({
 				<MenubarContent className="space-y-1">
 					<MenubarItem asChild>
 						<Link
+							href="/settings"
+							prefetch
+							className={pathname === "/settings" ? "bg-accent" : ""}
+						>
+							Settings
+						</Link>
+					</MenubarItem>
+					{/*
+					<MenubarItem asChild>
+						<Link
 							href="/profile"
 							prefetch
 							className={pathname === "/profile" ? "bg-accent" : ""}
@@ -92,6 +102,7 @@ export default function NavigationSection({
 							Profile
 						</Link>
 					</MenubarItem>
+					*/}
 					<MenubarItem onClick={() => signOut()}>Sign Out</MenubarItem>
 
 					<MenubarSeparator />

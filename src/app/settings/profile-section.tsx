@@ -1,7 +1,14 @@
 "use client";
 
 // UI
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,6 +20,7 @@ import { SaveAll } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { signOut, useSession } from "next-auth/react";
+import { Badge } from "@/components/ui/badge";
 
 interface profileSectionState {
 	loading: boolean;
@@ -115,8 +123,28 @@ export default function ProfileSection({
 	}
 
 	return (
-		<Card className="w-[90vw] max-w-sm">
-			<CardContent className="py-2">
+		<Card className="w-full">
+			<div className="flex flex-row">
+				<CardHeader className="w-full">
+					<CardTitle>Profile</CardTitle>
+					<CardDescription>Make changes to your profile here.</CardDescription>
+				</CardHeader>
+				<div className="flex flex-col space-y-1.5 p-6 text-right">
+					<Badge variant="default">{userData.tag}</Badge>
+				</div>
+			</div>
+
+            <Button onClick={ async () => {
+                const res = await fetch("/api/project", {method: "POST", body: JSON.stringify({ id: "4", name: "Test", userId: userData.id })})
+                console.log(res)
+                console.log(await res.json())
+            } }>
+                VVVV
+            </Button>
+
+			<Separator className="w-full" />
+
+			<CardContent className="py-6">
 				<div className="flex flex-col gap-4 py-2">
 					<div className="grid w-full items-center gap-1.5">
 						<Label htmlFor="input-name">Name</Label>
