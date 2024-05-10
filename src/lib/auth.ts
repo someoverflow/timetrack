@@ -84,10 +84,9 @@ export const authOptions: NextAuthOptions = {
 			if (user) {
 				token.id = Number.parseInt(user.id);
 
-				// TODO: explanation
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				// biome-ignore lint/suspicious/noExplicitAny: Type differences
 				token.tag = (user as any).tag;
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				// biome-ignore lint/suspicious/noExplicitAny: Type differences
 				token.role = (user as any).role;
 			}
 			return token;

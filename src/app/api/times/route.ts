@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
-import { NO_AUTH, BAD_REQUEST, FORBIDDEN } from "@/lib/utils";
+import { NO_AUTH, BAD_REQUEST, FORBIDDEN } from "@/lib/server-utils";
 
 //     indicator
 // Get current    timer

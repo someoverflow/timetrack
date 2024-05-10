@@ -1,13 +1,5 @@
-import { authOptions } from "@/lib/auth";
-import { type Session, getServerSession } from "next-auth";
-import prisma from "@/lib/prisma";
-
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 export const days = [
 	"Sunday",
@@ -33,28 +25,8 @@ export const months = [
 	"December",
 ];
 
-export async function checkAdmin(): Promise<boolean> {
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user) return false;
-
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-	});
-
-	return user?.role === "admin";
-}
-export async function checkAdminWithSession(session: Session): Promise<boolean> {
-	if (!session || !session.user) return false;
-
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-	});
-
-	return user?.role === "admin";
+export function cn(...inputs: ClassValue[]) {
+	return twMerge(clsx(inputs));
 }
 
 export function validatePassword(password: string): boolean {
@@ -84,25 +56,3 @@ export function getTotalTime(times: string[]): string {
 		.toString()
 		.padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
-
-export const NO_AUTH: APIResult = Object.freeze({
-	success: false,
-	status: 401,
-	result: "Unauthorized",
-});
-export const NOT_ADMIN: APIResult = Object.freeze({
-	success: false,
-	status: 403,
-	result: "Forbidden",
-});
-
-export const BAD_REQUEST: APIResult = Object.freeze({
-	success: false,
-	status: 400,
-	result: "Bad Request",
-});
-export const FORBIDDEN: APIResult = Object.freeze({
-	success: false,
-	status: 403,
-	result: "Forbidden",
-});
