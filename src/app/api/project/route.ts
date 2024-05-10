@@ -57,7 +57,7 @@ export async function DELETE(request: NextRequest) {
 	// Get the data about the project
 	const project = await prisma.project.findUnique({
 		where: {
-			id: json.id,
+			id: Number.parseInt(json.id),
 		},
 		select: {
 			id: true,
@@ -244,7 +244,6 @@ export async function POST(request: NextRequest) {
 	try {
 		const res = await prisma.project.create({
 			data: {
-				id: json.id,
 				name: json.name,
 				userId: user.id,
 			},
