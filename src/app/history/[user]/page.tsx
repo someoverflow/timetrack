@@ -99,16 +99,17 @@ export default async function History({
 		return !(history.length === 1 && history[0].end == null);
 	}
 
-	const historyData = history ? formatHistory(history) : null;
+	const historyData = history ? formatHistory(history) : {};
+
+	let yearMonth = searchParams?.ym;
+	if (!yearMonth || !Object.keys(historyData).includes(yearMonth)) yearMonth = Object.keys(historyData)[0];
 
 	const timeStrings: string[] = [];
-	if (historyData) {
-		if (searchParams?.ym) {
-			for (const data of historyData[searchParams.ym]) {
-				if (data.time) timeStrings.push(data.time);
-			}
+	try {
+		for (const data of historyData[yearMonth]) {
+			if (data.time) timeStrings.push(data.time);
 		}
-	}
+	} catch (e) {}
 	const totalTime =
 		timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
 
@@ -127,6 +128,7 @@ export default async function History({
 							<TimerSection
 								history={historyData}
 								totalTime={totalTime}
+								yearMonth={yearMonth}
 								tag={target.tag}
 							/>
 						) : (

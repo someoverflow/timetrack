@@ -30,7 +30,7 @@ import type { Prisma } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // React
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -45,10 +45,12 @@ interface Data {
 export default function TimerSection({
 	tag,
 	history,
+	yearMonth,
 	totalTime,
 }: {
 	tag: string;
 	history: Data;
+	yearMonth: string;
 	totalTime: string;
 }) {
 	const historyKeys = Object.keys(history);
@@ -58,9 +60,6 @@ export default function TimerSection({
 
 	const searchParams = useSearchParams();
 	const editTime = searchParams.get("edit");
-	let yearMonth = searchParams.get("ym");
-	if (yearMonth == null || !historyKeys.includes(yearMonth))
-		yearMonth = historyKeys[0];
 
 	const [addVisible, setAddVisible] = useState(false);
 
@@ -95,7 +94,6 @@ export default function TimerSection({
 		element.click();
 	};
 
-	// TODO: Fix total time
 	return (
 		<section
 			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
@@ -130,9 +128,9 @@ export default function TimerSection({
 									{historyKeys.map((key) => (
 										<CommandItem
 											key={`history-${key}`}
+											onSelect={() => changeYearMonth(key)}
 											value={key}
 											className="font-mono"
-											onSelect={() => changeYearMonth(key)}
 										>
 											{key}
 											<Check
@@ -141,7 +139,6 @@ export default function TimerSection({
 													yearMonth === key ? "opacity-100" : "opacity-0",
 												)}
 											/>
-											{/* TODO: Add loading indication */}
 										</CommandItem>
 									))}
 								</CommandGroup>

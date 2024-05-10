@@ -86,12 +86,15 @@ export default async function History({
 
 	const historyData = formatHistory(history);
 
+	let yearMonth = searchParams?.ym;
+	if (!yearMonth || !Object.keys(historyData).includes(yearMonth)) yearMonth = Object.keys(historyData)[0];
+
 	const timeStrings: string[] = [];
-	if (searchParams?.ym) {
-		for (const data of historyData[searchParams.ym]) {
+	try {
+		for (const data of historyData[yearMonth]) {
 			if (data.time) timeStrings.push(data.time);
 		}
-	}
+	} catch (e) {}
 	const totalTime =
 		timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
 
@@ -102,12 +105,11 @@ export default async function History({
 					<p className="text-2xl font-mono">History</p>
 				</div>
 
-				{/** Add button when no data found */}
-
 				{dataFound() ? (
 					<TimerSection
 						history={historyData}
 						totalTime={totalTime}
+						yearMonth={yearMonth}
 						tag={user.tag}
 					/>
 				) : (
