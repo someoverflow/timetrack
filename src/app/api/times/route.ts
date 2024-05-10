@@ -3,22 +3,7 @@ import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
-
-const NO_AUTH: APIResult = Object.freeze({
-	success: false,
-	status: 401,
-	result: "Unauthorized",
-});
-const FORBIDDEN: APIResult = Object.freeze({
-	success: false,
-	status: 403,
-	result: "Forbidden",
-});
-const BAD_REQUEST: APIResult = Object.freeze({
-	success: false,
-	status: 400,
-	result: "Bad Request",
-});
+import { NO_AUTH, BAD_REQUEST, FORBIDDEN } from "@/lib/utils";
 
 //     indicator
 // Get current    timer

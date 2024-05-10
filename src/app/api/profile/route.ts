@@ -1,21 +1,10 @@
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { validatePassword } from "@/lib/utils";
+import { NO_AUTH, BAD_REQUEST } from "@/lib/utils";
 import { hash } from "bcrypt";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
-
-const NO_AUTH: APIResult = Object.freeze({
-	success: false,
-	status: 401,
-	result: "Unauthorized",
-});
-
-const BAD_REQUEST: APIResult = Object.freeze({
-	success: false,
-	status: 400,
-	result: "Bad Request",
-});
 
 // Update profile
 export async function PUT(request: NextRequest) {

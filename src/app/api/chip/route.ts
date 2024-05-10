@@ -1,37 +1,8 @@
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { NO_AUTH, BAD_REQUEST, NOT_ADMIN, checkAdminWithSession } from "@/lib/utils";
 import { type Session, getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
-
-async function checkAdmin(session: Session): Promise<boolean> {
-	const user = await prisma.user.findUnique({
-		where: {
-			tag: session.user.tag,
-		},
-		select: {
-			role: true,
-		},
-	});
-
-	return user?.role === "admin";
-}
-
-const NO_AUTH: APIResult = Object.freeze({
-	success: false,
-	status: 401,
-	result: "Unauthorized",
-});
-const NOT_ADMIN: APIResult = Object.freeze({
-	success: false,
-	status: 403,
-	result: "Forbidden",
-});
-
-const BAD_REQUEST: APIResult = Object.freeze({
-	success: false,
-	status: 400,
-	result: "Bad Request",
-});
 
 // Delete a chip
 export async function DELETE(request: NextRequest) {
@@ -42,7 +13,7 @@ export async function DELETE(request: NextRequest) {
 			statusText: NO_AUTH.result,
 		});
 
-	const isAdmin = await checkAdmin(session);
+	const isAdmin = await checkAdminWithSession(session);
 	if (!isAdmin)
 		return NextResponse.json(NOT_ADMIN, {
 			status: NOT_ADMIN.status,
@@ -125,7 +96,7 @@ export async function POST(request: NextRequest) {
 			statusText: NO_AUTH.result,
 		});
 
-	const isAdmin = await checkAdmin(session);
+	const isAdmin = await checkAdminWithSession(session);
 	if (!isAdmin)
 		return NextResponse.json(NOT_ADMIN, {
 			status: NOT_ADMIN.status,
@@ -234,7 +205,7 @@ export async function PUT(request: NextRequest) {
 			statusText: NO_AUTH.result,
 		});
 
-	const isAdmin = await checkAdmin(session);
+	const isAdmin = await checkAdminWithSession(session);
 	if (!isAdmin)
 		return NextResponse.json(NOT_ADMIN, {
 			status: NOT_ADMIN.status,

@@ -1,32 +1,7 @@
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "bcrypt";
-import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
-
-const FORBIDDEN: APIResult = Object.freeze({
-	success: false,
-	status: 403,
-	result: "Forbidden",
-});
-const BAD_REQUEST: APIResult = Object.freeze({
-	success: false,
-	status: 400,
-	result: "Bad Request",
-});
-
-async function checkAdmin(): Promise<boolean> {
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user) return false;
-
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-	});
-
-	return user?.role === "admin";
-}
+import { BAD_REQUEST, FORBIDDEN, checkAdmin } from "@/lib/utils";
 
 // Create
 export async function PUT(request: NextRequest) {

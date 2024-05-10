@@ -3,12 +3,7 @@ import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
-
-const NO_AUTH: APIResult = Object.freeze({
-	success: false,
-	status: 401,
-	result: "Unauthorized",
-});
+import { NO_AUTH } from "@/lib/utils";
 
 export async function PUT(request: NextRequest) {
 	const session = await getServerSession(authOptions);
