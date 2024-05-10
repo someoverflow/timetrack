@@ -8,9 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model times {
-  id   Int    @id @default(autoincrement())
-  user String @db.Text
+model time {
+  id Int @id @default(autoincrement())
+
+  user   user? @relation(fields: [userId], references: [id])
+  userId Int?
 
   start     DateTime  @db.DateTime(2)
   startType String?   @db.Text
@@ -19,26 +21,44 @@ model times {
 
   time  String? @db.Text
   notes String? @db.MediumText
+
+  project   project? @relation(fields: [projectId], references: [id])
+  projectId Int?
+}
+
+model project {
+  id Int @id @default(autoincrement())
+
+  name String
+
+  times time[]
+
+  user   user? @relation(fields: [userId], references: [id])
+  userId Int?
 }
 
 model user {
-  id       Int     @id @default(autoincrement())
-  username String  @unique
-  name     String?
-  email    String  @unique
+  id Int @id @default(autoincrement())
+
+  tag      String @unique
   password String
-  role     String
+
+  name  String?
+  email String  @unique
+  role  String
+
   chips    chip[]
+  times    time[]
+  projects project[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@fulltext([name])
 }
 
 model chip {
-  id     String @id
-  user   user   @relation(fields: [userId], references: [id])
+  id String @id
+
+  user   user @relation(fields: [userId], references: [id])
   userId Int
 
   createdAt DateTime @default(now())

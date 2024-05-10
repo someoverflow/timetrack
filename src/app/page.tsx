@@ -1,31 +1,22 @@
 import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
 import { getServerSession } from "next-auth";
-import prisma from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const user = await getServerSession();
+	const session = await getServerSession(authOptions);
+	if (!session || !session.user) return redirect("/signin");
+	const user = session.user;
 
-  const userDetails = await prisma.user.findUnique({
-    where: {
-      username: user?.user?.name + "",
-    },
-    select: {
-      name: true,
-      username: true,
-    },
-  });
-
-  return (
-    <Navigation>
-      <section className="min-h-[90svh] flex flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-mono text-content3">
-          {userDetails?.name !== "?"
-            ? userDetails?.name
-            : userDetails?.username}
-        </h1>
-        <TimerSection />
-      </section>
-    </Navigation>
-  );
+	return (
+		<Navigation>
+			<section className="min-h-[90svh] flex flex-col items-center justify-center gap-4">
+				{user.name && (
+					<h1 className="text-2xl font-mono text-content3">{user.name}</h1>
+				)}
+				<TimerSection />
+			</section>
+		</Navigation>
+	);
 }

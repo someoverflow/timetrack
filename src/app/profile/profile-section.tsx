@@ -1,166 +1,180 @@
 "use client";
 
-import { Save, SaveAll } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+// UI
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { SaveAll } from "lucide-react";
+
+// React
+import { useRouter } from "next/navigation";
 import { useReducer } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+
+interface profileSectionState {
+	loading: boolean;
+	name: string | undefined;
+	mail: string | undefined;
+	password: string;
+}
 
 export default function ProfileSection({
-  userData,
+	userData,
 }: {
-  userData: {
-    role: string;
-    email: string;
-    name: string | null;
-    username: string;
-    chips: {
-      id: string;
-      userId: number;
-      createdAt: Date;
-      updatedAt: Date;
-    }[];
-  };
+	userData: {
+		id: number;
+		tag: string;
+		role: string;
+		name?: string | null | undefined;
+		email?: string | null | undefined;
+	};
 }) {
-  const [data, setData] = useReducer(
-    (prev: any, next: any) => ({
-      ...prev,
-      ...next,
-    }),
-    {
-      loading: false,
-      name: userData.name,
-      mail: userData.email,
-      password: "",
-    },
-  );
+	const [data, setData] = useReducer(
+		(prev: profileSectionState, next: Partial<profileSectionState>) => ({
+			...prev,
+			...next,
+		}),
+		{
+			loading: false,
+			name: userData.name ?? "",
+			mail: userData.email ?? "",
+			password: "",
+		},
+	);
 
-  const router = useRouter();
+	const router = useRouter();
 
-  async function updateData() {
-    setData({
-      loading: true,
-    });
+	const { update } = useSession();
 
-    const changePassword = data.password != "";
-    const result = await fetch("/api/profile", {
-      method: "PUT",
-      body: JSON.stringify({
-        name: data.name != userData.name ? data.name : undefined,
-        mail: data.mail != userData.email ? data.mail : undefined,
-        password: changePassword ? data.password : undefined,
-      }),
-    });
+	async function updateData() {
+		setData({
+			loading: true,
+		});
 
-    setData({
-      loading: false,
-    });
+		const changePassword = data.password !== "";
+		const result = await fetch("/api/profile", {
+			method: "PUT",
+			body: JSON.stringify({
+				name: data.name !== userData.name ? data.name : undefined,
+				mail: data.mail !== userData.email ? data.mail : undefined,
+				password: changePassword ? data.password : undefined,
+			}),
+		});
 
-    if (result.ok) {
-      toast.success(`Successfully updated profile`, {
-        duration: 3000,
-      });
+		setData({
+			loading: false,
+		});
 
-      if (changePassword) {
-        signOut();
-        return;
-      }
-      router.refresh();
-      return;
-    }
+		if (result.ok) {
+			toast.success("Successfully updated profile.", {
+				description: "Session is getting updated",
+				duration: 3000,
+			});
 
-    const resultData: APIResult = await result.json().catch(() => {
-      toast.error("An error occurred", {
-        description: "Result could not be proccessed",
-        important: true,
-        duration: 8000,
-      });
-      return;
-    });
-    if (!resultData) return;
+			await update({ name: data.name });
 
-    if (result.status == 400 && !!resultData.result[1]) {
-      toast.warning(`An error occurred (${resultData.result[0]})`, {
-        description: resultData.result[1],
-        important: true,
-        duration: 10000,
-      });
-      return;
-    }
+			if (changePassword) {
+				toast.success("Password changed. Please sign in again.", {
+					duration: 3000,
+				});
+				signOut();
+				return;
+			}
 
-    toast.error("An error occurred", {
-      description: "Error could not be identified. You can try again.",
-      important: true,
-      duration: 8000,
-    });
-  }
+			router.refresh();
+			return;
+		}
 
-  return (
-    <Card className="w-[90vw] max-w-sm">
-      <CardContent className="py-2">
-        <div className="flex flex-col gap-4 py-2">
-          <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="input-name">Name</Label>
-            <Input
-              type="text"
-              name="Name"
-              id="input-name"
-              placeholder="Max Mustermann"
-              className={`transition-all duration-300 ${
-                data.name != userData.name && "border-sky-700"
-              }`}
-              value={data.name}
-              onChange={(e) => setData({ name: e.target.value })}
-            />
-          </div>
-          <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="input-mail">Mail</Label>
-            <Input
-              type="email"
-              name="Mail"
-              id="input-mail"
-              placeholder="max@example.com"
-              className={`transition-all duration-300 ${
-                data.mail != userData.email && "border-sky-700"
-              }`}
-              value={data.mail}
-              onChange={(e) => setData({ mail: e.target.value })}
-            />
-          </div>
-          <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="input-password">Password</Label>
-            <Input
-              type="password"
-              name="Password"
-              id="input-password"
-              placeholder="Secure123"
-              className={`transition-all duration-300 ${
-                data.password != "" && "border-sky-700"
-              }`}
-              value={data.password}
-              onChange={(e) => setData({ password: e.target.value })}
-            />
-          </div>
-        </div>
-      </CardContent>
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+		if (!resultData) return;
 
-      <Separator className="w-full" />
+		if (result.status === 400 && !!resultData.result[1]) {
+			toast.warning(`An error occurred (${resultData.result[0]})`, {
+				description: resultData.result[1],
+				important: true,
+				duration: 10000,
+			});
+			return;
+		}
 
-      <CardFooter className="p-6">
-        <Button
-          disabled={data.loading}
-          variant="secondary"
-          className="w-full"
-          onClick={() => updateData()}
-        >
-          <SaveAll className="mr-2 w-4 h-4" /> Save Changes
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+		toast.error("An error occurred", {
+			description: "Error could not be identified. You can try again.",
+			important: true,
+			duration: 8000,
+		});
+	}
+
+	return (
+		<Card className="w-[90vw] max-w-sm">
+			<CardContent className="py-2">
+				<div className="flex flex-col gap-4 py-2">
+					<div className="grid w-full items-center gap-1.5">
+						<Label htmlFor="input-name">Name</Label>
+						<Input
+							type="text"
+							name="Name"
+							id="input-name"
+							placeholder="Max Mustermann"
+							className={`transition-all duration-300 ${
+								data.name !== userData.name && "border-sky-700"
+							}`}
+							value={data.name}
+							onChange={(e) => setData({ name: e.target.value })}
+						/>
+					</div>
+					<div className="grid w-full items-center gap-1.5">
+						<Label htmlFor="input-mail">Mail</Label>
+						<Input
+							type="email"
+							name="Mail"
+							id="input-mail"
+							placeholder="max@example.com"
+							className={`transition-all duration-300 ${
+								data.mail !== userData.email && "border-sky-700"
+							}`}
+							value={data.mail}
+							onChange={(e) => setData({ mail: e.target.value })}
+						/>
+					</div>
+					<div className="grid w-full items-center gap-1.5">
+						<Label htmlFor="input-password">Password</Label>
+						<Input
+							type="password"
+							name="Password"
+							id="input-password"
+							placeholder="Secure123"
+							className={`transition-all duration-300 ${
+								data.password !== "" && "border-sky-700"
+							}`}
+							value={data.password}
+							onChange={(e) => setData({ password: e.target.value })}
+						/>
+					</div>
+				</div>
+			</CardContent>
+
+			<Separator className="w-full" />
+
+			<CardFooter className="p-6">
+				<Button
+					disabled={data.loading}
+					variant="secondary"
+					className="w-full"
+					onClick={() => updateData()}
+				>
+					<SaveAll className="mr-2 w-4 h-4" /> Save Changes
+				</Button>
+			</CardFooter>
+		</Card>
+	);
 }
