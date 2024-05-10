@@ -33,8 +33,34 @@ model project {
 
   times time[]
 
+  relatedTodos todo[] @relation("relatedProjectTodo")
+
   user   user? @relation(fields: [userId], references: [id])
   userId Int?
+}
+
+model todo {
+  id Int @id @default(autoincrement())
+
+  content String @db.Text
+
+  done       Boolean @default(false)
+  inProgress Boolean @default(false)
+  archived   Boolean @default(false)
+
+  deadline DateTime?
+
+  relatedProject   project? @relation("relatedProjectTodo", fields: [relatedProjectId], references: [id])
+  relatedProjectId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creator   user? @relation("creator", fields: [creatorId], references: [id])
+  creatorId Int?
+
+  assignee   user? @relation("assignee", fields: [assigneeId], references: [id])
+  assigneeId Int?
 }
 
 model user {
@@ -50,6 +76,9 @@ model user {
   chips    chip[]
   times    time[]
   projects project[]
+
+  assignedTodos todo[] @relation("assignee")
+  createdTodos  todo[] @relation("creator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

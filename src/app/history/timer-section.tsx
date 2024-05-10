@@ -30,7 +30,7 @@ import type { Prisma } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // React
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -58,7 +58,9 @@ export default function TimerSection({
 
 	const searchParams = useSearchParams();
 	const editTime = searchParams.get("edit");
-	const yearMonth = searchParams.get("ym");
+	let yearMonth = searchParams.get("ym");
+	if (yearMonth == null || !historyKeys.includes(yearMonth))
+		yearMonth = historyKeys[0];
 
 	const [addVisible, setAddVisible] = useState(false);
 
@@ -68,12 +70,7 @@ export default function TimerSection({
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 		router.push(`${pathname}${query}`);
-	}
-
-	// Set selected yearMonth if not set
-	if (yearMonth == null || !historyKeys.includes(yearMonth)) {
-		changeYearMonth(historyKeys[0]);
-		return <></>;
+		router.refresh();
 	}
 
 	const downloadCSV = (yearMonth: string, totalTime: string) => {
@@ -98,6 +95,7 @@ export default function TimerSection({
 		element.click();
 	};
 
+	// TODO: Fix total time
 	return (
 		<section
 			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
@@ -143,6 +141,7 @@ export default function TimerSection({
 													yearMonth === key ? "opacity-100" : "opacity-0",
 												)}
 											/>
+											{/* TODO: Add loading indication */}
 										</CommandItem>
 									))}
 								</CommandGroup>
@@ -156,6 +155,7 @@ export default function TimerSection({
 							<Button
 								variant="outline"
 								size="icon"
+								disabled={yearMonth == null || !historyKeys.includes(yearMonth)}
 								onClick={() => downloadCSV(yearMonth, totalTime)}
 							>
 								<FileDown className="h-5 w-5" />
