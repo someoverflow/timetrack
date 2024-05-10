@@ -134,14 +134,6 @@ export default function ProfileSection({
 				</div>
 			</div>
 
-            <Button onClick={ async () => {
-                const res = await fetch("/api/project", {method: "POST", body: JSON.stringify({ id: "4", name: "Test", userId: userData.id })})
-                console.log(res)
-                console.log(await res.json())
-            } }>
-                VVVV
-            </Button>
-
 			<Separator className="w-full" />
 
 			<CardContent className="py-6">

@@ -12,7 +12,14 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 
-export default async function Profile() {
+export default async function Profile({
+	searchParams,
+}: {
+	searchParams?: {
+		query?: string;
+		page?: string;
+	};
+}) {
 	const session = await getServerSession(authOptions);
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
@@ -27,6 +34,35 @@ export default async function Profile() {
 		},
 	});
 
+	const adminProjects: {
+		[name: string]: {
+			users: Partial<{ id: number; tag: string; name: string }>[];
+		};
+	} = {};
+	if (user.role === "admin") {
+		const projectsResult = await prisma.project.findMany({
+			where: {
+				NOT: {
+					userId: user.id,
+				},
+			},
+			include: {
+				user: true,
+			},
+		});
+
+		for (const { name, user } of projectsResult) {
+			if (!adminProjects[name]) adminProjects[name] = { users: [] };
+			if (user) {
+				adminProjects[name].users.push({
+					id: user.id,
+					tag: user.tag,
+					name: user.name ?? "",
+				});
+			}
+		}
+	}
+
 	return (
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
@@ -35,7 +71,12 @@ export default async function Profile() {
 				</div>
 
 				<section className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn">
-					<Tabs defaultValue="profile" className="w-full">
+					<Tabs
+						defaultValue={
+							searchParams?.page === "projects" ? "projects" : "profile"
+						}
+						className="w-full"
+					>
 						<TabsList className="grid w-full grid-cols-2">
 							<TabsTrigger value="profile">Profile</TabsTrigger>
 							<TabsTrigger value="projects">Projects</TabsTrigger>
@@ -48,7 +89,11 @@ export default async function Profile() {
 								className="h-[calc(80svh-80px)] w-full rounded-sm border p-1.5 overflow-hidden"
 								type="scroll"
 							>
-								<ProjectSection projects={projects} userData={user} />
+								<ProjectSection
+									projects={projects}
+									adminProjects={adminProjects}
+									userData={user}
+								/>
 							</ScrollArea>
 						</TabsContent>
 					</Tabs>
