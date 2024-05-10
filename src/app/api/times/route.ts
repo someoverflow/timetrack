@@ -280,9 +280,14 @@ export async function PUT(request: NextRequest) {
 			statusText: FORBIDDEN.result,
 		});
 
-	// TODO: Do this
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const data: any = {
+	const data: Partial<{
+		notes: string;
+		start: Date;
+		startType: string | undefined;
+		end: Date;
+		endType: string | undefined;
+		time: string | undefined;
+	}> = {
 		notes: json.notes,
 	};
 
