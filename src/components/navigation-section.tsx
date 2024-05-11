@@ -13,7 +13,15 @@ import {
 	MenubarTrigger,
 } from "@/components/ui/menubar";
 
-import { History, Moon, Shield, Sun, SunMoon, Timer, User } from "lucide-react";
+import {
+	History,
+	ListTodo,
+	Moon,
+	Sun,
+	SunMoon,
+	Timer,
+	User,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 
 // React
@@ -63,21 +71,19 @@ export default function NavigationSection({
 					</Link>
 				</MenubarTrigger>
 			</MenubarMenu>
-			{user?.role === "admin" && (
-				<MenubarMenu>
-					<MenubarTrigger asChild>
-						<Link
-							href="/admin/user"
-							prefetch
-							className={`${
-								pathname === "/admin/user" ? "bg-accent" : "hover:bg-accent"
-							} !cursor-pointer aspect-square !p-2`}
-						>
-							<Shield className="h-6 w-6" />
-						</Link>
-					</MenubarTrigger>
-				</MenubarMenu>
-			)}
+			<MenubarMenu>
+				<MenubarTrigger asChild>
+					<Link
+						href="/todo"
+						prefetch
+						className={`${
+							pathname === "/todo" ? "bg-accent" : "hover:bg-accent"
+						} !cursor-pointer aspect-square !p-2`}
+					>
+						<ListTodo className="h-6 w-6" />
+					</Link>
+				</MenubarTrigger>
+			</MenubarMenu>
 			<MenubarMenu>
 				<MenubarTrigger className="hover:!bg-accent !bg-background !cursor-pointer aspect-square !p-2">
 					<User className="h-6 w-6" />
@@ -92,17 +98,18 @@ export default function NavigationSection({
 							Settings
 						</Link>
 					</MenubarItem>
-					{/*
-					<MenubarItem asChild>
-						<Link
-							href="/profile"
-							prefetch
-							className={pathname === "/profile" ? "bg-accent" : ""}
-						>
-							Profile
-						</Link>
-					</MenubarItem>
-					*/}
+					{user?.role === "admin" && (
+						<MenubarItem asChild>
+							<Link
+								href="/admin/user"
+								prefetch
+								className={pathname === "/admin/user" ? "bg-accent" : ""}
+							>
+								Users
+							</Link>
+						</MenubarItem>
+					)}
+					
 					<MenubarItem onClick={() => signOut()}>Sign Out</MenubarItem>
 
 					<MenubarSeparator />
