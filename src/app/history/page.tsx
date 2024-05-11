@@ -18,7 +18,9 @@ import { getTotalTime } from "@/lib/utils";
 import { authOptions } from "@/lib/auth";
 import { TimerAddServer } from "./timer-add";
 
-type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
+type Timer = Prisma.timeGetPayload<{
+	include: { project: { select: { id: true; name: true } } };
+}>;
 interface Data {
 	[yearMonth: string]: Timer[];
 }
@@ -69,15 +71,34 @@ export default async function History({
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
-	const history = await prisma.time.findMany({
-		orderBy: {
-			//id: "desc",
-			start: "desc",
-		},
-		where: {
-			userId: user.id,
-		},
-	});
+	const [history, projects] = await prisma.$transaction([
+		prisma.time.findMany({
+			orderBy: {
+				//id: "desc",
+				start: "desc",
+			},
+			where: {
+				userId: user.id,
+			},
+			include: {
+				project: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+			},
+		}),
+		prisma.project.findMany({
+			where: {
+				userId: user.id,
+			},
+			select: {
+				id: true,
+				name: true,
+			},
+		}),
+	]);
 
 	function dataFound(): boolean {
 		if (history.length === 0) return false;
@@ -87,7 +108,8 @@ export default async function History({
 	const historyData = formatHistory(history);
 
 	let yearMonth = searchParams?.ym;
-	if (!yearMonth || !Object.keys(historyData).includes(yearMonth)) yearMonth = Object.keys(historyData)[0];
+	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
+		yearMonth = Object.keys(historyData)[0];
 
 	const timeStrings: string[] = [];
 	try {
@@ -108,6 +130,7 @@ export default async function History({
 				{dataFound() ? (
 					<TimerSection
 						history={historyData}
+						projects={projects}
 						totalTime={totalTime}
 						yearMonth={yearMonth}
 						tag={user.tag}

@@ -37,7 +37,9 @@ import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
-type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
+type Timer = Prisma.timeGetPayload<{
+	include: { project: { select: { id: true; name: true } } };
+}>;
 interface Data {
 	[yearMonth: string]: Timer[];
 }
@@ -45,11 +47,16 @@ interface Data {
 export default function TimerSection({
 	tag,
 	history,
+	projects,
 	yearMonth,
 	totalTime,
 }: {
 	tag: string;
 	history: Data;
+	projects: {
+		id: number;
+		name: string;
+	}[];
 	yearMonth: string;
 	totalTime: string;
 }) {
@@ -117,7 +124,7 @@ export default function TimerSection({
 								<ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
 							</Button>
 						</PopoverTrigger>
-						<PopoverContent className="p-1">
+						<PopoverContent className="p-2">
 							<Command>
 								<CommandInput
 									placeholder="Search year/month..."
@@ -159,6 +166,7 @@ export default function TimerSection({
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent side="bottom">
+							{/* Open popup to filter */}
 							<p className="text-center">
 								Download a <code>.csv</code> containing all
 								<br /> the current visible entries
@@ -192,6 +200,7 @@ export default function TimerSection({
 					<TimerInfo
 						key={`timerHistory-${yearMonth}-${time.id}`}
 						edit={Number.parseInt(editTime ?? "-1") === time.id}
+						projects={projects}
 						data={time}
 					/>
 				))}

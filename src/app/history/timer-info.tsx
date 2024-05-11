@@ -15,7 +15,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SaveAll, Trash, Trash2, XCircle } from "lucide-react";
+import {
+	Check,
+	ChevronsUpDown,
+	SaveAll,
+	Trash,
+	Trash2,
+	XCircle,
+} from "lucide-react";
 
 // Database
 import type { Prisma } from "@prisma/client";
@@ -33,21 +40,44 @@ import { useRouter } from "next/navigation";
 
 // React
 import { useEffect, useReducer, useState } from "react";
-import { days } from "@/lib/utils";
+import { cn, days } from "@/lib/utils";
+import { badgeVariants } from "@/components/ui/badge";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
+import Link from "next/link";
 
-type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
-
+type Timer = Prisma.timeGetPayload<{
+	include: { project: { select: { id: true; name: true } } };
+}>;
 interface timerInfoState {
 	notes: string;
 	start: string;
 	end: string;
 	loading: boolean;
+
+	projectSelectionOpen: boolean;
+	projectId: number | null;
 }
 export default function TimerInfo({
 	data,
+	projects,
 	edit,
 }: {
 	data: Timer;
+	projects: {
+		id: number;
+		name: string;
+	}[];
 	edit: boolean;
 }) {
 	const [state, setState] = useReducer(
@@ -62,6 +92,8 @@ export default function TimerInfo({
 				? data.end.toLocaleString("sv").replace(" ", "T")
 				: new Date().toLocaleString("sv").replace(" ", "T"),
 			loading: false,
+			projectSelectionOpen: false,
+			projectId: data.projectId,
 		},
 	);
 
@@ -108,6 +140,7 @@ export default function TimerInfo({
 			start: string;
 			endType: string;
 			end: string;
+			projectId: number | null;
 		}> = {
 			id: data.id,
 			notes: state.notes,
@@ -134,6 +167,10 @@ export default function TimerInfo({
 
 			request.start = new Date(state.start).toUTCString();
 			request.end = new Date(state.end).toUTCString();
+		}
+
+		if (state.projectId !== data.projectId) {
+			request.projectId = state.projectId;
 		}
 
 		const result = await fetch("/api/times", {
@@ -276,15 +313,27 @@ export default function TimerInfo({
 								.toString()
 								.padStart(2, "0")} ${days[data.start.getDay()]}`}
 						</p>
-						{data.notes && (
-							<p className="text-xs text-muted-foreground/50 text-right">
-								{data.notes?.split("\n")[0].slice(0, 20) +
-									(data.notes?.split("\n").length > 1 ||
-									data.notes?.split("\n")[0].length > 20
-										? "…"
-										: "")}
-							</p>
-						)}
+						<p>
+							{data.notes && (
+								<span className="text-xs text-muted-foreground/75 text-right">
+									{data.notes?.split("\n")[0].slice(0, 20) +
+										(data.notes?.split("\n").length > 1 ||
+										data.notes?.split("\n")[0].length > 20
+											? "…"
+											: "")}
+								</span>
+							)}
+							{data.project && (
+								<span
+									className={badgeVariants({
+										variant: "secondary",
+										className: "ml-2 text-muted-foreground/80",
+									})}
+								>
+									{data.project?.name}
+								</span>
+							)}
+						</p>
 					</div>
 
 					<div className="flex flex-row justify-evenly items-center text-lg">
@@ -320,6 +369,93 @@ export default function TimerInfo({
 									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 									type="always"
 								>
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Popover
+											open={state.projectSelectionOpen}
+											onOpenChange={(open) =>
+												setState({ projectSelectionOpen: open })
+											}
+										>
+											<Label
+												htmlFor="project-button"
+												className="pl-2 text-muted-foreground"
+											>
+												Project
+											</Label>
+											<PopoverTrigger asChild>
+												<Button
+													id="project-button"
+													variant="outline"
+													role="combobox"
+													aria-expanded={state.projectSelectionOpen}
+													className={`w-full justify-between border-2 transition duration-300 ${
+														state.projectId !== data.projectId &&
+														"border-sky-700"
+													}`}
+												>
+													{state.projectId
+														? projects.find(
+																(project) => project.id === state.projectId,
+															)?.name
+														: "No related project"}
+													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+												</Button>
+											</PopoverTrigger>
+											<PopoverContent className="p-2">
+												<Command>
+													<CommandInput
+														placeholder="Search project..."
+														className="h-8"
+													/>
+													{projects.length === 0 ? (
+														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+															<p>No projects found.</p>
+															<Link
+																href="http://localhost:3000/settings?page=projects"
+																className={buttonVariants({
+																	variant: "link",
+																	className: "flex-col items-start",
+																})}
+															>
+																<p>Click to create one now</p>
+															</Link>
+														</div>
+													) : (
+														<CommandGroup>
+															{projects.map((project) => (
+																<CommandItem
+																	key={`project-selection-${data.id}-${project.id}`}
+																	value={`${project.id}`}
+																	onSelect={() => {
+																		setState({
+																			projectId:
+																				state.projectId !== project.id
+																					? project.id
+																					: null,
+																			projectSelectionOpen: false,
+																		});
+																	}}
+																>
+																	<Check
+																		className={cn(
+																			"mr-2 h-4 w-4",
+																			state.projectId === project.id
+																				? "opacity-100"
+																				: "opacity-0",
+																		)}
+																	/>
+																	{project.name}
+																</CommandItem>
+															))}
+														</CommandGroup>
+													)}
+												</Command>
+											</PopoverContent>
+										</Popover>
+									</div>
+
+									<div id="divider" className="h-4" />
+
 									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
 											htmlFor={`timerModal-notes-${data.id}`}
