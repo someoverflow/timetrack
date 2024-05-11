@@ -19,7 +19,7 @@ model time {
   end       DateTime? @db.DateTime(2)
   endType   String?   @db.Text
 
-  time  String? @db.Text
+  time  String?
   notes String? @db.MediumText
 
   project   project? @relation(fields: [projectId], references: [id])
@@ -42,7 +42,8 @@ model project {
 model todo {
   id Int @id @default(autoincrement())
 
-  content String @db.Text
+  task        String  @db.MediumText
+  description String? @db.Text
 
   done       Boolean @default(false)
   inProgress Boolean @default(false)
