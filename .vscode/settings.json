@@ -9,5 +9,8 @@
     "CodeGPT.apiKey": "Ollama",
     "CodeGPT.Autocomplete.enabled": true,
     "CodeGPT.Autocomplete.provider": "Ollama - codegemma:instruct",
-    "CodeGPT.Autocomplete.maxTokens": 6000
+    "CodeGPT.Autocomplete.maxTokens": 6000,
+    "[prisma]": {
+        "editor.defaultFormatter": "Prisma.prisma"
+    }
 }

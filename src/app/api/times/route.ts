@@ -258,6 +258,18 @@ export async function PUT(request: NextRequest) {
 			where: {
 				id: Number.parseInt(json.id),
 			},
+			include: {
+				user: {
+					select: {
+						id: true,
+						projects: {
+							select: {
+								id: true,
+							},
+						},
+					},
+				},
+			},
 		})
 		.catch(() => null);
 
@@ -272,7 +284,9 @@ export async function PUT(request: NextRequest) {
 		});
 	}
 
-	if (user?.role !== "admin" && user?.id !== timer?.userId)
+	if (!timer.user) throw Error("User cannot be null");
+
+	if (user?.role !== "admin" && user?.id !== timer.user?.id)
 		return NextResponse.json(FORBIDDEN, {
 			status: FORBIDDEN.status,
 			statusText: FORBIDDEN.result,
@@ -285,9 +299,18 @@ export async function PUT(request: NextRequest) {
 		end: Date;
 		endType: string | undefined;
 		time: string | undefined;
+		projectId: number | null | undefined;
 	}> = {
 		notes: json.notes,
 	};
+
+	if (json.projectId === null) data.projectId = null;
+
+	if (json.projectId) {
+		for (const { id } of timer.user.projects) {
+			if (id === Number.parseInt(json.projectId)) data.projectId = id;
+		}
+	}
 
 	if (json.start && json.end) {
 		const startDate = new Date(Date.parse(json.start));
