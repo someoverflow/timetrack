@@ -41,11 +41,6 @@ export default async function Profile({
 	} = {};
 	if (user.role === "admin") {
 		const projectsResult = await prisma.project.findMany({
-			where: {
-				NOT: {
-					userId: user.id,
-				},
-			},
 			include: {
 				user: true,
 			},

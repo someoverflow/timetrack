@@ -244,7 +244,7 @@ export function ProjectSection({
 								<div className="w-full flex flex-row items-center justify-between">
 									<div className="w-full">
 										<h4 className="text-sm font-semibold">{projectName}</h4>
-										<div className="flex flex-wrap gap-1 pt-2 text-xs text-muted-foreground">
+										<div className="flex flex-wrap gap-1 pt-2 text-xs text-muted-foreground items-center">
 											{adminProjects[projectName].users.map((user) => (
 												<Badge
 													variant="outline"
@@ -253,6 +253,14 @@ export function ProjectSection({
 													{user.tag}
 												</Badge>
 											))}
+											<Badge
+												variant="secondary"
+												key={`all-projects-${projectName}-add`}
+												className="h-6 w-6 p-0 items-center justify-center"
+											>
+												{/* Button to add this project to other users */}
+												<Plus className="w-3 h-3" />
+											</Badge>
 										</div>
 									</div>
 								</div>
