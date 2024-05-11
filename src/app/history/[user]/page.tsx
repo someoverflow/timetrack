@@ -19,6 +19,7 @@ import type { Metadata } from "next";
 // Utils
 import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "../timer-add";
+import { badgeVariants } from "@/components/ui/badge";
 
 type Timer = Prisma.timeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
@@ -137,9 +138,17 @@ export default async function History({
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
 				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">{`History of ${
-						target ? target.name : "?"
-					}`}</p>
+					<p className="text-2xl font-mono">
+						History
+						<span
+							className={badgeVariants({
+								variant: "secondary",
+								className: "absolute",
+							})}
+						>
+							{target?.name ?? target?.tag}
+						</span>
+					</p>
 				</div>
 
 				{target ? (
