@@ -19,22 +19,22 @@ model time {
   end       DateTime? @db.DateTime(2)
   endType   String?   @db.Text
 
-  time  String?
+  time  String? // Passed time from start to end
   notes String? @db.MediumText
 
-  project   project? @relation(fields: [projectId], references: [id])
-  projectId Int?
+  project   project? @relation(fields: [projectId], references: [id]) // Related Project
+  projectId String?
 }
 
 model project {
-  id Int @id @default(autoincrement())
+  id String @id @default(cuid())
 
-  name String
+  name        String
+  description String?
 
-  times time[]
-
-  user   user? @relation(fields: [userId], references: [id])
-  userId Int?
+  todos todo[] // Related Todos
+  times time[] // Related Times
+  users user[] // Users with this project
 }
 
 model todo {
@@ -45,18 +45,20 @@ model todo {
 
   deadline DateTime?
 
-  done       Boolean @default(false)
-  inProgress Boolean @default(false)
-  archived   Boolean @default(false)
+  done       Boolean @default(false) // Finish todo
+  inProgress Boolean @default(false) // Progressing the todo
+  archived   Boolean @default(false) // Finished the todo
+  trash      Boolean @default(false) // Hidden, can be toggled after archived
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  relatedProjects project[] // Any related projects to this todo
+
+  assignees user[] @relation("assignee") // Assigned users of the todo
 
   creator   user? @relation("creator", fields: [creatorId], references: [id])
   creatorId Int?
 
-  assignee   user? @relation("assignee", fields: [assigneeId], references: [id])
-  assigneeId Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model user {
@@ -66,11 +68,12 @@ model user {
   password String
 
   name  String?
-  email String  @unique
+  email String? @unique
   role  String
 
-  chips    chip[]
-  times    time[]
+  chips chip[]
+  times time[]
+
   projects project[]
 
   assignedTodos todo[] @relation("assignee")
