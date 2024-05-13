@@ -33,26 +33,21 @@ model project {
 
   times time[]
 
-  relatedTodos todo[] @relation("relatedProjectTodo")
-
   user   user? @relation(fields: [userId], references: [id])
   userId Int?
 }
 
 model todo {
-  id Int @id @default(autoincrement())
+  id String @id @default(cuid())
 
   task        String  @db.MediumText
   description String? @db.Text
 
+  deadline DateTime?
+
   done       Boolean @default(false)
   inProgress Boolean @default(false)
   archived   Boolean @default(false)
-
-  deadline DateTime?
-
-  relatedProject   project? @relation("relatedProjectTodo", fields: [relatedProjectId], references: [id])
-  relatedProjectId Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
