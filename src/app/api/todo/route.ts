@@ -5,6 +5,8 @@ import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
 
+// TODO: Array of assignees
+
 // Create a todo (task, description?, deadline?, assignee?)
 export async function POST(request: NextRequest) {
 	// Get server session and check if user is given

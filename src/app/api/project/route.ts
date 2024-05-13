@@ -9,9 +9,13 @@ import {
 } from "@/lib/server-utils";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { type NextRequest, NextResponse, userAgent } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const MAX_PROJECTS = 100;
+
+// TODO: Merge projects
+// TODO: Remove max projects
+// TODO: Add project description
 
 // Delete a project
 export async function DELETE(request: NextRequest) {

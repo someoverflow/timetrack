@@ -2,7 +2,8 @@ import prisma from "@/lib/prisma";
 import { hash } from "bcrypt";
 import { type NextRequest, NextResponse } from "next/server";
 import { BAD_REQUEST, FORBIDDEN, checkAdmin } from "@/lib/server-utils";
-import { Prisma } from "@prisma/client";
+
+// TODO: Add project to user
 
 // Create
 export async function PUT(request: NextRequest) {
@@ -103,11 +104,11 @@ export async function POST(request: NextRequest) {
 	}
 
 	const updateData: Partial<{
-		tag: string
-		name: string | undefined
-		email: string | undefined
-		role: string
-		password: string | undefined
+		tag: string;
+		name: string | undefined;
+		email: string | undefined;
+		role: string;
+		password: string | undefined;
 	}> = {
 		tag: json.tag,
 		name: json.name,
