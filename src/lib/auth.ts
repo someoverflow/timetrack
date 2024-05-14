@@ -1,5 +1,4 @@
 import NextAuth, { type DefaultSession } from "next-auth";
-
 import authConfig from "./auth.config";
 
 import prisma from "@/lib/prisma";
@@ -57,18 +56,18 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 			}
 
 			// To invalidate the jwt
-			const checkJwt = await prisma.user.findUnique({
-				where: {
-					username: token.username as string,
-				},
-				select: {
-					validJwtId: true,
-				},
-			});
-			if (!checkJwt) return null; // User may be deleted
-			if (token.validJwtId !== checkJwt.validJwtId) return null; // Token is invalid
-
-			console.log(checkJwt);
+			if (token.username !== undefined) {
+				const checkJwt = await prisma.user.findUnique({
+					where: {
+						username: token.username as string,
+					},
+					select: {
+						validJwtId: true,
+					},
+				});
+				if (!checkJwt) return null; // User may be deleted
+				if (token.validJwtId !== checkJwt.validJwtId) return null; // Token is invalid
+			}
 
 			return token;
 		},

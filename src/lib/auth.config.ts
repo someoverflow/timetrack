@@ -6,10 +6,10 @@ import prisma from "@/lib/prisma";
 import { compare } from "bcryptjs";
 
 class UserNotFound extends CredentialsSignin {
-	code = "UserNotFound";
+	code = "user-not-found";
 }
 class InvalidPassword extends CredentialsSignin {
-	code = "InvalidPassword";
+	code = "invalid-password";
 }
 
 export default {

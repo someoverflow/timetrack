@@ -36,15 +36,11 @@ export default function SignIn() {
 			redirect: false,
 		});
 		if (result) {
-			if (result.status === 200) {
-				router.push(result.url ? result.url : callbackUrl);
-				return;
-			}
 			if (result.error === "CredentialsSignin") {
 				toast.error("Wrong Credentials", {
 					description: "Try again with a different username and password",
 				});
-			}
+			} else router.push(result.url ? result.url : callbackUrl);
 		} else
 			toast.error("No result data", {
 				description: "Try again now or later",
