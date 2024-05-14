@@ -32,13 +32,9 @@ export default async function Profile({
 			},
 		},
 		include: {
+			_count: true,
 			todos: true,
 			times: true,
-			users: {
-				select: {
-					_count: true,
-				},
-			},
 		},
 	});
 
@@ -53,7 +49,7 @@ export default async function Profile({
 		name: string;
 		description: string | null;
 	})[] = [];
-	if (user.role === "admin") {
+	if (user.role === "ADMIN") {
 		projectsResult = await prisma.project.findMany({
 			include: {
 				users: {

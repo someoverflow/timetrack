@@ -8,6 +8,11 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
@@ -27,13 +32,9 @@ async function getUserProjects() {
 			},
 		},
 		include: {
+			_count: true,
 			todos: true,
 			times: true,
-			users: {
-				select: {
-					_count: true,
-				},
-			},
 		},
 	});
 }
@@ -228,15 +229,30 @@ export function ProjectSection({
 										<Separator className="mt-2 mb-4 w-full" />
 										<div className="flex flex-row items-center gap-1 text-xs">
 											<Badge variant="secondary" className="font-normal">
-												Times: {project.times.length}
+												Users: {project._count.users}
 											</Badge>
 											<Badge variant="secondary" className="font-normal">
-												Todos: {project.todos.length}
+												Times: {project._count.times}
+											</Badge>
+											<Badge variant="secondary" className="font-normal">
+												Todos: {project._count.todos}
 											</Badge>
 										</div>
 									</div>
 								</div>
-								<div className="flex flex-col w-min gap-1 ">
+
+								<div className="absolute right-3 top-3 ">
+									<Tooltip delayDuration={300}>
+										<TooltipTrigger>
+											<Badge variant="default" className="text-xs">
+												{project.id}
+											</Badge>
+										</TooltipTrigger>
+										{/* TODO: Add functionallity */}
+										<TooltipContent>Merge Project</TooltipContent>
+									</Tooltip>
+								</div>
+								<div className="flex flex-col w-min gap-1">
 									<Button
 										size="icon"
 										variant="destructive"
@@ -262,6 +278,17 @@ export function ProjectSection({
 							>
 								<div className="w-full flex flex-row items-center justify-between">
 									<div className="w-full">
+										<div className="absolute right-3 top-3 ">
+											<Tooltip delayDuration={300}>
+												<TooltipTrigger>
+													<Badge variant="default" className="text-xs">
+														{id}
+													</Badge>
+												</TooltipTrigger>
+												{/* TODO: Add functionallity */}
+												<TooltipContent>Merge Project</TooltipContent>
+											</Tooltip>
+										</div>
 										<h4 className="text-sm font-semibold">{name}</h4>
 										{/* TODO: Styling */}
 										<p>{description}</p>
