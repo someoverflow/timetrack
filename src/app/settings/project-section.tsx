@@ -19,7 +19,22 @@ import { Separator } from "@/components/ui/separator";
 
 async function getUserProjects() {
 	return await prisma.project.findMany({
-		include: { relatedTodos: true, times: true },
+		where: {
+			users: {
+				some: {
+					id: "",
+				},
+			},
+		},
+		include: {
+			todos: true,
+			times: true,
+			users: {
+				select: {
+					_count: true,
+				},
+			},
+		},
 	});
 }
 type userProjects = Prisma.PromiseReturnType<typeof getUserProjects>;
@@ -34,16 +49,22 @@ export function ProjectSection({
 	userData,
 }: {
 	projects: userProjects;
-	adminProjects: {
-		[name: string]: {
-			users: Partial<{ id: number; tag: string; name: string }>[];
-		};
-	};
+	adminProjects: ({
+		users: {
+			id: string;
+			name: string | null;
+			username: string;
+		}[];
+	} & {
+		id: string;
+		name: string;
+		description: string | null;
+	})[];
 	userData: {
-		id: number;
-		tag: string;
-		role: string;
+		id?: string;
+		username: string;
 		name?: string | null | undefined;
+		role: string;
 	};
 }) {
 	const [data, setData] = useReducer(
@@ -59,8 +80,6 @@ export function ProjectSection({
 	const [search, setSearch] = useState("");
 
 	const router = useRouter();
-
-	const adminProjectsKeys = Object.keys(adminProjects);
 
 	async function createProject() {
 		setData({
@@ -112,7 +131,7 @@ export function ProjectSection({
 		});
 	}
 
-	async function deleteProject(id: number) {
+	async function deleteProject(id: string) {
 		setData({
 			loading: true,
 		});
@@ -212,7 +231,7 @@ export function ProjectSection({
 												Times: {project.times.length}
 											</Badge>
 											<Badge variant="secondary" className="font-normal">
-												Todos: {project.relatedTodos.length}
+												Todos: {project.todos.length}
 											</Badge>
 										</div>
 									</div>
@@ -234,28 +253,30 @@ export function ProjectSection({
 				</CommandGroup>
 
 				{/* TODO: Interaction & Description */}
-				{adminProjectsKeys.length !== 0 && (
+				{adminProjects.length !== 0 && (
 					<CommandGroup heading="All Projects">
-						{adminProjectsKeys.map((projectName) => (
+						{adminProjects.map(({ id, description, name, users }) => (
 							<CommandItem
-								key={`all-projects-${projectName}`}
+								key={`all-projects-${id}`}
 								className="font-mono aria-selected:!bg-accent/20 rounded-md border my-2 p-4 outline-none group"
 							>
 								<div className="w-full flex flex-row items-center justify-between">
 									<div className="w-full">
-										<h4 className="text-sm font-semibold">{projectName}</h4>
+										<h4 className="text-sm font-semibold">{name}</h4>
+										{/* TODO: Styling */}
+										<p>{description}</p>
 										<div className="flex flex-wrap gap-1 pt-2 text-xs text-muted-foreground items-center">
-											{adminProjects[projectName].users.map((user) => (
+											{users.map((user) => (
 												<Badge
 													variant="outline"
-													key={`all-projects-${projectName}-${user.id}`}
+													key={`all-projects-${id}-${user.id}`}
 												>
-													{user.tag}
+													{user.username}
 												</Badge>
 											))}
 											<Badge
 												variant="secondary"
-												key={`all-projects-${projectName}-add`}
+												key={`all-projects-${id}-add`}
 												className="h-6 w-6 p-0 items-center justify-center"
 											>
 												{/* Button to add this project to other users */}

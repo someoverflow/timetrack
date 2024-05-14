@@ -33,8 +33,8 @@ export default function ProfileSection({
 	userData,
 }: {
 	userData: {
-		id: number;
-		tag: string;
+		id?: string;
+		username: string;
 		role: string;
 		name?: string | null | undefined;
 		email?: string | null | undefined;
@@ -130,7 +130,7 @@ export default function ProfileSection({
 					<CardDescription>Make changes to your profile here.</CardDescription>
 				</CardHeader>
 				<div className="flex flex-col space-y-1.5 p-6 text-right">
-					<Badge variant="default">{userData.tag}</Badge>
+					<Badge variant="default">{userData.username}</Badge>
 				</div>
 			</div>
 

@@ -34,8 +34,6 @@ export default function NavigationSection({
 	user,
 }: {
 	user: {
-		id: number;
-		username: string;
 		role: string;
 	};
 }) {
