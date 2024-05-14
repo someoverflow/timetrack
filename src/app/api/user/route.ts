@@ -1,17 +1,26 @@
 import prisma from "@/lib/prisma";
 import { hash } from "bcrypt";
-import { type NextRequest, NextResponse } from "next/server";
-import { BAD_REQUEST, FORBIDDEN, checkAdmin } from "@/lib/server-utils";
+import { NextResponse } from "next/server";
+import { BAD_REQUEST, NOT_ADMIN, NO_AUTH } from "@/lib/server-utils";
+import { auth } from "@/lib/auth";
+import { randomUUID } from "node:crypto";
 
 // TODO: Add project to user
+// TODO: invalidate session when changing something
 
 // Create
-export async function PUT(request: NextRequest) {
-	const isAdmin = await checkAdmin();
-	if (!isAdmin)
-		return NextResponse.json(FORBIDDEN, {
-			status: FORBIDDEN.status,
-			statusText: FORBIDDEN.result,
+export const PUT = auth(async (request) => {
+	const session = request.auth;
+	if (!session || !session.user)
+		return NextResponse.json(NO_AUTH, {
+			status: NO_AUTH.status,
+			statusText: NO_AUTH.result,
+		});
+
+	if (session.user.role !== "ADMIN")
+		return NextResponse.json(NOT_ADMIN, {
+			status: NOT_ADMIN.status,
+			statusText: NOT_ADMIN.result,
 		});
 
 	let result: APIResult = {
@@ -25,14 +34,14 @@ export async function PUT(request: NextRequest) {
 	if (
 		json.email == null ||
 		json.password == null ||
-		json.tag == null ||
+		json.username == null ||
 		json.name == null
 	) {
 		result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
 		result.result = [
 			result.result,
-			json.tag == null ? "Tag Missing" : undefined,
+			json.username == null ? "Tag Missing" : undefined,
 			json.name == null ? "Name Missing" : undefined,
 			json.password == null ? "Password Missing" : undefined,
 			json.email == null ? "Mail Missing" : undefined,
@@ -44,19 +53,19 @@ export async function PUT(request: NextRequest) {
 		});
 	}
 
-	if (json.role == null) json.role = "user";
-	if (!(json.role === "user" || json.role === "admin")) json.role = "user";
+	if (json.role == null) json.role = "USER";
+	if (!(json.role === "USER" || json.role === "ADMIN")) json.role = "USER";
 
 	result.result = await prisma.user.create({
 		data: {
-			tag: json.tag,
+			username: json.username,
 			name: json.name,
 			email: json.email,
 			password: await hash(json.password, 12),
 			role: json.role,
 		},
 		select: {
-			tag: true,
+			username: true,
 			name: true,
 			email: true,
 			role: true,
@@ -64,15 +73,21 @@ export async function PUT(request: NextRequest) {
 	});
 
 	return NextResponse.json(result, { status: result.status });
-}
+});
 
 // Update
-export async function POST(request: NextRequest) {
-	const isAdmin = await checkAdmin();
-	if (!isAdmin)
-		return NextResponse.json(FORBIDDEN, {
-			status: FORBIDDEN.status,
-			statusText: FORBIDDEN.result,
+export const POST = auth(async (request) => {
+	const session = request.auth;
+	if (!session || !session.user)
+		return NextResponse.json(NO_AUTH, {
+			status: NO_AUTH.status,
+			statusText: NO_AUTH.result,
+		});
+
+	if (session.user.role !== "ADMIN")
+		return NextResponse.json(NOT_ADMIN, {
+			status: NOT_ADMIN.status,
+			statusText: NOT_ADMIN.result,
 		});
 
 	const json = await request.json();
@@ -85,7 +100,7 @@ export async function POST(request: NextRequest) {
 
 	if (
 		json.id == null ||
-		json.tag == null ||
+		json.username == null ||
 		json.mail == null ||
 		json.role == null ||
 		json.name == null
@@ -104,16 +119,16 @@ export async function POST(request: NextRequest) {
 	}
 
 	const updateData: Partial<{
-		tag: string;
+		username: string;
 		name: string | undefined;
 		email: string | undefined;
-		role: string;
+		role: "ADMIN" | "USER";
 		password: string | undefined;
 	}> = {
-		tag: json.tag,
+		username: json.tag,
 		name: json.name,
 		email: json.mail,
-		role: json.role === "admin" || json.role === "user" ? json.role : "user",
+		role: json.role === "ADMIN" || json.role === "USER" ? json.role : "USER",
 	};
 
 	if (json.password) {
@@ -143,8 +158,8 @@ export async function POST(request: NextRequest) {
 			statusText: BAD_REQUEST.result,
 		});
 	}
-	if (user.tag === "admin") {
-		if (updateData.tag !== "admin" || updateData.role !== "admin") {
+	if (user.username === "admin") {
+		if (updateData.username !== "admin" || updateData.role !== "ADMIN") {
 			result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
 			result.result = [result.result, "Tag of admin cannot be changed"];
@@ -158,12 +173,15 @@ export async function POST(request: NextRequest) {
 
 	result.result = await prisma.user.update({
 		where: {
-			id: Number.parseInt(json.id),
+			id: json.id,
 		},
-		data: updateData,
+		data: {
+			validJwtId: randomUUID(),
+			...updateData,
+		},
 		select: {
 			id: true,
-			tag: true,
+			username: true,
 			email: true,
 			role: true,
 			updatedAt: true,
@@ -172,15 +190,21 @@ export async function POST(request: NextRequest) {
 	});
 
 	return NextResponse.json(result, { status: result.status });
-}
+});
 
 // Delete
-export async function DELETE(request: NextRequest) {
-	const isAdmin = await checkAdmin();
-	if (!isAdmin)
-		return NextResponse.json(FORBIDDEN, {
-			status: FORBIDDEN.status,
-			statusText: FORBIDDEN.result,
+export const DELETE = auth(async (request) => {
+	const session = request.auth;
+	if (!session || !session.user)
+		return NextResponse.json(NO_AUTH, {
+			status: NO_AUTH.status,
+			statusText: NO_AUTH.result,
+		});
+
+	if (session.user.role !== "ADMIN")
+		return NextResponse.json(NOT_ADMIN, {
+			status: NOT_ADMIN.status,
+			statusText: NOT_ADMIN.result,
 		});
 
 	let result: APIResult = {
@@ -224,7 +248,7 @@ export async function DELETE(request: NextRequest) {
 			statusText: BAD_REQUEST.result,
 		});
 	}
-	if (userToDelete?.tag === "admin") {
+	if (userToDelete?.username === "admin") {
 		result = JSON.parse(JSON.stringify(BAD_REQUEST));
 
 		result.result = [result.result, "The admin account cannot be deleted"];
@@ -235,19 +259,16 @@ export async function DELETE(request: NextRequest) {
 		});
 	}
 
-	const [timeResult, projectResult, chipResult, userResult] =
-		await prisma.$transaction([
-			prisma.time.deleteMany({ where: { userId: userToDelete.id } }),
-			prisma.project.deleteMany({ where: { userId: userToDelete.id } }),
-			prisma.chip.deleteMany({ where: { userId: userToDelete.id } }),
-			prisma.user.delete({
-				where: {
-					id: userToDelete.id,
-				},
-			}),
-		]);
+	// TODO: Delete Todo or change creator to assigned
+	const [userResult] = await prisma.$transaction([
+		prisma.user.delete({
+			where: {
+				id: userToDelete.id,
+			},
+		}),
+	]);
 
-	result.result = [timeResult, projectResult, chipResult, userResult];
+	result.result = [userResult];
 
 	return NextResponse.json(result, { status: result.status });
-}
+});
