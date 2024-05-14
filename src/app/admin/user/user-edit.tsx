@@ -434,8 +434,8 @@ export default function UserEdit({ user }: { user: User }) {
 													<SelectValue placeholder="Theme" />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectItem value="admin">Admin</SelectItem>
-													<SelectItem value="user">User</SelectItem>
+													<SelectItem value="ADMIN">Admin</SelectItem>
+													<SelectItem value="USER">User</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
@@ -474,7 +474,7 @@ export default function UserEdit({ user }: { user: User }) {
 											<Input
 												disabled
 												className="w-full font-mono"
-												type="number"
+												type="text"
 												name="Id"
 												id="id"
 												value={user.id}

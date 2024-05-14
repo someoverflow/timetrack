@@ -95,7 +95,7 @@ export default function NavigationSection({
 							Settings
 						</Link>
 					</MenubarItem>
-					{user?.role === "admin" && (
+					{user?.role === "ADMIN" && (
 						<MenubarItem asChild>
 							<Link
 								href="/admin/user"

@@ -11,7 +11,6 @@ import "react-swipeable-list/dist/styles.css";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,14 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-	Check,
-	ChevronsUpDown,
-	SaveAll,
-	Trash,
-	Trash2,
-	XCircle,
-} from "lucide-react";
+import { Check, ChevronsUpDown, SaveAll, Trash, Trash2 } from "lucide-react";
 
 // Database
 import type { Prisma } from "@prisma/client";
@@ -575,7 +567,7 @@ export default function TimerInfo({
 											<Input
 												disabled
 												className="w-full font-mono"
-												type="number"
+												type="text"
 												name="Id"
 												id="id"
 												value={data.id}

@@ -67,7 +67,7 @@ export default function UserAdd() {
 				name: data.name,
 				email: data.mail,
 				password: data.password,
-				role: data.role,
+				role: data.role.toUpperCase(),
 			}),
 		});
 
