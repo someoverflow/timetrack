@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
-type Timer = Prisma.timeGetPayload<{
+type Timer = Prisma.TimeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
 }>;
 interface Data {
@@ -45,16 +45,16 @@ interface Data {
 }
 
 export default function TimerSection({
-	tag,
+	username,
 	history,
 	projects,
 	yearMonth,
 	totalTime,
 }: {
-	tag: string;
+	username: string;
 	history: Data;
 	projects: {
-		id: number;
+		id: string;
 		name: string;
 	}[];
 	yearMonth: string;
@@ -189,7 +189,11 @@ export default function TimerSection({
 							<p className="text-center">Add a new entry</p>
 						</TooltipContent>
 					</Tooltip>
-					<TimerAdd tag={tag} visible={addVisible} setVisible={setAddVisible} />
+					<TimerAdd
+						username={username}
+						visible={addVisible}
+						setVisible={setAddVisible}
+					/>
 				</div>
 			</div>
 			<ScrollArea
@@ -199,7 +203,7 @@ export default function TimerSection({
 				{history[yearMonth].map((time) => (
 					<TimerInfo
 						key={`timerHistory-${yearMonth}-${time.id}`}
-						edit={Number.parseInt(editTime ?? "-1") === time.id}
+						edit={editTime === time.id}
 						projects={projects}
 						data={time}
 					/>

@@ -22,14 +22,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListPlus, UserPlus, XCircle } from "lucide-react";
+import { ListPlus, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
 import { toast } from "sonner";
 
 interface userAddState {
 	loading: boolean;
-	tag: string;
+	username: string;
 	name: string;
 	password: string;
 	mail: string;
@@ -43,7 +43,7 @@ export default function UserAdd() {
 		}),
 		{
 			loading: false,
-			tag: "",
+			username: "",
 			name: "",
 			password: "",
 			mail: "",
@@ -63,7 +63,7 @@ export default function UserAdd() {
 		const result = await fetch("/api/user", {
 			method: "PUT",
 			body: JSON.stringify({
-				tag: data.tag,
+				username: data.username,
 				name: data.name,
 				email: data.mail,
 				password: data.password,
@@ -79,7 +79,7 @@ export default function UserAdd() {
 			setVisible(false);
 
 			setData({
-				tag: "",
+				username: "",
 				name: "",
 				password: "",
 				mail: "",
@@ -167,8 +167,8 @@ export default function UserAdd() {
 										name="Name"
 										id="userAdd-username"
 										placeholder="maxmust"
-										value={data.tag}
-										onChange={(e) => setData({ tag: e.target.value })}
+										value={data.username}
+										onChange={(e) => setData({ username: e.target.value })}
 									/>
 								</div>
 

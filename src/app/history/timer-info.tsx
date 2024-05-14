@@ -56,7 +56,7 @@ import {
 } from "@/components/ui/command";
 import Link from "next/link";
 
-type Timer = Prisma.timeGetPayload<{
+type Timer = Prisma.TimeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
 }>;
 interface timerInfoState {
@@ -66,7 +66,7 @@ interface timerInfoState {
 	loading: boolean;
 
 	projectSelectionOpen: boolean;
-	projectId: number | null;
+	projectId: string | null;
 }
 export default function TimerInfo({
 	data,
@@ -75,7 +75,7 @@ export default function TimerInfo({
 }: {
 	data: Timer;
 	projects: {
-		id: number;
+		id: string;
 		name: string;
 	}[];
 	edit: boolean;
@@ -134,13 +134,13 @@ export default function TimerInfo({
 		});
 
 		const request: Partial<{
-			id: number;
+			id: string;
 			notes: string;
 			startType: string;
 			start: string;
 			endType: string;
 			end: string;
-			projectId: number | null;
+			projectId: string | null;
 		}> = {
 			id: data.id,
 			notes: state.notes,

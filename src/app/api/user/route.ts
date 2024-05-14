@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { BAD_REQUEST, NOT_ADMIN, NO_AUTH } from "@/lib/server-utils";
 import { auth } from "@/lib/auth";

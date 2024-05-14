@@ -5,39 +5,24 @@ import TimerSection from "./timer-section";
 // Database
 import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 // Navigation
 import { redirect } from "next/navigation";
 
 // React
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
 
 // Utils
-import { getTotalTime } from "@/lib/utils";
-import { authOptions } from "@/lib/auth";
+import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "./timer-add";
 
-type Timer = Prisma.timeGetPayload<{
+type Timer = Prisma.TimeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
 }>;
 interface Data {
 	[yearMonth: string]: Timer[];
 }
-const months = [
-	"January",
-	"February",
-	"March",
-	"April",
-	"May",
-	"June",
-	"July",
-	"August",
-	"September",
-	"October",
-	"November",
-	"December",
-];
 
 function formatHistory(data: Timer[]): Data {
 	const result: Data = {};
@@ -67,7 +52,7 @@ export default async function History({
 		ym?: string;
 	};
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
@@ -91,7 +76,13 @@ export default async function History({
 		}),
 		prisma.project.findMany({
 			where: {
-				userId: user.id,
+				users: {
+					some: {
+						id: {
+							equals: user.id,
+						},
+					},
+				},
 			},
 			select: {
 				id: true,
@@ -133,10 +124,10 @@ export default async function History({
 						projects={projects}
 						totalTime={totalTime}
 						yearMonth={yearMonth}
-						tag={user.tag}
+						username={user.username}
 					/>
 				) : (
-					<TimerAddServer tag={user.tag} />
+					<TimerAddServer username={user.username} />
 				)}
 			</section>
 		</Navigation>

@@ -13,7 +13,6 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Eye } from "lucide-react";
-import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Navigation from "@/components/navigation";
@@ -26,9 +25,9 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Prisma } from "@prisma/client";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
-type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
+type User = Prisma.UserGetPayload<{ include: { projects: true; chips: true } }>;
 
 async function getUsers(skip: number, take: number, search: string | null) {
 	let searchValid = /^[A-Za-z\s]*$/.test(search ?? "");
@@ -43,7 +42,7 @@ async function getUsers(skip: number, take: number, search: string | null) {
 		},
 		select: {
 			id: true,
-			tag: true,
+			username: true,
 			name: true,
 			email: true,
 			role: true,
@@ -70,9 +69,9 @@ export default async function AdminUserPage({
 		page?: string;
 	};
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return redirect("/");
-	if (session.user.role !== "admin") return redirect("/");
+	if (session.user.role !== "ADMIN") return redirect("/");
 
 	let currentPage = Number(searchParams?.page) || 1;
 	const searchName = searchParams?.search || null;
@@ -93,11 +92,11 @@ export default async function AdminUserPage({
 		for (let i = 0; i < 15; i++) {
 			if (!users[i]) {
 				users[i] = {
-					id: i * -1,
-					tag: "<null>",
+					id: String(i * -1),
+					username: "<null>",
 					name: null,
 					email: "<null>",
-					role: "<null>",
+					role: "USER",
 					projects: [],
 					chips: [],
 					createdAt: new Date(),
@@ -136,20 +135,20 @@ export default async function AdminUserPage({
 										className="animate__animated animate__slideInLeft"
 									>
 										<TableCell className="whitespace-nowrap font-medium w-fit">
-											{user.tag !== "<null>" && user.tag}
+											{user.username !== "<null>" && user.username}
 										</TableCell>
 										<TableCell className="whitespace-nowrap">
 											{user.name !== "<null>" && user.name}
 										</TableCell>
 										<TableCell className="text-right">
-											{user.tag === "<null>" ? (
+											{user.username === "<null>" ? (
 												<div className="h-10 w-1" />
 											) : (
 												<div className="flex flex-row justify-end items-center gap-2">
 													<Tooltip>
 														<TooltipTrigger>
 															<Button variant="secondary" size="icon" asChild>
-																<Link href={`/history/${user.tag}`}>
+																<Link href={`/history/${user.username}`}>
 																	<Eye className="w-5 h-5" />
 																</Link>
 															</Button>

@@ -458,3 +458,9 @@ export async function PUT(request: NextRequest) {
 	return NextResponse.json(result, { status: result.status });
 }
  */
+
+import { NextResponse } from "next/server";
+
+export async function GET() {
+	return NextResponse.json("Hello world");
+}
