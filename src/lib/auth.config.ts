@@ -40,7 +40,7 @@ export default {
 				if (!isPasswordValid) throw new InvalidPassword();
 
 				return {
-					id: `${user.id}`,
+					id: user.id,
 					username: user.username,
 					name: user.name,
 

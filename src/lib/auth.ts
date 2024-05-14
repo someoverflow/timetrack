@@ -9,7 +9,6 @@ declare module "next-auth" {
 	 */
 	interface Session {
 		user: {
-			id: number;
 			username: string;
 			role: string;
 			validJwtId: string;
@@ -45,7 +44,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 			}
 
 			if (user) {
-				token.id = Number.parseInt(user.id ?? "");
+				token.id = user.id;
 
 				// biome-ignore lint/suspicious/noExplicitAny: Type differences
 				token.username = (user as any).username;
