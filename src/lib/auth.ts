@@ -1,13 +1,38 @@
-import type { NextAuthOptions } from "next-auth";
+import NextAuth, { CredentialsSignin, type DefaultSession } from "next-auth";
+
+import CredentialsProvider from "next-auth/providers/credentials";
 
 import prisma from "@/lib/prisma";
 import { compare } from "bcrypt";
-import CredentialsProvider from "next-auth/providers/credentials";
+import { cache } from "react";
 
-export const authOptions: NextAuthOptions = {
+declare module "next-auth" {
+	/**
+	 * Returned by `auth`, `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
+	 */
+	interface Session {
+		user: {
+			id: number;
+			username: string;
+			role: string;
+			validJwtId: string;
+		} & DefaultSession["user"];
+	}
+}
+
+class UserNotFound extends CredentialsSignin {
+	code = "UserNotFound";
+}
+class InvalidPassword extends CredentialsSignin {
+	code = "InvalidPassword";
+}
+
+export const { auth, handlers, signIn, signOut } = NextAuth({
 	pages: {
 		signIn: "/signin",
 	},
+	session: { strategy: "jwt" },
+
 	providers: [
 		CredentialsProvider({
 			name: "Credentials",
@@ -15,81 +40,88 @@ export const authOptions: NextAuthOptions = {
 				username: {
 					label: "Username",
 					type: "text",
-					placeholder: "Type here...",
 				},
-				password: { label: "Password", type: "password", placeholder: "..." },
+				password: { label: "Password", type: "password" },
 			},
-			async authorize(credentials, req) {
-				if (!credentials?.username || !credentials?.password) return null;
+			authorize: async (credentials) => {
+				if (!credentials.username || !credentials.password) return null;
+				const data = credentials as Record<"username" | "password", string>;
 
+				// Check the user
 				const user = await prisma.user.findUnique({
 					where: {
-						tag: credentials.username,
+						username: data.username,
 					},
 				});
+				if (!user) throw new UserNotFound();
 
-				if (!user) return null;
-
-				const isPasswordValid = await compare(
-					credentials.password,
-					user.password,
-				);
-
-				if (!isPasswordValid) return null;
+				// Check the password
+				const isPasswordValid = await compare(data.password, user.password);
+				if (!isPasswordValid) throw new InvalidPassword();
 
 				return {
 					id: `${user.id}`,
-					tag: user.tag,
+					username: user.username,
 					name: user.name,
+
 					email: user.email,
 					role: user.role,
+
+					validJwtId: user.validJwtId,
 				};
 			},
 		}),
 	],
-	session: {
-		maxAge: 30 * 24 * 60 * 60, // 3 Days
-	},
+
 	callbacks: {
 		async session({ session, token }) {
-			session.user.id = token.id as number;
-			session.user.name = token.name as string;
-			session.user.tag = token.tag as string;
-			session.user.role = token.role as string;
-
-			try {
-				const user = await prisma.user.findUniqueOrThrow({
-					where: {
-						id: session.user.id,
-					},
-				});
-				if (
-					!user ||
-					user.tag !== session.user.tag ||
-					user.role !== session.user.role ||
-					user.email !== session.user.email
-				)
-					return { expires: "", user: undefined };
-			} catch (e) {
-				return { expires: "", user: undefined };
-			}
-
-			return session;
+			return {
+				...session,
+				user: {
+					...session.user,
+					// biome-ignore lint/suspicious/noExplicitAny: unknown
+					id: token.id as any,
+					name: token.name,
+					username: token.username,
+					role: token.role,
+					validJwtId: token.validJwtId,
+				},
+			};
 		},
-		jwt({ token, user, session, trigger }) {
+		async jwt({ token, user, session, trigger }) {
 			if (trigger === "update" && session?.name) {
 				token.name = session.name;
+				token.username = session.username;
 			}
 
 			if (user) {
-				token.id = Number.parseInt(user.id);
+				token.id = Number.parseInt(user.id ?? "");
 
 				// biome-ignore lint/suspicious/noExplicitAny: Type differences
-				token.tag = (user as any).tag;
+				token.username = (user as any).username;
 				// biome-ignore lint/suspicious/noExplicitAny: Type differences
 				token.role = (user as any).role;
+				// biome-ignore lint/suspicious/noExplicitAny: Type differences
+				token.validJwtId = (user as any).validJwtId;
 			}
+
+			// To invalidate the jwt
+			const checkJwt = await prisma.user.findUnique({
+				where: {
+					username: token.username as string,
+				},
+				select: {
+					validJwtId: true,
+				},
+			});
+			if (!checkJwt) return null; // User may be deleted
+			if (token.validJwtId !== checkJwt.validJwtId) return null; // Token is invalid
+
+			console.log(checkJwt);
+
 			return token;
 		},
 	},
-};
+});
+
+export const cachedAuth = cache(auth);

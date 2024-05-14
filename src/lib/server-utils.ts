@@ -1,9 +1,9 @@
-import { authOptions } from "@/lib/auth";
-import { type Session, getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
+import type { Session } from "next-auth";
 import prisma from "@/lib/prisma";
 
 export async function checkAdmin(): Promise<boolean> {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return false;
 
 	const user = await prisma.user.findUnique({
@@ -12,7 +12,7 @@ export async function checkAdmin(): Promise<boolean> {
 		},
 	});
 
-	return user?.role === "admin";
+	return user?.role === "ADMIN";
 }
 export async function checkAdminWithSession(
 	session: Session,
@@ -25,13 +25,13 @@ export async function checkAdminWithSession(
 		},
 	});
 
-	return user?.role === "admin";
+	return user?.role === "ADMIN";
 }
 
 export const NO_AUTH: APIResult = Object.freeze({
 	success: false,
 	status: 401,
-	result: "Unauthorized",
+	result: "Not authenticated",
 });
 export const NOT_ADMIN: APIResult = Object.freeze({
 	success: false,
