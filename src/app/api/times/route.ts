@@ -1,15 +1,15 @@
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
-import { getServerSession } from "next-auth";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { NO_AUTH, BAD_REQUEST, FORBIDDEN } from "@/lib/server-utils";
+import { auth } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
 
 //     indicator
 // Get current    timer
 // Get all        timers
-export async function GET(request: NextRequest) {
-	const session = await getServerSession(authOptions);
+export const GET = auth(async (request) => {
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 		result: undefined,
 	};
 
-	const userId = Number.parseInt(`${session.user.id}`);
+	const userId = session.user.id;
 
 	if (indicator === "current") {
 		result.result = await prisma.time
@@ -61,11 +61,11 @@ export async function GET(request: NextRequest) {
 	}
 
 	return NextResponse.json(result, { status: result.status });
-}
+});
 
 // Create timer
-export async function POST(request: NextRequest) {
-	const session = await getServerSession(authOptions);
+export const POST = auth(async (request) => {
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 			id: session.user.id,
 		},
 		select: {
-			tag: true,
+			username: true,
 			role: true,
 			id: true,
 		},
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 	if (json instanceof NextResponse) return json;
 
 	if (
-		json.tag == null ||
+		json.username == null ||
 		json.notes == null ||
 		json.start == null ||
 		json.end == null
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
 		result.result = [
 			result.result,
-			json.tag == null ? "Tag Missing" : undefined,
+			json.username == null ? "Username Missing" : undefined,
 			json.notes == null ? "Notes Missing" : undefined,
 			json.start == null ? "Start Missing" : undefined,
 			json.end == null ? "End Missing" : undefined,
@@ -144,15 +144,15 @@ export async function POST(request: NextRequest) {
 
 	const timePassed = getTimePassed(startDate, endDate);
 
-	let targetUser: number | undefined;
-	if (user.tag === json.tag) targetUser = user.id;
+	let targetUser: string | undefined;
+	if (user.username === json.username) targetUser = user.id;
 
 	if (!targetUser) {
 		targetUser = (
 			await prisma.user
 				.findUnique({
 					where: {
-						tag: json.tag,
+						username: json.username,
 					},
 					select: {
 						id: true,
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
 		});
 	}
 
-	if (user?.role !== "admin" && targetUser !== user.id)
+	if (user?.role !== "ADMIN" && targetUser !== user.id)
 		return NextResponse.json(FORBIDDEN, {
 			status: FORBIDDEN.status,
 			statusText: FORBIDDEN.result,
@@ -198,11 +198,11 @@ export async function POST(request: NextRequest) {
 		});
 
 	return NextResponse.json(result, { status: result.status });
-}
+});
 
 // Update timer
-export async function PUT(request: NextRequest) {
-	const session = await getServerSession(authOptions);
+export const PUT = auth(async (request) => {
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
@@ -215,7 +215,7 @@ export async function PUT(request: NextRequest) {
 		},
 		select: {
 			id: true,
-			tag: true,
+			username: true,
 			role: true,
 		},
 	});
@@ -256,7 +256,7 @@ export async function PUT(request: NextRequest) {
 	const timer = await prisma.time
 		.findUnique({
 			where: {
-				id: Number.parseInt(json.id),
+				id: json.id,
 			},
 			include: {
 				user: {
@@ -286,21 +286,16 @@ export async function PUT(request: NextRequest) {
 
 	if (!timer.user) throw Error("User cannot be null");
 
-	if (user?.role !== "admin" && user?.id !== timer.user?.id)
+	if (user?.role !== "ADMIN" && user?.id !== timer.user?.id)
 		return NextResponse.json(FORBIDDEN, {
 			status: FORBIDDEN.status,
 			statusText: FORBIDDEN.result,
 		});
 
-	const data: Partial<{
-		notes: string;
-		start: Date;
-		startType: string | undefined;
-		end: Date;
-		endType: string | undefined;
-		time: string | undefined;
-		projectId: number | null | undefined;
-	}> = {
+	const data: Prisma.XOR<
+		Prisma.TimeUpdateInput,
+		Prisma.TimeUncheckedUpdateInput
+	> = {
 		notes: json.notes,
 	};
 
@@ -308,7 +303,7 @@ export async function PUT(request: NextRequest) {
 
 	if (json.projectId) {
 		for (const { id } of timer.user.projects) {
-			if (id === Number.parseInt(json.projectId)) data.projectId = id;
+			if (id === json.projectId) data.projectId = id;
 		}
 	}
 
@@ -345,7 +340,7 @@ export async function PUT(request: NextRequest) {
 	result.result = await prisma.time
 		.update({
 			where: {
-				id: Number.parseInt(json.id),
+				id: json.id,
 			},
 			data: data,
 		})
@@ -356,11 +351,11 @@ export async function PUT(request: NextRequest) {
 		});
 
 	return NextResponse.json(result, { status: result.status });
-}
+});
 
 // Delete timer
-export async function DELETE(request: NextRequest) {
-	const session = await getServerSession(authOptions);
+export const DELETE = auth(async (request) => {
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
@@ -372,7 +367,7 @@ export async function DELETE(request: NextRequest) {
 			id: session.user.id,
 		},
 		select: {
-			tag: true,
+			username: true,
 			id: true,
 			role: true,
 		},
@@ -410,7 +405,7 @@ export async function DELETE(request: NextRequest) {
 	const timer = await prisma.time
 		.findUnique({
 			where: {
-				id: Number.parseInt(json.id),
+				id: json.id,
 			},
 		})
 		.catch(() => null);
@@ -426,7 +421,7 @@ export async function DELETE(request: NextRequest) {
 		});
 	}
 
-	if (user?.role !== "admin" && user?.id !== timer?.userId)
+	if (user?.role !== "ADMIN" && user?.id !== timer?.userId)
 		return NextResponse.json(FORBIDDEN, {
 			status: FORBIDDEN.status,
 			statusText: FORBIDDEN.result,
@@ -435,7 +430,7 @@ export async function DELETE(request: NextRequest) {
 	result.result = await prisma.time
 		.delete({
 			where: {
-				id: Number.parseInt(json.id),
+				id: json.id,
 			},
 		})
 		.catch((e) => {
@@ -445,4 +440,4 @@ export async function DELETE(request: NextRequest) {
 		});
 
 	return NextResponse.json(result, { status: result.status });
-}
+});

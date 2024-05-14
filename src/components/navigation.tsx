@@ -1,6 +1,5 @@
 // Auth
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 // Navigation
 import NavigationSection from "./navigation-section";
@@ -11,7 +10,7 @@ export default async function Navigation({
 }: {
 	children: React.ReactNode;
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session) return redirect("/signin");
 	const user = session.user;
 

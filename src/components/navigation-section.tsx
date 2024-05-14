@@ -12,7 +12,6 @@ import {
 	MenubarSubTrigger,
 	MenubarTrigger,
 } from "@/components/ui/menubar";
-
 import {
 	History,
 	ListTodo,
@@ -36,7 +35,7 @@ export default function NavigationSection({
 }: {
 	user: {
 		id: number;
-		tag: string;
+		username: string;
 		role: string;
 	};
 }) {
@@ -109,7 +108,7 @@ export default function NavigationSection({
 							</Link>
 						</MenubarItem>
 					)}
-					
+
 					<MenubarItem onClick={() => signOut()}>Sign Out</MenubarItem>
 
 					<MenubarSeparator />
