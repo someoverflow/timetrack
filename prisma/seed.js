@@ -1,5 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
-const { hash } = require("bcrypt");
+const { hash } = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
