@@ -61,17 +61,12 @@ export const POST = auth(async (request) => {
 
 	// Create the chip
 	try {
-		const databaseResult = await prisma.chip
-			.create({
-				data: {
-					id: data.id,
-					userId: data.userId,
-				},
-			})
-			.catch((e) => {
-				console.error(e);
-				return null;
-			});
+		const databaseResult = await prisma.chip.create({
+			data: {
+				id: data.id,
+				userId: data.userId,
+			},
+		});
 		result.result = databaseResult;
 		return NextResponse.json(result, { status: result.status });
 	} catch (e) {
@@ -81,6 +76,7 @@ export const POST = auth(async (request) => {
 		result.result = `Server issue occurred ${
 			e instanceof PrismaClientKnownRequestError ? e.code : ""
 		}`;
+		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
 });
@@ -142,6 +138,7 @@ export const PUT = auth(async (request) => {
 		result.success = false;
 		result.status = 500;
 		result.type = "unknown";
+		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
 });
@@ -197,6 +194,7 @@ export const DELETE = auth(async (request) => {
 		result.success = false;
 		result.status = 500;
 		result.type = "unknown";
+		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
 });

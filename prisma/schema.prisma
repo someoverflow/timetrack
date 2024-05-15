@@ -24,7 +24,7 @@ model User {
   password String
   role     Role   @default(USER)
 
-  email         String?   @unique
+  email         String?
   emailVerified DateTime? @map("email_verified")
 
   validJwtId String @default(uuid()) @map("valid_jwt_id")
