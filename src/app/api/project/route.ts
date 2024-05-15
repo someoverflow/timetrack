@@ -5,7 +5,6 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 // Create a project
-// TODO: Description
 export const POST = auth(async (request) => {
 	// Check if user is given in session
 	const session = request.auth;
@@ -58,11 +57,26 @@ export const POST = auth(async (request) => {
 		});
 	}
 
+	if (json.description) {
+		// Check if the given project name is empty
+		if ((json.description as string).trim().length === 0) {
+			result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+			result.result = [result.result, "Given description is empty"];
+
+			return NextResponse.json(result, {
+				status: BAD_REQUEST.status,
+				statusText: BAD_REQUEST.result,
+			});
+		}
+	}
+
 	// Create Project
 	try {
 		const res = await prisma.project.create({
 			data: {
 				name: json.name,
+				description: json.description ?? undefined,
 				users: {
 					connect: {
 						id: session.user.id,

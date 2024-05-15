@@ -6,7 +6,6 @@ import { auth } from "@/lib/auth";
 import { randomUUID } from "node:crypto";
 
 // TODO: Add project to user
-// TODO: invalidate session when changing something
 
 // Create
 export const PUT = auth(async (request) => {
@@ -176,7 +175,7 @@ export const POST = auth(async (request) => {
 			id: json.id,
 		},
 		data: {
-			validJwtId: randomUUID(),
+			validJwtId: randomUUID(), // Invalidate session
 			...updateData,
 		},
 		select: {
