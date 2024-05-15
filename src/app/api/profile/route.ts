@@ -58,7 +58,9 @@ export const PUT = auth(async (request) => {
 			},
 			select: {
 				id: true,
+				name: true,
 				username: true,
+				email: true,
 				validJwtId: true,
 				updatedAt: true,
 			},
@@ -72,7 +74,7 @@ export const PUT = auth(async (request) => {
 		result.result = `Server issue occurred ${
 			e instanceof PrismaClientKnownRequestError ? e.code : ""
 		}`;
-		console.warn(e)
+		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
 });

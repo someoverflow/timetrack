@@ -38,9 +38,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 			};
 		},
 		async jwt({ token, user, session, trigger }) {
-			if (trigger === "update" && session?.name) {
+			if (
+				trigger === "update" &&
+				session?.name &&
+				session?.username &&
+				session?.email &&
+				session?.validJwtId
+			) {
 				token.name = session.name;
+				token.email = session.email
 				token.username = session.username;
+				token.validJwtId = session.validJwtId;
 			}
 
 			if (user) {
