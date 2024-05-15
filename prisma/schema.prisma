@@ -8,6 +8,53 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+
+  @@map("roles")
+}
+
+model User {
+  id String @id @default(nanoid(8))
+
+  username String  @unique
+  name     String?
+
+  password String
+  role     Role   @default(USER)
+
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+
+  validJwtId String @default(uuid()) @map("valid_jwt_id")
+
+  times Time[]
+  chips Chip[]
+
+  projects Project[] @relation("project_to_user")
+
+  assignedTodos Todo[] @relation("assignee_to_todo")
+  createdTodos  Todo[] @relation("creator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Chip {
+  id String @id
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chips")
+}
+
 model Time {
   id String @id @default(nanoid(10))
 
@@ -34,9 +81,9 @@ model Project {
   name        String
   description String?
 
-  todos Todo[] // Related Todos
+  todos Todo[] @relation("project_to_todo") // Related Todos
   times Time[] // Related Times
-  users User[] // Users with this project
+  users User[] @relation("project_to_user") // Users with this project
 
   @@map("projects")
 }
@@ -54,9 +101,9 @@ model Todo {
   archived   Boolean @default(false) // Finished the todo
   trash      Boolean @default(false) // Hidden, can be toggled after archived
 
-  relatedProjects Project[] // Any related projects to this todo
+  relatedProjects Project[] @relation("project_to_todo") // Any related projects to this todo
 
-  assignees User[] @relation("assignee") // Assigned users of the todo
+  assignees User[] @relation("assignee_to_todo") // Assigned users of the todo
 
   creator   User?   @relation("creator", fields: [creatorId], references: [id], onDelete: Restrict)
   creatorId String? @map("creator_id")
@@ -65,51 +112,4 @@ model Todo {
   updatedAt DateTime @updatedAt
 
   @@map("todos")
-}
-
-model Chip {
-  id String @id
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @map("user_id")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("chips")
-}
-
-enum Role {
-  USER
-  ADMIN
-
-  @@map("roles")
-}
-
-model User {
-  id String @id @default(nanoid(8))
-
-  username String  @unique
-  name     String?
-
-  password String
-  role     Role   @default(USER)
-
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-
-  validJwtId String @default(uuid()) @map("valid_jwt_id")
-
-  times Time[]
-  chips Chip[]
-
-  projects Project[]
-
-  assignedTodos Todo[] @relation("assignee")
-  createdTodos  Todo[] @relation("creator")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("users")
 }
