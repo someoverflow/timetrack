@@ -4,12 +4,12 @@
         "editor.defaultFormatter": "biomejs.biome"
     },
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "biomejs.biome"
     },
     "CodeGPT.apiKey": "Ollama",
     "CodeGPT.Autocomplete.enabled": true,
-    "CodeGPT.Autocomplete.provider": "Ollama - codegemma:instruct",
-    "CodeGPT.Autocomplete.maxTokens": 6000,
+    "CodeGPT.Autocomplete.provider": "Ollama - llama3:instruct",
+    "CodeGPT.Autocomplete.maxTokens": 3000,
     "[prisma]": {
         "editor.defaultFormatter": "Prisma.prisma"
     }

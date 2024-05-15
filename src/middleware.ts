@@ -8,16 +8,15 @@ export default auth((req) => {
 	const { nextUrl } = req;
 	const isLoggedIn = !!req.auth;
 
-	if (nextUrl.pathname.toLowerCase().startsWith("/api"))
-		return NextResponse.next();
-	if (nextUrl.pathname.toLowerCase().startsWith("/signin")) {
-		if (!isLoggedIn) return NextResponse.next();
-		return NextResponse.redirect(req.url.replace(req.nextUrl.pathname, "/"));
+	const allowedPaths = ["/api", "/signin"];
+	for (const allowedPath of allowedPaths) {
+		if (nextUrl.pathname.toLowerCase().startsWith(allowedPath))
+			return NextResponse.next();
 	}
 
 	if (!isLoggedIn) {
 		const signInUrl = new URL("/signin", req.url);
-		signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+		signInUrl.searchParams.set("callbackUrl", req.nextUrl.href);
 		return NextResponse.redirect(signInUrl);
 	}
 
