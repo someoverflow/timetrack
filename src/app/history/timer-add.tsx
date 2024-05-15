@@ -36,11 +36,11 @@ interface timerAddState {
 }
 
 export default function TimerAdd({
-	tag,
+	username,
 	visible,
 	setVisible,
 }: {
-	tag: string;
+	username: string;
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
@@ -67,7 +67,7 @@ export default function TimerAdd({
 		const result = await fetch("/api/times", {
 			method: "POST",
 			body: JSON.stringify({
-				tag: tag,
+				username: username,
 				notes: data.notes,
 				start: new Date(data.start).toUTCString(),
 				end: new Date(data.end).toUTCString(),
@@ -178,11 +178,7 @@ export default function TimerAdd({
 											Start
 										</Label>
 										<Input
-											className={`!w-full font-mono border-2 transition-all duration-300 ${
-												data.start !==
-													data.start.toLocaleString("sv").replace(" ", "T") &&
-												"border-sky-700"
-											}`}
+											className="!w-full font-mono border-2 transition-all duration-300"
 											type="datetime-local"
 											name="Updated"
 											id="updated"
@@ -199,14 +195,7 @@ export default function TimerAdd({
 											End
 										</Label>
 										<Input
-											className={`w-full font-mono border-2 transition-all duration-300 ${
-												data.end !==
-													(data.end
-														? data.end.toLocaleString("sv").replace(" ", "T")
-														: new Date()
-																.toLocaleString("sv")
-																.replace(" ", "T")) && "border-sky-700"
-											}`}
+											className="w-full font-mono border-2 transition-all duration-300"
 											type="datetime-local"
 											name="Created"
 											id="created"
@@ -236,7 +225,7 @@ export default function TimerAdd({
 	);
 }
 
-export function TimerAddServer({ tag }: { tag: string }) {
+export function TimerAddServer({ username }: { username: string }) {
 	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
 		(prev: timerAddState, next: Partial<timerAddState>) => ({
@@ -261,7 +250,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
 		const result = await fetch("/api/times", {
 			method: "POST",
 			body: JSON.stringify({
-				tag: tag,
+				username: username,
 				notes: data.notes,
 				start: new Date(data.start).toUTCString(),
 				end: new Date(data.end).toUTCString(),
@@ -387,11 +376,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
 												Start
 											</Label>
 											<Input
-												className={`!w-full font-mono border-2 transition-all duration-300 ${
-													data.start !==
-														data.start.toLocaleString("sv").replace(" ", "T") &&
-													"border-sky-700"
-												}`}
+												className="!w-full font-mono border-2 transition-all duration-300"
 												type="datetime-local"
 												name="Updated"
 												id="updated"
@@ -408,14 +393,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
 												End
 											</Label>
 											<Input
-												className={`w-full font-mono border-2 transition-all duration-300 ${
-													data.end !==
-														(data.end
-															? data.end.toLocaleString("sv").replace(" ", "T")
-															: new Date()
-																	.toLocaleString("sv")
-																	.replace(" ", "T")) && "border-sky-700"
-												}`}
+												className="w-full font-mono border-2 transition-all duration-300"
 												type="datetime-local"
 												name="Created"
 												id="created"

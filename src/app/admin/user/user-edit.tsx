@@ -31,15 +31,15 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Prisma } from "@prisma/client";
 
-type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
+type User = Prisma.UserGetPayload<{ include: { projects: true; chips: true } }>;
 
 interface userEditState {
 	loading: boolean;
 	loadingIndicator: string;
-	tag: string;
+	username: string;
 	name: string | null;
-	mail: string;
-	role: string;
+	mail: string | null;
+	role: "ADMIN" | "USER";
 	password: string;
 	chipAdd: string;
 }
@@ -52,7 +52,7 @@ export default function UserEdit({ user }: { user: User }) {
 		{
 			loading: false,
 			loadingIndicator: "",
-			tag: user.tag,
+			username: user.username,
 			name: user.name !== "?" ? user.name : "",
 			mail: user.email,
 			role: user.role,
@@ -74,7 +74,7 @@ export default function UserEdit({ user }: { user: User }) {
 			method: "POST",
 			body: JSON.stringify({
 				id: user.id,
-				tag: data.tag,
+				username: data.username,
 				name: data.name,
 				mail: data.mail,
 				role: data.role,
@@ -307,7 +307,7 @@ export default function UserEdit({ user }: { user: User }) {
 					setVisible(!visible);
 
 					setData({
-						tag: user.tag,
+						username: user.username,
 						name: user.name !== "?" ? user.name : "",
 						mail: user.email,
 						role: user.role,
@@ -351,15 +351,16 @@ export default function UserEdit({ user }: { user: User }) {
 											</Label>
 											<Input
 												className={`w-full border-2 transition duration-300 ${
-													user.tag !== (data.tag ? data.tag : "") &&
+													user.username !==
+														(data.username ? data.username : "") &&
 													"border-sky-700"
 												}`}
-												disabled={data.tag === "admin"}
+												disabled={data.username === "admin"}
 												type="text"
 												name="Login Name"
 												id="loginName"
-												value={data.tag}
-												onChange={(e) => setData({ tag: e.target.value })}
+												value={data.username}
+												onChange={(e) => setData({ username: e.target.value })}
 											/>
 										</div>
 										<div className="grid w-full items-center gap-1.5">
@@ -400,7 +401,7 @@ export default function UserEdit({ user }: { user: User }) {
 												name="Mail"
 												id="userAdd-mail"
 												placeholder="max@muster.com"
-												value={data.mail}
+												value={data.mail ?? ""}
 												onChange={(e) => setData({ mail: e.target.value })}
 											/>
 										</div>
@@ -414,9 +415,16 @@ export default function UserEdit({ user }: { user: User }) {
 											</Label>
 											<Select
 												key="userAdd-role"
-												disabled={data.tag === "admin"}
+												disabled={data.username === "admin"}
 												value={data.role}
-												onValueChange={(role) => setData({ role: role })}
+												onValueChange={(role) =>
+													setData({
+														role:
+															role === "ADMIN" || role === "USER"
+																? role
+																: "USER",
+													})
+												}
 											>
 												<SelectTrigger
 													className={`w-full border-2 transition duration-300 ${
@@ -426,8 +434,8 @@ export default function UserEdit({ user }: { user: User }) {
 													<SelectValue placeholder="Theme" />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectItem value="admin">Admin</SelectItem>
-													<SelectItem value="user">User</SelectItem>
+													<SelectItem value="ADMIN">Admin</SelectItem>
+													<SelectItem value="USER">User</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
@@ -466,7 +474,7 @@ export default function UserEdit({ user }: { user: User }) {
 											<Input
 												disabled
 												className="w-full font-mono"
-												type="number"
+												type="text"
 												name="Id"
 												id="id"
 												value={user.id}
@@ -551,7 +559,7 @@ export default function UserEdit({ user }: { user: User }) {
 							<Button
 								variant="destructive"
 								onClick={() => sendDeleteRequest()}
-								disabled={data.loading || user.id === 1}
+								disabled={data.loading || user.username === "admin"}
 							>
 								{data.loading && data.loadingIndicator === "delete" ? (
 									<RefreshCw className="mr-2 h-4 w-4 animate-spin" />

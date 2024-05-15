@@ -11,7 +11,6 @@ import "react-swipeable-list/dist/styles.css";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,14 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-	Check,
-	ChevronsUpDown,
-	SaveAll,
-	Trash,
-	Trash2,
-	XCircle,
-} from "lucide-react";
+import { Check, ChevronsUpDown, SaveAll, Trash, Trash2 } from "lucide-react";
 
 // Database
 import type { Prisma } from "@prisma/client";
@@ -56,7 +48,7 @@ import {
 } from "@/components/ui/command";
 import Link from "next/link";
 
-type Timer = Prisma.timeGetPayload<{
+type Timer = Prisma.TimeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
 }>;
 interface timerInfoState {
@@ -66,7 +58,7 @@ interface timerInfoState {
 	loading: boolean;
 
 	projectSelectionOpen: boolean;
-	projectId: number | null;
+	projectId: string | null;
 }
 export default function TimerInfo({
 	data,
@@ -75,7 +67,7 @@ export default function TimerInfo({
 }: {
 	data: Timer;
 	projects: {
-		id: number;
+		id: string;
 		name: string;
 	}[];
 	edit: boolean;
@@ -134,13 +126,13 @@ export default function TimerInfo({
 		});
 
 		const request: Partial<{
-			id: number;
+			id: string;
 			notes: string;
 			startType: string;
 			start: string;
 			endType: string;
 			end: string;
-			projectId: number | null;
+			projectId: string | null;
 		}> = {
 			id: data.id,
 			notes: state.notes,
@@ -575,7 +567,7 @@ export default function TimerInfo({
 											<Input
 												disabled
 												className="w-full font-mono"
-												type="number"
+												type="text"
 												name="Id"
 												id="id"
 												value={data.id}

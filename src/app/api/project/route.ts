@@ -1,30 +1,133 @@
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import {
-	NO_AUTH,
-	BAD_REQUEST,
-	NOT_ADMIN,
-	checkAdminWithSession,
-	FORBIDDEN,
-} from "@/lib/server-utils";
+import { NO_AUTH, BAD_REQUEST, NOT_ADMIN, FORBIDDEN } from "@/lib/server-utils";
 import { Prisma } from "@prisma/client";
-import { getServerSession } from "next-auth";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export const MAX_PROJECTS = 100;
-
-// TODO: Merge projects
-// TODO: Remove max projects
-// TODO: Add project description
-
-// Delete a project
-export async function DELETE(request: NextRequest) {
-	// Get server session and check if user is given
-	const session = await getServerSession(authOptions);
+// Create a project
+export const POST = auth(async (request) => {
+	// Check if user is given in session
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
 			statusText: NO_AUTH.result,
+		});
+
+	// Create the default result
+	let result: Partial<APIResult> = {
+		success: true,
+		status: 200,
+	};
+
+	// Process json request
+	const json = await request.json().catch((e) => {
+		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+		result.result = [result.result, "JSON-Body could not be parsed"];
+
+		return NextResponse.json(result, {
+			status: BAD_REQUEST.status,
+			statusText: BAD_REQUEST.result,
+		});
+	});
+	if (json instanceof NextResponse) return json;
+
+	// Check for given data
+	if (json.name == null) {
+		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+		result.result = [result.result, "Project Name is missing"];
+
+		return NextResponse.json(result, {
+			status: BAD_REQUEST.status,
+			statusText: BAD_REQUEST.result,
+		});
+	}
+
+	// Check if the given project name is empty
+	if ((json.name as string).trim().length === 0) {
+		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+		result.result = [result.result, "Project name is empty"];
+
+		return NextResponse.json(result, {
+			status: BAD_REQUEST.status,
+			statusText: BAD_REQUEST.result,
+		});
+	}
+
+	if (json.description) {
+		// Check if the given project name is empty
+		if ((json.description as string).trim().length === 0) {
+			result = JSON.parse(JSON.stringify(BAD_REQUEST));
+
+			result.result = [result.result, "Given description is empty"];
+
+			return NextResponse.json(result, {
+				status: BAD_REQUEST.status,
+				statusText: BAD_REQUEST.result,
+			});
+		}
+	}
+
+	// Create Project
+	try {
+		const res = await prisma.project.create({
+			data: {
+				name: json.name,
+				description: json.description ?? undefined,
+				users: {
+					connect: {
+						id: session.user.id,
+					},
+				},
+			},
+		});
+
+		result.result = res;
+	} catch (e) {
+		// Handle prisma errors
+		if (e instanceof Prisma.PrismaClientKnownRequestError) {
+			result.success = false;
+			result.status = 500;
+			result.result = `${e.code} - ${e.message}`;
+		} else throw e;
+	}
+
+	return NextResponse.json(result, { status: result.status });
+});
+
+// TODO: Update a project
+// update: name, description, users
+// merge: id
+export const PUT = auth(async (request) => {
+	// Check if user is given in session
+	const session = request.auth;
+	if (!session || !session.user)
+		return NextResponse.json(NO_AUTH, {
+			status: NO_AUTH.status,
+			statusText: NO_AUTH.result,
+		});
+
+	throw new Error("Not implemented");
+});
+
+// Delete a project
+export const DELETE = auth(async (request) => {
+	// Check if user is given in session
+	const session = request.auth;
+	if (!session || !session.user)
+		return NextResponse.json(NO_AUTH, {
+			status: NO_AUTH.status,
+			statusText: NO_AUTH.result,
+		});
+
+	// Check for admin
+	if (session.user.role !== "ADMIN")
+		return NextResponse.json(NOT_ADMIN, {
+			status: NOT_ADMIN.status,
+			statusText: NOT_ADMIN.result,
 		});
 
 	// Create the default result
@@ -61,7 +164,7 @@ export async function DELETE(request: NextRequest) {
 	// Get the data about the project
 	const project = await prisma.project.findUnique({
 		where: {
-			id: Number.parseInt(json.id),
+			id: json.id,
 		},
 		select: {
 			id: true,
@@ -85,175 +188,13 @@ export async function DELETE(request: NextRequest) {
 
 	// Execute database updates
 	try {
-		const [updateTimesResult, updateTodosResult, updateDeleteResult] =
-			await prisma.$transaction([
-				prisma.time.updateMany({
-					where: {
-						projectId: project.id,
-					},
-					data: {
-						projectId: undefined,
-					},
-				}),
-				prisma.todo.updateMany({
-					where: {
-						relatedProjectId: project.id,
-					},
-					data: {
-						relatedProjectId: undefined,
-					},
-				}),
-				prisma.project.delete({
-					where: {
-						id: project.id,
-					},
-				}),
-			]);
-
-		result.result = [updateDeleteResult, updateTimesResult, updateTodosResult];
-	} catch (e) {
-		// Handle prisma errors
-		if (e instanceof Prisma.PrismaClientKnownRequestError) {
-			result.success = false;
-			result.status = 500;
-			result.result = `${e.code} - ${e.message}`;
-		} else throw e;
-	}
-
-	return NextResponse.json(result, { status: result.status });
-}
-
-// Create a project
-export async function POST(request: NextRequest) {
-	// Get server session and check if user is given
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
-
-	// Create the default result
-	let result: Partial<APIResult> = {
-		success: true,
-		status: 200,
-	};
-
-	// Process json request
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON-Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
-	if (json instanceof NextResponse) return json;
-
-	// Check for given data
-	if (json.name == null || json.userId == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			json.name == null ? "Project Name is missing" : undefined,
-			json.userId == null ? "User is missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	if (session.user.id !== Number.parseInt(json.userId)) {
-		if (!checkAdminWithSession(session)) {
-			return NextResponse.json(FORBIDDEN, {
-				status: FORBIDDEN.status,
-				statusText: FORBIDDEN.result,
-			});
-		}
-	}
-
-	const user = await prisma.user.findUnique({
-		where: {
-			id: json.userId,
-		},
-		select: {
-			id: true,
-			name: true,
-			projects: true,
-		},
-	});
-	if (!user) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "User not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Check if user exceeded the project limit
-	if (user.projects.length >= MAX_PROJECTS) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			`You cannot have more than ${MAX_PROJECTS} projects.`,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Check if the given project name is empty
-	if ((json.name as string).trim().length === 0) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "Project name is empty"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Check if the project exists
-	if (
-		user.projects.filter(
-			(project) => project.name.toLowerCase() === json.name.toLowerCase(),
-		).length !== 0
-	) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			`Project with the name ${json.name} already exists`,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Create Project
-	try {
-		const res = await prisma.project.create({
-			data: {
-				name: json.name,
-				userId: user.id,
+		const deleteResult = await prisma.project.delete({
+			where: {
+				id: project.id,
 			},
 		});
 
-		result.result = res;
+		result.result = deleteResult;
 	} catch (e) {
 		// Handle prisma errors
 		if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -264,4 +205,4 @@ export async function POST(request: NextRequest) {
 	}
 
 	return NextResponse.json(result, { status: result.status });
-}
+});

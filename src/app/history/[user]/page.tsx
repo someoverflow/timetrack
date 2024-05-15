@@ -6,8 +6,7 @@ import TimerSection from "../timer-section";
 import { redirect } from "next/navigation";
 
 // Auth
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 // Database
 import prisma from "@/lib/prisma";
@@ -21,7 +20,7 @@ import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "../timer-add";
 import { badgeVariants } from "@/components/ui/badge";
 
-type Timer = Prisma.timeGetPayload<{
+type Timer = Prisma.TimeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
 }>;
 interface Data {
@@ -59,26 +58,18 @@ export default async function History({
 	};
 	params: { user: string };
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
-
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-	});
-
-	if (!user) return redirect("/");
-	if (user.role !== "admin") redirect("/history");
+	if (session.user.role !== "ADMIN") redirect("/history");
 
 	const target = await prisma.user
 		.findUnique({
 			where: {
-				tag: params.user,
+				username: params.user,
 			},
 			select: {
 				id: true,
-				tag: true,
+				username: true,
 				name: true,
 			},
 		})
@@ -104,7 +95,13 @@ export default async function History({
 		}),
 		prisma.project.findMany({
 			where: {
-				userId: target?.id,
+				users: {
+					some: {
+						id: {
+							equals: target?.id,
+						},
+					},
+				},
 			},
 			select: {
 				id: true,
@@ -146,7 +143,7 @@ export default async function History({
 								className: "absolute",
 							})}
 						>
-							{target?.name ?? target?.tag}
+							{target ? target?.name ?? target?.username : searchParams?.user}
 						</span>
 					</p>
 				</div>
@@ -159,10 +156,10 @@ export default async function History({
 								projects={projects}
 								totalTime={totalTime}
 								yearMonth={yearMonth}
-								tag={target.tag}
+								username={target.username}
 							/>
 						) : (
-							<TimerAddServer tag={target.tag} />
+							<TimerAddServer username={target.username} />
 						)}
 					</>
 				) : (

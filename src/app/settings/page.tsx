@@ -7,10 +7,9 @@ import { ProjectSection } from "./project-section";
 import ProfileSection from "./profile-section";
 
 // Auth
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 export default async function Profile({
 	searchParams,
@@ -20,42 +19,48 @@ export default async function Profile({
 		page?: string;
 	};
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
 	const projects = await prisma.project.findMany({
 		where: {
-			userId: user.id,
+			users: {
+				some: {
+					id: user.id,
+				},
+			},
 		},
 		include: {
-			relatedTodos: true,
+			_count: true,
+			todos: true,
 			times: true,
 		},
 	});
 
-	const adminProjects: {
-		[name: string]: {
-			users: Partial<{ id: number; tag: string; name: string }>[];
-		};
-	} = {};
-	if (user.role === "admin") {
-		const projectsResult = await prisma.project.findMany({
+	let projectsResult: ({
+		users: {
+			id: string;
+			name: string | null;
+			username: string;
+		}[];
+	} & {
+		id: string;
+		name: string;
+		description: string | null;
+	})[] = [];
+	if (user.role === "ADMIN") {
+		projectsResult = await prisma.project.findMany({
 			include: {
-				user: true,
+				users: {
+					select: {
+						id: true,
+						username: true,
+						name: true,
+					},
+				},
 			},
 		});
-
-		for (const { name, user } of projectsResult) {
-			if (!adminProjects[name]) adminProjects[name] = { users: [] };
-			if (user) {
-				adminProjects[name].users.push({
-					id: user.id,
-					tag: user.tag,
-					name: user.name ?? "",
-				});
-			}
-		}
 	}
 
 	return (
@@ -86,8 +91,8 @@ export default async function Profile({
 							>
 								<ProjectSection
 									projects={projects}
-									adminProjects={adminProjects}
 									userData={user}
+									adminProjects={projectsResult}
 								/>
 							</ScrollArea>
 						</TabsContent>

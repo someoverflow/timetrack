@@ -9,15 +9,17 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 // Auth
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 // Navigation
 import { useRouter, useSearchParams } from "next/navigation";
 
 // React
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function SignIn() {
+	const session = useSession();
+
 	const searchParams = useSearchParams();
 	const callbackUrl = searchParams.get("callbackUrl") || "/";
 
@@ -26,6 +28,11 @@ export default function SignIn() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
+	useEffect(() => {
+		if (!loading && session.status === "authenticated") router.replace("/");
+	}, [session, loading, setLoading]);
 
 	async function start() {
 		setLoading(true);
@@ -36,15 +43,11 @@ export default function SignIn() {
 			redirect: false,
 		});
 		if (result) {
-			if (result.status === 200) {
-				router.push(result.url ? result.url : callbackUrl);
-				return;
-			}
 			if (result.error === "CredentialsSignin") {
 				toast.error("Wrong Credentials", {
 					description: "Try again with a different username and password",
 				});
-			}
+			} else router.push(result.url ? result.url : callbackUrl);
 		} else
 			toast.error("No result data", {
 				description: "Try again now or later",

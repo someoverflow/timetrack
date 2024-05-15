@@ -1,12 +1,11 @@
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
-import { getServerSession } from "next-auth";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { NO_AUTH } from "@/lib/server-utils";
+import { auth } from "@/lib/auth";
 
-export async function PUT(request: NextRequest) {
-	const session = await getServerSession(authOptions);
+export const PUT = auth(async (request) => {
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
@@ -76,4 +75,4 @@ export async function PUT(request: NextRequest) {
 	}
 
 	return NextResponse.json(result, { status: result.status });
-}
+});

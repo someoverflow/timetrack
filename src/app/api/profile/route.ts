@@ -1,14 +1,13 @@
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { validatePassword } from "@/lib/utils";
 import { NO_AUTH, BAD_REQUEST } from "@/lib/server-utils";
-import { hash } from "bcrypt";
-import { getServerSession } from "next-auth";
+import { hash } from "bcryptjs";
 import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 // Update profile
-export async function PUT(request: NextRequest) {
-	const session = await getServerSession(authOptions);
+export const PUT = auth(async (request) => {
+	const session = request.auth;
 	if (!session || !session.user)
 		return NextResponse.json(NO_AUTH, {
 			status: NO_AUTH.status,
@@ -107,4 +106,4 @@ export async function PUT(request: NextRequest) {
 	result.result = res;
 
 	return NextResponse.json(result, { status: result.status });
-}
+});

@@ -8,37 +8,88 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model time {
-  id Int @id @default(autoincrement())
+enum Role {
+  USER
+  ADMIN
 
-  user   user? @relation(fields: [userId], references: [id])
-  userId Int?
+  @@map("roles")
+}
+
+model User {
+  id String @id @default(nanoid(12))
+
+  username String  @unique
+  name     String?
+
+  password String
+  role     Role   @default(USER)
+
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+
+  validJwtId String @default(uuid()) @map("valid_jwt_id")
+
+  times Time[]
+  chips Chip[]
+
+  projects Project[] @relation("project_to_user")
+
+  assignedTodos Todo[] @relation("assignee_to_todo")
+  createdTodos  Todo[] @relation("creator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Chip {
+  id String @id
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chips")
+}
+
+model Time {
+  id String @id @default(nanoid(12))
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
 
   start     DateTime  @db.DateTime(2)
-  startType String?   @db.Text
+  startType String?   @map("start_type") @db.Text
   end       DateTime? @db.DateTime(2)
-  endType   String?   @db.Text
+  endType   String?   @map("end_type") @db.Text
 
   time  String? // Passed time from start to end
   notes String? @db.MediumText
 
-  project   project? @relation(fields: [projectId], references: [id]) // Related Project
-  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull) // Related Project
+  projectId String?  @map("project_id")
+
+  @@map("times")
 }
 
-model project {
-  id String @id @default(cuid())
+model Project {
+  id String @id @default(nanoid(12))
 
   name        String
   description String?
 
-  todos todo[] // Related Todos
-  times time[] // Related Times
-  users user[] // Users with this project
+  todos Todo[] @relation("project_to_todo") // Related Todos
+  times Time[] // Related Times
+  users User[] @relation("project_to_user") // Users with this project
+
+  @@map("projects")
 }
 
-model todo {
-  id String @id @default(cuid())
+model Todo {
+  id String @id @default(nanoid(12))
 
   task        String  @db.MediumText
   description String? @db.Text
@@ -46,49 +97,19 @@ model todo {
   deadline DateTime?
 
   done       Boolean @default(false) // Finish todo
-  inProgress Boolean @default(false) // Progressing the todo
+  inProgress Boolean @default(false) @map("in_progress") // Progressing the todo 
   archived   Boolean @default(false) // Finished the todo
   trash      Boolean @default(false) // Hidden, can be toggled after archived
 
-  relatedProjects project[] // Any related projects to this todo
+  relatedProjects Project[] @relation("project_to_todo") // Any related projects to this todo
 
-  assignees user[] @relation("assignee") // Assigned users of the todo
+  assignees User[] @relation("assignee_to_todo") // Assigned users of the todo
 
-  creator   user? @relation("creator", fields: [creatorId], references: [id])
-  creatorId Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model user {
-  id Int @id @default(autoincrement())
-
-  tag      String @unique
-  password String
-
-  name  String?
-  email String? @unique
-  role  String
-
-  chips chip[]
-  times time[]
-
-  projects project[]
-
-  assignedTodos todo[] @relation("assignee")
-  createdTodos  todo[] @relation("creator")
+  creator   User?   @relation("creator", fields: [creatorId], references: [id], onDelete: Restrict)
+  creatorId String? @map("creator_id")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
 
-model chip {
-  id String @id
-
-  user   user @relation(fields: [userId], references: [id])
-  userId Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("todos")
 }

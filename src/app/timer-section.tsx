@@ -32,7 +32,7 @@ interface timerSectionState {
 	loaded: boolean;
 	running: boolean;
 	changeModal: boolean;
-	changeTimer: number | undefined;
+	changeTimer: string | undefined;
 	stop: boolean;
 	delay: number;
 }
@@ -140,7 +140,7 @@ export default function TimerSection() {
 		});
 
 		const data: Partial<Timer> = {
-			id: 0,
+			id: "<0>",
 			start: new Date().toISOString(),
 			startType: "Website",
 		};

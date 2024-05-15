@@ -1,3 +1,5 @@
+/* TODO: Finish 
+
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NO_AUTH, BAD_REQUEST, FORBIDDEN } from "@/lib/server-utils";
@@ -454,4 +456,11 @@ export async function PUT(request: NextRequest) {
 	}
 
 	return NextResponse.json(result, { status: result.status });
+}
+ */
+
+import { NextResponse } from "next/server";
+
+export async function GET() {
+	return NextResponse.json("Hello world");
 }
