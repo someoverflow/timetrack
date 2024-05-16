@@ -45,6 +45,40 @@ export const profileApiValidation = z
 		},
 	);
 
+// Projects API
+// name, description, [userId]
+const projectDescriptionValidation = z
+	.string()
+	.min(1, "Description is too short.")
+	.max(100, "Description is too long. (max. 100)")
+	.nullable()
+	.optional();
+
+export const projectCreateApiValidation = z.object({
+	name: nameValidation,
+	description: projectDescriptionValidation,
+	users: z.array(nanoIdValidation).nonempty().optional(),
+});
+
+export const projectUpdateApiValidation = z
+	.object({
+		id: nanoIdValidation,
+		name: nameValidation,
+		description: projectDescriptionValidation,
+		merge: nanoIdValidation,
+		users: z
+			.object({
+				add: z.array(nanoIdValidation).nonempty(),
+				remove: z.array(nanoIdValidation).nonempty(),
+			})
+			.partial()
+			.optional(),
+	})
+	.partial()
+	.required({
+		id: true,
+	});
+
 // Chips API
 const chipMaxId = "ID is longer than 50 chars";
 export const chipIdValidation = // Chip ids

@@ -1,208 +1,241 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { NO_AUTH, BAD_REQUEST, NOT_ADMIN, FORBIDDEN } from "@/lib/server-utils";
-import { Prisma } from "@prisma/client";
+import {
+	NO_AUTH_RESPONSE,
+	NOT_ADMIN_RESPONSE,
+	defaultResult,
+	parseJsonBody,
+	badRequestResponse,
+	FORBIDDEN_RESPONSE,
+} from "@/lib/server-utils";
+import {
+	nanoIdValidation,
+	projectCreateApiValidation,
+	projectUpdateApiValidation,
+} from "@/lib/zod";
+import type { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { NextResponse } from "next/server";
+
+// TODO: Test
 
 // Create a project
 export const POST = auth(async (request) => {
-	// Check if user is given in session
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-	// Create the default result
-	let result: Partial<APIResult> = {
-		success: true,
-		status: 200,
-	};
+	// Prepare data
+	const result = defaultResult("created", 201);
 
-	// Process json request
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON-Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	// Check for given data
-	if (json.name == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "Project Name is missing"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Validate request
+	const validationResult = projectCreateApiValidation.safeParse({
+		id: json.id,
+		userId: json.userId,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
 	}
+	const data = validationResult.data;
 
-	// Check if the given project name is empty
-	if ((json.name as string).trim().length === 0) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Prepare the users to connect
+	let toConnect = [{ id: session.user.id }];
+	if (data.users && session.user.role === "ADMIN")
+		toConnect = [...toConnect, ...data.users.map((userId) => ({ id: userId }))];
 
-		result.result = [result.result, "Project name is empty"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	if (json.description) {
-		// Check if the given project name is empty
-		if ((json.description as string).trim().length === 0) {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-			result.result = [result.result, "Given description is empty"];
-
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-	}
-
-	// Create Project
+	// Create the project
 	try {
-		const res = await prisma.project.create({
+		const databaseResult = await prisma.project.create({
 			data: {
-				name: json.name,
-				description: json.description ?? undefined,
+				name: data.name,
+				description: data.description ?? undefined,
 				users: {
-					connect: {
-						id: session.user.id,
-					},
+					connect: toConnect,
 				},
 			},
 		});
 
-		result.result = res;
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
 	} catch (e) {
-		// Handle prisma errors
-		if (e instanceof Prisma.PrismaClientKnownRequestError) {
-			result.success = false;
-			result.status = 500;
-			result.result = `${e.code} - ${e.message}`;
-		} else throw e;
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
 	}
-
-	return NextResponse.json(result, { status: result.status });
 });
 
-// TODO: Update a project
-// update: name, description, users
-// merge: id
+// Update a project
+/* {
+	"id":			<id>
+	"name":			<name?>
+	"description":	<description?>
+
+	--- ADMINS: ---
+	"users":
+		{
+			add: 	[<id>]? 
+			remove: [<id>]? 
+		}?
+	"merge":		<id?>
+} */
 export const PUT = auth(async (request) => {
-	// Check if user is given in session
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	const isAdmin = session.user.role === "ADMIN";
+
+	// Prepare data
+	const result = defaultResult("updated");
+
+	// Check JSON
+	const json = await parseJsonBody(request);
+	if (json instanceof NextResponse) return json;
+
+	// Validate request
+	const validationResult = projectUpdateApiValidation.safeParse({
+		id: json.id,
+		userId: json.userId,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
+	}
+	const data = validationResult.data;
+
+	if (!isAdmin && (data.merge || data.users)) return FORBIDDEN_RESPONSE;
+
+	let updateData: Prisma.XOR<
+		Prisma.ProjectUpdateInput,
+		Prisma.ProjectUncheckedUpdateInput
+	> = {
+		id: data.id,
+		name: data.name,
+		description: data.description ?? undefined,
+	};
+
+	if (data.users) {
+		if (data.users.add) {
+			updateData = {
+				...updateData,
+				users: {
+					...updateData.users,
+					connect: data.users.add.map((userId) => ({ id: userId })),
+				},
+			};
+		}
+		if (data.users.remove) {
+			updateData = {
+				...updateData,
+				users: {
+					...updateData.users,
+					disconnect: data.users.remove.map((userId) => ({ id: userId })),
+				},
+			};
+		}
+	}
+
+	// Update the project
+	try {
+		const databaseResult = await prisma.project.update({
+			where: {
+				id: data.id,
+				users: {
+					some: {
+						id: session.user.id,
+					},
+				},
+			},
+			data: updateData,
 		});
 
-	throw new Error("Not implemented");
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		if (e instanceof PrismaClientKnownRequestError) {
+			switch (e.code) {
+				// TODO: Check currently unchecked errors
+				case "P2025":
+					console.error("project: ", e);
+					return badRequestResponse(
+						{
+							id: data.id,
+							message: "Project does not exist.",
+						},
+						"not-found",
+					);
+			}
+
+			result.result = `Server issue occurred ${e.code}`;
+		} else result.result = "Server issue occurred";
+
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });
 
 // Delete a project
 export const DELETE = auth(async (request) => {
-	// Check if user is given in session
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	// Check for admin
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("deleted");
 
-	// Create the default result
-	let result: Partial<APIResult> = {
-		success: true,
-		status: 200,
-	};
-
-	// Process json request
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON-Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	// Check for the project id in the request
-	if (json.id == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Validate request
+	const validationResult = nanoIdValidation.safeParse(json.id);
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const id = validationResult.data;
 
-		result.result = [result.result, "ID is missing"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Get the data about the project
-	const project = await prisma.project.findUnique({
-		where: {
-			id: json.id,
-		},
-		select: {
-			id: true,
-		},
-	});
-
-	// Check if the project exists
-	if (!project) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			`Project with id ${json.id} could not be found`,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Execute database updates
+	// Delete the chip
 	try {
-		const deleteResult = await prisma.project.delete({
+		const databaseResult = await prisma.project.delete({
 			where: {
-				id: project.id,
+				id: id,
 			},
 		});
 
-		result.result = deleteResult;
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
 	} catch (e) {
-		// Handle prisma errors
-		if (e instanceof Prisma.PrismaClientKnownRequestError) {
-			result.success = false;
-			result.status = 500;
-			result.result = `${e.code} - ${e.message}`;
-		} else throw e;
-	}
+		if (e instanceof PrismaClientKnownRequestError) {
+			switch (e.code) {
+				case "P2025":
+					return badRequestResponse(
+						{
+							id: id,
+							message: "Project does not exist.",
+						},
+						"not-found",
+					);
+			}
 
-	return NextResponse.json(result, { status: result.status });
+			result.result = `Server issue occurred ${e.code}`;
+		} else result.result = "Server issue occurred";
+
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });

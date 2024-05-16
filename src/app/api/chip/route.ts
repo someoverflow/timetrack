@@ -89,7 +89,7 @@ export const PUT = auth(async (request) => {
 	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
 	// Prepare data
-	const result = defaultResult("updated", 200);
+	const result = defaultResult("updated");
 
 	// Check JSON
 	const json = await parseJsonBody(request);
