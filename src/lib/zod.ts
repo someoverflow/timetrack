@@ -99,7 +99,7 @@ export const timesPutApiValidation = z
 		id: nanoIdValidation,
 
 		notes: z.coerce.string().trim(),
-		project: nanoIdValidation,
+		project: nanoIdValidation.nullable(),
 
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
@@ -116,6 +116,7 @@ export const timesPutApiValidation = z
 			!(
 				data.notes ||
 				data.project ||
+				data.project === null ||
 				data.start ||
 				data.end ||
 				data.startType ||

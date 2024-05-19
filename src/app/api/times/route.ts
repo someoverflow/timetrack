@@ -272,7 +272,7 @@ export const PUT = auth(async (request) => {
 					select: {
 						projects: {
 							where: {
-								id: data.project,
+								id: data.project ?? undefined,
 							},
 						},
 					},

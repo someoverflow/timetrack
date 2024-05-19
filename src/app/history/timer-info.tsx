@@ -132,7 +132,7 @@ export default function TimerInfo({
 			start: string;
 			endType: string;
 			end: string;
-			projectId: string | null;
+			project: string | null;
 		}> = {
 			id: data.id,
 			notes: state.notes,
@@ -162,7 +162,7 @@ export default function TimerInfo({
 		}
 
 		if (state.projectId !== data.projectId) {
-			request.projectId = state.projectId;
+			request.project = state.projectId;
 		}
 
 		const result = await fetch("/api/times", {
