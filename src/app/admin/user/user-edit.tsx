@@ -53,7 +53,7 @@ export default function UserEdit({ user }: { user: User }) {
 			loading: false,
 			loadingIndicator: "",
 			username: user.username,
-			name: user.name !== "?" ? user.name : "",
+			name: user.name ?? "",
 			mail: user.email,
 			role: user.role,
 			password: "",
@@ -111,6 +111,13 @@ export default function UserEdit({ user }: { user: User }) {
 		}
 
 		switch (resultData.type) {
+			case "duplicate-found":
+				toast.warning(`An error occurred (${resultData.type})`, {
+					description: resultData.result.message,
+					important: true,
+					duration: 5000,
+				});
+				break;
 			case "validation":
 				toast.warning(`An error occurred (${resultData.result[0].code})`, {
 					description: resultData.result[0].message,

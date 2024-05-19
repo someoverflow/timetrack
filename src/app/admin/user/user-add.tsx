@@ -103,6 +103,13 @@ export default function UserAdd() {
 		}
 
 		switch (resultData.type) {
+			case "duplicate-found":
+				toast.warning(`An error occurred (${resultData.type})`, {
+					description: resultData.result.message,
+					important: true,
+					duration: 5000,
+				});
+				break;
 			case "validation":
 				toast.warning(`An error occurred (${resultData.result[0].code})`, {
 					description: resultData.result[0].message,

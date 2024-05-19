@@ -2,10 +2,7 @@ import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import {
-	BAD_REQUEST,
-	NOT_ADMIN,
 	NOT_ADMIN_RESPONSE,
-	NO_AUTH,
 	NO_AUTH_RESPONSE,
 	badRequestResponse,
 	defaultResult,
@@ -51,7 +48,23 @@ export const PUT = auth(async (request) => {
 	const role =
 		data.role === "ADMIN" || data.role === "USER" ? data.role : "USER";
 
-	// Create the chip
+	// Check if new username exists when given
+	const databaseUser = await prisma.user
+		.findUnique({
+			where: { username: data.username },
+		})
+		.catch(() => null);
+	if (databaseUser) {
+		return badRequestResponse(
+			{
+				username: data.username,
+				message: "User with the username exists.",
+			},
+			"duplicate-found",
+		);
+	}
+
+	// Create the user
 	try {
 		const databaseResult = await prisma.user.create({
 			data: {
@@ -71,19 +84,12 @@ export const PUT = auth(async (request) => {
 		result.result = databaseResult;
 		return NextResponse.json(result, { status: result.status });
 	} catch (e) {
-		if (e instanceof PrismaClientKnownRequestError) {
-			switch (
-				e.code
-				// TODO: Add cases
-			) {
-			}
-
-			result.result = `Server issue occurred ${e.code}`;
-		} else result.result = "Server issue occurred";
-
 		result.success = false;
 		result.status = 500;
 		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
 		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
@@ -133,6 +139,24 @@ export const POST = auth(async (request) => {
 			"not-found",
 		);
 	}
+	// Check if new username exists when given
+	if (data.username) {
+		const databaseUser = await prisma.user
+			.findUnique({
+				where: { username: data.username },
+				select: { id: true },
+			})
+			.catch(() => null);
+		if (databaseUser && databaseUser.id !== data.id) {
+			return badRequestResponse(
+				{
+					username: data.username,
+					message: "User with the new username exists.",
+				},
+				"duplicate-found",
+			);
+		}
+	}
 	// Check for changes of admin
 	if (databaseUser.username === "admin") {
 		if (data.username !== "admin" || data.role !== "ADMIN")
@@ -153,7 +177,7 @@ export const POST = auth(async (request) => {
 		password: string | undefined;
 	}> = {
 		validJwtId: randomUUID(), // Invalidate session
-		username: json.tag,
+		username: data.username,
 		name: data.name,
 		email: data.email,
 		role: data.role === "ADMIN" || data.role === "USER" ? data.role : undefined,
