@@ -5,7 +5,8 @@ const invalidId = "ID is invalid.";
 const invalidPassword = "Password is invalid. (8-30 chars, a-z, A-Z, 0-9)";
 
 export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
-export const passwordRegex = /^(?=.*[0-9])[a-zA-Z0-9]{8,30}$/i;
+export const passwordRegex =
+	/^(?=.*[A-Za-z])(?=.*\d)[a-zA-Z0-9\d@$!%*#?&]{8,30}$/i;
 
 // Utils
 export const nanoIdValidation = // All nanoid ids

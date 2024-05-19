@@ -72,7 +72,8 @@ export default function ProfileSection({
 			method: "PUT",
 			body: JSON.stringify({
 				name: data.name !== userData.name ? data.name : undefined,
-				mail: data.mail !== userData.email ? data.mail : undefined,
+				mail:
+					(data.mail ?? "") !== (userData.email ?? "") ? data.mail : undefined,
 				password: changePassword ? data.password : undefined,
 			}),
 		});
@@ -175,7 +176,7 @@ export default function ProfileSection({
 							id="input-mail"
 							placeholder="max@example.com"
 							className={`transition-all duration-300 ${
-								data.mail !== userData.email && "border-sky-700"
+								(data.mail ?? "") !== (userData.email ?? "") && "border-sky-700"
 							}`}
 							value={data.mail}
 							onChange={(e) => setData({ mail: e.target.value })}
