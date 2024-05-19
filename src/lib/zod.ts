@@ -28,6 +28,29 @@ export const passwordValidation = z
 	.max(30, "Password is too long. (max. 30)")
 	.regex(passwordRegex, invalidPassword);
 
+// User API
+export const userCreateApiValidation = z.object({
+	name: nameValidation,
+	username: nameValidation,
+	email: mailValidation.optional(),
+	password: passwordValidation,
+	role: z
+		.string()
+		.regex(/\b(?:USER|ADMIN)\b/gm, "Role is not USER or ADMIN")
+		.optional(),
+});
+export const userUpdateApiValidation = z
+	.object({
+		id: nanoIdValidation,
+		name: nameValidation,
+		username: nameValidation,
+		email: mailValidation,
+		password: passwordValidation,
+		role: z.string().regex(/\b(?:USER|ADMIN)\b/gm, "Role is not USER or ADMIN"),
+	})
+	.partial()
+	.required({ id: true });
+
 // Times API
 export const timesToggleApiValidation = z
 	.object({
