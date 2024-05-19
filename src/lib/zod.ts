@@ -5,11 +5,11 @@ const invalidId = "ID is invalid.";
 const invalidPassword = "Password is invalid. (8-30 chars, a-z, A-Z, 0-9)";
 
 export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
-export const passwordRegex = /^(?=.*[0-9])[a-zA-Z0-9]/;
+export const passwordRegex = /^(?=.*[0-9])[a-zA-Z0-9]{8,30}$/i;
 
 // Utils
 export const nanoIdValidation = // All nanoid ids
-	z.string().trim().regex(nanoidRegex, invalidId);
+	z.string().trim().length(12, invalidId).regex(nanoidRegex, invalidId);
 
 export const nameValidation = z
 	.string()
@@ -28,6 +28,103 @@ export const passwordValidation = z
 	.max(30, "Password is too long. (max. 30)")
 	.regex(passwordRegex, invalidPassword);
 
+// Times API
+export const timesToggleApiValidation = z
+	.object({
+		type: z.string(),
+		fixTime: z.string().datetime(),
+	})
+	.partial();
+
+export const timesGetApiValidation = z
+	.object({
+		all: z.coerce.boolean(),
+		period: z.object({
+			from: z.string().datetime(),
+			to: z.string().datetime(),
+		}),
+	})
+	.partial();
+
+export const timesPostApiValidation = z
+	.object({
+		userId: nanoIdValidation,
+
+		notes: z.coerce.string().trim(),
+		project: nanoIdValidation,
+
+		start: z.coerce.string().datetime(),
+		end: z.coerce.string().datetime(),
+
+		startType: z.coerce.string().trim(),
+		endType: z.coerce.string().trim(),
+	})
+	.partial({
+		userId: true,
+		project: true,
+		startType: true,
+		endType: true,
+	})
+	.refine((data) => data.end > data.start, {
+		message: "The end is earlier than start",
+		path: ["end"],
+	});
+
+export const timesPutApiValidation = z
+	.object({
+		id: nanoIdValidation,
+
+		notes: z.coerce.string().trim(),
+		project: nanoIdValidation,
+
+		start: z.coerce.string().datetime(),
+		end: z.coerce.string().datetime(),
+
+		startType: z.coerce.string().trim(),
+		endType: z.coerce.string().trim(),
+	})
+	.partial()
+	.required({
+		id: true,
+	})
+	.superRefine((data, ctx) => {
+		if (
+			!(
+				data.notes ||
+				data.project ||
+				data.start ||
+				data.end ||
+				data.startType ||
+				data.endType
+			)
+		)
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"One of the fields must be given (notes, project, start(type), end(type))",
+				path: ["notes", "project", "start", "end"],
+			});
+
+		if (data.start || data.end) {
+			if ((data.start && !data.end) || (data.end && !data.start))
+				ctx.addIssue({
+					code: "custom",
+					message:
+						"One of the fields must be given (notes, project, start(type), end(type))",
+					path: ["start", "end"],
+				});
+		}
+
+		if (data.end && data.start ? data.end < data.start : false)
+			ctx.addIssue({
+				code: "custom",
+				message: "The end is earlier than start",
+				path: ["end"],
+			});
+	});
+
+export type timesPutApiValidation = z.infer<typeof timesPutApiValidation>;
+
 // Profile API
 export const profileApiValidation = z
 	.object({
@@ -36,14 +133,10 @@ export const profileApiValidation = z
 		password: passwordValidation,
 	})
 	.partial()
-	.refine(
-		({ name, mail, password }) =>
-			name !== undefined || mail !== undefined || password !== undefined,
-		{
-			message: "One of the fields must be given (name, mail, password)",
-			path: ["name", "mail", "password"],
-		},
-	);
+	.refine(({ name, mail, password }) => !(name || mail || password), {
+		message: "One of the fields must be given (name, mail, password)",
+		path: ["name", "mail", "password"],
+	});
 
 // Projects API
 // name, description, [userId]

@@ -206,7 +206,7 @@ export const DELETE = auth(async (request) => {
 		return badRequestResponse(validationResult.error.issues, "validation");
 	const id = validationResult.data;
 
-	// Delete the chip
+	// Delete the project
 	try {
 		const databaseResult = await prisma.project.delete({
 			where: {
