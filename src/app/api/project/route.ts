@@ -17,8 +17,6 @@ import type { Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { NextResponse } from "next/server";
 
-// TODO: Test
-
 // Create a project
 export const POST = auth(async (request) => {
 	// Check auth
@@ -34,7 +32,8 @@ export const POST = auth(async (request) => {
 
 	// Validate request
 	const validationResult = projectCreateApiValidation.safeParse({
-		id: json.id,
+		name: json.name,
+		description: json.description,
 		userId: json.userId,
 	});
 	if (!validationResult.success) {
@@ -86,7 +85,7 @@ export const POST = auth(async (request) => {
 			add: 	[<id>]? 
 			remove: [<id>]? 
 		}?
-	"merge":		<id?>
+	TODO: "merge":		<id?>
 } */
 export const PUT = auth(async (request) => {
 	// Check auth
