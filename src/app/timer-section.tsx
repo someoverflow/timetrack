@@ -105,7 +105,7 @@ export default function TimerSection() {
 					});
 				}
 
-				if (result.result?.endType === null) {
+				if (result.result?.end === null) {
 					const timer: Timer = result.result;
 					setFetchedTimer(timer);
 

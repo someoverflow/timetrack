@@ -114,7 +114,7 @@ export default function TimerInfo({
 		return (
 			<div className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1 animate__animated animate__fadeIn">
 				<p className="text-sm text-muted-foreground">
-					Running Timer {data.start.toLocaleTimeString()}
+					Running Timer since {data.start.toLocaleTimeString()}
 				</p>
 			</div>
 		);

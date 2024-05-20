@@ -58,7 +58,7 @@ export const GET = auth(async (request) => {
 		try {
 			const databaseResult = await prisma.time.findFirst({
 				orderBy: {
-					id: "desc",
+					start: "desc",
 				},
 				where: {
 					userId: session.user.id,
@@ -84,7 +84,7 @@ export const GET = auth(async (request) => {
 		try {
 			const databaseResult = await prisma.time.findMany({
 				orderBy: {
-					id: "desc",
+					start: "desc",
 				},
 				where: {
 					userId: session.user.id,
@@ -108,7 +108,7 @@ export const GET = auth(async (request) => {
 	try {
 		const databaseResult = await prisma.time.findMany({
 			orderBy: {
-				id: "desc",
+				start: "desc",
 			},
 			where: {
 				userId: session.user.id,

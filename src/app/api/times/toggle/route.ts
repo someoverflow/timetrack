@@ -29,10 +29,9 @@ export const PUT = auth(async (request) => {
 	const data = validationResult.data;
 
 	const databaseResult = await prisma.time
-		.findMany({
-			take: 1,
+		.findFirst({
 			orderBy: {
-				id: "desc",
+				start: "desc",
 			},
 			where: {
 				userId: session.user.id,
@@ -42,7 +41,7 @@ export const PUT = auth(async (request) => {
 		.catch(() => null);
 
 	try {
-		if (databaseResult == null || databaseResult.length === 0) {
+		if (databaseResult === null) {
 			const createResult = await prisma.time.create({
 				data: {
 					userId: session.user.id,
@@ -53,7 +52,7 @@ export const PUT = auth(async (request) => {
 			result.result = createResult;
 		} else {
 			const changeDate = data.fixTime ? new Date(data.fixTime) : new Date();
-			const timePassed = getTimePassed(databaseResult[0].start, changeDate);
+			const timePassed = getTimePassed(databaseResult.start, changeDate);
 
 			const updateResult = await prisma.time.update({
 				data: {
@@ -62,7 +61,7 @@ export const PUT = auth(async (request) => {
 					endType: data.type ?? "API",
 				},
 				where: {
-					id: databaseResult[0].id,
+					id: databaseResult.id,
 				},
 			});
 			result.result = updateResult;
