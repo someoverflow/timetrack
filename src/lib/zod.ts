@@ -8,7 +8,7 @@ export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
 export const passwordRegex =
 	/^(?=.*[A-Za-z])(?=.*\d)[a-zA-Z0-9\d@$!%*#?&]{8,30}$/i;
 
-// Utils
+//#region Utils
 export const nanoIdValidation = // All nanoid ids
 	z.string().trim().length(12, invalidId).regex(nanoidRegex, invalidId);
 
@@ -28,8 +28,9 @@ export const passwordValidation = z
 	.min(8, "Password is too short. (min. 8)")
 	.max(30, "Password is too long. (max. 30)")
 	.regex(passwordRegex, invalidPassword);
+//#endregion
 
-// User API
+//#region User API
 export const userCreateApiValidation = z.object({
 	name: nameValidation,
 	username: nameValidation,
@@ -51,8 +52,9 @@ export const userUpdateApiValidation = z
 	})
 	.partial()
 	.required({ id: true });
+//#endregion
 
-// Times API
+//#region Times API
 export const timesToggleApiValidation = z
 	.object({
 		type: z.string(),
@@ -149,8 +151,46 @@ export const timesPutApiValidation = z
 	});
 
 export type timesPutApiValidation = z.infer<typeof timesPutApiValidation>;
+//#endregion
 
-// Profile API
+//#region Todo API
+const todoTaskValidation = z
+	.string()
+	.trim()
+	.min(1, "Task is too short.")
+	.max(100, "Task is too long. (max. 100)");
+const todoDescriptionValidation = z
+	.string()
+	.trim()
+	.min(1, "Description is too short.")
+	.max(800, "Description is too long. (max. 800)");
+
+export const todoCreateApiValidation = z
+	.object({
+		task: todoTaskValidation,
+		description: todoDescriptionValidation.nullable(),
+		deadline: z.string().date(),
+		assignees: z.array(nameValidation).nonempty(),
+	})
+	.partial()
+	.required({ task: true });
+
+export const todoUpdateApiValidation = z
+	.object({
+		id: nanoIdValidation,
+		task: todoTaskValidation,
+		description: todoDescriptionValidation.nullable(),
+		deadline: z.string().date(),
+		assignees: z.object({
+			add: z.array(nameValidation).nonempty(),
+			remove: z.array(nameValidation).nonempty(),
+		}),
+	})
+	.partial()
+	.required({ id: true });
+//#endregion
+
+//#region Profile API
 export const profileApiValidation = z
 	.object({
 		name: nameValidation,
@@ -162,8 +202,9 @@ export const profileApiValidation = z
 		message: "One of the fields must be given (name, mail, password)",
 		path: ["name", "mail", "password"],
 	});
+//#endregion
 
-// Projects API
+//#region Projects API
 // name, description, [userId]
 const projectDescriptionValidation = z
 	.string()
@@ -196,8 +237,9 @@ export const projectUpdateApiValidation = z
 	.required({
 		id: true,
 	});
+//#endregion
 
-// Chips API
+//#region Chips API
 const chipMaxId = "ID is longer than 50 chars";
 export const chipIdValidation = // Chip ids
 	z.string().trim().max(50, chipMaxId).min(1, emptyId);
@@ -208,3 +250,4 @@ export const chipApiValidation = // POST & PUT requests
 		userId: nanoIdValidation,
 	});
 export type chipApiValidation = z.infer<typeof chipApiValidation>;
+//#endregion

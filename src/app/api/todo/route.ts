@@ -1,434 +1,267 @@
-/* TODO: Finish 
-
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { NO_AUTH, BAD_REQUEST, FORBIDDEN } from "@/lib/server-utils";
-import { Prisma } from "@prisma/client";
-import { getServerSession } from "next-auth";
-import { type NextRequest, NextResponse } from "next/server";
+import {
+	NO_AUTH,
+	BAD_REQUEST,
+	FORBIDDEN,
+	parseJsonBody,
+	defaultResult,
+	NO_AUTH_RESPONSE,
+	badRequestResponse,
+	FORBIDDEN_RESPONSE,
+} from "@/lib/server-utils";
+import { todoCreateApiValidation, todoUpdateApiValidation } from "@/lib/zod";
+import type { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { NextResponse } from "next/server";
 
-// TODO: Array of assignees
+// Create a todo (task, description?, deadline?, assignees?)
+/*{
+	"task": 			<task>
+	"description": 		<description?>
+	"deadline": 		<Date?>
+	"assignees": 		[<username>]?
+}*/
+export const POST = auth(async (request) => {
+	// Check auth
+	const session = request.auth;
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-// Create a todo (task, description?, deadline?, assignee?)
-export async function POST(request: NextRequest) {
-	// Get server session and check if user is given
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	// Prepare data
+	const result = defaultResult("created", 201);
 
-	// Create the default result
-	let result: Partial<APIResult> = {
-		success: true,
-		status: 200,
-	};
-
-	// Process json request
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON-Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	// Check for given data
-	if (json.task == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			json.task == null ? "The task for the todo is missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Check if the task is empty
-	if ((json.task as string).trim().length === 0) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			json.task == null ? "The task cannot be empty" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
+	// Validate request
+	const validationResult = todoCreateApiValidation.safeParse({
+		task: json.task,
+		description: json.description,
+		deadline: json.deadline,
+		assignees: json.assignees,
+	});
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const data = validationResult.data;
 
 	const createData: Prisma.Without<
-		Prisma.todoCreateInput,
-		Prisma.todoUncheckedCreateInput
+		Prisma.TodoCreateInput,
+		Prisma.TodoUncheckedCreateInput
 	> &
-		Prisma.todoUncheckedCreateInput = {
-		task: json.task,
+		Prisma.TodoUncheckedCreateInput = {
+		task: data.task,
+		description: data.description,
+		deadline: data.deadline ? new Date(data.deadline) : undefined,
+
+		assignees: data.assignees
+			? {
+					connect: data.assignees.map((username) => ({ username: username })),
+				}
+			: undefined,
+
+		creatorId: session.user.id,
 	};
 
-	// Check for description and if it is empty
-	if (json.description) {
-		createData.description =
-			(json.description as string).trim().length !== 0
-				? json.description
-				: null;
-	}
-
-	// Check for deadline
-	if (json.deadline) {
-		const deadline = new Date(Date.parse(json.deadline));
-		createData.deadline = deadline;
-	}
-
-	// Check for assignee
-	if (json.assigneeId) {
-		const assigneeId: number = Number.parseInt(json.assigneeId);
-
-		const checkAssignee = await prisma.user.findUnique({
-			where: {
-				id: assigneeId,
-			},
-			select: {
-				id: true,
-				name: true,
-			},
-		});
-
-		if (checkAssignee === null) {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-			result.result = [
-				result.result,
-				json.task == null
-					? `The user with the id ${assigneeId} could not be found`
-					: undefined,
-			];
-
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-
-		createData.assigneeId = checkAssignee.id;
-	}
-
-	// Create Todo
+	// Create the project
 	try {
-		const res = await prisma.todo.create({
+		const databaseResult = await prisma.todo.create({
 			data: createData,
 		});
 
-		result.result = res;
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
 	} catch (e) {
-		// Handle prisma errors
-		if (e instanceof Prisma.PrismaClientKnownRequestError) {
-			result.success = false;
-			result.status = 500;
-			result.result = `${e.code} - ${e.message}`;
-		} else throw e;
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
 	}
-
-	return NextResponse.json(result, { status: result.status });
-}
+});
 
 // Update a todo
-// (type, id)
-// UPDATE 				(task?, description?, deadline?, assignee?)
-// START_PROGRESS
-// FINISH
-// ARCHIVE
-export async function PUT(request: NextRequest) {
-	// Get server session and check if user is given
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+/*
 
-	// Create the default result
-	let result: Partial<APIResult> = {
-		success: true,
-		status: 200,
-	};
+	/?type=<UPDATE(default) | START_PROGRESS | FINISH | ARCHIVE>
 
-	// Process json request
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Changeable by creator & assignees when not archived
+	{
+		"task": 			<task?>
+		"description": 		<description?>
+		"deadline": 		<Date?>
+		"assignees": {
+			"add": 			[<username>]?
+			"remove": 		[<username>]?
+		}?
+	}
+*/
+export const PUT = auth(async (request) => {
+	// Check auth
+	const session = request.auth;
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	const isAdmin = session.user.role === "ADMIN";
 
-		result.result = [result.result, "JSON-Body could not be parsed"];
+	// Prepare data
+	const result = defaultResult("updated");
 
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	const searchParams = request.nextUrl.searchParams;
+	const type = (searchParams.get("type") ?? "UPDATE").toUpperCase();
+
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	// Check the json data
-	if (json.type == null || json.id == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			json.type == null ? "The request type is missing" : undefined,
-			json.id == null ? "The todo id is missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	const requestType: string = json.type;
+	// Validate request
+	const validationResult = todoUpdateApiValidation.safeParse({
+		id: json.id,
+		task: json.task,
+		description: json.description,
+		deadline: json.deadline,
+		assignees: json.assignees,
+	});
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const data = validationResult.data;
 
 	// Check if the type can be handled
-	if (
-		!["UPDATE", "START_PROGRESS", "FINISH", "ARCHIVE"].includes(
-			requestType.toUpperCase(),
-		)
-	) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "The request type cannot be processed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
+	if (!["UPDATE", "START_PROGRESS", "FINISH", "ARCHIVE"].includes(type))
+		return badRequestResponse(
+			"Request-Type cannot be processed.",
+			"error-message",
+		);
 
 	// Get the todo
-	const todo = await prisma.todo.findUnique({
-		where: {
-			id: json.id,
-		},
-		include: {
-			assignee: {
-				select: {
-					id: true,
-					name: true,
-				},
+	const todo = await prisma.todo
+		.findUnique({
+			where: {
+				id: data.id,
 			},
-			creator: {
-				select: {
-					id: true,
-					name: true,
-				},
-			},
-		},
-	});
-
-	// Check if todo exists
-	if (todo == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			`The todo with the id ${json.id} could not be found`,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// Archived projects cannot be changed anymore
-	if (todo.archived) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-		result.result = [result.result, "Todo is already archived"];
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	const isByCreator = todo.creatorId === session.user.id;
-	const isByAssignee = todo.assigneeId === session.user.id;
-
-	const updateData: Prisma.Without<
-		Prisma.todoUpdateInput,
-		Prisma.todoUncheckedUpdateInput
-	> &
-		Prisma.todoUncheckedUpdateInput = {};
-
-	switch (requestType.toUpperCase()) {
-		case "UPDATE":
-			// UPDATE 				(task?, description?, deadline?, assignee?)
-
-			// Check for data
-			if (!(json.task || json.description || json.deadline || json.assignee)) {
-				result.result = [result.result, "Nothing has changed"];
-				return NextResponse.json(result, { status: result.status });
-			}
-
-			// Check the data
-			// Can be changed by creator and assignee
-			if (
-				!(isByCreator || isByAssignee) &&
-				(json.task || json.description || json.deadline)
-			) {
-				result = JSON.parse(JSON.stringify(FORBIDDEN));
-				result.result = [
-					result.result,
-					"Task, Description and Deadline can only be changed by the creator or assignee",
-				];
-				return NextResponse.json(result, {
-					status: FORBIDDEN.status,
-					statusText: FORBIDDEN.result,
-				});
-			}
-
-			if (json.task) {
-				const task: string = json.task;
-				if (task.trim().length === 0) {
-					result = JSON.parse(JSON.stringify(BAD_REQUEST));
-					result.result = [result.result, "Task cannot be empty"];
-					return NextResponse.json(result, {
-						status: BAD_REQUEST.status,
-						statusText: BAD_REQUEST.result,
-					});
-				}
-				updateData.task = task.trim();
-			}
-			if (json.description) {
-				const description: string = json.task;
-				if (description.trim().length === 0) updateData.description = null;
-				else updateData.task = description.trim();
-			}
-			if (json.deadline) {
-				const deadline = new Date(Date.parse(json.deadline));
-				updateData.deadline = deadline;
-			}
-			// Can only be changed by creator
-			if (json.assignee) {
-				if (!isByCreator) {
-					result = JSON.parse(JSON.stringify(FORBIDDEN));
-					result.result = [
-						result.result,
-						"The assigned user can only be changed by the task creator",
-					];
-					return NextResponse.json(result, {
-						status: FORBIDDEN.status,
-						statusText: FORBIDDEN.result,
-					});
-				}
-
-				const assigneeId = Number.parseInt(json.assigneeId);
-
-				const checkAssignee = await prisma.user.findUnique({
-					where: {
-						id: assigneeId,
-					},
+			include: {
+				assignees: {
 					select: {
 						id: true,
 						name: true,
 					},
-				});
+				},
+				creator: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+			},
+		})
+		.catch(() => null);
 
-				if (checkAssignee === null) {
-					result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Check if todo exists
+	if (todo == null)
+		return badRequestResponse(
+			{
+				id: data.id,
+				message: "Todo does not exist.",
+			},
+			"not-found",
+		);
 
-					result.result = [
-						result.result,
-						json.task == null
-							? `The user with the id ${assigneeId} could not be found`
-							: undefined,
-					];
+	// Check if todo is archived (Archived projects cannot be changed anymore)
+	if (todo.archived)
+		return badRequestResponse(
+			{
+				id: data.id,
+				message: "Todo is archived.",
+			},
+			"error-message",
+		);
 
-					return NextResponse.json(result, {
-						status: BAD_REQUEST.status,
-						statusText: BAD_REQUEST.result,
-					});
+	// Prepare data
+	const isByCreator = todo.creatorId === session.user.id;
+	const isByAssignee = !!todo.assignees.find(
+		(assignee) => assignee.id === session.user.id,
+	);
+
+	// Data can only be changed by creator and assignee
+	if (!(isByCreator || isByAssignee))
+		return badRequestResponse(
+			{
+				id: data.id,
+				message: "Todos can only be changed by the creator or assignees.",
+			},
+			"error-message",
+		);
+
+	const updateData: Prisma.Without<
+		Prisma.TodoUpdateInput,
+		Prisma.TodoUncheckedUpdateInput
+	> &
+		Prisma.TodoUncheckedUpdateInput = {};
+
+	switch (type) {
+		case "UPDATE":
+			updateData.task = data.task;
+			updateData.description = data.description;
+			updateData.deadline = data.deadline ? new Date(data.deadline) : undefined;
+
+			if (data.assignees) {
+				if (data.assignees.add) {
+					updateData.assignees = {
+						...updateData.assignees,
+						connect: data.assignees.add.map((username) => ({
+							username: username,
+						})),
+					};
 				}
-
-				updateData.assigneeId = assigneeId;
+				if (data.assignees.remove) {
+					updateData.assignees = {
+						...updateData.assignees,
+						connect: data.assignees.remove.map((username) => ({
+							username: username,
+						})),
+					};
+				}
 			}
 			break;
 
 		case "START_PROGRESSING":
-			if (todo.inProgress || todo.done) {
-				result = JSON.parse(JSON.stringify(BAD_REQUEST));
-				result.result = [
-					result.result,
-					todo.inProgress ? "Todo is already in progress" : undefined,
-					todo.inProgress ? "Todo is done already" : undefined,
-				];
-				return NextResponse.json(result, {
-					status: BAD_REQUEST.status,
-					statusText: BAD_REQUEST.result,
-				});
-			}
-
-			if (!(isByCreator || isByAssignee)) {
-				result = JSON.parse(JSON.stringify(FORBIDDEN));
-				result.result = [
-					result.result,
-					"Todo-State can only be changed by the creator or assignee",
-				];
-				return NextResponse.json(result, {
-					status: FORBIDDEN.status,
-					statusText: FORBIDDEN.result,
-				});
-			}
+			if (todo.inProgress)
+				return badRequestResponse(
+					{
+						id: data.id,
+						message: "Todo is in progress.",
+					},
+					"error-message",
+				);
 
 			updateData.inProgress = true;
+			updateData.done = false;
 			break;
 
 		case "FINISH":
-			if (todo.done) {
-				result = JSON.parse(JSON.stringify(BAD_REQUEST));
-				result.result = [
-					result.result,
-					todo.inProgress ? "Todo is done already" : undefined,
-				];
-				return NextResponse.json(result, {
-					status: BAD_REQUEST.status,
-					statusText: BAD_REQUEST.result,
-				});
-			}
-
-			if (!(isByCreator || isByAssignee)) {
-				result = JSON.parse(JSON.stringify(FORBIDDEN));
-				result.result = [
-					result.result,
-					"Todo-State can only be changed by the creator or assignee",
-				];
-				return NextResponse.json(result, {
-					status: FORBIDDEN.status,
-					statusText: FORBIDDEN.result,
-				});
-			}
+			if (todo.done)
+				return badRequestResponse(
+					{
+						id: data.id,
+						message: "Todo is done already.",
+					},
+					"error-message",
+				);
 
 			updateData.inProgress = false;
 			updateData.done = true;
 			break;
 
 		case "ARCHIVE":
-			if (!isByCreator) {
-				result = JSON.parse(JSON.stringify(FORBIDDEN));
-				result.result = [
-					result.result,
-					"The todo can only be archived by the creator",
-				];
-				return NextResponse.json(result, {
-					status: FORBIDDEN.status,
-					statusText: FORBIDDEN.result,
-				});
-			}
+			if (!isByCreator)
+				return badRequestResponse(
+					{
+						id: data.id,
+						message: "Todos can only be archived by the creator.",
+					},
+					"error-message",
+				);
 
 			updateData.inProgress = false;
 			updateData.done = true;
@@ -438,29 +271,23 @@ export async function PUT(request: NextRequest) {
 
 	// Update Todo Data
 	try {
-		const res = await prisma.todo.update({
+		const databaseResult = await prisma.todo.update({
 			where: {
 				id: todo.id,
 			},
 			data: updateData,
 		});
 
-		result.result = res;
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
 	} catch (e) {
-		// Handle prisma errors
-		if (e instanceof Prisma.PrismaClientKnownRequestError) {
-			result.success = false;
-			result.status = 500;
-			result.result = `${e.code} - ${e.message}`;
-		} else throw e;
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
 	}
-
-	return NextResponse.json(result, { status: result.status });
-}
- */
-
-import { NextResponse } from "next/server";
-
-export async function GET() {
-	return NextResponse.json("Hello world");
-}
+});

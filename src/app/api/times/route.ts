@@ -31,7 +31,7 @@ export const GET = auth(async (request) => {
 	// Prepare data
 	const result = defaultResult("ok");
 
-	// Check JSON
+	// Prepare request
 	const searchParams = request.nextUrl.searchParams;
 	const allSearch = searchParams.get("all");
 	const periodFrom = searchParams.get("periodFrom");
