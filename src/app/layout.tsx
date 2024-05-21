@@ -1,5 +1,6 @@
 // UI
 import { Toaster } from "@/components/ui/sonner";
+import NextTopLoader from "nextjs-toploader";
 
 // Provider
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +24,7 @@ export default async function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body>
+				<NextTopLoader showSpinner={false} />
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<SessionProvider>
 						<TooltipProvider delayDuration={100}>

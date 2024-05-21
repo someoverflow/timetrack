@@ -30,7 +30,7 @@ import type { Prisma } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // React
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -69,6 +69,10 @@ export default function TimerSection({
 	const editTime = searchParams.get("edit");
 
 	const [addVisible, setAddVisible] = useState(false);
+
+	useEffect(() => {
+		router.refresh()
+	}, [router])
 
 	function changeYearMonth(change: string) {
 		const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -191,6 +195,7 @@ export default function TimerSection({
 					</Tooltip>
 					<TimerAdd
 						username={username}
+						projects={projects}
 						visible={addVisible}
 						setVisible={setAddVisible}
 					/>

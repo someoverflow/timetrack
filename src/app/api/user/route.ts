@@ -1,273 +1,293 @@
 import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
-import { BAD_REQUEST, NOT_ADMIN, NO_AUTH } from "@/lib/server-utils";
+import {
+	NOT_ADMIN_RESPONSE,
+	NO_AUTH_RESPONSE,
+	badRequestResponse,
+	defaultResult,
+	parseJsonBody,
+} from "@/lib/server-utils";
 import { auth } from "@/lib/auth";
 import { randomUUID } from "node:crypto";
-
-// TODO: Add project to user
+import {
+	nanoIdValidation,
+	userCreateApiValidation,
+	userUpdateApiValidation,
+} from "@/lib/zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 // Create
 export const PUT = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("created", 201);
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
+	// Check JSON
+	const json = await parseJsonBody(request);
+	if (json instanceof NextResponse) return json;
 
-	const json = await request.json();
+	// Validate request
+	const validationResult = userCreateApiValidation.safeParse({
+		name: json.name,
+		username: json.username,
+		password: json.password,
+		email: json.email,
+		role: json.role,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
+	}
+	const data = validationResult.data;
 
-	if (
-		json.email == null ||
-		json.password == null ||
-		json.username == null ||
-		json.name == null
-	) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	const role =
+		data.role === "ADMIN" || data.role === "USER" ? data.role : "USER";
 
-		result.result = [
-			result.result,
-			json.username == null ? "Tag Missing" : undefined,
-			json.name == null ? "Name Missing" : undefined,
-			json.password == null ? "Password Missing" : undefined,
-			json.email == null ? "Mail Missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Check if new username exists when given
+	const databaseUser = await prisma.user
+		.findUnique({
+			where: { username: data.username },
+		})
+		.catch(() => null);
+	if (databaseUser) {
+		return badRequestResponse(
+			{
+				username: data.username,
+				message: "User with the username exists.",
+			},
+			"duplicate-found",
+		);
 	}
 
-	if (json.role == null) json.role = "USER";
-	if (!(json.role === "USER" || json.role === "ADMIN")) json.role = "USER";
-
-	result.result = await prisma.user.create({
-		data: {
-			username: json.username,
-			name: json.name,
-			email: json.email,
-			password: await hash(json.password, 12),
-			role: json.role,
-		},
-		select: {
-			username: true,
-			name: true,
-			email: true,
-			role: true,
-		},
-	});
-
-	return NextResponse.json(result, { status: result.status });
+	// Create the user
+	try {
+		const databaseResult = await prisma.user.create({
+			data: {
+				username: data.username,
+				name: data.name,
+				email: data.email,
+				password: await hash(data.password, 12),
+				role: role,
+			},
+			select: {
+				username: true,
+				name: true,
+				email: true,
+				role: true,
+			},
+		});
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });
 
 // Update
 export const POST = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("updated");
 
-	const json = await request.json();
+	// Check JSON
+	const json = await parseJsonBody(request);
+	if (json instanceof NextResponse) return json;
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
+	// Validate request
+	const validationResult = userUpdateApiValidation.safeParse({
+		id: json.id,
+		name: json.name,
+		username: json.username,
+		password: json.password,
+		email: json.email,
+		role: json.role,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
+	}
+	const data = validationResult.data;
 
-	if (
-		json.id == null ||
-		json.username == null ||
-		json.mail == null ||
-		json.role == null ||
-		json.name == null
-	) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			"ID, Tag, Name, Mail or Role should be given",
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Check the user
+	const databaseUser = await prisma.user
+		.findUnique({
+			where: { id: json.id },
+		})
+		.catch(() => null);
+	if (!databaseUser) {
+		return badRequestResponse(
+			{
+				id: data.id,
+				message: "User does not exist.",
+			},
+			"not-found",
+		);
+	}
+	// Check if new username exists when given
+	if (data.username) {
+		const databaseUser = await prisma.user
+			.findUnique({
+				where: { username: data.username },
+				select: { id: true },
+			})
+			.catch(() => null);
+		if (databaseUser && databaseUser.id !== data.id) {
+			return badRequestResponse(
+				{
+					username: data.username,
+					message: "User with the new username exists.",
+				},
+				"duplicate-found",
+			);
+		}
+	}
+	// Check for changes of admin
+	if (databaseUser.username === "admin") {
+		if (data.username !== "admin" || data.role !== "ADMIN")
+			return badRequestResponse(
+				"Tag of admin cannot be changed",
+				"error-message",
+			);
 	}
 
+	// Prepare data
 	const updateData: Partial<{
+		validJwtId: string;
+
 		username: string;
 		name: string | undefined;
 		email: string | undefined;
 		role: "ADMIN" | "USER";
 		password: string | undefined;
 	}> = {
-		username: json.tag,
-		name: json.name,
-		email: json.mail,
-		role: json.role === "ADMIN" || json.role === "USER" ? json.role : "USER",
+		validJwtId: randomUUID(), // Invalidate session
+		username: data.username,
+		name: data.name,
+		email: data.email,
+		role: data.role === "ADMIN" || data.role === "USER" ? data.role : undefined,
+		password: data.password ? await hash(data.password, 12) : undefined,
 	};
 
-	if (json.password) {
-		if (json.password.trim().length === 0) {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-			result.result = [result.result, "Password is empty"];
-
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-		updateData.password = await hash(json.password, 12);
-	}
-
-	const user = await prisma.user.findUnique({
-		where: { id: json.id },
-	});
-	if (!user) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "User not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
+	// Update the user
+	try {
+		const databaseResult = await prisma.user.update({
+			where: {
+				id: data.id,
+			},
+			data: updateData,
+			select: {
+				id: true,
+				username: true,
+				email: true,
+				role: true,
+				updatedAt: true,
+				createdAt: true,
+			},
 		});
+
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
 	}
-	if (user.username === "admin") {
-		if (updateData.username !== "admin" || updateData.role !== "ADMIN") {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-			result.result = [result.result, "Tag of admin cannot be changed"];
-
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-	}
-
-	result.result = await prisma.user.update({
-		where: {
-			id: json.id,
-		},
-		data: {
-			validJwtId: randomUUID(), // Invalidate session
-			...updateData,
-		},
-		select: {
-			id: true,
-			username: true,
-			email: true,
-			role: true,
-			updatedAt: true,
-			createdAt: true,
-		},
-	});
-
-	return NextResponse.json(result, { status: result.status });
 });
 
 // Delete
 export const DELETE = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("deleted");
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
+	// Check JSON
+	const json = await parseJsonBody(request);
+	if (json instanceof NextResponse) return json;
 
-	const json = await request.json();
-
-	if (json.id == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "User ID Missing"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Validate request
+	const validationResult = nanoIdValidation.safeParse(json.id);
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
 	}
+	const id = validationResult.data;
 
-	if (json.id === 1) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "The admin account cannot be deleted"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	const userToDelete = await prisma.user.findUnique({ where: { id: json.id } });
-	if (!userToDelete) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "User not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-	if (userToDelete?.username === "admin") {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "The admin account cannot be deleted"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	// TODO: Delete Todo or change creator to assigned
-	const [userResult] = await prisma.$transaction([
-		prisma.user.delete({
-			where: {
-				id: userToDelete.id,
+	const databaseUser = await prisma.user
+		.findUnique({
+			where: { id: id },
+			select: {
+				username: true,
+				createdTodos: {
+					select: {
+						id: true,
+						assignees: {
+							select: { id: true },
+						},
+					},
+				},
 			},
-		}),
-	]);
+		})
+		.catch(() => null);
+	if (!databaseUser) {
+		return badRequestResponse(
+			{
+				id: id,
+				message: "User does not exist.",
+			},
+			"not-found",
+		);
+	}
+	if (databaseUser.username === "admin")
+		return badRequestResponse(
+			"Admin account cannot be deleted.",
+			"error-message",
+		);
 
-	result.result = [userResult];
+	// Delete the chip
+	try {
+		// TODO: Delete Todo or change creator to assigned
 
-	return NextResponse.json(result, { status: result.status });
+		const databaseResult = await prisma.user.delete({
+			where: {
+				id: id,
+			},
+		});
+
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });

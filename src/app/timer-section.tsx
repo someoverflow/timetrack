@@ -85,17 +85,16 @@ export default function TimerSection() {
 	}, [currentTimer, fetchedTimer, data.running]);
 
 	const fetchCurrentTimer = useCallback(() => {
-		fetch("/api/times?indicator=current")
+		fetch("/api/times")
 			.then((result) => result.json())
 			.then((result) => {
 				if (result.success === false) {
 					updateData({
 						stop: true,
 					});
-					toast.error("An error occurred while updating", {
+					toast.error(`An error occurred while updating (${result.type})`, {
 						description: "Reloading the page could solve the problem",
 					});
-					console.error(result);
 					return;
 				}
 
@@ -106,20 +105,20 @@ export default function TimerSection() {
 					});
 				}
 
-				if (result.result.length === 0) {
+				if (result.result?.end === null) {
+					const timer: Timer = result.result;
+					setFetchedTimer(timer);
+
+					updateData({
+						running: true,
+					});
+				} else {
 					updateData({
 						running: false,
 					});
 
 					setFetchedTimer(undefined);
 					setCurrentTimer(undefined);
-				} else {
-					const timer: Timer = result.result[0];
-					setFetchedTimer(timer);
-
-					updateData({
-						running: true,
-					});
 				}
 				count();
 			})
@@ -165,12 +164,9 @@ export default function TimerSection() {
 			setCurrentTimer(undefined);
 		}
 
-		fetch(
-			`/api/times/toggle?type=Website&fixTime=${data.start}&value=${
-				start ? "start" : "stop"
-			}`,
-			{ method: "PUT" },
-		)
+		fetch(`/api/times/toggle?type=Website&fixTime=${data.start}`, {
+			method: "PUT",
+		})
 			.then((result) => result.json())
 			.then(() => {
 				updateData({

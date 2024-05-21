@@ -78,7 +78,6 @@ export default async function History({
 	const [history, projects] = await prisma.$transaction([
 		prisma.time.findMany({
 			orderBy: {
-				//id: "desc",
 				start: "desc",
 			},
 			where: {

@@ -1,22 +1,37 @@
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { NextResponse } from "next/server";
-import { NO_AUTH } from "@/lib/server-utils";
+import {
+	NO_AUTH,
+	NO_AUTH_RESPONSE,
+	badRequestResponse,
+	defaultResult,
+} from "@/lib/server-utils";
 import { auth } from "@/lib/auth";
+import { timesToggleApiValidation } from "@/lib/zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export const PUT = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-	const data = await prisma.time
-		.findMany({
-			take: 1,
+	// Prepare data
+	const result = defaultResult("updated");
+
+	// Validate request
+	const validationResult = timesToggleApiValidation.safeParse({
+		type: request.nextUrl.searchParams.get("type") ?? undefined,
+		fixTime: request.nextUrl.searchParams.get("fixTime") ?? undefined,
+	});
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const data = validationResult.data;
+
+	const databaseResult = await prisma.time
+		.findFirst({
 			orderBy: {
-				id: "desc",
+				start: "desc",
 			},
 			where: {
 				userId: session.user.id,
@@ -25,54 +40,42 @@ export const PUT = auth(async (request) => {
 		})
 		.catch(() => null);
 
-	const result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
-
-	const type = request.nextUrl.searchParams.get("type");
-	const requestTime = request.nextUrl.searchParams.get("fixTime");
-
-	let changeDate = new Date();
-	if (requestTime) changeDate = new Date(Date.parse(requestTime));
-
-	if (data == null || data.length === 0) {
-		result.result = await prisma.time
-			.create({
+	try {
+		if (databaseResult === null) {
+			const createResult = await prisma.time.create({
 				data: {
 					userId: session.user.id,
-					start: changeDate,
-					startType: type ? type : "API",
+					start: data.fixTime ?? new Date(),
+					startType: data.type ?? "API",
 				},
-			})
-			.catch((e) => {
-				result.success = false;
-				result.status = 500;
-				return e.meta.cause;
 			});
-	} else {
-		const item = data[0];
+			result.result = createResult;
+		} else {
+			const changeDate = data.fixTime ? new Date(data.fixTime) : new Date();
+			const timePassed = getTimePassed(databaseResult.start, changeDate);
 
-		const timePassed = getTimePassed(item.start, changeDate);
-
-		const result = await prisma.time
-			.update({
+			const updateResult = await prisma.time.update({
 				data: {
-					end: changeDate,
-					endType: type ? type : "API",
 					time: timePassed,
+					end: changeDate,
+					endType: data.type ?? "API",
 				},
 				where: {
-					id: item.id,
+					id: databaseResult.id,
 				},
-			})
-			.catch((e) => {
-				result.success = false;
-				result.status = 500;
-				return e.meta.cause;
 			});
-	}
+			result.result = updateResult;
+		}
 
-	return NextResponse.json(result, { status: result.status });
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });

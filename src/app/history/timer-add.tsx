@@ -1,7 +1,7 @@
 "use client";
 
 // UI
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ListPlus, SaveAll } from "lucide-react";
+import { Check, ChevronsUpDown, ListPlus, SaveAll } from "lucide-react";
 import { toast } from "sonner";
 
 // Navigation
@@ -27,20 +27,40 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface timerAddState {
 	start: string;
 	end: string;
 	notes: string;
 	loading: boolean;
+	projectSelectionOpen: boolean;
+	project: string | null;
 }
 
 export default function TimerAdd({
 	username,
+	projects,
 	visible,
 	setVisible,
 }: {
 	username: string;
+	projects: {
+		id: string;
+		name: string;
+	}[];
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
@@ -54,6 +74,8 @@ export default function TimerAdd({
 			end: new Date().toLocaleString("sv").replace(" ", "T"),
 			notes: "",
 			loading: false,
+			projectSelectionOpen: false,
+			project: null,
 		},
 	);
 
@@ -69,10 +91,11 @@ export default function TimerAdd({
 			body: JSON.stringify({
 				username: username,
 				notes: data.notes,
-				start: new Date(data.start).toUTCString(),
-				end: new Date(data.end).toUTCString(),
+				start: new Date(data.start).toISOString(),
+				end: new Date(data.end).toISOString(),
 				startType: "Website",
 				endType: "Website",
+				project: data.project ?? undefined,
 			}),
 		});
 
@@ -80,7 +103,16 @@ export default function TimerAdd({
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setData({
 				start: new Date().toLocaleString("sv").replace(" ", "T"),
 				end: new Date().toLocaleString("sv").replace(" ", "T"),
@@ -95,30 +127,22 @@ export default function TimerAdd({
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
 
 	return (
@@ -145,6 +169,90 @@ export default function TimerAdd({
 								className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 								type="always"
 							>
+								<div className="h-full w-full grid p-1 gap-1.5">
+									<Popover
+										open={data.projectSelectionOpen}
+										onOpenChange={(open) =>
+											setData({ projectSelectionOpen: open })
+										}
+									>
+										<Label
+											htmlFor="project-button"
+											className="pl-2 text-muted-foreground"
+										>
+											Project
+										</Label>
+										<PopoverTrigger asChild>
+											<Button
+												id="project-button"
+												variant="outline"
+												role="combobox"
+												aria-expanded={data.projectSelectionOpen}
+												className="w-full justify-between border-2 transition duration-300"
+											>
+												{data.project
+													? projects.find(
+															(project) => project.id === data.project,
+														)?.name
+													: "No related project"}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="p-2">
+											<Command>
+												<CommandInput
+													placeholder="Search project..."
+													className="h-8"
+												/>
+												{projects.length === 0 ? (
+													<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+														<p>No projects found.</p>
+														<Link
+															href="http://localhost:3000/settings?page=projects"
+															className={buttonVariants({
+																variant: "link",
+																className: "flex-col items-start",
+															})}
+														>
+															<p>Click to create one now</p>
+														</Link>
+													</div>
+												) : (
+													<CommandGroup>
+														{projects.map((project) => (
+															<CommandItem
+																key={`project-selection-add-${project.id}`}
+																value={`${project.id}`}
+																onSelect={() => {
+																	setData({
+																		project:
+																			data.project !== project.id
+																				? project.id
+																				: null,
+																		projectSelectionOpen: false,
+																	});
+																}}
+															>
+																<Check
+																	className={cn(
+																		"mr-2 h-4 w-4",
+																		data.project === project.id
+																			? "opacity-100"
+																			: "opacity-0",
+																	)}
+																/>
+																{project.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												)}
+											</Command>
+										</PopoverContent>
+									</Popover>
+								</div>
+
+								<div id="divider" className="h-4" />
+
 								<div className="h-full w-full grid p-1 gap-1.5">
 									<Label
 										htmlFor="timerModal-notes-add"
@@ -225,7 +333,16 @@ export default function TimerAdd({
 	);
 }
 
-export function TimerAddServer({ username }: { username: string }) {
+export function TimerAddServer({
+	username,
+	projects,
+}: {
+	username: string;
+	projects: {
+		id: string;
+		name: string;
+	}[];
+}) {
 	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
 		(prev: timerAddState, next: Partial<timerAddState>) => ({
@@ -237,6 +354,8 @@ export function TimerAddServer({ username }: { username: string }) {
 			end: new Date().toLocaleString("sv").replace(" ", "T"),
 			notes: "",
 			loading: false,
+			project: null,
+			projectSelectionOpen: false,
 		},
 	);
 
@@ -256,6 +375,7 @@ export function TimerAddServer({ username }: { username: string }) {
 				end: new Date(data.end).toUTCString(),
 				startType: "Website",
 				endType: "Website",
+				project: data.project ?? undefined,
 			}),
 		});
 
@@ -343,6 +463,90 @@ export function TimerAddServer({ username }: { username: string }) {
 									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 									type="always"
 								>
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Popover
+											open={data.projectSelectionOpen}
+											onOpenChange={(open) =>
+												setData({ projectSelectionOpen: open })
+											}
+										>
+											<Label
+												htmlFor="project-button"
+												className="pl-2 text-muted-foreground"
+											>
+												Project
+											</Label>
+											<PopoverTrigger asChild>
+												<Button
+													id="project-button"
+													variant="outline"
+													role="combobox"
+													aria-expanded={data.projectSelectionOpen}
+													className="w-full justify-between border-2 transition duration-300"
+												>
+													{data.project
+														? projects.find(
+																(project) => project.id === data.project,
+															)?.name
+														: "No related project"}
+													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+												</Button>
+											</PopoverTrigger>
+											<PopoverContent className="p-2">
+												<Command>
+													<CommandInput
+														placeholder="Search project..."
+														className="h-8"
+													/>
+													{projects.length === 0 ? (
+														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+															<p>No projects found.</p>
+															<Link
+																href="http://localhost:3000/settings?page=projects"
+																className={buttonVariants({
+																	variant: "link",
+																	className: "flex-col items-start",
+																})}
+															>
+																<p>Click to create one now</p>
+															</Link>
+														</div>
+													) : (
+														<CommandGroup>
+															{projects.map((project) => (
+																<CommandItem
+																	key={`project-selection-add-${project.id}`}
+																	value={`${project.id}`}
+																	onSelect={() => {
+																		setData({
+																			project:
+																				data.project !== project.id
+																					? project.id
+																					: null,
+																			projectSelectionOpen: false,
+																		});
+																	}}
+																>
+																	<Check
+																		className={cn(
+																			"mr-2 h-4 w-4",
+																			data.project === project.id
+																				? "opacity-100"
+																				: "opacity-0",
+																		)}
+																	/>
+																	{project.name}
+																</CommandItem>
+															))}
+														</CommandGroup>
+													)}
+												</Command>
+											</PopoverContent>
+										</Popover>
+									</div>
+
+									<div id="divider" className="h-4" />
+
 									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
 											htmlFor="timerModal-notes-add"

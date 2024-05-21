@@ -91,20 +91,13 @@ export function ProjectSection({
 			method: "POST",
 			body: JSON.stringify({
 				name: search,
-				userId: userData.id,
+				userId: [userData.id],
 			}),
 		});
 
 		setData({
 			loading: false,
 		});
-
-		if (result.ok) {
-			toast.success("Successfully created project.");
-			setSearch("");
-			router.refresh();
-			return;
-		}
 
 		const resultData: APIResult = await result.json().catch(() => {
 			toast.error("An error occurred", {
@@ -114,22 +107,30 @@ export function ProjectSection({
 			});
 			return;
 		});
-		if (!resultData) return;
 
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
+		if (resultData.success) {
+			toast.success("Successfully created project.");
+			setSearch("");
+			router.refresh();
 			return;
 		}
 
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
+		}
 	}
 
 	async function deleteProject(id: string) {
@@ -148,12 +149,6 @@ export function ProjectSection({
 			loading: false,
 		});
 
-		if (result.ok) {
-			toast.success("Successfully deleted project.");
-			router.refresh();
-			return;
-		}
-
 		const resultData: APIResult = await result.json().catch(() => {
 			toast.error("An error occurred", {
 				description: "Result could not be proccessed",
@@ -162,22 +157,29 @@ export function ProjectSection({
 			});
 			return;
 		});
-		if (!resultData) return;
 
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
+		if (resultData.success) {
+			toast.success("Successfully deleted project.");
+			router.refresh();
 			return;
 		}
 
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
+		}
 	}
 
 	return (
@@ -224,7 +226,12 @@ export function ProjectSection({
 						>
 							<div className="w-full flex flex-row items-center justify-between">
 								<div className="w-full">
-									<h4 className="text-sm font-semibold">{project.name}</h4>
+									<div className="flex flex-row gap-2 items-center">
+										<h4 className="text-sm font-semibold">{project.name}</h4>
+										<Badge variant="default" className="text-xs">
+											{project.id}
+										</Badge>
+									</div>
 									<div className="w-fit">
 										<Separator className="mt-2 mb-4 w-full" />
 										<div className="flex flex-row items-center gap-1 text-xs">
@@ -241,17 +248,6 @@ export function ProjectSection({
 									</div>
 								</div>
 
-								<div className="absolute right-3 top-3 ">
-									<Tooltip delayDuration={300}>
-										<TooltipTrigger>
-											<Badge variant="default" className="text-xs">
-												{project.id}
-											</Badge>
-										</TooltipTrigger>
-										{/* TODO: Add functionallity */}
-										<TooltipContent>Merge Project</TooltipContent>
-									</Tooltip>
-								</div>
 								<div className="flex flex-col w-min gap-1">
 									<Button
 										size="icon"

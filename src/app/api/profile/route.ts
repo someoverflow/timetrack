@@ -1,109 +1,80 @@
 import prisma from "@/lib/prisma";
 import { validatePassword } from "@/lib/utils";
-import { NO_AUTH, BAD_REQUEST } from "@/lib/server-utils";
+import {
+	NO_AUTH,
+	BAD_REQUEST,
+	NO_AUTH_RESPONSE,
+	defaultResult,
+	parseJsonBody,
+	badRequestResponse,
+} from "@/lib/server-utils";
 import { hash } from "bcryptjs";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { randomUUID } from "node:crypto";
+import { profileApiValidation } from "@/lib/zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 // Update profile
 export const PUT = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
+	// Prepare data
+	const result = defaultResult("updated", 200);
 
-	const json = await request.json().catch(() => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-		result.result = [result.result, "JSON Body could not be parsed"];
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	const containsName = json.name != null;
-	const containsMail = json.mail != null;
-	const containsPassword = json.password != null;
-
-	if (!(containsName || containsMail || containsPassword)) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-		result.result = [
-			result.result,
-			"Nothing to change (name, mail or password)",
-		];
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Validate request
+	const validationResult = profileApiValidation.safeParse({
+		name: json.name,
+		mail: json.mail,
+		password: json.password,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
 	}
+	const data = validationResult.data;
 
-	const data: {
-		password: string | undefined;
-		name: string | undefined;
-		email: string | undefined;
-	} = {
-		password: undefined,
-		name: undefined,
-		email: undefined,
-	};
+	// Prepare password
+	const password = data.password ? await hash(data.password, 12) : undefined;
 
-	if (containsName) {
-		const name: string = json.name;
-		if (name.trim() === "") {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-			result.result = [result.result, "Your name should not be empty..."];
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-		data.name = name;
-	}
-	if (containsMail) data.email = json.mail;
-	if (containsPassword) {
-		const password: string = json.password;
-
-		if (!validatePassword(password)) {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-			result.result = [
-				result.result,
-				"Invalid Password (8-20 chars, a-z, A-Z, 0-9)",
-			];
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-
-		data.password = await hash(password, 12);
-	}
-
-	const res = await prisma.user
-		.update({
+	// Update the user
+	try {
+		const databaseResult = await prisma.user.update({
 			where: {
 				id: session.user.id,
 			},
-			data: data,
+			data: {
+				// Invalidate all sessions
+				validJwtId: randomUUID(),
+				name: data.name ?? undefined,
+				email: data.mail ?? undefined,
+				password: password,
+			},
 			select: {
 				id: true,
+				name: true,
+				username: true,
+				email: true,
+				validJwtId: true,
 				updatedAt: true,
 			},
-		})
-		.catch((e) => {
-			result.success = false;
-			result.status = 500;
-			return `System error "${e.message}"`;
 		});
-	result.result = res;
-
-	return NextResponse.json(result, { status: result.status });
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });

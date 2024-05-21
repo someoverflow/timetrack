@@ -1,260 +1,200 @@
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { NO_AUTH, BAD_REQUEST, NOT_ADMIN } from "@/lib/server-utils";
-import { NextResponse } from "next/server";
+import { chipApiValidation, chipIdValidation } from "@/lib/zod";
+import {
+	parseJsonBody,
+	NO_AUTH_RESPONSE,
+	NOT_ADMIN_RESPONSE,
+	badRequestResponse,
+	defaultResult,
+} from "@/lib/server-utils";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 // Create a chip
 export const POST = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("created", 201);
 
-	let result: APIResult = {
-		success: true,
-		status: 201,
-		result: undefined,
-	};
-
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	if (json.id == null || json.userId == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			json.id == null ? "ID Missing" : undefined,
-			json.userId == null ? "User ID Missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Validate request
+	const validationResult = chipApiValidation.safeParse({
+		id: json.id,
+		userId: json.userId,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
 	}
+	const data = validationResult.data;
 
-	if ((json.id as string).trim().length === 0) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "ID is empty"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
+	// Check for duplicated chip
 	const check = await prisma.chip.findUnique({
 		where: {
-			id: json.id,
+			id: data.id,
 		},
 		select: {
 			id: true,
-			userId: true,
 			user: true,
 		},
 	});
 
 	if (check) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			`Chip ID is already in use by ${
-				check.userId === json.userId ? "this user" : check.user.username
-			}`,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+		return badRequestResponse(
+			{
+				duplicateId: check.user.id,
+				message: `Chip ID is already in use by ${
+					check.user.id === json.userId ? "this user" : check.user.username
+				}`,
+			},
+			"duplicate-found",
+		);
 	}
 
-	const res = await prisma.chip
-		.create({
+	// Create the chip
+	try {
+		const databaseResult = await prisma.chip.create({
 			data: {
-				id: json.id,
-				userId: json.userId,
+				id: data.id,
+				userId: data.userId,
 			},
-		})
-		.catch(() => {
-			return null;
 		});
-
-	if (!res) {
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
 		result.success = false;
 		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
-
-	result.result = res;
-
-	return NextResponse.json(result, { status: result.status });
 });
 
-// Update a chip
+// Change the user of a chip
 export const PUT = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("updated");
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
-
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	if (json.id == null || json.userId == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [
-			result.result,
-			json.id == null ? "ID Missing" : undefined,
-			json.userId == null ? "User ID Missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Validate request
+	const validationResult = chipApiValidation.safeParse({
+		id: json.id,
+		userId: json.userId,
+	});
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
 	}
+	const data = validationResult.data;
 
-	result.result = await prisma.chip
-		.update({
+	// Update the user
+	try {
+		const databaseResult = await prisma.chip.update({
 			where: {
-				id: json.id,
+				id: data.id,
 			},
 			data: {
-				userId: json.userId,
+				userId: data.userId,
 			},
-		})
-		.catch((e) => {
-			result.success = false;
-			result.status = 500;
-			return e.meta.cause;
 		});
 
-	return NextResponse.json(result, { status: result.status });
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		if (e instanceof PrismaClientKnownRequestError) {
+			switch (e.code) {
+				case "P2025":
+					return badRequestResponse(
+						{
+							id: data.id,
+							message: "Chip does not exist.",
+						},
+						"not-found",
+					);
+			}
+
+			result.result = `Server issue occurred ${e.code}`;
+		} else result.result = "Server issue occurred";
+
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
 });
 
 // Delete a chip
 export const DELETE = auth(async (request) => {
+	// Check auth
 	const session = request.auth;
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
+	if (session.user.role !== "ADMIN") return NOT_ADMIN_RESPONSE;
 
-	if (session.user.role !== "ADMIN")
-		return NextResponse.json(NOT_ADMIN, {
-			status: NOT_ADMIN.status,
-			statusText: NOT_ADMIN.result,
-		});
+	// Prepare data
+	const result = defaultResult("deleted");
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
-
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON Body could not be parsed"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	if (json.id == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "ID Missing"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Validate request
+	const validationResult = chipIdValidation.safeParse(json.id);
+	if (!validationResult.success) {
+		const validationError = validationResult.error;
+		return badRequestResponse(validationError.issues, "validation");
 	}
+	const id = validationResult.data;
 
-	const check = await prisma.chip.findUnique({
-		where: {
-			id: json.id,
-		},
-	});
-
-	if (!check) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "Chip ID not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	const res = await prisma.chip
-		.delete({
+	// Delete the chip
+	try {
+		const databaseResult = await prisma.chip.delete({
 			where: {
-				id: json.id,
+				id: id,
 			},
-		})
-		.catch(() => {
-			return null;
 		});
 
-	if (!res) {
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		if (e instanceof PrismaClientKnownRequestError) {
+			switch (e.code) {
+				case "P2025":
+					return badRequestResponse(
+						{
+							id: id,
+							message: "Chip does not exist.",
+						},
+						"not-found",
+					);
+			}
+
+			result.result = `Server issue occurred ${e.code}`;
+		} else result.result = "Server issue occurred";
+
 		result.success = false;
 		result.status = 500;
+		result.type = "unknown";
+		console.warn(e);
 		return NextResponse.json(result, { status: result.status });
 	}
-
-	result.result = res;
-
-	return NextResponse.json(result, { status: result.status });
 });
