@@ -158,7 +158,7 @@ export default async function History({
 								username={target.username}
 							/>
 						) : (
-							<TimerAddServer username={target.username} />
+							<TimerAddServer username={target.username} projects={projects} />
 						)}
 					</>
 				) : (
