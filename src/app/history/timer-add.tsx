@@ -371,8 +371,8 @@ export function TimerAddServer({
 			body: JSON.stringify({
 				username: username,
 				notes: data.notes,
-				start: new Date(data.start).toUTCString(),
-				end: new Date(data.end).toUTCString(),
+				start: new Date(data.start).toISOString(),
+				end: new Date(data.end).toISOString(),
 				startType: "Website",
 				endType: "Website",
 				project: data.project ?? undefined,
@@ -383,7 +383,16 @@ export function TimerAddServer({
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setData({
 				start: new Date().toLocaleString("sv").replace(" ", "T"),
 				end: new Date().toLocaleString("sv").replace(" ", "T"),
@@ -398,30 +407,22 @@ export function TimerAddServer({
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
 
 	return (

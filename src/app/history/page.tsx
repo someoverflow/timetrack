@@ -101,14 +101,14 @@ export default async function History({
 	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
 		yearMonth = Object.keys(historyData)[0];
 
-	const timeStrings: string[] = [];
-	try {
-		for (const data of historyData[yearMonth]) {
-			if (data.time) timeStrings.push(data.time);
-		}
-	} catch (e) {}
+	const timeStrings = (historyData[yearMonth] || [])
+		.map((data) => data.time)
+		.filter(Boolean); // Remove all undefined or null
+
 	const totalTime =
-		timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
+		timeStrings.length === 0
+			? "00:00:00"
+			: getTotalTime(timeStrings as string[]);
 
 	return (
 		<Navigation>
@@ -126,7 +126,7 @@ export default async function History({
 						username={user.username}
 					/>
 				) : (
-					<TimerAddServer username={user.username} />
+					<TimerAddServer username={user.username} projects={projects} />
 				)}
 			</section>
 		</Navigation>

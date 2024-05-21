@@ -35,6 +35,7 @@ import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import dynamic from "next/dynamic";
+import TimerExportDialog from "./timer-export";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 type Timer = Prisma.TimeGetPayload<{
@@ -71,38 +72,16 @@ export default function TimerSection({
 	const [addVisible, setAddVisible] = useState(false);
 
 	useEffect(() => {
-		router.refresh()
-	}, [router])
+		router.refresh();
+	}, [router]);
 
-	function changeYearMonth(change: string) {
+	const changeYearMonth = (change: string) => {
 		const current = new URLSearchParams(Array.from(searchParams.entries()));
 		current.set("ym", change);
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 		router.push(`${pathname}${query}`);
 		router.refresh();
-	}
-
-	const downloadCSV = (yearMonth: string, totalTime: string) => {
-		let result = "Date;Start;End;Time;Notes";
-
-		for (const time of history[yearMonth].reverse()) {
-			if (!time.end) return;
-			result = `${result}\n${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
-				time.time
-			};"${time.notes ? time.notes : ""}"`;
-		}
-
-		result = `${result}\n\n;;;${totalTime};`;
-
-		const element = document.createElement("a");
-		const file = new Blob([result], {
-			type: "text/plain",
-		});
-		element.href = URL.createObjectURL(file);
-		element.download = `Time ${yearMonth}.csv`;
-		document.body.appendChild(element);
-		element.click();
 	};
 
 	return (
@@ -158,25 +137,11 @@ export default function TimerSection({
 					</Popover>
 				</div>
 				<div className="w-max">
-					<Tooltip delayDuration={500}>
-						<TooltipTrigger asChild>
-							<Button
-								variant="outline"
-								size="icon"
-								disabled={yearMonth == null || !historyKeys.includes(yearMonth)}
-								onClick={() => downloadCSV(yearMonth, totalTime)}
-							>
-								<FileDown className="h-5 w-5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent side="bottom">
-							{/* Open popup to filter */}
-							<p className="text-center">
-								Download a <code>.csv</code> containing all
-								<br /> the current visible entries
-							</p>
-						</TooltipContent>
-					</Tooltip>
+					<TimerExportDialog
+						history={history}
+						yearMonth={yearMonth}
+						projects={projects}
+					/>
 				</div>
 				<div className="w-max">
 					<Tooltip delayDuration={500}>
