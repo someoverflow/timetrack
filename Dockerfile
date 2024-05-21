@@ -41,10 +41,9 @@ USER nextjs
 
 EXPOSE 3000
 
+ENV AUTH_TRUST_HOST true
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
-
-ENV NEXTAUTH_URL http://localhost:3000/api/auth
 
 ENV DATABASE_URL mysql://root:root@localhost:3306/timetrack
 
