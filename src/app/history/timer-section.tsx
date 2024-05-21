@@ -195,6 +195,7 @@ export default function TimerSection({
 					</Tooltip>
 					<TimerAdd
 						username={username}
+						projects={projects}
 						visible={addVisible}
 						setVisible={setAddVisible}
 					/>
