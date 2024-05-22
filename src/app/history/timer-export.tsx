@@ -35,6 +35,28 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
+const umlautMap: Record<string, string> = {
+	"\u00dc": "UE",
+	"\u00c4": "AE",
+	"\u00d6": "OE",
+	"\u00fc": "ue",
+	"\u00e4": "ae",
+	"\u00f6": "oe",
+	"\u00df": "ss",
+};
+
+function replaceUmlaute(str: string) {
+	return str
+		.replace(/[\u00dc|\u00c4|\u00d6][a-z]/g, (a) => {
+			const big = umlautMap[a.slice(0, 1)];
+			return big.charAt(0) + big.charAt(1).toLowerCase() + a.slice(1);
+		})
+		.replace(
+			new RegExp(`[${Object.keys(umlautMap).join("|")}]`, "g"),
+			(a) => umlautMap[a],
+		);
+}
+
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: { select: { id: true; name: true } } };
 }>;
@@ -172,7 +194,12 @@ export default function TimerExportDialog({
 					}`;
 					if (visualisation.showProject)
 						result = `${result};${time.project?.name ?? ""}`;
-					result = `${result};"${time.notes ?? ""}"`;
+					if (time.notes)
+						result = `${result};"${
+							time.notes.startsWith("-")
+								? time.notes.replace("-", " -")
+								: time.notes
+						}"`;
 				}
 			}
 		} else {
@@ -190,7 +217,12 @@ export default function TimerExportDialog({
 					}`;
 				if (visualisation.showProject)
 					result = `${result};${time.project?.name ?? ""}`;
-				result = `${result};"${time.notes ?? ""}"`;
+				if (time.notes)
+					result = `${result};"${
+						time.notes.startsWith("-")
+							? time.notes.replace("-", " -")
+							: time.notes
+					}"`;
 			}
 		}
 
@@ -198,6 +230,8 @@ export default function TimerExportDialog({
 		if (visualisation.showDateColumn) result = `${result};`;
 		result = `${result};;${totalTime};`;
 		if (visualisation.showProject) result = `${result};`;
+
+		result = replaceUmlaute(result)
 
 		// Download CSV
 		const element = document.createElement("a");
