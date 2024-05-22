@@ -198,7 +198,7 @@ export const profileApiValidation = z
 		password: passwordValidation,
 	})
 	.partial()
-	.refine(({ name, mail, password }) => !(name || mail || password), {
+	.refine(({ name, mail, password }) => name || mail || password, {
 		message: "One of the fields must be given (name, mail, password)",
 		path: ["name", "mail", "password"],
 	});
