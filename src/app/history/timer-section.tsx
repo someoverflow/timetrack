@@ -39,7 +39,7 @@ import TimerExportDialog from "./timer-export";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 type Timer = Prisma.TimeGetPayload<{
-	include: { project: { select: { id: true; name: true } } };
+	include: { project: true };
 }>;
 interface Data {
 	[yearMonth: string]: Timer[];
@@ -54,10 +54,7 @@ export default function TimerSection({
 }: {
 	username: string;
 	history: Data;
-	projects: {
-		id: string;
-		name: string;
-	}[];
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	yearMonth: string;
 	totalTime: string;
 }) {

@@ -18,7 +18,7 @@ import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "./timer-add";
 
 type Timer = Prisma.TimeGetPayload<{
-	include: { project: { select: { id: true; name: true } } };
+	include: { project: true };
 }>;
 interface Data {
 	[yearMonth: string]: Timer[];
@@ -65,29 +65,10 @@ export default async function History({
 				userId: user.id,
 			},
 			include: {
-				project: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
+				project: true,
 			},
 		}),
-		prisma.project.findMany({
-			where: {
-				users: {
-					some: {
-						id: {
-							equals: user.id,
-						},
-					},
-				},
-			},
-			select: {
-				id: true,
-				name: true,
-			},
-		}),
+		prisma.project.findMany(),
 	]);
 
 	function dataFound(): boolean {

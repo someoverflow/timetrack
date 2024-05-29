@@ -2,7 +2,6 @@ import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import {
-	NO_AUTH,
 	NO_AUTH_RESPONSE,
 	badRequestResponse,
 	defaultResult,

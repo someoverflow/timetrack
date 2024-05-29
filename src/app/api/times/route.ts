@@ -178,20 +178,15 @@ export const POST = auth(async (request) => {
 		try {
 			const project = await prisma.project.findUniqueOrThrow({
 				where: {
-					id: data.project,
-					users: {
-						some: {
-							id: data.userId ?? session.user.id,
-						},
-					},
+					name: data.project,
 				},
 			});
-			data.project = project.id;
+			data.project = project.name;
 		} catch {
 			return badRequestResponse(
 				{
 					id: data.project,
-					message: "Project not available.",
+					message: "Project not found.",
 				},
 				"not-found",
 			);
@@ -206,7 +201,7 @@ export const POST = auth(async (request) => {
 		const databaseResult = await prisma.time.create({
 			data: {
 				userId: data.userId ?? session.user.id,
-				projectId: data.project,
+				projectName: data.project,
 				notes: data.notes,
 				start: data.start,
 				end: data.end,
@@ -263,20 +258,10 @@ export const PUT = auth(async (request) => {
 
 	// Check the time entry
 	try {
+		// TODO: Check
 		const databaseResult = await prisma.time.findUnique({
 			where: {
 				id: data.id,
-			},
-			include: {
-				user: {
-					select: {
-						projects: {
-							where: {
-								id: data.project ?? undefined,
-							},
-						},
-					},
-				},
 			},
 		});
 
@@ -286,20 +271,21 @@ export const PUT = auth(async (request) => {
 				"not-found",
 			);
 
-		if (
-			databaseResult.userId !== session.user.id &&
-			session.user.role !== "ADMIN"
-		)
-			return NextResponse.json(FORBIDDEN, {
-				status: FORBIDDEN.status,
-				statusText: FORBIDDEN.result,
-			});
+		if (data.project) {
+			const projectDatabaseResult = await prisma.project
+				.findUnique({
+					where: {
+						name: data.project,
+					},
+				})
+				.catch(() => null);
 
-		if (data.project && databaseResult.user?.projects.length === 0)
-			return badRequestResponse(
-				"Project with the given id not found",
-				"not-found",
-			);
+			if (data.project && projectDatabaseResult == null)
+				return badRequestResponse(
+					"Project with the given id not found",
+					"not-found",
+				);
+		}
 	} catch (e) {
 		result.success = false;
 		result.status = 500;
@@ -315,7 +301,7 @@ export const PUT = auth(async (request) => {
 		Prisma.TimeUpdateInput,
 		Prisma.TimeUncheckedUpdateInput
 	> = {
-		projectId: data.project,
+		projectName: data.project,
 		notes: data.notes,
 	};
 

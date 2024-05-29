@@ -1,8 +1,5 @@
 import prisma from "@/lib/prisma";
-import { validatePassword } from "@/lib/utils";
 import {
-	NO_AUTH,
-	BAD_REQUEST,
 	NO_AUTH_RESPONSE,
 	defaultResult,
 	parseJsonBody,

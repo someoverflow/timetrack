@@ -24,17 +24,8 @@ import { Separator } from "@/components/ui/separator";
 
 async function getUserProjects() {
 	return await prisma.project.findMany({
-		where: {
-			users: {
-				some: {
-					id: "",
-				},
-			},
-		},
 		include: {
 			_count: true,
-			todos: true,
-			times: true,
 		},
 	});
 }
@@ -46,21 +37,9 @@ interface projectSectionState {
 
 export function ProjectSection({
 	projects,
-	adminProjects,
 	userData,
 }: {
 	projects: userProjects;
-	adminProjects: ({
-		users: {
-			id: string;
-			name: string | null;
-			username: string;
-		}[];
-	} & {
-		id: string;
-		name: string;
-		description: string | null;
-	})[];
 	userData: {
 		id?: string;
 		username: string;
@@ -119,6 +98,13 @@ export function ProjectSection({
 			case "validation":
 				toast.warning(`An error occurred (${resultData.result[0].code})`, {
 					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			case "duplicate-found":
+				toast.warning(`An error occurred (${resultData.type})`, {
+					description: resultData.result.message,
 					important: true,
 					duration: 5000,
 				});
@@ -209,7 +195,7 @@ export function ProjectSection({
 			</div>
 			<CommandList className="max-h-none h-full">
 				<CommandGroup
-					heading="Your Projects"
+					heading={`Projects (${projects.length})`}
 					forceMount={projects.length === 0}
 				>
 					{projects.length === 0 && (
@@ -218,26 +204,18 @@ export function ProjectSection({
 							<p>Create a new project now!</p>
 						</div>
 					)}
-					{/* TODO: Project Merging & Renaming */}
+					{/* TODO: Interaction & Description & Renaming */}
 					{projects.map((project) => (
 						<CommandItem
-							key={`own-projects-${project.id}`}
+							key={`projects-${project.name}`}
 							className="font-mono rounded-md aria-selected:!bg-accent/20 border my-2 p-4 outline-none group"
 						>
 							<div className="w-full flex flex-row items-center justify-between">
 								<div className="w-full">
-									<div className="flex flex-row gap-2 items-center">
-										<h4 className="text-sm font-semibold">{project.name}</h4>
-										<Badge variant="default" className="text-xs">
-											{project.id}
-										</Badge>
-									</div>
+									<h4 className="text-sm font-semibold">{project.name}</h4>
 									<div className="w-fit">
 										<Separator className="mt-2 mb-4 w-full" />
 										<div className="flex flex-row items-center gap-1 text-xs">
-											<Badge variant="secondary" className="font-normal">
-												Users: {project._count.users}
-											</Badge>
 											<Badge variant="secondary" className="font-normal">
 												Times: {project._count.times}
 											</Badge>
@@ -248,70 +226,23 @@ export function ProjectSection({
 									</div>
 								</div>
 
-								<div className="flex flex-col w-min gap-1">
-									<Button
-										size="icon"
-										variant="destructive"
-										className="transition-all duration-150 opacity-0 group-hover:opacity-100"
-										disabled={data.loading}
-										onClick={() => deleteProject(project.id)}
-									>
-										<Trash className="w-4 h-4" />
-									</Button>
-								</div>
+								{userData.role === "ADMIN" && (
+									<div className="flex flex-col w-min gap-1">
+										<Button
+											size="icon"
+											variant="destructive"
+											className="transition-all duration-150 opacity-0 group-hover:opacity-100"
+											disabled={data.loading}
+											onClick={() => deleteProject(project.name)}
+										>
+											<Trash className="w-4 h-4" />
+										</Button>
+									</div>
+								)}
 							</div>
 						</CommandItem>
 					))}
 				</CommandGroup>
-
-				{/* TODO: Interaction & Description */}
-				{adminProjects.length !== 0 && (
-					<CommandGroup heading="All Projects">
-						{adminProjects.map(({ id, description, name, users }) => (
-							<CommandItem
-								key={`all-projects-${id}`}
-								className="font-mono aria-selected:!bg-accent/20 rounded-md border my-2 p-4 outline-none group"
-							>
-								<div className="w-full flex flex-row items-center justify-between">
-									<div className="w-full">
-										<div className="absolute right-3 top-3 ">
-											<Tooltip delayDuration={300}>
-												<TooltipTrigger>
-													<Badge variant="default" className="text-xs">
-														{id}
-													</Badge>
-												</TooltipTrigger>
-												{/* TODO: Add functionallity */}
-												<TooltipContent>Merge Project</TooltipContent>
-											</Tooltip>
-										</div>
-										<h4 className="text-sm font-semibold">{name}</h4>
-										{/* TODO: Styling */}
-										<p>{description}</p>
-										<div className="flex flex-wrap gap-1 pt-2 text-xs text-muted-foreground items-center">
-											{users.map((user) => (
-												<Badge
-													variant="outline"
-													key={`all-projects-${id}-${user.id}`}
-												>
-													{user.username}
-												</Badge>
-											))}
-											<Badge
-												variant="secondary"
-												key={`all-projects-${id}-add`}
-												className="h-6 w-6 p-0 items-center justify-center"
-											>
-												{/* Button to add this project to other users */}
-												<Plus className="w-3 h-3" />
-											</Badge>
-										</div>
-									</div>
-								</div>
-							</CommandItem>
-						))}
-					</CommandGroup>
-				)}
 			</CommandList>
 		</Command>
 	);

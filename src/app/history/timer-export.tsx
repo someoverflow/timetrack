@@ -58,7 +58,7 @@ function replaceUmlaute(str: string) {
 }
 
 type Timer = Prisma.TimeGetPayload<{
-	include: { project: { select: { id: true; name: true } } };
+	include: { project: true };
 }>;
 interface Data {
 	[yearMonth: string]: Timer[];
@@ -81,10 +81,7 @@ export default function TimerExportDialog({
 }: {
 	history: Data;
 	yearMonth: string;
-	projects: {
-		id: string;
-		name: string;
-	}[];
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
 	const [filters, setFilters] = useReducer(
 		(prev: exportFilterState, next: Partial<exportFilterState>) => ({
@@ -150,7 +147,7 @@ export default function TimerExportDialog({
 		let data = history[filters.yearMonth];
 
 		if (filters.project !== undefined)
-			data = data.filter((entry) => entry.projectId === filters.project);
+			data = data.filter((entry) => entry.projectName === filters.project);
 
 		return data;
 	}, [history, filters]);
@@ -231,7 +228,7 @@ export default function TimerExportDialog({
 		result = `${result};;${totalTime};`;
 		if (visualisation.showProject) result = `${result};`;
 
-		result = replaceUmlaute(result)
+		result = replaceUmlaute(result);
 
 		// Download CSV
 		const element = document.createElement("a");
@@ -356,11 +353,7 @@ export default function TimerExportDialog({
 											role="combobox"
 										>
 											{filters.project !== undefined
-												? filters.project !== null
-													? projects.find(
-															(project) => project.id === filters.project,
-														)?.name
-													: "Without a Project"
+												? filters.project ?? "Without a Project"
 												: "All Projects"}
 											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 										</Button>
@@ -396,13 +389,13 @@ export default function TimerExportDialog({
 												<CommandGroup heading="Projects">
 													{projects.map((project) => (
 														<CommandItem
-															key={`project-filter-${project.id}`}
-															value={`${project.id}`}
+															key={`project-filter-${project.name}`}
+															value={project.name}
 															onSelect={() => {
 																setFilters({
 																	project:
-																		filters.project !== project.id
-																			? project.id
+																		filters.project !== project.name
+																			? project.name
 																			: undefined,
 																});
 															}}
@@ -410,7 +403,7 @@ export default function TimerExportDialog({
 															<Check
 																className={cn(
 																	"mr-2 h-4 w-4",
-																	filters.project === project.id
+																	filters.project === project.name
 																		? "opacity-100"
 																		: "opacity-0",
 																)}

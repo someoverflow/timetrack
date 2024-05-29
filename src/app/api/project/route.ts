@@ -6,14 +6,12 @@ import {
 	defaultResult,
 	parseJsonBody,
 	badRequestResponse,
-	FORBIDDEN_RESPONSE,
 } from "@/lib/server-utils";
 import {
-	nanoIdValidation,
+	nameValidation,
 	projectCreateApiValidation,
 	projectUpdateApiValidation,
 } from "@/lib/zod";
-import type { Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { NextResponse } from "next/server";
 
@@ -42,10 +40,21 @@ export const POST = auth(async (request) => {
 	}
 	const data = validationResult.data;
 
-	// Prepare the users to connect
-	let toConnect = [{ id: session.user.id }];
-	if (data.users && session.user.role === "ADMIN")
-		toConnect = [...toConnect, ...data.users.map((userId) => ({ id: userId }))];
+	// Check if new project exists when given
+	const databaseProject = await prisma.project
+		.findUnique({
+			where: { name: data.name },
+		})
+		.catch(() => null);
+	if (databaseProject) {
+		return badRequestResponse(
+			{
+				name: data.name,
+				message: "Project with this name exists.",
+			},
+			"duplicate-found",
+		);
+	}
 
 	// Create the project
 	try {
@@ -53,9 +62,6 @@ export const POST = auth(async (request) => {
 			data: {
 				name: data.name,
 				description: data.description ?? undefined,
-				users: {
-					connect: toConnect,
-				},
 			},
 		});
 
@@ -75,23 +81,13 @@ export const POST = auth(async (request) => {
 
 // Update a project
 /* {
-	"id":			<id>
-	"name":			<name?>
+	"name":			<name>
 	"description":	<description?>
-
-	--- ADMINS: ---
-	"users":
-		{
-			add: 	[<id>]? 
-			remove: [<id>]? 
-		}?
-	TODO: "merge":		<id?>
 } */
 export const PUT = auth(async (request) => {
 	// Check auth
 	const session = request.auth;
 	if (!session || !session.user) return NO_AUTH_RESPONSE;
-	const isAdmin = session.user.role === "ADMIN";
 
 	// Prepare data
 	const result = defaultResult("updated");
@@ -111,50 +107,16 @@ export const PUT = auth(async (request) => {
 	}
 	const data = validationResult.data;
 
-	if (!isAdmin && (data.merge || data.users)) return FORBIDDEN_RESPONSE;
-
-	let updateData: Prisma.XOR<
-		Prisma.ProjectUpdateInput,
-		Prisma.ProjectUncheckedUpdateInput
-	> = {
-		id: data.id,
-		name: data.name,
-		description: data.description ?? undefined,
-	};
-
-	if (data.users) {
-		if (data.users.add) {
-			updateData = {
-				...updateData,
-				users: {
-					...updateData.users,
-					connect: data.users.add.map((userId) => ({ id: userId })),
-				},
-			};
-		}
-		if (data.users.remove) {
-			updateData = {
-				...updateData,
-				users: {
-					...updateData.users,
-					disconnect: data.users.remove.map((userId) => ({ id: userId })),
-				},
-			};
-		}
-	}
-
 	// Update the project
 	try {
 		const databaseResult = await prisma.project.update({
 			where: {
-				id: data.id,
-				users: {
-					some: {
-						id: session.user.id,
-					},
-				},
+				name: data.name,
 			},
-			data: updateData,
+			data: {
+				name: data.name,
+				description: data.description ?? undefined,
+			},
 		});
 
 		result.result = databaseResult;
@@ -162,12 +124,11 @@ export const PUT = auth(async (request) => {
 	} catch (e) {
 		if (e instanceof PrismaClientKnownRequestError) {
 			switch (e.code) {
-				// TODO: Check currently unchecked errors
 				case "P2025":
 					console.error("project: ", e);
 					return badRequestResponse(
 						{
-							id: data.id,
+							name: data.name,
 							message: "Project does not exist.",
 						},
 						"not-found",
@@ -185,7 +146,7 @@ export const PUT = auth(async (request) => {
 	}
 });
 
-// Delete a project
+// Delete a project (Admin Only)
 export const DELETE = auth(async (request) => {
 	// Check auth
 	const session = request.auth;
@@ -200,16 +161,16 @@ export const DELETE = auth(async (request) => {
 	if (json instanceof NextResponse) return json;
 
 	// Validate request
-	const validationResult = nanoIdValidation.safeParse(json.id);
+	const validationResult = nameValidation.safeParse(json.id);
 	if (!validationResult.success)
 		return badRequestResponse(validationResult.error.issues, "validation");
-	const id = validationResult.data;
+	const name = validationResult.data;
 
 	// Delete the project
 	try {
 		const databaseResult = await prisma.project.delete({
 			where: {
-				id: id,
+				name: name,
 			},
 		});
 
@@ -221,7 +182,7 @@ export const DELETE = auth(async (request) => {
 				case "P2025":
 					return badRequestResponse(
 						{
-							id: id,
+							name: name,
 							message: "Project does not exist.",
 						},
 						"not-found",

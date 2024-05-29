@@ -77,7 +77,7 @@ export const timesPostApiValidation = z
 		userId: nanoIdValidation,
 
 		notes: z.coerce.string().trim(),
-		project: nanoIdValidation,
+		project: nameValidation,
 
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
@@ -101,7 +101,7 @@ export const timesPutApiValidation = z
 		id: nanoIdValidation,
 
 		notes: z.coerce.string().trim(),
-		project: nanoIdValidation.nullable(),
+		project: nameValidation.nullable(),
 
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
@@ -205,7 +205,7 @@ export const profileApiValidation = z
 //#endregion
 
 //#region Projects API
-// name, description, [userId]
+// name, description
 const projectDescriptionValidation = z
 	.string()
 	.min(1, "Description is too short.")
@@ -216,27 +216,12 @@ const projectDescriptionValidation = z
 export const projectCreateApiValidation = z.object({
 	name: nameValidation,
 	description: projectDescriptionValidation,
-	users: z.array(nanoIdValidation).nonempty().optional(),
 });
 
-export const projectUpdateApiValidation = z
-	.object({
-		id: nanoIdValidation,
-		name: nameValidation,
-		description: projectDescriptionValidation,
-		merge: nanoIdValidation,
-		users: z
-			.object({
-				add: z.array(nanoIdValidation).nonempty(),
-				remove: z.array(nanoIdValidation).nonempty(),
-			})
-			.partial()
-			.optional(),
-	})
-	.partial()
-	.required({
-		id: true,
-	});
+export const projectUpdateApiValidation = z.object({
+	name: nameValidation,
+	description: projectDescriptionValidation.optional(),
+});
 //#endregion
 
 //#region Chips API

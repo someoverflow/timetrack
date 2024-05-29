@@ -49,7 +49,7 @@ import {
 import Link from "next/link";
 
 type Timer = Prisma.TimeGetPayload<{
-	include: { project: { select: { id: true; name: true } } };
+	include: { project: true };
 }>;
 interface timerInfoState {
 	notes: string;
@@ -58,7 +58,7 @@ interface timerInfoState {
 	loading: boolean;
 
 	projectSelectionOpen: boolean;
-	projectId: string | null;
+	projectName: string | null;
 }
 export default function TimerInfo({
 	data,
@@ -66,10 +66,7 @@ export default function TimerInfo({
 	edit,
 }: {
 	data: Timer;
-	projects: {
-		id: string;
-		name: string;
-	}[];
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	edit: boolean;
 }) {
 	const [state, setState] = useReducer(
@@ -85,7 +82,7 @@ export default function TimerInfo({
 				: new Date().toLocaleString("sv").replace(" ", "T"),
 			loading: false,
 			projectSelectionOpen: false,
-			projectId: data.projectId,
+			projectName: data.projectName,
 		},
 	);
 
@@ -161,9 +158,8 @@ export default function TimerInfo({
 			request.end = new Date(state.end).toISOString();
 		}
 
-		if (state.projectId !== data.projectId) {
-			request.project = state.projectId;
-		}
+		if (state.projectName !== data.projectName)
+			request.project = state.projectName;
 
 		const result = await fetch("/api/times", {
 			method: "PUT",
@@ -308,23 +304,23 @@ export default function TimerInfo({
 								.padStart(2, "0")} ${days[data.start.getDay()]}`}
 						</p>
 						<p>
+							{data.project && (
+								<span
+									className={badgeVariants({
+										variant: "secondary",
+										className: "text-muted-foreground/80",
+									})}
+								>
+									{data.project?.name}
+								</span>
+							)}
 							{data.notes && (
-								<span className="text-xs text-muted-foreground/75 text-right">
+								<span className="ml-2 text-xs text-muted-foreground/75 text-right">
 									{data.notes?.split("\n")[0].slice(0, 20) +
 										(data.notes?.split("\n").length > 1 ||
 										data.notes?.split("\n")[0].length > 20
 											? "…"
 											: "")}
-								</span>
-							)}
-							{data.project && (
-								<span
-									className={badgeVariants({
-										variant: "secondary",
-										className: "ml-2 text-muted-foreground/80",
-									})}
-								>
-									{data.project?.name}
 								</span>
 							)}
 						</p>
@@ -383,13 +379,13 @@ export default function TimerInfo({
 													role="combobox"
 													aria-expanded={state.projectSelectionOpen}
 													className={`w-full justify-between border-2 transition duration-300 ${
-														state.projectId !== data.projectId &&
+														state.projectName !== data.projectName &&
 														"border-sky-700"
 													}`}
 												>
-													{state.projectId
+													{state.projectName
 														? projects.find(
-																(project) => project.id === state.projectId,
+																(project) => project.name === state.projectName,
 															)?.name
 														: "No related project"}
 													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -418,13 +414,13 @@ export default function TimerInfo({
 														<CommandGroup>
 															{projects.map((project) => (
 																<CommandItem
-																	key={`project-selection-${data.id}-${project.id}`}
-																	value={`${project.id}`}
+																	key={`project-selection-${project.name}`}
+																	value={`${project.name}`}
 																	onSelect={() => {
 																		setState({
-																			projectId:
-																				state.projectId !== project.id
-																					? project.id
+																			projectName:
+																				state.projectName !== project.name
+																					? project.name
 																					: null,
 																			projectSelectionOpen: false,
 																		});
@@ -433,7 +429,7 @@ export default function TimerInfo({
 																	<Check
 																		className={cn(
 																			"mr-2 h-4 w-4",
-																			state.projectId === project.id
+																			state.projectName === project.name
 																				? "opacity-100"
 																				: "opacity-0",
 																		)}

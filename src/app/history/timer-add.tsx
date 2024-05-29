@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/command";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import type { Prisma } from "@prisma/client";
 
 interface timerAddState {
 	start: string;
@@ -57,10 +58,7 @@ export default function TimerAdd({
 	setVisible,
 }: {
 	username: string;
-	projects: {
-		id: string;
-		name: string;
-	}[];
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
@@ -190,11 +188,7 @@ export default function TimerAdd({
 												aria-expanded={data.projectSelectionOpen}
 												className="w-full justify-between border-2 transition duration-300"
 											>
-												{data.project
-													? projects.find(
-															(project) => project.id === data.project,
-														)?.name
-													: "No related project"}
+												{data.project ?? "No related project"}
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
@@ -221,13 +215,13 @@ export default function TimerAdd({
 													<CommandGroup>
 														{projects.map((project) => (
 															<CommandItem
-																key={`project-selection-add-${project.id}`}
-																value={`${project.id}`}
+																key={`project-selection-add-${project.name}`}
+																value={`${project.name}`}
 																onSelect={() => {
 																	setData({
 																		project:
-																			data.project !== project.id
-																				? project.id
+																			data.project !== project.name
+																				? project.name
 																				: null,
 																		projectSelectionOpen: false,
 																	});
@@ -236,7 +230,7 @@ export default function TimerAdd({
 																<Check
 																	className={cn(
 																		"mr-2 h-4 w-4",
-																		data.project === project.id
+																		data.project === project.name
 																			? "opacity-100"
 																			: "opacity-0",
 																	)}
@@ -338,10 +332,7 @@ export function TimerAddServer({
 	projects,
 }: {
 	username: string;
-	projects: {
-		id: string;
-		name: string;
-	}[];
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
 	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
@@ -485,11 +476,7 @@ export function TimerAddServer({
 													aria-expanded={data.projectSelectionOpen}
 													className="w-full justify-between border-2 transition duration-300"
 												>
-													{data.project
-														? projects.find(
-																(project) => project.id === data.project,
-															)?.name
-														: "No related project"}
+													{data.project ?? "No related project"}
 													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 												</Button>
 											</PopoverTrigger>
@@ -516,13 +503,13 @@ export function TimerAddServer({
 														<CommandGroup>
 															{projects.map((project) => (
 																<CommandItem
-																	key={`project-selection-add-${project.id}`}
-																	value={`${project.id}`}
+																	key={`project-selection-add-${project.name}`}
+																	value={`${project.name}`}
 																	onSelect={() => {
 																		setData({
 																			project:
-																				data.project !== project.id
-																					? project.id
+																				data.project !== project.name
+																					? project.name
 																					: null,
 																			projectSelectionOpen: false,
 																		});
@@ -531,7 +518,7 @@ export function TimerAddServer({
 																	<Check
 																		className={cn(
 																			"mr-2 h-4 w-4",
-																			data.project === project.id
+																			data.project === project.name
 																				? "opacity-100"
 																				: "opacity-0",
 																		)}

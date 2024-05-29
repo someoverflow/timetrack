@@ -24,44 +24,10 @@ export default async function Profile({
 	const user = session.user;
 
 	const projects = await prisma.project.findMany({
-		where: {
-			users: {
-				some: {
-					id: user.id,
-				},
-			},
-		},
 		include: {
 			_count: true,
-			todos: true,
-			times: true,
 		},
 	});
-
-	let projectsResult: ({
-		users: {
-			id: string;
-			name: string | null;
-			username: string;
-		}[];
-	} & {
-		id: string;
-		name: string;
-		description: string | null;
-	})[] = [];
-	if (user.role === "ADMIN") {
-		projectsResult = await prisma.project.findMany({
-			include: {
-				users: {
-					select: {
-						id: true,
-						username: true,
-						name: true,
-					},
-				},
-			},
-		});
-	}
 
 	return (
 		<Navigation>
@@ -92,7 +58,6 @@ export default async function Profile({
 								<ProjectSection
 									projects={projects}
 									userData={user}
-									adminProjects={projectsResult}
 								/>
 							</ScrollArea>
 						</TabsContent>

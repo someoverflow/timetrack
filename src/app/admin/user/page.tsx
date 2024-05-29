@@ -50,7 +50,6 @@ async function getUsers(skip: number, take: number, search: string | null) {
 			createdAt: true,
 			updatedAt: true,
 
-			projects: true,
 			chips: true,
 		},
 	});
@@ -97,7 +96,6 @@ export default async function AdminUserPage({
 					name: null,
 					email: "<null>",
 					role: "USER",
-					projects: [],
 					chips: [],
 					createdAt: new Date(),
 					updatedAt: new Date(),

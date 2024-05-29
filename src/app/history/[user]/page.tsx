@@ -21,7 +21,7 @@ import { TimerAddServer } from "../timer-add";
 import { badgeVariants } from "@/components/ui/badge";
 
 type Timer = Prisma.TimeGetPayload<{
-	include: { project: { select: { id: true; name: true } } };
+	include: { project: true };
 }>;
 interface Data {
 	[yearMonth: string]: Timer[];
@@ -84,29 +84,10 @@ export default async function History({
 				userId: target?.id,
 			},
 			include: {
-				project: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
+				project: true
 			},
 		}),
-		prisma.project.findMany({
-			where: {
-				users: {
-					some: {
-						id: {
-							equals: target?.id,
-						},
-					},
-				},
-			},
-			select: {
-				id: true,
-				name: true,
-			},
-		}),
+		prisma.project.findMany(),
 	]);
 
 	function dataFound(): boolean {
