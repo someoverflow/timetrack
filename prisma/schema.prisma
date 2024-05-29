@@ -32,8 +32,6 @@ model User {
   times Time[]
   chips Chip[]
 
-  projects Project[] @relation("project_to_user")
-
   assignedTodos Todo[] @relation("assignee_to_todo")
   createdTodos  Todo[] @relation("creator")
 
@@ -69,21 +67,36 @@ model Time {
   time  String? // Passed time from start to end
   notes String? @db.MediumText
 
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull) // Related Project
-  projectId String?  @map("project_id")
+  traveledDistance Int? @map("traveled_distance") // Stored in km
+  // TODO: Can be changed/recalculated in ui
+
+  materials String      @default("[]") // Array of materials used
+  breaks    TimeBreak[] @relation("break")
+
+  project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
+  projectName String?  @map("project_id")
 
   @@map("times")
 }
 
-model Project {
+model TimeBreak {
   id String @id @default(nanoid(12))
 
-  name        String
+  time   Time   @relation("break", references: [id], fields: [timeId], onDelete: Cascade)
+  timeId String @map("time_id")
+
+  start DateTime  @db.DateTime(2)
+  end   DateTime? @db.DateTime(2)
+
+  @@map("times_breaks")
+}
+
+model Project {
+  name        String  @id @unique
   description String?
 
   todos Todo[] @relation("project_to_todo") // Related Todos
   times Time[] // Related Times
-  users User[] @relation("project_to_user") // Users with this project
 
   @@map("projects")
 }
