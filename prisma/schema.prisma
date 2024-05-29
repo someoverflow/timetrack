@@ -74,7 +74,7 @@ model Time {
   breaks    TimeBreak[] @relation("break")
 
   project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
-  projectName String?  @map("project_id")
+  projectName String?  @map("project_name")
 
   @@map("times")
 }

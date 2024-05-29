@@ -141,8 +141,8 @@ export default function TimerInfo({
 			state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
 
 		if (startChanged || endChanged) {
-			if (startChanged) request.startType = "Website";
-			if (endChanged) request.endType = "Website";
+			request.startType = "Website";
+			request.endType = "Website";
 
 			if (state.start.trim() === "" || state.end.trim() === "") {
 				toast.warning("Missing data", {
@@ -311,7 +311,7 @@ export default function TimerInfo({
 										className: "text-muted-foreground/80",
 									})}
 								>
-									{data.project?.name}
+									{data.project.name}
 								</span>
 							)}
 							{data.notes && (

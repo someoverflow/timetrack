@@ -42,14 +42,18 @@ RUN mkdir /backups && chown nextjs:nodejs /backups
 USER nextjs
 
 ENV AUTH_TRUST_HOST true
-ENV AUTH_URL http://localhost:3000/api/auth
+ENV AUTH_URL http://0.0.0.0:3000/api/auth
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 ENV BACKUP true
 ENV BACKUP_DELAY 86400
 
-ENV DATABASE_URL mysql://root:root@localhost:3306/timetrack
+ENV DATABASE_HOST localhost
+ENV DATABASE_USER root
+ENV DATABASE_PASSWORD root
+ENV DATABASE_PORT 3306
+ENV DATABASE_DB timetrack
 
 EXPOSE 3000
 VOLUME ["/backups"]
