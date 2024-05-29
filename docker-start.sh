@@ -12,9 +12,9 @@ echo ""
         AUTH_SECRET="$(openssl rand -base64 32)"
     fi
     echo "AUTH_SECRET=\"$AUTH_SECRET\"" >> ./.env
-
+    
     echo "start prisma generation"
-
+    
     npm i --yes
     npx --yes prisma db push --accept-data-loss --skip-generate
     node prisma/seed.js
@@ -26,4 +26,4 @@ echo ""
 
 echo " * Starting Server * "
 
-node server.js
+(trap 'kill 0' SIGINT; (while $BACKUP; do /usr/bin/mysqldump --opt -h 172.17.0.1 -u timetrack -ptimetrack timetrack >> /backups/$(date +"%Y-%m-%d_%H-%M-%S")_timetrack.sql & sleep $BACKUP_DELAY; done) & node server.js)
