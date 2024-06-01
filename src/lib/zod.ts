@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+//#region Utils
 const emptyId = "ID is empty.";
 const invalidId = "ID is invalid.";
 const invalidPassword = "Password is invalid. (8-30 chars, a-z, A-Z, 0-9)";
@@ -8,7 +9,6 @@ export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
 export const passwordRegex =
 	/^(?=.*[A-Za-z])(?=.*\d)[a-zA-Z0-9\d@$!%*#?&]{8,30}$/i;
 
-//#region Utils
 export const nanoIdValidation = // All nanoid ids
 	z.string().trim().length(12, invalidId).regex(nanoidRegex, invalidId);
 
@@ -82,6 +82,8 @@ export const timesPostApiValidation = z
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
 
+		traveledDistance: z.coerce.number(),
+
 		startType: z.coerce.string().trim(),
 		endType: z.coerce.string().trim(),
 	})
@@ -90,6 +92,7 @@ export const timesPostApiValidation = z
 		project: true,
 		startType: true,
 		endType: true,
+		traveledDistance: true,
 	})
 	.refine((data) => data.end > data.start, {
 		message: "The end is earlier than start",
@@ -102,6 +105,8 @@ export const timesPutApiValidation = z
 
 		notes: z.coerce.string().trim(),
 		project: nameValidation.nullable(),
+
+		traveledDistance: z.coerce.number().nullable(),
 
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
@@ -122,22 +127,22 @@ export const timesPutApiValidation = z
 				data.start ||
 				data.end ||
 				data.startType ||
-				data.endType
+				data.endType ||
+				data.traveledDistance
 			)
 		)
 			ctx.addIssue({
 				code: "custom",
 				message:
-					"One of the fields must be given (notes, project, start(type), end(type))",
-				path: ["notes", "project", "start", "end"],
+					"One of the fields must be given (notes, project, time, distance)",
+				path: ["notes", "project", "start", "end", "traveledDistance"],
 			});
 
 		if (data.start || data.end) {
 			if ((data.start && !data.end) || (data.end && !data.start))
 				ctx.addIssue({
 					code: "custom",
-					message:
-						"One of the fields must be given (notes, project, start(type), end(type))",
+					message: "Start and End must be given",
 					path: ["start", "end"],
 				});
 		}

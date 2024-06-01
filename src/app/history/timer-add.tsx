@@ -5,7 +5,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
@@ -46,6 +45,7 @@ interface timerAddState {
 	start: string;
 	end: string;
 	notes: string;
+	traveledDistance: number | null;
 	loading: boolean;
 	projectSelectionOpen: boolean;
 	project: string | null;
@@ -69,7 +69,10 @@ export default function TimerAdd({
 		}),
 		{
 			start: new Date().toLocaleString("sv").replace(" ", "T"),
-			end: new Date().toLocaleString("sv").replace(" ", "T"),
+			end: new Date(new Date().setHours(new Date().getHours() + 2))
+				.toLocaleString("sv")
+				.replace(" ", "T"),
+			traveledDistance: null,
 			notes: "",
 			loading: false,
 			projectSelectionOpen: false,
@@ -89,6 +92,7 @@ export default function TimerAdd({
 			body: JSON.stringify({
 				username: username,
 				notes: data.notes,
+				traveledDistance: data.traveledDistance,
 				start: new Date(data.start).toISOString(),
 				end: new Date(data.end).toISOString(),
 				startType: "Website",
@@ -158,11 +162,18 @@ export default function TimerAdd({
 
 				<div className="w-full flex flex-col gap-2">
 					<Tabs defaultValue="time">
-						<TabsList className="grid w-full grid-cols-2 h-fit">
-							<TabsTrigger value="notes">Notes</TabsTrigger>
-							<TabsTrigger value="time">Time</TabsTrigger>
+						<TabsList className="flex w-full">
+							<TabsTrigger className="w-full" value="details">
+								Details
+							</TabsTrigger>
+							<TabsTrigger className="w-full" value="time">
+								Time
+							</TabsTrigger>
+							<TabsTrigger className="w-full" value="breaks">
+								Breaks
+							</TabsTrigger>
 						</TabsList>
-						<TabsContent value="notes">
+						<TabsContent value="details">
 							<ScrollArea
 								className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 								type="always"
@@ -249,6 +260,30 @@ export default function TimerAdd({
 
 								<div className="h-full w-full grid p-1 gap-1.5">
 									<Label
+										htmlFor="distance-button"
+										className="pl-2 text-muted-foreground"
+									>
+										Distance traveled (km)
+									</Label>
+									<Input
+										id="distance-button"
+										type="number"
+										min={0}
+										className="w-full justify-between border-2 transition duration-300"
+										onChange={(change) => {
+											const target = change.target.valueAsNumber;
+											setData({
+												traveledDistance: Number.isNaN(target) ? null : target,
+											});
+										}}
+										value={data.traveledDistance ?? ""}
+									/>
+								</div>
+
+								<div id="divider" className="h-4" />
+
+								<div className="h-full w-full grid p-1 gap-1.5">
+									<Label
 										htmlFor="timerModal-notes-add"
 										className="text-muted-foreground pl-2"
 									>
@@ -256,12 +291,10 @@ export default function TimerAdd({
 									</Label>
 									<Textarea
 										id="timerModal-notes-add"
-										className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-											data.notes !== (data.notes ?? "") && "border-sky-700"
-										}`}
+										className="h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300"
 										spellCheck={true}
-										value={data.notes}
 										onChange={(e) => setData({ notes: e.target.value })}
+										value={data.notes}
 									/>
 								</div>
 							</ScrollArea>
@@ -309,6 +342,23 @@ export default function TimerAdd({
 								</div>
 							</ScrollArea>
 						</TabsContent>
+						<TabsContent value="breaks" className="h-full">
+							<ScrollArea
+								className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+								type="always"
+							>
+								<div className="grid gap-4 p-1 w-full">
+									<div className="grid w-full items-center gap-1.5">
+										<Label
+											htmlFor="name"
+											className="pl-2 text-muted-foreground"
+										>
+											In work...
+										</Label>
+									</div>
+								</div>
+							</ScrollArea>
+						</TabsContent>
 					</Tabs>
 
 					<div className="w-full gap-2 flex flex-row justify-end">
@@ -344,6 +394,7 @@ export function TimerAddServer({
 			start: new Date().toLocaleString("sv").replace(" ", "T"),
 			end: new Date().toLocaleString("sv").replace(" ", "T"),
 			notes: "",
+			traveledDistance: null,
 			loading: false,
 			project: null,
 			projectSelectionOpen: false,
@@ -362,6 +413,7 @@ export function TimerAddServer({
 			body: JSON.stringify({
 				username: username,
 				notes: data.notes,
+				traveledDistance: data.traveledDistance,
 				start: new Date(data.start).toISOString(),
 				end: new Date(data.end).toISOString(),
 				startType: "Website",
@@ -446,11 +498,18 @@ export function TimerAddServer({
 
 					<div className="w-full flex flex-col gap-2">
 						<Tabs defaultValue="time">
-							<TabsList className="grid w-full grid-cols-2 h-fit">
-								<TabsTrigger value="notes">Notes</TabsTrigger>
-								<TabsTrigger value="time">Time</TabsTrigger>
+							<TabsList className="flex w-full">
+								<TabsTrigger className="w-full" value="details">
+									Details
+								</TabsTrigger>
+								<TabsTrigger className="w-full" value="time">
+									Time
+								</TabsTrigger>
+								<TabsTrigger className="w-full" value="breaks">
+									Breaks
+								</TabsTrigger>
 							</TabsList>
-							<TabsContent value="notes">
+							<TabsContent value="details">
 								<ScrollArea
 									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 									type="always"
@@ -537,6 +596,32 @@ export function TimerAddServer({
 
 									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
+											htmlFor="distance-button"
+											className="pl-2 text-muted-foreground"
+										>
+											Distance traveled (km)
+										</Label>
+										<Input
+											id="distance-button"
+											type="number"
+											min={0}
+											className="w-full justify-between border-2 transition duration-300"
+											onChange={(change) => {
+												const target = change.target.valueAsNumber;
+												setData({
+													traveledDistance: Number.isNaN(target)
+														? null
+														: target,
+												});
+											}}
+											value={data.traveledDistance ?? ""}
+										/>
+									</div>
+
+									<div id="divider" className="h-4" />
+
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Label
 											htmlFor="timerModal-notes-add"
 											className="text-muted-foreground pl-2"
 										>
@@ -593,6 +678,23 @@ export function TimerAddServer({
 												value={data.end}
 												onChange={(e) => setData({ end: e.target.value })}
 											/>
+										</div>
+									</div>
+								</ScrollArea>
+							</TabsContent>
+							<TabsContent value="breaks" className="h-full">
+								<ScrollArea
+									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+									type="always"
+								>
+									<div className="grid gap-4 p-1 w-full">
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="name"
+												className="pl-2 text-muted-foreground"
+											>
+												In work...
+											</Label>
 										</div>
 									</div>
 								</ScrollArea>

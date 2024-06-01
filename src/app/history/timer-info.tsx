@@ -14,6 +14,24 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -32,21 +50,9 @@ import { useRouter } from "next/navigation";
 
 // React
 import { useEffect, useReducer, useState } from "react";
-import { cn, days } from "@/lib/utils";
-import { badgeVariants } from "@/components/ui/badge";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-} from "@/components/ui/command";
 import Link from "next/link";
+
+import { cn, days } from "@/lib/utils";
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -56,6 +62,8 @@ interface timerInfoState {
 	start: string;
 	end: string;
 	loading: boolean;
+
+	traveledDistance: number | null;
 
 	projectSelectionOpen: boolean;
 	projectName: string | null;
@@ -75,12 +83,16 @@ export default function TimerInfo({
 			...next,
 		}),
 		{
+			loading: false,
+
 			notes: data.notes ?? "",
 			start: data.start.toLocaleString("sv").replace(" ", "T"),
 			end: data.end
 				? data.end.toLocaleString("sv").replace(" ", "T")
 				: new Date().toLocaleString("sv").replace(" ", "T"),
-			loading: false,
+
+			traveledDistance: data.traveledDistance ?? null,
+
 			projectSelectionOpen: false,
 			projectName: data.projectName,
 		},
@@ -97,6 +109,7 @@ export default function TimerInfo({
 				end: data.end
 					? data.end.toLocaleString("sv").replace(" ", "T")
 					: new Date().toLocaleString("sv").replace(" ", "T"),
+				traveledDistance: data.traveledDistance ?? null,
 			});
 		}
 	}, [visible]);
@@ -107,6 +120,7 @@ export default function TimerInfo({
 
 	const router = useRouter();
 
+	// TODO: Make it editable
 	if (!data.end) {
 		return (
 			<div className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1 animate__animated animate__fadeIn">
@@ -130,6 +144,7 @@ export default function TimerInfo({
 			endType: string;
 			end: string;
 			project: string | null;
+			traveledDistance: number | null;
 		}> = {
 			id: data.id,
 			notes: state.notes,
@@ -160,6 +175,9 @@ export default function TimerInfo({
 
 		if (state.projectName !== data.projectName)
 			request.project = state.projectName;
+
+		if (state.traveledDistance !== data.traveledDistance)
+			request.traveledDistance = state.traveledDistance;
 
 		const result = await fetch("/api/times", {
 			method: "PUT",
@@ -290,49 +308,62 @@ export default function TimerInfo({
 			>
 				<button
 					type="button"
-					className="w-full font-mono p-4 md:py-3 select-none rounded-sm text-center border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
+					className="w-full font-mono p-4 pb-5 select-none rounded-sm border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
 					onClick={() => {
 						if (!blockVisible) setVisible(true);
 					}}
 				>
-					<div className="flex flex-row items-center justify-between pb-2">
-						<p className="font-semibold text-xs text-muted-foreground text-left">
+					<div className="flex items-center justify-between pb-2">
+						<p className="flex flex-row items-center font-semibold text-xs text-muted-foreground text-left">
 							{`${data.start.getDate().toString().padStart(2, "0")}.${(
 								data.start.getMonth() + 1
 							)
 								.toString()
 								.padStart(2, "0")} ${days[data.start.getDay()]}`}
 						</p>
-						<p>
-							{data.project && (
-								<span
-									className={badgeVariants({
-										variant: "secondary",
-										className: "text-muted-foreground/80",
-									})}
-								>
-									{data.project.name}
-								</span>
-							)}
-							{data.notes && (
-								<span className="ml-2 text-xs text-muted-foreground/75 text-right">
-									{data.notes?.split("\n")[0].slice(0, 20) +
-										(data.notes?.split("\n").length > 1 ||
-										data.notes?.split("\n")[0].length > 20
-											? "…"
-											: "")}
-								</span>
-							)}
-						</p>
+						{(data.project || data.notes) && (
+							<Breadcrumb>
+								<BreadcrumbList className="flex-nowrap">
+									{data.project && (
+										<>
+											<BreadcrumbItem>
+												<BreadcrumbLink asChild>
+													<p className="text-xs truncate">
+														{data.project.name}
+													</p>
+												</BreadcrumbLink>
+											</BreadcrumbItem>
+											<BreadcrumbSeparator />
+										</>
+									)}
+									{data.notes && (
+										<BreadcrumbItem>
+											<BreadcrumbLink asChild>
+												<p className="text-xs text-muted-foreground/75 truncate max-w-32 text-start">
+													{data.notes?.split("\n")[0].startsWith("- ")
+														? `${data.notes
+																?.split("\n")[0]
+																.replace("- ", "")} …`
+														: data.notes?.split("\n")[0]}
+												</p>
+											</BreadcrumbLink>
+										</BreadcrumbItem>
+									)}
+								</BreadcrumbList>
+							</Breadcrumb>
+						)}
 					</div>
 
 					<div className="flex flex-row justify-evenly items-center text-lg">
 						<p>{data.start.toLocaleTimeString()}</p>
-						<Separator orientation="horizontal" className="w-[5%]" />
+						<div className="relative flex flex-col items-center">
+							<Separator orientation="horizontal" className="w-10" />
+							<p className="text-xs text-muted-foreground/80 absolute -bottom-5">
+								{data.time ?? ""}
+							</p>
+						</div>
 						<p>{data.end.toLocaleTimeString()}</p>
 					</div>
-
-					<p className="text-xs text-muted-foreground/80">{`${data.time}`}</p>
 				</button>
 			</SwipeableListItem>
 
@@ -341,7 +372,11 @@ export default function TimerInfo({
 				open={visible}
 				onOpenChange={(e) => setVisible(e)}
 			>
-				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
+				<DialogContent
+					className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+					onPointerDownOutside={(e) => e.preventDefault()}
+					onInteractOutside={(e) => e.preventDefault()}
+				>
 					<DialogHeader>
 						<DialogTitle>
 							<div>Edit entry</div>
@@ -349,12 +384,19 @@ export default function TimerInfo({
 					</DialogHeader>
 
 					<div className="w-full flex flex-col gap-2">
-						<Tabs defaultValue="notes">
-							<TabsList className="grid w-full grid-cols-2 h-fit">
-								<TabsTrigger value="notes">Notes</TabsTrigger>
-								<TabsTrigger value="time">Time</TabsTrigger>
+						<Tabs defaultValue="details">
+							<TabsList className="flex w-full">
+								<TabsTrigger className="w-full" value="details">
+									Details
+								</TabsTrigger>
+								<TabsTrigger className="w-full" value="time">
+									Time
+								</TabsTrigger>
+								<TabsTrigger className="w-full" value="breaks">
+									Breaks
+								</TabsTrigger>
 							</TabsList>
-							<TabsContent value="notes">
+							<TabsContent value="details">
 								<ScrollArea
 									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 									type="always"
@@ -448,6 +490,35 @@ export default function TimerInfo({
 
 									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
+											htmlFor="distance-button"
+											className="pl-2 text-muted-foreground"
+										>
+											Distance traveled (km)
+										</Label>
+										<Input
+											id="distance-button"
+											type="number"
+											min={0}
+											className={`w-full border-2 transition duration-300 ${
+												state.traveledDistance !== data.traveledDistance &&
+												"border-sky-700"
+											}`}
+											onChange={(change) => {
+												const target = change.target.valueAsNumber;
+												setState({
+													traveledDistance: Number.isNaN(target)
+														? null
+														: target,
+												});
+											}}
+											value={state.traveledDistance ?? ""}
+										/>
+									</div>
+
+									<div id="divider" className="h-4" />
+
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Label
 											htmlFor={`timerModal-notes-${data.id}`}
 											className="text-muted-foreground pl-2"
 										>
@@ -456,8 +527,7 @@ export default function TimerInfo({
 										<Textarea
 											id={`timerModal-notes-${data.id}`}
 											className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-												state.notes !== (data.notes ? data.notes : "") &&
-												"border-sky-700"
+												state.notes !== (data.notes ?? "") && "border-sky-700"
 											}`}
 											spellCheck={true}
 											value={state.notes}
@@ -570,6 +640,23 @@ export default function TimerInfo({
 												id="id"
 												value={data.id}
 											/>
+										</div>
+									</div>
+								</ScrollArea>
+							</TabsContent>
+							<TabsContent value="breaks" className="h-full">
+								<ScrollArea
+									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+									type="always"
+								>
+									<div className="grid gap-4 p-1 w-full">
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="name"
+												className="pl-2 text-muted-foreground"
+											>
+												In work...
+											</Label>
 										</div>
 									</div>
 								</ScrollArea>

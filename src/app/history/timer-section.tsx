@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, ChevronDown, FileDown, ListPlus } from "lucide-react";
+import { Check, ChevronDown, ListPlus } from "lucide-react";
 import TimerAdd from "./timer-add";
 
 // Database
@@ -83,7 +83,7 @@ export default function TimerSection({
 
 	return (
 		<section
-			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
+			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start"
 			key={yearMonth}
 		>
 			<div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">

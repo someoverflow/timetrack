@@ -154,6 +154,8 @@ export const POST = auth(async (request) => {
 
 		project: json.project,
 
+		traveledDistance: json.traveledDistance,
+
 		start: json.start,
 		end: json.end,
 
@@ -203,6 +205,7 @@ export const POST = auth(async (request) => {
 				userId: data.userId ?? session.user.id,
 				projectName: data.project,
 				notes: data.notes,
+				traveledDistance: data.traveledDistance ?? null,
 				start: data.start,
 				end: data.end,
 				startType: data.startType ?? "API",
@@ -245,6 +248,8 @@ export const PUT = auth(async (request) => {
 		notes: json.notes,
 
 		project: json.project,
+
+		traveledDistance: json.traveledDistance,
 
 		start: json.start,
 		end: json.end,
@@ -303,6 +308,7 @@ export const PUT = auth(async (request) => {
 	> = {
 		projectName: data.project,
 		notes: data.notes,
+		traveledDistance: data.traveledDistance,
 	};
 
 	if (data.start && data.end) {
