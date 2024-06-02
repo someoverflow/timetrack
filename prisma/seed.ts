@@ -26,34 +26,20 @@ async function main() {
 		},
 	});
 
-	/* Invalidate jwt
-	const result = await prisma.user.update({
-		where: {
-			username: "admin",
-		},
-		data: {
-			validJwtId: randomUUID(),
-		},
-	});
-  */
-
 	/*
-  const data = [];
-	for (let i = 0; i < 50; i++) {
+	const data = [];
+	for (let i = 0; i < 25; i++) {
 		data.push({
-			tag: `test${i}`,
-			name: `Test-${i}`,
-			role: "user",
-			password: await hash(`test${i}`, 12),
-			email: `test${i}@test.de`,
+			task: `Test Task ${i}`,
+			creatorId: "cKaKfdrKJwxy",
 		});
 	}
 
-	const res = await prisma.user.createMany({
+	const res = await prisma.todo.createMany({
 		data: data,
-	}); 
-  console.log({ res }) 
-  */
+	});
+	console.log({ res });
+	*/
 
 	console.log({ result });
 }

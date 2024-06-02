@@ -68,7 +68,6 @@ model Time {
   notes String? @db.MediumText
 
   traveledDistance Int? @map("traveled_distance") // Stored in km
-  // TODO: Can be changed/recalculated in ui
 
   materials String      @default("[]") // Array of materials used
   breaks    TimeBreak[] @relation("break")
@@ -101,25 +100,39 @@ model Project {
   @@map("projects")
 }
 
+enum TodoPriority {
+  HIGH
+  MEDIUM
+  LOW
+
+  @@map("todo_priorities")
+}
+
+enum TodoStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  ARCHIVED
+  HIDDEN
+
+  @@map("todo_statuses")
+}
+
 model Todo {
   id String @id @default(nanoid(12))
 
-  task        String  @db.MediumText
-  description String? @db.Text
-
-  deadline DateTime?
-
-  done       Boolean @default(false) // Finish todo
-  inProgress Boolean @default(false) @map("in_progress") // Progressing the todo 
-  archived   Boolean @default(false) // Finished the todo
-  trash      Boolean @default(false) // Hidden, can be toggled after archived
+  task        String       @db.MediumText
+  description String?      @db.Text
+  status      TodoStatus   @default(TODO)
+  priority    TodoPriority @default(MEDIUM)
+  deadline    DateTime?
 
   relatedProjects Project[] @relation("project_to_todo") // Any related projects to this todo
 
   assignees User[] @relation("assignee_to_todo") // Assigned users of the todo
 
-  creator   User?   @relation("creator", fields: [creatorId], references: [id], onDelete: Restrict)
-  creatorId String? @map("creator_id")
+  creator   User   @relation("creator", fields: [creatorId], references: [id], onDelete: Restrict)
+  creatorId String @map("creator_id")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
