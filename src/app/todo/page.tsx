@@ -1,26 +1,10 @@
 // UI
-import {
-	Table,
-	TableBody,
-	TableCaption,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectLabel,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import Navigation from "@/components/navigation";
 
+import { DataTable } from "./data-table";
+import { columns } from "./columns";
+
 // Database
-import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -30,29 +14,6 @@ import { redirect } from "next/navigation";
 // React
 import type { Metadata } from "next";
 
-// Utils
-import {} from "@/lib/utils";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
-import { DataTable } from "./data-table";
-import { columns } from "./columns";
 
 export const metadata: Metadata = {
 	title: "Time Track - Todos",

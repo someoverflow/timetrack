@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	ArrowDownAZ,
-	ArrowUpDown,
-	ArrowUpZA,
+	ArrowDownZA,
 	ChevronDown,
 	ChevronRight,
 	ChevronUp,
@@ -76,7 +75,7 @@ export const columns: ColumnDef<
 						>
 							<span>Task</span>
 							{column.getIsSorted() === "desc" ? (
-								<ArrowUpZA className="ml-2 h-4 w-4" />
+								<ArrowDownZA className="ml-2 h-4 w-4" />
 							) : column.getIsSorted() === "asc" ? (
 								<ArrowDownAZ className="ml-2 h-4 w-4" />
 							) : (
@@ -90,7 +89,7 @@ export const columns: ColumnDef<
 							Asc
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-							<ArrowUpZA className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+							<ArrowDownZA className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
 							Desc
 						</DropdownMenuItem>
 					</DropdownMenuContent>
@@ -201,22 +200,13 @@ export const columns: ColumnDef<
 		id: "createdAt",
 		accessorKey: "createdAt",
 		sortingFn: "datetime",
-		header: ({ column }) => {
-			return (
-				<Button
-					variant="ghost"
-					className="text-right"
-					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-				>
-					Created at
-					<ArrowUpDown className="ml-2 h-4 w-4" />
-				</Button>
-			);
-		},
+		header: "Created at",
 		cell: ({ row }) => {
 			const todo = row.original;
 			return (
-				<div className=" font-medium">{todo.createdAt.toLocaleString()}</div>
+				<div className="font-medium text-nowrap">
+					{todo.createdAt.toLocaleString()}
+				</div>
 			);
 		},
 	},
@@ -267,7 +257,7 @@ export const columns: ColumnDef<
 			</DropdownMenu>
 		),
 		cell: ({ row }) => {
-			const payment = row.original;
+			const todo = row.original;
 
 			return (
 				<DropdownMenu>
@@ -279,14 +269,16 @@ export const columns: ColumnDef<
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>Actions</DropdownMenuLabel>
+						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							onClick={() => navigator.clipboard.writeText(payment.id)}
+							onClick={() => navigator.clipboard.writeText(todo.id)}
 						>
 							Edit
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem>Archive</DropdownMenuItem>
-						<DropdownMenuItem>Hide</DropdownMenuItem>
+						{!todo.hidden && <DropdownMenuItem>Hide</DropdownMenuItem>}
+						{todo.hidden && <DropdownMenuItem>Show</DropdownMenuItem>}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			);

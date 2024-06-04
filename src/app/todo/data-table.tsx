@@ -21,7 +21,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -29,6 +29,7 @@ import {
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
+	Filter,
 } from "lucide-react";
 import {
 	Select,
@@ -37,6 +38,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -89,12 +98,41 @@ export function DataTable<TData, TValue>({
 		isMultiSortEvent: (e) => true,
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Get localstorage only run on page load
+	useEffect(() => {
+		// Load page size
+		const localPageSize = Number(localStorage.getItem("pageSizes"));
+		if (!Number.isNaN(localPageSize)) table.setPageSize(localPageSize);
+
+		// Load filters
+		const localHiddenFilter = localStorage.getItem("todoHiddenFilter");
+		if (["true", "false", "indeterminate"].includes(localHiddenFilter ?? ""))
+			table
+				.getColumn("hidden")
+				?.setFilterValue(
+					localHiddenFilter === "indeterminate"
+						? undefined
+						: localHiddenFilter === "true",
+				);
+
+		const localArchivedFilter = localStorage.getItem("todoArchivedFilter");
+		if (["true", "false", "indeterminate"].includes(localArchivedFilter ?? ""))
+			table
+				.getColumn("archived")
+				?.setFilterValue(
+					localArchivedFilter === "indeterminate"
+						? undefined
+						: localArchivedFilter === "true",
+				);
+	}, []);
+
 	return (
 		<div>
 			<div className="w-full flex flex-row items-center justify-between gap-2 p-2">
 				<div className="w-full">
 					<Input
-						placeholder="Search for tasks..."
+						id="searchTaskInput"
+						placeholder="Search for a tasks..."
 						value={(table.getColumn("task")?.getFilterValue() as string) ?? ""}
 						onChange={(event) =>
 							table.getColumn("task")?.setFilterValue(event.target.value)
@@ -102,9 +140,94 @@ export function DataTable<TData, TValue>({
 						className="max-w-xs"
 					/>
 				</div>
-				<div className="w-max">
-					<div className="w-8 h-8 bg-white" />
-				</div>
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button variant="outline" size="sm" className="h-10 w-10 sm:w-fit sm:px-3">
+							<Filter className="sm:mr-2 h-4 w-4" />
+							<span className="hidden sm:block">Filter</span>
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="w-full">
+						<div className="grid gap-2 p-2">
+							<div className="flex flex-row items-center gap-4">
+								<Checkbox
+									id="archivedSwitch"
+									checked={
+										table.getColumn("archived")?.getFilterValue() === undefined
+											? "indeterminate"
+											: (table
+													.getColumn("archived")
+													?.getFilterValue() as boolean)
+									}
+									onCheckedChange={(checked) => {
+										let value = checked ? true : undefined;
+										if (
+											table.getColumn("archived")?.getFilterValue() ===
+											undefined
+										)
+											value = false;
+
+										table.getColumn("archived")?.setFilterValue(value);
+										localStorage.setItem(
+											"todoArchivedFilter",
+											value === undefined ? "indeterminate" : String(value),
+										);
+									}}
+								/>
+								<Label htmlFor="archivedSwitch" className="text-nowrap">
+									Archived
+								</Label>
+							</div>
+							<div className="flex flex-row items-center gap-4">
+								<Checkbox
+									id="hiddenSwitch"
+									checked={
+										table.getColumn("hidden")?.getFilterValue() === undefined
+											? "indeterminate"
+											: (table.getColumn("hidden")?.getFilterValue() as boolean)
+									}
+									onCheckedChange={(checked) => {
+										let value = checked ? true : undefined;
+										if (
+											table.getColumn("hidden")?.getFilterValue() === undefined
+										)
+											value = false;
+
+										table.getColumn("hidden")?.setFilterValue(value);
+										localStorage.setItem(
+											"todoHiddenFilter",
+											value === undefined ? "indeterminate" : String(value),
+										);
+									}}
+								/>
+								<Label htmlFor="hiddenSwitch" className="text-nowrap">
+									Hidden
+								</Label>
+							</div>
+
+							<Separator className="w-full mt-2" />
+
+							<div className="opacity-75 scale-75 flex flex-col gap-2">
+								<div className="flex flex-row items-center gap-4">
+									<Checkbox id="previewChecked" checked disabled />
+									<Label htmlFor="previewChecked">Show only … todos</Label>
+								</div>
+								<div className="flex flex-row items-center gap-4">
+									<Checkbox
+										id="previewIndeterminate"
+										checked="indeterminate"
+										disabled
+									/>
+									<Label htmlFor="previewIndeterminate">Show … todos</Label>
+								</div>
+								<div className="flex flex-row items-center gap-4">
+									<Checkbox id="previewNotChecked" checked={false} disabled />
+									<Label htmlFor="previewNotChecked">Hide … todos</Label>
+								</div>
+							</div>
+						</div>
+					</PopoverContent>
+				</Popover>
 			</div>
 			<ScrollArea
 				className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"
@@ -143,6 +266,7 @@ export function DataTable<TData, TValue>({
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
+									className={row.getValue("hidden") ? "opacity-50" : ""}
 									data-state={row.getIsSelected() && "selected"}
 								>
 									{row.getVisibleCells().map((cell) => (
@@ -168,12 +292,13 @@ export function DataTable<TData, TValue>({
 					</TableBody>
 				</Table>
 			</ScrollArea>
-			<div className="flex items-center justify-end space-x-4 py-4">
-				<div className="flex items-center space-x-2">
+			<div className="flex items-center justify-evenly sm:justify-end space-x-4 p-2 sm:py-4 w-full">
+				<div className="flex flex-col sm:flex-row items-center space-x-2">
 					<p className="text-sm font-medium">Rows per page</p>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
+							localStorage.setItem("pageSizes", value);
 							table.setPageSize(Number(value));
 						}}
 					>
@@ -181,7 +306,7 @@ export function DataTable<TData, TValue>({
 							<SelectValue placeholder={table.getState().pagination.pageSize} />
 						</SelectTrigger>
 						<SelectContent side="top">
-							{[15, 25, 50].map((pageSize) => (
+							{[15, 25, 50, 100].map((pageSize) => (
 								<SelectItem key={pageSize} value={`${pageSize}`}>
 									{pageSize}
 								</SelectItem>
@@ -189,47 +314,50 @@ export function DataTable<TData, TValue>({
 						</SelectContent>
 					</Select>
 				</div>
-				<div className="flex w-[80px] items-center justify-center text-sm font-medium">
-					Page {table.getState().pagination.pageIndex + 1} of{" "}
-					{table.getPageCount()}
-				</div>
-				<div className="flex flex-row items-center space-x-1">
-					<Button
-						variant="outline"
-						size="icon"
-						className="w-9 h-9"
-						onClick={() => table.firstPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						<ChevronsLeft className="w-4 h-4" />
-					</Button>
-					<Button
-						variant="outline"
-						size="icon"
-						className="w-9 h-9"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						<ChevronLeft className="w-4 h-4" />
-					</Button>
-					<Button
-						variant="outline"
-						size="icon"
-						className="w-9 h-9"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						<ChevronRight className="w-4 h-4" />
-					</Button>
-					<Button
-						variant="outline"
-						size="icon"
-						className="w-9 h-9"
-						onClick={() => table.lastPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						<ChevronsRight className="w-4 h-4" />
-					</Button>
+
+				<div className="flex flex-col sm:flex-row items-center justify-center sm:gap-2">
+					<p className="flex w-full sm:w-[80px] justify-center text-center text-sm font-medium">
+						Page {table.getState().pagination.pageIndex + 1} of{" "}
+						{table.getPageCount()}
+					</p>
+					<div className="flex flex-row items-center space-x-1">
+						<Button
+							variant="outline"
+							size="icon"
+							className="w-9 h-9"
+							onClick={() => table.firstPage()}
+							disabled={!table.getCanPreviousPage()}
+						>
+							<ChevronsLeft className="w-4 h-4" />
+						</Button>
+						<Button
+							variant="outline"
+							size="icon"
+							className="w-9 h-9"
+							onClick={() => table.previousPage()}
+							disabled={!table.getCanPreviousPage()}
+						>
+							<ChevronLeft className="w-4 h-4" />
+						</Button>
+						<Button
+							variant="outline"
+							size="icon"
+							className="w-9 h-9"
+							onClick={() => table.nextPage()}
+							disabled={!table.getCanNextPage()}
+						>
+							<ChevronRight className="w-4 h-4" />
+						</Button>
+						<Button
+							variant="outline"
+							size="icon"
+							className="w-9 h-9"
+							onClick={() => table.lastPage()}
+							disabled={!table.getCanNextPage()}
+						>
+							<ChevronsRight className="w-4 h-4" />
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>
