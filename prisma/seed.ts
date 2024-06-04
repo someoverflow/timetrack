@@ -29,9 +29,13 @@ async function main() {
 	/*
 	const data = [];
 	for (let i = 0; i < 25; i++) {
+		let status: "TODO" | "IN_PROGRESS" | "DONE" = "TODO";
+		if (i % 3 === 0) status = "IN_PROGRESS";
+		if (i % 3 === 1) status = "DONE";
 		data.push({
 			task: `Test Task ${i}`,
 			creatorId: "cKaKfdrKJwxy",
+			status: status,
 		});
 	}
 

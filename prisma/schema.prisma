@@ -112,8 +112,6 @@ enum TodoStatus {
   TODO
   IN_PROGRESS
   DONE
-  ARCHIVED
-  HIDDEN
 
   @@map("todo_statuses")
 }
@@ -124,6 +122,8 @@ model Todo {
   task        String       @db.MediumText
   description String?      @db.Text
   status      TodoStatus   @default(TODO)
+  archived    Boolean      @default(false)
+  hidden      Boolean      @default(false)
   priority    TodoPriority @default(MEDIUM)
   deadline    DateTime?
 
