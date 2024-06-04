@@ -321,37 +321,31 @@ export default function TimerInfo({
 								.toString()
 								.padStart(2, "0")} ${days[data.start.getDay()]}`}
 						</p>
-						{(data.project || data.notes) && (
-							<Breadcrumb>
-								<BreadcrumbList className="flex-nowrap">
-									{data.project && (
-										<>
-											<BreadcrumbItem>
-												<BreadcrumbLink asChild>
-													<p className="text-xs truncate">
-														{data.project.name}
-													</p>
-												</BreadcrumbLink>
-											</BreadcrumbItem>
-											<BreadcrumbSeparator />
-										</>
-									)}
-									{data.notes && (
+						<Breadcrumb>
+							<BreadcrumbList className="flex-nowrap">
+								{data.project && (
+									<>
 										<BreadcrumbItem>
 											<BreadcrumbLink asChild>
-												<p className="text-xs text-muted-foreground/75 truncate max-w-32 text-start">
-													{data.notes?.split("\n")[0].startsWith("- ")
-														? `${data.notes
-																?.split("\n")[0]
-																.replace("- ", "")} …`
-														: data.notes?.split("\n")[0]}
-												</p>
+												<p className="text-xs truncate">{data.project.name}</p>
 											</BreadcrumbLink>
 										</BreadcrumbItem>
-									)}
-								</BreadcrumbList>
-							</Breadcrumb>
-						)}
+										<BreadcrumbSeparator />
+									</>
+								)}
+								{data.notes && (
+									<BreadcrumbItem>
+										<BreadcrumbLink asChild>
+											<p className="text-xs text-muted-foreground/75 truncate max-w-32 text-start">
+												{data.notes?.split("\n")[0].startsWith("- ")
+													? `${data.notes?.split("\n")[0].replace("- ", "")} …`
+													: data.notes?.split("\n")[0]}
+											</p>
+										</BreadcrumbLink>
+									</BreadcrumbItem>
+								)}
+							</BreadcrumbList>
+						</Breadcrumb>
 					</div>
 
 					<div className="flex flex-row justify-evenly items-center text-lg">

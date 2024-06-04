@@ -116,7 +116,7 @@ export default async function AdminUserPage({
 
 					<ScrollArea
 						type="always"
-						className="h-[calc(80svh-80px)] rounded-md border p-2.5 w-full"
+						className="h-[calc(95svh-82px-56px-40px)] rounded-md border p-2.5 w-full"
 					>
 						<Table className="rounded-none h-[calc(80svh-80px)]">
 							<TableHeader className="sticky z-10 top-0 bg-secondary">

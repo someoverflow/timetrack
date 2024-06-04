@@ -164,7 +164,7 @@ export default function TimerSection({
 				</div>
 			</div>
 			<ScrollArea
-				className="h-[calc(80svh-80px)] w-full rounded-sm border p-1.5 overflow-hidden"
+				className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border p-1.5 overflow-hidden"
 				type="scroll"
 			>
 				{history[yearMonth].map((time) => (
