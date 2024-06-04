@@ -18,7 +18,7 @@ export default async function Navigation({
 		<main>
 			{children}
 
-			<section className="w-full fixed bottom-[1svh] p-4">
+			<section className="fixed left-1/2 -translate-x-1/2 bottom-[1svh] p-4">
 				<div className="flex flex-row items-center justify-center">
 					<NavigationSection user={user} />
 				</div>
