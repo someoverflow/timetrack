@@ -177,6 +177,7 @@ export const todoCreateApiValidation = z
 		deadline: z.string().date(),
 		assignees: z.array(nameValidation).nonempty(),
 		projects: z.array(nameValidation).nonempty(),
+		priority: z.enum(["HIGH", "MEDIUM", "LOW"])
 	})
 	.partial()
 	.required({ task: true });

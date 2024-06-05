@@ -14,7 +14,15 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, ChevronsUpDown, ListPlus, UserPlus } from "lucide-react";
+import {
+	Check,
+	ChevronDown,
+	ChevronUp,
+	ChevronsUp,
+	ChevronsUpDown,
+	ListPlus,
+	UserPlus,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
 import { toast } from "sonner";
@@ -35,6 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface todoAddState {
 	loading: boolean;
@@ -46,6 +55,7 @@ interface todoAddState {
 	projectsSelectionOpen: boolean;
 	deadline: string;
 	deadlineEnabled: boolean;
+	priority: "HIGH" | "MEDIUM" | "LOW";
 }
 export function TodoAdd({
 	users,
@@ -72,6 +82,7 @@ export function TodoAdd({
 			projectsSelectionOpen: false,
 			deadline: new Date().toISOString().split("T")[0],
 			deadlineEnabled: false,
+			priority: "MEDIUM",
 		},
 	);
 
@@ -90,6 +101,7 @@ export function TodoAdd({
 				task: data.task,
 				description:
 					data.description.trim() === "" ? undefined : data.description.trim(),
+                priority: data.priority,
 				deadline: data.deadlineEnabled ? data.deadline : undefined,
 				assignees: data.assignees.length !== 0 ? data.assignees : undefined,
 				projects: data.projects.length !== 0 ? data.projects : undefined,
@@ -184,6 +196,38 @@ export function TodoAdd({
 							type="always"
 						>
 							<div className="grid gap-4 p-1 w-full">
+								<RadioGroup
+									className="flex flex-row items-center justify-between pt-1"
+									value={data.priority}
+									onValueChange={(state) =>
+										setData({ priority: state as "HIGH" | "MEDIUM" | "LOW" })
+									}
+								>
+									<div className="flex flex-col items-center gap-2">
+										<RadioGroupItem value="HIGH" id="r1" />
+										<Label htmlFor="r1">
+											<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />
+											{" "}High Priority
+										</Label>
+									</div>
+									<div className="flex flex-col items-center gap-2">
+										<RadioGroupItem value="MEDIUM" id="r2" />
+										<Label htmlFor="r2">
+											<ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />
+											{" "}Medium Priority
+										</Label>
+									</div>
+									<div className="flex flex-col items-center gap-2">
+										<RadioGroupItem value="LOW" id="r3" />
+										<Label htmlFor="r3">
+											<ChevronDown className="h-5 w-5 text-blue-500 inline-block" />
+											{" "}Low Priority
+										</Label>
+									</div>
+								</RadioGroup>
+
+								<div id="divider" className="h-1" />
+
 								<div className="grid w-full items-center gap-1.5">
 									<Label
 										htmlFor="todo-add-task"
@@ -193,7 +237,7 @@ export function TodoAdd({
 									</Label>
 									<Input
 										className="!w-full border-2"
-                                        type="text"
+										type="text"
 										spellCheck
 										name="Task"
 										id="todo-add-task"
@@ -279,7 +323,7 @@ export function TodoAdd({
 														<p>No projects found.</p>
 														<Link
 															href="/settings?page=projects"
-                                                            prefetch={false}
+															prefetch={false}
 															className={buttonVariants({
 																variant: "link",
 																className: "flex-col items-start",

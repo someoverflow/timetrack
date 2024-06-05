@@ -1,14 +1,10 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import {
-	NO_AUTH,
-	BAD_REQUEST,
-	FORBIDDEN,
 	parseJsonBody,
 	defaultResult,
 	NO_AUTH_RESPONSE,
 	badRequestResponse,
-	FORBIDDEN_RESPONSE,
 } from "@/lib/server-utils";
 import { todoCreateApiValidation, todoUpdateApiValidation } from "@/lib/zod";
 import type { Prisma } from "@prisma/client";
@@ -22,6 +18,7 @@ import { NextResponse } from "next/server";
 	"deadline": 		<Date?>
 	"assignees": 		[<username>]?
 	"projects": 		[<projectName>]?
+	"priority"			"HIGH"-"MEDIUM"-"LOW"
 }*/
 export const POST = auth(async (request) => {
 	// Check auth
@@ -42,6 +39,7 @@ export const POST = auth(async (request) => {
 		deadline: json.deadline,
 		assignees: json.assignees,
 		projects: json.projects,
+		priority: json.priority,
 	});
 	if (!validationResult.success)
 		return badRequestResponse(validationResult.error.issues, "validation");
@@ -55,6 +53,8 @@ export const POST = auth(async (request) => {
 		task: data.task,
 		description: data.description,
 		deadline: data.deadline ? new Date(data.deadline) : undefined,
+
+		priority: data.priority ?? "MEDIUM",
 
 		assignees: data.assignees
 			? {
@@ -136,7 +136,11 @@ export const PUT = auth(async (request) => {
 	const data = validationResult.data;
 
 	// Check if the type can be handled
-	if (!["UPDATE", "START_PROGRESS", "FINISH", "ARCHIVE"].includes(type))
+	if (
+		!["UPDATE", "START_PROGRESS", "FINISH", "ARCHIVE", "VISIBILITY"].includes(
+			type,
+		)
+	)
 		return badRequestResponse(
 			"Request-Type cannot be processed.",
 			"error-message",
@@ -176,7 +180,7 @@ export const PUT = auth(async (request) => {
 		);
 
 	// Check if todo is archived (Archived projects cannot be changed anymore)
-	if (todo.archived)
+	if (todo.archived && type !== "VISIBILITY")
 		return badRequestResponse(
 			{
 				id: data.id,
@@ -196,7 +200,7 @@ export const PUT = auth(async (request) => {
 		return badRequestResponse(
 			{
 				id: data.id,
-				message: "Todos can only be changed by the creator or assignees.",
+				message: "Todos can only be updated by the creator or assignees.",
 			},
 			"error-message",
 		);
@@ -270,6 +274,10 @@ export const PUT = auth(async (request) => {
 				);
 
 			updateData.archived = true;
+			break;
+
+		case "VISIBILITY":
+			updateData.hidden = !todo.hidden;
 			break;
 	}
 

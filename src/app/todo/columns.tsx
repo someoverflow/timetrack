@@ -14,6 +14,7 @@ import {
 	CircleCheckBig,
 	CircleDot,
 	CircleDotDashed,
+	Dot,
 	ListFilter,
 	MoreHorizontal,
 	Settings2,
@@ -33,6 +34,14 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 export const columns: ColumnDef<
 	Prisma.TodoGetPayload<{
@@ -142,17 +151,52 @@ export const columns: ColumnDef<
 
 					<Separator orientation="vertical" className="ml-2 h-10" />
 
-					<p className="flex flex-col justify-center text-xs text-muted-foreground/80 space-x-2 w-full">
-						{todo.relatedProjects.map(
-							(project, index) =>
-								project.name +
-								(index !== todo.relatedProjects.length - 1 ? " / " : ""),
-						)}
-						<span className="text-primary text-base">
-							<ChevronRight className="inline-block size-3 text-muted-foreground" />
-							{todo.task}
-						</span>
-					</p>
+					<HoverCard>
+						<HoverCardTrigger>
+							<p className="flex flex-col justify-center text-xs text-muted-foreground/80 space-x-2 w-full bg-background/25 rounded-sm p-2">
+								{todo.relatedProjects.map(
+									(project, index) =>
+										project.name +
+										(index !== todo.relatedProjects.length - 1 ? " / " : ""),
+								)}
+								<span className="text-primary text-base">
+									<ChevronRight className="inline-block size-3 text-muted-foreground" />
+									{todo.task}
+								</span>
+							</p>
+						</HoverCardTrigger>
+						<HoverCardContent className="text-muted-foreground">
+							{(todo.hidden || todo.archived) && (
+								<div className="flex flex-row gap-2 pb-2">
+									{todo.archived && (
+										<Badge variant="destructive">Archived</Badge>
+									)}
+									{todo.hidden && <Badge>Hidden</Badge>}
+								</div>
+							)}
+
+							<div className="flex flex-row items-center gap-2">
+								<Label className="flex flex-row">Deadline:</Label>
+								<p className="text-foreground">
+									{todo.deadline
+										? new Intl.DateTimeFormat().format(todo.deadline)
+										: "None"}
+								</p>
+							</div>
+							{todo.description && (
+								<>
+									<Separator className="w-full my-2" />
+									<div className="flex flex-col">
+										<Label className="pr-2">Description:</Label>
+										<p className="text-foreground">{todo.description}</p>
+									</div>
+								</>
+							)}
+
+							<Separator className="w-full my-2" />
+							<p className="text-muted-foreground/80">Click to edit the current todo.</p>
+						</HoverCardContent>
+					</HoverCard>
 				</div>
 			);
 		},
@@ -257,7 +301,103 @@ export const columns: ColumnDef<
 			</DropdownMenu>
 		),
 		cell: ({ row }) => {
+			const router = useRouter();
 			const todo = row.original;
+
+			async function archive() {
+				const result = await fetch("/api/todo?type=ARCHIVE", {
+					method: "PUT",
+					body: JSON.stringify({ id: todo.id }),
+				});
+
+				const resultData: APIResult = await result.json().catch(() => {
+					toast.error("An error occurred", {
+						description: "Result could not be proccessed",
+						important: true,
+						duration: 8000,
+					});
+					return;
+				});
+
+				if (resultData.success) {
+					toast.success("Successfully archived", {
+						duration: 3000,
+					});
+					router.refresh();
+					return;
+				}
+
+				switch (resultData.type) {
+					case "error-message":
+						toast.warning("An error occurred", {
+							description: resultData.result.message,
+							important: true,
+							duration: 5000,
+						});
+						break;
+					case "validation":
+						toast.warning(`An error occurred (${resultData.result[0].code})`, {
+							description: resultData.result[0].message,
+							important: true,
+							duration: 5000,
+						});
+						break;
+					default:
+						toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+							description: "Error could not be identified. You can try again.",
+							important: true,
+							duration: 8000,
+						});
+						break;
+				}
+			}
+			async function visibiltyToggle() {
+				const result = await fetch("/api/todo?type=VISIBILITY", {
+					method: "PUT",
+					body: JSON.stringify({ id: todo.id }),
+				});
+
+				const resultData: APIResult = await result.json().catch(() => {
+					toast.error("An error occurred", {
+						description: "Result could not be proccessed",
+						important: true,
+						duration: 8000,
+					});
+					return;
+				});
+
+				if (resultData.success) {
+					toast.success("Successfully changed visibility", {
+						duration: 3000,
+					});
+					router.refresh();
+					return;
+				}
+
+				switch (resultData.type) {
+					case "error-message":
+						toast.warning("An error occurred", {
+							description: resultData.result.message,
+							important: true,
+							duration: 5000,
+						});
+						break;
+					case "validation":
+						toast.warning(`An error occurred (${resultData.result[0].code})`, {
+							description: resultData.result[0].message,
+							important: true,
+							duration: 5000,
+						});
+						break;
+					default:
+						toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+							description: "Error could not be identified. You can try again.",
+							important: true,
+							duration: 8000,
+						});
+						break;
+				}
+			}
 
 			return (
 				<DropdownMenu>
@@ -271,14 +411,25 @@ export const columns: ColumnDef<
 						<DropdownMenuLabel>Actions</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
+							disabled={todo.archived}
 							onClick={() => navigator.clipboard.writeText(todo.id)}
 						>
 							Edit
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem>Archive</DropdownMenuItem>
-						{!todo.hidden && <DropdownMenuItem>Hide</DropdownMenuItem>}
-						{todo.hidden && <DropdownMenuItem>Show</DropdownMenuItem>}
+						<DropdownMenuItem disabled={todo.archived} onClick={archive}>
+							Archive
+						</DropdownMenuItem>
+						{!todo.hidden && (
+							<DropdownMenuItem onClick={() => visibiltyToggle()}>
+								Hide
+							</DropdownMenuItem>
+						)}
+						{todo.hidden && (
+							<DropdownMenuItem onClick={() => visibiltyToggle()}>
+								Show
+							</DropdownMenuItem>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			);

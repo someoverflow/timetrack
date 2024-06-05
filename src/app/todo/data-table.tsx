@@ -285,7 +285,7 @@ export function DataTable<TData, TValue>({
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
-									className={row.getValue("hidden") ? "opacity-50" : ""}
+									className={`${row.getValue("hidden") ? "bg-muted/10" : ""} ${row.getValue("archived") ? "bg-muted/30" : ""}`}
 									data-state={row.getIsSelected() && "selected"}
 								>
 									{row.getVisibleCells().map((cell) => (
