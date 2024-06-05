@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import {
 	CircleCheckBig,
 	CircleDot,
 	CircleDotDashed,
-	Dot,
 	ListFilter,
 	MoreHorizontal,
 	Settings2,
@@ -42,6 +40,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { type Prisma, TodoPriority, TodoStatus } from "@prisma/client";
 
 export const columns: ColumnDef<
 	Prisma.TodoGetPayload<{
@@ -75,43 +74,41 @@ export const columns: ColumnDef<
 		sortingFn: "alphanumericCaseSensitive",
 		header: ({ column }) => (
 			<div className="flex items-center space-x-2">
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="-ml-3 h-8 data-[state=open]:bg-accent w-full"
-						>
-							<span>Task</span>
-							{column.getIsSorted() === "desc" ? (
-								<ArrowDownZA className="ml-2 h-4 w-4" />
-							) : column.getIsSorted() === "asc" ? (
-								<ArrowDownAZ className="ml-2 h-4 w-4" />
-							) : (
-								<ListFilter className="ml-2 h-4 w-4" />
-							)}
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="start">
-						<DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-							<ArrowDownAZ className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-							Asc
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-							<ArrowDownZA className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
-							Desc
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+				<Button
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc", true)
+					}
+					variant="ghost"
+					size="sm"
+					className="-ml-3 h-8 data-[state=open]:bg-accent w-full"
+				>
+					<span>Task</span>
+					{column.getIsSorted() === "desc" ? (
+						<ArrowDownZA className="ml-2 h-4 w-4" />
+					) : column.getIsSorted() === "asc" ? (
+						<ArrowDownAZ className="ml-2 h-4 w-4" />
+					) : (
+						<ListFilter className="ml-2 h-4 w-4" />
+					)}
+				</Button>
 			</div>
 		),
-		cell: ({ row }) => {
+		cell: ({ row, table }) => {
 			const todo = row.original;
 			return (
 				<div className="flex flex-row items-center gap-2">
 					<div className="flex flex-col justify-between gap-1 h-10">
 						<Tooltip>
-							<TooltipTrigger>
+							<TooltipTrigger
+								onClick={() => {
+									const statusColumn = table.getColumn("status");
+									if (statusColumn)
+										statusColumn.toggleSorting(
+											statusColumn.getIsSorted() === "asc",
+											true,
+										);
+								}}
+							>
 								{row.original.status === "TODO" && (
 									<CircleDot className="h-4 w-4 text-blue-500" />
 								)}
@@ -130,7 +127,16 @@ export const columns: ColumnDef<
 						</Tooltip>
 
 						<Tooltip>
-							<TooltipTrigger>
+							<TooltipTrigger
+								onClick={() => {
+									const priorityColumn = table.getColumn("priority");
+									if (priorityColumn)
+										priorityColumn.toggleSorting(
+											priorityColumn.getIsSorted() === "asc",
+											true,
+										);
+								}}
+							>
 								{row.original.priority === "HIGH" && (
 									<ChevronsUp className="h-4 w-4 text-red-500" />
 								)}
@@ -188,13 +194,17 @@ export const columns: ColumnDef<
 									<Separator className="w-full my-2" />
 									<div className="flex flex-col">
 										<Label className="pr-2">Description:</Label>
-										<p className="text-foreground">{todo.description}</p>
+										<p className="text-foreground whitespace-pre">
+											{todo.description}
+										</p>
 									</div>
 								</>
 							)}
 
 							<Separator className="w-full my-2" />
-							<p className="text-muted-foreground/80">Click to edit the current todo.</p>
+							<p className="text-muted-foreground/80">
+								Click to edit the current todo.
+							</p>
 						</HoverCardContent>
 					</HoverCard>
 				</div>
@@ -204,11 +214,35 @@ export const columns: ColumnDef<
 	{
 		id: "status",
 		accessorKey: "status",
+		sortingFn: (a, b) => {
+			const actionOrder = {
+				[TodoStatus.TODO]: 1,
+				[TodoStatus.IN_PROGRESS]: 2,
+				[TodoStatus.DONE]: 3,
+			};
+
+			return (
+				actionOrder[a.original.status as TodoStatus] -
+				actionOrder[b.original.status as TodoStatus]
+			);
+		},
 		enableHiding: false,
 	},
 	{
 		id: "priority",
 		accessorKey: "priority",
+		sortingFn: (a, b) => {
+			const actionOrder = {
+				[TodoPriority.HIGH]: 1,
+				[TodoPriority.MEDIUM]: 2,
+				[TodoPriority.LOW]: 3,
+			};
+
+			return (
+				actionOrder[a.original.priority as TodoPriority] -
+				actionOrder[b.original.priority as TodoPriority]
+			);
+		},
 		enableHiding: false,
 	},
 	{

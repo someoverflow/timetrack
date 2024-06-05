@@ -65,7 +65,7 @@ export function DataTable<TData, TValue>({
 	projects
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([
-		{ id: "status", desc: true },
+		{ id: "status", desc: false },
 		{ id: "priority", desc: false },
 		{ id: "task", desc: false },
 	]);
