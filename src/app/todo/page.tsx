@@ -31,7 +31,7 @@ export default async function History({
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
-	const [todos, projects] = await prisma.$transaction([
+	const [todos, users, projects] = await prisma.$transaction([
 		prisma.todo.findMany({
 			where: {
 				OR: [
@@ -69,6 +69,7 @@ export default async function History({
 				},
 			},
 		}),
+		prisma.user.findMany({select: {username: true, name: true}}),
 		prisma.project.findMany(),
 	]);
 
@@ -82,7 +83,7 @@ export default async function History({
 				{todos.length === 0 ? (
 					<>Keine Todos</>
 				) : (
-					<DataTable columns={columns} data={todos} />
+					<DataTable columns={columns} data={todos} projects={projects} users={users} />
 				)}
 			</section>
 		</Navigation>

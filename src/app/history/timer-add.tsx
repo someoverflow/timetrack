@@ -549,13 +549,13 @@ export function TimerAddServer({
 														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 															<p>No projects found.</p>
 															<Link
-																href="http://localhost:3000/settings?page=projects"
+																href="/settings?page=projects"
 																className={buttonVariants({
 																	variant: "link",
 																	className: "flex-col items-start",
 																})}
 															>
-																<p>Click to create one now</p>
+																<p>Click to manage projects</p>
 															</Link>
 														</div>
 													) : (

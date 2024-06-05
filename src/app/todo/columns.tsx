@@ -181,7 +181,7 @@ export const columns: ColumnDef<
 							key={assignee.id}
 							className="px-4 text-center text-xs text-nowrap w-full"
 						>
-							{assignee.name}
+							<p className="w-full">{assignee.name}</p>
 						</Badge>
 					))}
 				</div>

@@ -21,6 +21,7 @@ import { NextResponse } from "next/server";
 	"description": 		<description?>
 	"deadline": 		<Date?>
 	"assignees": 		[<username>]?
+	"projects": 		[<projectName>]?
 }*/
 export const POST = auth(async (request) => {
 	// Check auth
@@ -40,6 +41,7 @@ export const POST = auth(async (request) => {
 		description: json.description,
 		deadline: json.deadline,
 		assignees: json.assignees,
+		projects: json.projects,
 	});
 	if (!validationResult.success)
 		return badRequestResponse(validationResult.error.issues, "validation");
@@ -60,10 +62,16 @@ export const POST = auth(async (request) => {
 				}
 			: undefined,
 
-		creatorId: session.user.id,
+		relatedProjects: data.projects
+			? {
+					connect: data.projects.map((name) => ({ name: name })),
+				}
+			: undefined,
+
+		creatorId: session.user.id ?? "",
 	};
 
-	// Create the project
+	// Create the todo
 	try {
 		const databaseResult = await prisma.todo.create({
 			data: createData,
@@ -226,7 +234,7 @@ export const PUT = auth(async (request) => {
 			break;
 
 		case "START_PROGRESSING":
-			if (todo.inProgress)
+			if (todo.status === "IN_PROGRESS")
 				return badRequestResponse(
 					{
 						id: data.id,
@@ -235,12 +243,11 @@ export const PUT = auth(async (request) => {
 					"error-message",
 				);
 
-			updateData.inProgress = true;
-			updateData.done = false;
+			updateData.status = "IN_PROGRESS";
 			break;
 
 		case "FINISH":
-			if (todo.done)
+			if (todo.status === "DONE")
 				return badRequestResponse(
 					{
 						id: data.id,
@@ -249,8 +256,7 @@ export const PUT = auth(async (request) => {
 					"error-message",
 				);
 
-			updateData.inProgress = false;
-			updateData.done = true;
+			updateData.status = "DONE";
 			break;
 
 		case "ARCHIVE":
@@ -263,8 +269,6 @@ export const PUT = auth(async (request) => {
 					"error-message",
 				);
 
-			updateData.inProgress = false;
-			updateData.done = true;
 			updateData.archived = true;
 			break;
 	}

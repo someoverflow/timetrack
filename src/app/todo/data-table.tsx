@@ -46,15 +46,23 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { TodoAdd } from "./todo-add";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+	users: { name: string | null; username: string }[];
+	projects: {
+		name: string;
+		description: string | null;
+	}[]
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
+	users,
+	projects
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([
 		{ id: "status", desc: true },
@@ -140,94 +148,105 @@ export function DataTable<TData, TValue>({
 						className="max-w-xs"
 					/>
 				</div>
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button variant="outline" size="sm" className="h-10 w-10 sm:w-fit sm:px-3">
-							<Filter className="sm:mr-2 h-4 w-4" />
-							<span className="hidden sm:block">Filter</span>
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent className="w-full">
-						<div className="grid gap-2 p-2">
-							<div className="flex flex-row items-center gap-4">
-								<Checkbox
-									id="archivedSwitch"
-									checked={
-										table.getColumn("archived")?.getFilterValue() === undefined
-											? "indeterminate"
-											: (table
-													.getColumn("archived")
-													?.getFilterValue() as boolean)
-									}
-									onCheckedChange={(checked) => {
-										let value = checked ? true : undefined;
-										if (
+				<div className="flex flex-row gap-2">
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								className="h-10 w-10 sm:w-fit sm:px-3"
+							>
+								<Filter className="sm:mr-2 h-4 w-4" />
+								<span className="hidden sm:block">Filter</span>
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent className="w-full">
+							<div className="grid gap-2 p-2">
+								<div className="flex flex-row items-center gap-4">
+									<Checkbox
+										id="archivedSwitch"
+										checked={
 											table.getColumn("archived")?.getFilterValue() ===
 											undefined
-										)
-											value = false;
+												? "indeterminate"
+												: (table
+														.getColumn("archived")
+														?.getFilterValue() as boolean)
+										}
+										onCheckedChange={(checked) => {
+											let value = checked ? true : undefined;
+											if (
+												table.getColumn("archived")?.getFilterValue() ===
+												undefined
+											)
+												value = false;
 
-										table.getColumn("archived")?.setFilterValue(value);
-										localStorage.setItem(
-											"todoArchivedFilter",
-											value === undefined ? "indeterminate" : String(value),
-										);
-									}}
-								/>
-								<Label htmlFor="archivedSwitch" className="text-nowrap">
-									Archived
-								</Label>
-							</div>
-							<div className="flex flex-row items-center gap-4">
-								<Checkbox
-									id="hiddenSwitch"
-									checked={
-										table.getColumn("hidden")?.getFilterValue() === undefined
-											? "indeterminate"
-											: (table.getColumn("hidden")?.getFilterValue() as boolean)
-									}
-									onCheckedChange={(checked) => {
-										let value = checked ? true : undefined;
-										if (
-											table.getColumn("hidden")?.getFilterValue() === undefined
-										)
-											value = false;
-
-										table.getColumn("hidden")?.setFilterValue(value);
-										localStorage.setItem(
-											"todoHiddenFilter",
-											value === undefined ? "indeterminate" : String(value),
-										);
-									}}
-								/>
-								<Label htmlFor="hiddenSwitch" className="text-nowrap">
-									Hidden
-								</Label>
-							</div>
-
-							<Separator className="w-full mt-2" />
-
-							<div className="opacity-75 scale-75 flex flex-col gap-2">
-								<div className="flex flex-row items-center gap-4">
-									<Checkbox id="previewChecked" checked disabled />
-									<Label htmlFor="previewChecked">Show only … todos</Label>
+											table.getColumn("archived")?.setFilterValue(value);
+											localStorage.setItem(
+												"todoArchivedFilter",
+												value === undefined ? "indeterminate" : String(value),
+											);
+										}}
+									/>
+									<Label htmlFor="archivedSwitch" className="text-nowrap">
+										Archived
+									</Label>
 								</div>
 								<div className="flex flex-row items-center gap-4">
 									<Checkbox
-										id="previewIndeterminate"
-										checked="indeterminate"
-										disabled
+										id="hiddenSwitch"
+										checked={
+											table.getColumn("hidden")?.getFilterValue() === undefined
+												? "indeterminate"
+												: (table
+														.getColumn("hidden")
+														?.getFilterValue() as boolean)
+										}
+										onCheckedChange={(checked) => {
+											let value = checked ? true : undefined;
+											if (
+												table.getColumn("hidden")?.getFilterValue() ===
+												undefined
+											)
+												value = false;
+
+											table.getColumn("hidden")?.setFilterValue(value);
+											localStorage.setItem(
+												"todoHiddenFilter",
+												value === undefined ? "indeterminate" : String(value),
+											);
+										}}
 									/>
-									<Label htmlFor="previewIndeterminate">Show … todos</Label>
+									<Label htmlFor="hiddenSwitch" className="text-nowrap">
+										Hidden
+									</Label>
 								</div>
-								<div className="flex flex-row items-center gap-4">
-									<Checkbox id="previewNotChecked" checked={false} disabled />
-									<Label htmlFor="previewNotChecked">Hide … todos</Label>
+
+								<Separator className="w-full mt-2" />
+
+								<div className="opacity-75 scale-75 flex flex-col gap-2">
+									<div className="flex flex-row items-center gap-4">
+										<Checkbox id="previewChecked" checked disabled />
+										<Label htmlFor="previewChecked">Show only … todos</Label>
+									</div>
+									<div className="flex flex-row items-center gap-4">
+										<Checkbox
+											id="previewIndeterminate"
+											checked="indeterminate"
+											disabled
+										/>
+										<Label htmlFor="previewIndeterminate">Show … todos</Label>
+									</div>
+									<div className="flex flex-row items-center gap-4">
+										<Checkbox id="previewNotChecked" checked={false} disabled />
+										<Label htmlFor="previewNotChecked">Hide … todos</Label>
+									</div>
 								</div>
 							</div>
-						</div>
-					</PopoverContent>
-				</Popover>
+						</PopoverContent>
+					</Popover>
+					<TodoAdd users={users} projects={projects} />
+				</div>
 			</div>
 			<ScrollArea
 				className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"

@@ -176,6 +176,7 @@ export const todoCreateApiValidation = z
 		description: todoDescriptionValidation.nullable(),
 		deadline: z.string().date(),
 		assignees: z.array(nameValidation).nonempty(),
+		projects: z.array(nameValidation).nonempty(),
 	})
 	.partial()
 	.required({ task: true });
