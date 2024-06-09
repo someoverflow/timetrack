@@ -100,8 +100,14 @@ export const POST = auth(async (request) => {
 	{
 		"task": 			<task?>
 		"description": 		<description?>
+		"status": 			<Status?>
+		"priority": 		<Priority?>
 		"deadline": 		<Date?>
 		"assignees": {
+			"add": 			[<username>]?
+			"remove": 		[<username>]?
+		}?
+		"projects": {
 			"add": 			[<username>]?
 			"remove": 		[<username>]?
 		}?
@@ -126,21 +132,20 @@ export const PUT = auth(async (request) => {
 	// Validate request
 	const validationResult = todoUpdateApiValidation.safeParse({
 		id: json.id,
+		status: json.status,
+		priority: json.priority,
 		task: json.task,
 		description: json.description,
 		deadline: json.deadline,
 		assignees: json.assignees,
+		projects: json.projects,
 	});
 	if (!validationResult.success)
 		return badRequestResponse(validationResult.error.issues, "validation");
 	const data = validationResult.data;
 
 	// Check if the type can be handled
-	if (
-		!["UPDATE", "START_PROGRESS", "FINISH", "ARCHIVE", "VISIBILITY"].includes(
-			type,
-		)
-	)
+	if (!["UPDATE", "ARCHIVE", "VISIBILITY"].includes(type))
 		return badRequestResponse(
 			"Request-Type cannot be processed.",
 			"error-message",
@@ -215,7 +220,15 @@ export const PUT = auth(async (request) => {
 		case "UPDATE":
 			updateData.task = data.task;
 			updateData.description = data.description;
-			updateData.deadline = data.deadline ? new Date(data.deadline) : undefined;
+			updateData.deadline =
+				data.deadline !== undefined
+					? data.deadline
+						? new Date(data.deadline)
+						: null
+					: undefined;
+
+			if (data.status) updateData.status = data.status;
+			if (data.priority) updateData.priority = data.priority;
 
 			if (data.assignees) {
 				if (data.assignees.add) {
@@ -229,40 +242,32 @@ export const PUT = auth(async (request) => {
 				if (data.assignees.remove) {
 					updateData.assignees = {
 						...updateData.assignees,
-						connect: data.assignees.remove.map((username) => ({
+						disconnect: data.assignees.remove.map((username) => ({
 							username: username,
 						})),
 					};
 				}
 			}
+
+			if (data.projects) {
+				if (data.projects.add) {
+					updateData.relatedProjects = {
+						...updateData.relatedProjects,
+						connect: data.projects.add.map((name) => ({
+							name: name,
+						})),
+					};
+				}
+				if (data.projects.remove) {
+					updateData.relatedProjects = {
+						...updateData.relatedProjects,
+						disconnect: data.projects.remove.map((name) => ({
+							name: name,
+						})),
+					};
+				}
+			}
 			break;
-
-		case "START_PROGRESSING":
-			if (todo.status === "IN_PROGRESS")
-				return badRequestResponse(
-					{
-						id: data.id,
-						message: "Todo is in progress.",
-					},
-					"error-message",
-				);
-
-			updateData.status = "IN_PROGRESS";
-			break;
-
-		case "FINISH":
-			if (todo.status === "DONE")
-				return badRequestResponse(
-					{
-						id: data.id,
-						message: "Todo is done already.",
-					},
-					"error-message",
-				);
-
-			updateData.status = "DONE";
-			break;
-
 		case "ARCHIVE":
 			if (!isByCreator)
 				return badRequestResponse(

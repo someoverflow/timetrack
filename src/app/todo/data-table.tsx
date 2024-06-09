@@ -10,6 +10,7 @@ import {
 	type SortingState,
 	type ColumnFiltersState,
 	getFilteredRowModel,
+	type RowData,
 } from "@tanstack/react-table";
 
 import {
@@ -48,21 +49,33 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { TodoAdd } from "./todo-add";
 
+type UsersType = { name: string | null; username: string }[];
+type ProjectsType = {
+	name: string;
+	description: string | null;
+}[];
+
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
-	users: { name: string | null; username: string }[];
-	projects: {
-		name: string;
-		description: string | null;
-	}[]
+	users: UsersType;
+	projects: ProjectsType;
+}
+
+declare module "@tanstack/table-core" {
+	interface TableMeta<TData extends RowData> {
+		todo: {
+			projects: ProjectsType;
+			users: UsersType;
+		};
+	}
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
 	users,
-	projects
+	projects,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([
 		{ id: "status", desc: false },
@@ -83,6 +96,13 @@ export function DataTable<TData, TValue>({
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		onColumnFiltersChange: setColumnFilters,
+		isMultiSortEvent: () => true,
+		meta: {
+			todo: {
+				projects: projects,
+				users: users,
+			},
+		},
 		state: {
 			sorting,
 			columnFilters,
@@ -103,13 +123,12 @@ export function DataTable<TData, TValue>({
 				return acc;
 			}, {}),
 		},
-		isMultiSortEvent: (e) => true,
 	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Get localstorage only run on page load
 	useEffect(() => {
 		// Load page size
-		const localPageSize = Number(localStorage.getItem("pageSizes"));
+		const localPageSize = Number(localStorage.getItem("pageSizes") ?? 15);
 		if (!Number.isNaN(localPageSize)) table.setPageSize(localPageSize);
 
 		// Load filters
@@ -285,7 +304,9 @@ export function DataTable<TData, TValue>({
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
-									className={`${row.getValue("hidden") ? "bg-muted/10" : ""} ${row.getValue("archived") ? "bg-muted/30" : ""}`}
+									className={`${row.getValue("hidden") ? "bg-muted/10" : ""} ${
+										row.getValue("archived") ? "bg-muted/30" : ""
+									}`}
 									data-state={row.getIsSelected() && "selected"}
 								>
 									{row.getVisibleCells().map((cell) => (

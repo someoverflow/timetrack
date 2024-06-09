@@ -32,15 +32,12 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { useRouter } from "next/navigation";
+import { HoverCard, HoverCardContent } from "@/components/ui/hover-card";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { type Prisma, TodoPriority, TodoStatus } from "@prisma/client";
+import { TodoTableEdit } from "./todo-edit";
 
 export const columns: ColumnDef<
 	Prisma.TodoGetPayload<{
@@ -158,19 +155,11 @@ export const columns: ColumnDef<
 					<Separator orientation="vertical" className="ml-2 h-10" />
 
 					<HoverCard>
-						<HoverCardTrigger>
-							<p className="flex flex-col justify-center text-xs text-muted-foreground/80 space-x-2 w-full bg-background/25 rounded-sm p-2">
-								{todo.relatedProjects.map(
-									(project, index) =>
-										project.name +
-										(index !== todo.relatedProjects.length - 1 ? " / " : ""),
-								)}
-								<span className="text-primary text-base">
-									<ChevronRight className="inline-block size-3 text-muted-foreground" />
-									{todo.task}
-								</span>
-							</p>
-						</HoverCardTrigger>
+						<TodoTableEdit
+							todo={todo}
+							projects={table.options.meta?.todo.projects ?? []}
+							users={table.options.meta?.todo.users ?? []}
+						/>
 						<HoverCardContent className="text-muted-foreground">
 							{(todo.hidden || todo.archived) && (
 								<div className="flex flex-row gap-2 pb-2">
@@ -336,6 +325,7 @@ export const columns: ColumnDef<
 		),
 		cell: ({ row }) => {
 			const router = useRouter();
+			const pathname = usePathname()
 			const todo = row.original;
 
 			async function archive() {
@@ -445,10 +435,9 @@ export const columns: ColumnDef<
 						<DropdownMenuLabel>Actions</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							disabled={todo.archived}
-							onClick={() => navigator.clipboard.writeText(todo.id)}
+							onClick={() => navigator.clipboard.writeText(`${window.location.host}/todo?link=${todo.id}`)}
 						>
-							Edit
+							Copy Link
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem disabled={todo.archived} onClick={archive}>

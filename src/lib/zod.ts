@@ -1,3 +1,4 @@
+import { Role, TodoPriority, TodoStatus } from "@prisma/client";
 import { z } from "zod";
 
 //#region Utils
@@ -36,10 +37,7 @@ export const userCreateApiValidation = z.object({
 	username: nameValidation,
 	email: mailValidation.optional(),
 	password: passwordValidation,
-	role: z
-		.string()
-		.regex(/\b(?:USER|ADMIN)\b/gm, "Role is not USER or ADMIN")
-		.optional(),
+	role: z.nativeEnum(Role).optional(),
 });
 export const userUpdateApiValidation = z
 	.object({
@@ -48,7 +46,7 @@ export const userUpdateApiValidation = z
 		username: nameValidation,
 		email: mailValidation,
 		password: passwordValidation,
-		role: z.string().regex(/\b(?:USER|ADMIN)\b/gm, "Role is not USER or ADMIN"),
+		role: z.nativeEnum(Role),
 	})
 	.partial()
 	.required({ id: true });
@@ -177,7 +175,7 @@ export const todoCreateApiValidation = z
 		deadline: z.string().date(),
 		assignees: z.array(nameValidation).nonempty(),
 		projects: z.array(nameValidation).nonempty(),
-		priority: z.enum(["HIGH", "MEDIUM", "LOW"])
+		priority: z.nativeEnum(TodoPriority),
 	})
 	.partial()
 	.required({ task: true });
@@ -186,15 +184,23 @@ export const todoUpdateApiValidation = z
 	.object({
 		id: nanoIdValidation,
 		task: todoTaskValidation,
+		status: z.nativeEnum(TodoStatus),
+		priority: z.nativeEnum(TodoPriority),
 		description: todoDescriptionValidation.nullable(),
-		deadline: z.string().date(),
+		deadline: z.string().date().nullable(),
 		assignees: z.object({
 			add: z.array(nameValidation).nonempty(),
 			remove: z.array(nameValidation).nonempty(),
-		}),
+		}).partial(),
+		projects: z.object({
+			add: z.array(nameValidation).nonempty(),
+			remove: z.array(nameValidation).nonempty(),
+		}).partial(),
 	})
 	.partial()
 	.required({ id: true });
+
+export type todoUpdateApiValidationType = z.infer<typeof todoUpdateApiValidation>
 //#endregion
 
 //#region Profile API

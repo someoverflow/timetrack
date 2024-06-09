@@ -44,18 +44,24 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { TodoPriority } from "@prisma/client";
 
 interface todoAddState {
 	loading: boolean;
+
+	priority: TodoPriority;
+
 	task: string;
 	description: string;
-	assignees: string[];
-	assigneesSelectionOpen: boolean;
-	projects: string[];
-	projectsSelectionOpen: boolean;
+
 	deadline: string;
 	deadlineEnabled: boolean;
-	priority: "HIGH" | "MEDIUM" | "LOW";
+
+	assignees: string[];
+	assigneesSelectionOpen: boolean;
+
+	projects: string[];
+	projectsSelectionOpen: boolean;
 }
 export function TodoAdd({
 	users,
@@ -101,7 +107,7 @@ export function TodoAdd({
 				task: data.task,
 				description:
 					data.description.trim() === "" ? undefined : data.description.trim(),
-                priority: data.priority,
+				priority: data.priority,
 				deadline: data.deadlineEnabled ? data.deadline : undefined,
 				assignees: data.assignees.length !== 0 ? data.assignees : undefined,
 				projects: data.projects.length !== 0 ? data.projects : undefined,
@@ -200,28 +206,28 @@ export function TodoAdd({
 									className="flex flex-row items-center justify-between pt-1"
 									value={data.priority}
 									onValueChange={(state) =>
-										setData({ priority: state as "HIGH" | "MEDIUM" | "LOW" })
+										setData({ priority: state as TodoPriority })
 									}
 								>
 									<div className="flex flex-col items-center gap-2">
 										<RadioGroupItem value="HIGH" id="r1" />
 										<Label htmlFor="r1">
-											<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />
-											{" "}High Priority
+											<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />{" "}
+											High Priority
 										</Label>
 									</div>
 									<div className="flex flex-col items-center gap-2">
 										<RadioGroupItem value="MEDIUM" id="r2" />
 										<Label htmlFor="r2">
-											<ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />
-											{" "}Medium Priority
+											<ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />{" "}
+											Medium Priority
 										</Label>
 									</div>
 									<div className="flex flex-col items-center gap-2">
 										<RadioGroupItem value="LOW" id="r3" />
 										<Label htmlFor="r3">
-											<ChevronDown className="h-5 w-5 text-blue-500 inline-block" />
-											{" "}Low Priority
+											<ChevronDown className="h-5 w-5 text-blue-500 inline-block" />{" "}
+											Low Priority
 										</Label>
 									</div>
 								</RadioGroup>
@@ -429,7 +435,8 @@ export function TodoAdd({
 															key={`user-selection-add-${user.username}`}
 															className="text-nowrap"
 															value={user.username}
-															onSelect={(value) => {
+															onSelect={() => {
+																const value = user.username
 																const currentAssignees = data.assignees;
 																if (currentAssignees.includes(value))
 																	currentAssignees.splice(
@@ -468,7 +475,7 @@ export function TodoAdd({
 								<div id="divider" className="h-1" />
 
 								<div className="grid w-full items-center gap-1.5">
-									<div className="flex flex-row items-end justify-between">
+									<div className="flex flex-row items-center justify-between">
 										<Label
 											htmlFor="todo-add-deadline"
 											className="pl-2 text-muted-foreground"
@@ -483,9 +490,10 @@ export function TodoAdd({
 										/>
 									</div>
 									<Input
-										className={`!w-full border-2 ${
-											data.deadlineEnabled ? "border-blue-500" : ""
+										className={`!w-full border-2 transition-opacity duration-150 opacity-0 ${
+											data.deadlineEnabled ? "opacity-100" : ""
 										}`}
+										disabled={!data.deadlineEnabled}
 										name="Name"
 										id="todo-add-deadline"
 										type="date"
