@@ -62,6 +62,7 @@ export const GET = auth(async (request) => {
 				},
 				where: {
 					userId: session.user.id,
+					end: null
 				},
 			});
 

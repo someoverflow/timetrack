@@ -25,13 +25,6 @@ import {
 	CommandInput,
 	CommandItem,
 } from "@/components/ui/command";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -52,7 +45,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useReducer, useState } from "react";
 import Link from "next/link";
 
-import { cn, days } from "@/lib/utils";
+import { cn, days, getTimePassed } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -77,6 +71,8 @@ export default function TimerInfo({
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	edit: boolean;
 }) {
+	const router = useRouter();
+
 	const [state, setState] = useReducer(
 		(prev: timerInfoState, next: Partial<timerInfoState>) => ({
 			...prev,
@@ -98,7 +94,10 @@ export default function TimerInfo({
 		},
 	);
 
+	const [blockVisible, setBlockVisible] = useState(false);
+	const [dragProgress, setDragProgress] = useState(0);
 	const [visible, setVisible] = useState(edit);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run when visibility changed
 	useEffect(() => {
 		if (visible) {
@@ -114,24 +113,18 @@ export default function TimerInfo({
 		}
 	}, [visible]);
 
-	const [blockVisible, setBlockVisible] = useState(false);
+	useEffect(() => {
+		if (data.end === null && !visible) {
+			const interval = setInterval(
+				() =>
+					setState({ end: new Date().toLocaleString("sv").replace(" ", "T") }),
+				1000,
+			);
+			return () => clearInterval(interval);
+		}
+	});
 
-	const [dragProgress, setDragProgress] = useState(0);
-
-	const router = useRouter();
-
-	// TODO: Make it editable
-	if (!data.end) {
-		return (
-			<div className="w-full font-mono bg-backgroundSecondary rounded-md text-center mt-2 mb-2 pt-1 pb-1 animate__animated animate__fadeIn">
-				<p className="text-sm text-muted-foreground">
-					Running Timer since {data.start.toLocaleTimeString()}
-				</p>
-			</div>
-		);
-	}
-
-	async function sendRequest() {
+	async function sendRequest(updateEndTime: boolean) {
 		setState({
 			loading: true,
 		});
@@ -152,25 +145,19 @@ export default function TimerInfo({
 
 		const startChanged =
 			state.start !== data.start.toLocaleString("sv").replace(" ", "T");
-		const endChanged =
-			state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
-
-		if (startChanged || endChanged) {
+		if (startChanged) {
 			request.startType = "Website";
-			request.endType = "Website";
-
-			if (state.start.trim() === "" || state.end.trim() === "") {
-				toast.warning("Missing data", {
-					description: "Start or End time not set",
-				});
-				setState({
-					loading: false,
-				});
-				return;
-			}
-
 			request.start = new Date(state.start).toISOString();
-			request.end = new Date(state.end).toISOString();
+		}
+
+		if (updateEndTime) {
+			const endChanged =
+				state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
+
+			if (endChanged) {
+				request.endType = "Website";
+				request.end = new Date(state.end).toISOString();
+			}
 		}
 
 		if (state.projectName !== data.projectName)
@@ -224,7 +211,6 @@ export default function TimerInfo({
 				break;
 		}
 	}
-
 	async function sendDeleteRequest() {
 		setState({
 			loading: true,
@@ -308,44 +294,19 @@ export default function TimerInfo({
 			>
 				<button
 					type="button"
-					className="w-full font-mono p-4 pb-5 select-none rounded-sm border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
+					className="w-full font-mono p-2 select-none rounded-sm border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
 					onClick={() => {
 						if (!blockVisible) setVisible(true);
 					}}
 				>
 					<div className="flex items-center justify-between pb-2">
-						<p className="flex flex-row items-center font-semibold text-xs text-muted-foreground text-left">
-							{`${data.start.getDate().toString().padStart(2, "0")}.${(
-								data.start.getMonth() + 1
-							)
-								.toString()
-								.padStart(2, "0")} ${days[data.start.getDay()]}`}
-						</p>
-						<Breadcrumb>
-							<BreadcrumbList className="flex-nowrap">
-								{data.project && (
-									<>
-										<BreadcrumbItem>
-											<BreadcrumbLink asChild>
-												<p className="text-xs truncate">{data.project.name}</p>
-											</BreadcrumbLink>
-										</BreadcrumbItem>
-										<BreadcrumbSeparator />
-									</>
-								)}
-								{data.notes && (
-									<BreadcrumbItem>
-										<BreadcrumbLink asChild>
-											<p className="text-xs text-muted-foreground/75 truncate max-w-32 text-start">
-												{data.notes?.split("\n")[0].startsWith("- ")
-													? `${data.notes?.split("\n")[0].replace("- ", "")} …`
-													: data.notes?.split("\n")[0]}
-											</p>
-										</BreadcrumbLink>
-									</BreadcrumbItem>
-								)}
-							</BreadcrumbList>
-						</Breadcrumb>
+						{data.project ? (
+							<Badge variant="secondary" className="text-xs">
+								{data.project.name}
+							</Badge>
+						) : (
+							<div className="pb-4" />
+						)}
 					</div>
 
 					<div className="flex flex-row justify-evenly items-center text-lg">
@@ -353,11 +314,24 @@ export default function TimerInfo({
 						<div className="relative flex flex-col items-center">
 							<Separator orientation="horizontal" className="w-10" />
 							<p className="text-xs text-muted-foreground/80 absolute -bottom-5">
-								{data.time ?? ""}
+								{data.time ?? getTimePassed(data.start, new Date(state.end))}
 							</p>
 						</div>
-						<p>{data.end.toLocaleTimeString()}</p>
+						<p className={data.end ? "" : "opacity-50"}>
+							{new Date(state.end).toLocaleTimeString()}
+						</p>
 					</div>
+
+					<p
+						className={cn(
+							"text-xs text-muted-foreground/90 truncate max-w-52 text-start p-2 pt-4",
+						)}
+					>
+						{data.notes &&
+							(data.notes?.split("\n")[0].startsWith("- ")
+								? `${data.notes?.split("\n")[0].replace("- ", "")} …`
+								: data.notes?.split("\n")[0])}
+					</p>
 				</button>
 			</SwipeableListItem>
 
@@ -368,8 +342,12 @@ export default function TimerInfo({
 			>
 				<DialogContent
 					className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
-					onPointerDownOutside={(e) => e.preventDefault()}
-					onInteractOutside={(e) => e.preventDefault()}
+					onPointerDownOutside={(e) => {
+						e.preventDefault();
+					}}
+					onInteractOutside={(e) => {
+						e.preventDefault();
+					}}
 				>
 					<DialogHeader>
 						<DialogTitle>
@@ -404,7 +382,12 @@ export default function TimerInfo({
 										>
 											<Label
 												htmlFor="project-button"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													state.projectName !== data.projectName
+														? "text-blue-500"
+														: "",
+												)}
 											>
 												Project
 											</Label>
@@ -414,10 +397,7 @@ export default function TimerInfo({
 													variant="outline"
 													role="combobox"
 													aria-expanded={state.projectSelectionOpen}
-													className={`w-full justify-between border-2 transition duration-300 ${
-														state.projectName !== data.projectName &&
-														"border-sky-700"
-													}`}
+													className="w-full justify-between border-2"
 												>
 													{state.projectName
 														? projects.find(
@@ -484,8 +464,36 @@ export default function TimerInfo({
 
 									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
+											htmlFor={`timerModal-notes-${data.id}`}
+											className={cn(
+												"pl-2 text-muted-foreground transition-colors",
+												state.notes !== (data.notes ?? "")
+													? "text-blue-500"
+													: "",
+											)}
+										>
+											Notes
+										</Label>
+										<Textarea
+											id={`timerModal-notes-${data.id}`}
+											className="h-full min-h-[30svh] max-h-[50svh] border-2"
+											spellCheck={true}
+											value={state.notes}
+											onChange={(e) => setState({ notes: e.target.value })}
+										/>
+									</div>
+
+									<div id="divider" className="h-4" />
+
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Label
 											htmlFor="distance-button"
-											className="pl-2 text-muted-foreground"
+											className={cn(
+												"pl-2 text-muted-foreground transition-colors",
+												state.traveledDistance !== data.traveledDistance
+													? "text-blue-500"
+													: "",
+											)}
 										>
 											Distance traveled (km)
 										</Label>
@@ -493,10 +501,7 @@ export default function TimerInfo({
 											id="distance-button"
 											type="number"
 											min={0}
-											className={`w-full border-2 transition duration-300 ${
-												state.traveledDistance !== data.traveledDistance &&
-												"border-sky-700"
-											}`}
+											className="w-full border-2"
 											onChange={(change) => {
 												const target = change.target.valueAsNumber;
 												setState({
@@ -506,26 +511,6 @@ export default function TimerInfo({
 												});
 											}}
 											value={state.traveledDistance ?? ""}
-										/>
-									</div>
-
-									<div id="divider" className="h-4" />
-
-									<div className="h-full w-full grid p-1 gap-1.5">
-										<Label
-											htmlFor={`timerModal-notes-${data.id}`}
-											className="text-muted-foreground pl-2"
-										>
-											Notes
-										</Label>
-										<Textarea
-											id={`timerModal-notes-${data.id}`}
-											className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-												state.notes !== (data.notes ?? "") && "border-sky-700"
-											}`}
-											spellCheck={true}
-											value={state.notes}
-											onChange={(e) => setState({ notes: e.target.value })}
 										/>
 									</div>
 								</ScrollArea>
@@ -539,16 +524,18 @@ export default function TimerInfo({
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="name"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													state.start !==
+														data.start.toLocaleString("sv").replace(" ", "T")
+														? "text-blue-500"
+														: "",
+												)}
 											>
 												Start
 											</Label>
 											<Input
-												className={`!w-full font-mono border-2 transition-all duration-300 ${
-													state.start !==
-														data.start.toLocaleString("sv").replace(" ", "T") &&
-													"border-sky-700"
-												}`}
+												className="w-full font-mono border-2"
 												type="datetime-local"
 												name="Updated"
 												id="updated"
@@ -560,19 +547,22 @@ export default function TimerInfo({
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="username"
-												className="pl-2 text-muted-foreground"
-											>
-												End
-											</Label>
-											<Input
-												className={`w-full font-mono border-2 transition-all duration-300 ${
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
 													state.end !==
 														(data.end
 															? data.end.toLocaleString("sv").replace(" ", "T")
 															: new Date()
 																	.toLocaleString("sv")
-																	.replace(" ", "T")) && "border-sky-700"
-												}`}
+																	.replace(" ", "T"))
+														? "text-blue-500"
+														: "",
+												)}
+											>
+												End
+											</Label>
+											<Input
+												className="w-full font-mono border-2"
 												type="datetime-local"
 												name="Created"
 												id="created"
@@ -613,7 +603,7 @@ export default function TimerInfo({
 												type="text"
 												name="stopped-with"
 												id="stopped-w"
-												value={`${data.endType}`}
+												value={data.endType ?? "not stopped"}
 											/>
 										</div>
 
@@ -666,9 +656,19 @@ export default function TimerInfo({
 								<Trash className="mr-2 h-4 w-4" />
 								Delete
 							</Button>
+							{!data.end && (
+								<Button
+									variant="outline"
+									onClick={() => sendRequest(false)}
+									disabled={state.loading}
+								>
+									<SaveAll className="mr-2 h-4 w-4" />
+									Save Data
+								</Button>
+							)}
 							<Button
 								variant="outline"
-								onClick={() => sendRequest()}
+								onClick={() => sendRequest(true)}
 								disabled={state.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />

@@ -161,7 +161,7 @@ export default function TimerAdd({
 				</DialogHeader>
 
 				<div className="w-full flex flex-col gap-2">
-					<Tabs defaultValue="time">
+					<Tabs defaultValue="details">
 						<TabsList className="flex w-full">
 							<TabsTrigger className="w-full" value="details">
 								Details
@@ -260,6 +260,24 @@ export default function TimerAdd({
 
 								<div className="h-full w-full grid p-1 gap-1.5">
 									<Label
+										htmlFor="timerModal-notes-add"
+										className="text-muted-foreground pl-2"
+									>
+										Notes
+									</Label>
+									<Textarea
+										id="timerModal-notes-add"
+										className="h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300"
+										spellCheck={true}
+										onChange={(e) => setData({ notes: e.target.value })}
+										value={data.notes}
+									/>
+								</div>
+
+								<div id="divider" className="h-4" />
+
+								<div className="h-full w-full grid p-1 gap-1.5">
+									<Label
 										htmlFor="distance-button"
 										className="pl-2 text-muted-foreground"
 									>
@@ -277,24 +295,6 @@ export default function TimerAdd({
 											});
 										}}
 										value={data.traveledDistance ?? ""}
-									/>
-								</div>
-
-								<div id="divider" className="h-4" />
-
-								<div className="h-full w-full grid p-1 gap-1.5">
-									<Label
-										htmlFor="timerModal-notes-add"
-										className="text-muted-foreground pl-2"
-									>
-										Notes
-									</Label>
-									<Textarea
-										id="timerModal-notes-add"
-										className="h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300"
-										spellCheck={true}
-										onChange={(e) => setData({ notes: e.target.value })}
-										value={data.notes}
 									/>
 								</div>
 							</ScrollArea>
@@ -497,7 +497,7 @@ export function TimerAddServer({
 					</DialogHeader>
 
 					<div className="w-full flex flex-col gap-2">
-						<Tabs defaultValue="time">
+						<Tabs defaultValue="details">
 							<TabsList className="flex w-full">
 								<TabsTrigger className="w-full" value="details">
 									Details
@@ -596,6 +596,26 @@ export function TimerAddServer({
 
 									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
+											htmlFor="timerModal-notes-add"
+											className="text-muted-foreground pl-2"
+										>
+											Notes
+										</Label>
+										<Textarea
+											id="timerModal-notes-add"
+											className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
+												data.notes !== (data.notes ?? "") && "border-sky-700"
+											}`}
+											spellCheck={true}
+											value={data.notes}
+											onChange={(e) => setData({ notes: e.target.value })}
+										/>
+									</div>
+
+									<div id="divider" className="h-4" />
+
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Label
 											htmlFor="distance-button"
 											className="pl-2 text-muted-foreground"
 										>
@@ -615,26 +635,6 @@ export function TimerAddServer({
 												});
 											}}
 											value={data.traveledDistance ?? ""}
-										/>
-									</div>
-
-									<div id="divider" className="h-4" />
-
-									<div className="h-full w-full grid p-1 gap-1.5">
-										<Label
-											htmlFor="timerModal-notes-add"
-											className="text-muted-foreground pl-2"
-										>
-											Notes
-										</Label>
-										<Textarea
-											id="timerModal-notes-add"
-											className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-												data.notes !== (data.notes ?? "") && "border-sky-700"
-											}`}
-											spellCheck={true}
-											value={data.notes}
-											onChange={(e) => setData({ notes: e.target.value })}
 										/>
 									</div>
 								</ScrollArea>

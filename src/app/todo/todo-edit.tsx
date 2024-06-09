@@ -392,7 +392,7 @@ export function TodoTableEdit({
 								responsive={false}
 								styles={{
 									"step-button-container": cn(
-										"transition-all duration-500",
+										"transition-all duration-300",
 										"data-[active=true]:bg-muted data-[active=true]:border-primary dark:data-[active=true]:text-primary-foreground",
 										"data-[current=true]:bg-muted data-[current=true]:border-primary data-[current=true]:text-primary-foreground",
 										todo.status === "TODO"
@@ -452,7 +452,7 @@ export function TodoTableEdit({
 								>
 									<div className="grid gap-4 p-1 w-full">
 										<RadioGroup
-											className={cn("flex flex-row items-center justify-between pt-1 px-2 border-l-2", todo.priority !== state.priority ? "border-blue-500" : "")}
+											className={cn("flex flex-row items-center justify-between pt-1 px-2 transition-all border-l-2", todo.priority !== state.priority ? "border-blue-500" : "")}
 											value={state.priority}
 											onValueChange={(state) =>
 												setState({

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Check, ChevronDown, ListPlus } from "lucide-react";
 import TimerAdd from "./timer-add";
 
@@ -32,7 +33,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 // React
 import React, { useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn, days } from "@/lib/utils";
 
 import dynamic from "next/dynamic";
 import TimerExportDialog from "./timer-export";
@@ -81,6 +82,16 @@ export default function TimerSection({
 		router.refresh();
 	};
 
+	const historyDays = history[yearMonth]
+		.map((entry) => entry.start)
+		.filter(
+			(item, index, array) =>
+				array.indexOf(
+					array.find((v) => item.toDateString() === v.toDateString()) ??
+						new Date(),
+				) === index,
+		);
+
 	return (
 		<section
 			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start"
@@ -98,7 +109,11 @@ export default function TimerSection({
 								<div className="flex flex-row items-center justify-start gap-2">
 									{yearMonth}
 									<p className="font-mono text-muted-foreground">
-										({totalTime})
+										(
+										{(history[yearMonth].find((e) => e.end === null)
+											? "~"
+											: "") + totalTime}
+										)
 									</p>
 								</div>
 								<ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -167,14 +182,38 @@ export default function TimerSection({
 				className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border p-1.5 overflow-hidden"
 				type="scroll"
 			>
-				{history[yearMonth].map((time) => (
-					<TimerInfo
-						key={`timerHistory-${yearMonth}-${time.id}`}
-						edit={editTime === time.id}
-						projects={projects}
-						data={time}
-					/>
-				))}
+				{historyDays.map((day, index) => {
+					return (
+						<section
+							key={`day-${day}`}
+							className={index === 0 ? "mt-2" : "mt-6 mb-2"}
+						>
+							<div className="flex flex-row items-center justify-center gap-2 mb-2 transition-all duration-300 animate__animated animate__slideInLeft">
+								<div className="w-1/2" />
+								<Badge className="justify-center w-full font-semibold text-sm">
+									{`${day.getDate().toString().padStart(2, "0")}.${(
+										day.getMonth() + 1
+									)
+										.toString()
+										.padStart(2, "0")} ${days[day.getDay()]}`}
+								</Badge>
+								<div className="w-1/2" />
+							</div>
+
+							{history[yearMonth]
+								.filter((v) => v.start.toDateString() === day.toDateString())
+								.reverse()
+								.map((time) => (
+									<TimerInfo
+										key={`timerHistory-${yearMonth}-${time.id}`}
+										edit={editTime === time.id}
+										projects={projects}
+										data={time}
+									/>
+								))}
+						</section>
+					);
+				})}
 			</ScrollArea>
 		</section>
 	);
