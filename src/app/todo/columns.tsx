@@ -160,7 +160,7 @@ export const columns: ColumnDef<
 							projects={table.options.meta?.todo.projects ?? []}
 							users={table.options.meta?.todo.users ?? []}
 						/>
-						<HoverCardContent className="text-muted-foreground">
+						<HoverCardContent className="text-muted-foreground w-96">
 							{(todo.hidden || todo.archived) && (
 								<div className="flex flex-row gap-2 pb-2">
 									{todo.archived && (
@@ -183,7 +183,7 @@ export const columns: ColumnDef<
 									<Separator className="w-full my-2" />
 									<div className="flex flex-col">
 										<Label className="pr-2">Description:</Label>
-										<p className="text-foreground whitespace-pre">
+										<p className="text-foreground whitespace-pre-line">
 											{todo.description}
 										</p>
 									</div>
