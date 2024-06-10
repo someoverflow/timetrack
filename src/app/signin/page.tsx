@@ -49,13 +49,12 @@ export default function SignIn() {
 				toast.error("Wrong Credentials", {
 					description: "Try again with a different username and password",
 				});
-				return;
+			} else {
+				const target = result.url ?? "/";
+				if (target.startsWith("https://") || target.startsWith("http://"))
+					window.location.href = target;
+				else router.push(target);
 			}
-
-			const target = result.url ?? "/";
-			if (target.startsWith("https://") || target.startsWith("http://"))
-				window.location.href = target;
-			else router.push(target);
 		} else
 			toast.error("No result data", {
 				description: "Try again now or later",
