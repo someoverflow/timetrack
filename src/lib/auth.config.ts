@@ -5,12 +5,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import { compare } from "bcryptjs";
 
-class UserNotFound extends CredentialsSignin {
-	code = "user-not-found";
-}
-class InvalidPassword extends CredentialsSignin {
-	code = "invalid-password";
-}
+export class MemberNotFoundError extends CredentialsSignin {}
+export class InvalidPasswordError extends CredentialsSignin {}
 
 export default {
 	providers: [
@@ -33,11 +29,11 @@ export default {
 						username: data.username,
 					},
 				});
-				if (!user) throw new UserNotFound();
+				if (!user) throw new MemberNotFoundError();
 
 				// Check the password
 				const isPasswordValid = await compare(data.password, user.password);
-				if (!isPasswordValid) throw new InvalidPassword();
+				if (!isPasswordValid) throw new InvalidPasswordError();
 
 				return {
 					id: user.id,

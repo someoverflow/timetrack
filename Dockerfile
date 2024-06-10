@@ -42,7 +42,7 @@ RUN mkdir /backups && chown nextjs:nodejs /backups
 USER nextjs
 
 ENV AUTH_TRUST_HOST true
-#ENV AUTH_URL http://0.0.0.0:3000/api/auth
+
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 

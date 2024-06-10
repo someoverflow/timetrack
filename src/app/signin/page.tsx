@@ -21,7 +21,7 @@ export default function SignIn() {
 	const session = useSession();
 
 	const searchParams = useSearchParams();
-	const callbackUrl = searchParams.get("callbackUrl") || "/";
+	const callbackUrl = searchParams.get("callbackUrl");
 
 	const router = useRouter();
 
@@ -39,15 +39,23 @@ export default function SignIn() {
 		const result = await signIn("credentials", {
 			username: username,
 			password: password,
-			callbackUrl: callbackUrl,
+			callbackUrl: callbackUrl ?? "/",
 			redirect: false,
 		});
+		console.log(result);
 		if (result) {
-			if (result.error === "CredentialsSignin") {
+			if (result.error) {
+				//  === "CredentialsSignin"
 				toast.error("Wrong Credentials", {
 					description: "Try again with a different username and password",
 				});
-			} else router.push(result.url ? result.url : callbackUrl);
+				return;
+			}
+
+			const target = result.url ?? "/";
+			if (target.startsWith("https://") || target.startsWith("http://"))
+				window.location.href = target;
+			else router.push(target);
 		} else
 			toast.error("No result data", {
 				description: "Try again now or later",
@@ -58,7 +66,7 @@ export default function SignIn() {
 	return (
 		<main className="min-h-[90svh] flex flex-col items-center justify-center">
 			<Card className="w-[350px]">
-				<CardHeader>
+				<CardHeader className="text-center">
 					<CardTitle>Sign In</CardTitle>
 				</CardHeader>
 				<CardContent>

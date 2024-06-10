@@ -14,12 +14,9 @@ export default auth((req) => {
 			return NextResponse.next();
 	}
 
-	if (!isLoggedIn) {
-		const signInUrl = new URL("/signin", req.url);
-		signInUrl.searchParams.set("callbackUrl", req.nextUrl.href);
-		return NextResponse.redirect(signInUrl);
-	}
-
+	if (!isLoggedIn) 
+		return NextResponse.redirect(new URL("/signin", req.url));
+	
 	return NextResponse.next();
 });
 

@@ -23,9 +23,6 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-// React
-import { signOut } from "next-auth/react";
-
 // Navigation
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -107,7 +104,11 @@ export default function NavigationSection({
 						</MenubarItem>
 					)}
 
-					<MenubarItem onClick={() => signOut()}>Sign Out</MenubarItem>
+					<MenubarItem asChild>
+						<Link href="/signout" prefetch>
+							Sign Out
+						</Link>
+					</MenubarItem>
 
 					<MenubarSeparator />
 
