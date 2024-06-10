@@ -452,7 +452,12 @@ export function TodoTableEdit({
 								>
 									<div className="grid gap-4 p-1 w-full">
 										<RadioGroup
-											className={cn("flex flex-row items-center justify-between pt-1 px-2 transition-all border-l-2", todo.priority !== state.priority ? "border-blue-500" : "")}
+											className={cn(
+												"flex flex-row items-center justify-between pt-1 px-2 transition-all border-l-2",
+												todo.priority !== state.priority
+													? "border-blue-500"
+													: "",
+											)}
 											value={state.priority}
 											onValueChange={(state) =>
 												setState({
@@ -462,7 +467,7 @@ export function TodoTableEdit({
 										>
 											<div className="flex flex-col items-center gap-2">
 												<RadioGroupItem value="HIGH" id="r1" />
-												<Label htmlFor="r1" >
+												<Label htmlFor="r1">
 													<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />{" "}
 													High Priority
 												</Label>
@@ -513,7 +518,7 @@ export function TodoTableEdit({
 												htmlFor={`todo-description-${todo.id}`}
 												className={cn(
 													"pl-2 text-muted-foreground transition-colors",
-													todo.description ?? "" !== state.description
+													(todo.description ?? "") !== state.description
 														? "text-blue-500"
 														: "",
 												)}

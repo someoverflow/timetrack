@@ -1,6 +1,7 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import authConfig from "./auth.config";
 
+import type { User } from "@prisma/client";
 import prisma from "@/lib/prisma";
 
 declare module "next-auth" {
@@ -54,12 +55,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 			if (user) {
 				token.id = user.id;
 
-				// biome-ignore lint/suspicious/noExplicitAny: Type differences
-				token.username = (user as any).username;
-				// biome-ignore lint/suspicious/noExplicitAny: Type differences
-				token.role = (user as any).role;
-				// biome-ignore lint/suspicious/noExplicitAny: Type differences
-				token.validJwtId = (user as any).validJwtId;
+				token.username = (user as User).username;
+				token.role = (user as User).role;
+				token.validJwtId = (user as User).validJwtId;
 			}
 
 			// To invalidate the jwt
