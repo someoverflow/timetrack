@@ -14,7 +14,6 @@ import { redirect } from "next/navigation";
 // React
 import type { Metadata } from "next";
 
-
 export const metadata: Metadata = {
 	title: "Time Track - Todos",
 	description: "Track your Time",
@@ -69,7 +68,7 @@ export default async function History({
 				},
 			},
 		}),
-		prisma.user.findMany({select: {username: true, name: true}}),
+		prisma.user.findMany({ select: { username: true, name: true } }),
 		prisma.project.findMany(),
 	]);
 
@@ -80,11 +79,12 @@ export default async function History({
 					<p className="text-2xl font-mono">Todos</p>
 				</div>
 
-				{todos.length === 0 ? (
-					<>Keine Todos</>
-				) : (
-					<DataTable columns={columns} data={todos} projects={projects} users={users} />
-				)}
+				<DataTable
+					columns={columns}
+					data={todos}
+					projects={projects}
+					users={users}
+				/>
 			</section>
 		</Navigation>
 	);
