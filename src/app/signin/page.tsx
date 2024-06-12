@@ -20,9 +20,6 @@ import { useEffect, useState } from "react";
 export default function SignIn() {
 	const session = useSession();
 
-	const searchParams = useSearchParams();
-	const callbackUrl = searchParams.get("callbackUrl");
-
 	const router = useRouter();
 
 	const [username, setUsername] = useState("");
@@ -39,7 +36,6 @@ export default function SignIn() {
 		const result = await signIn("credentials", {
 			username: username,
 			password: password,
-			callbackUrl: callbackUrl ?? "/",
 			redirect: false,
 		});
 		console.log(result);
@@ -49,12 +45,7 @@ export default function SignIn() {
 				toast.error("Wrong Credentials", {
 					description: "Try again with a different username and password",
 				});
-			} else {
-				const target = result.url ?? "/";
-				if (target.startsWith("https://") || target.startsWith("http://"))
-					window.location.href = target;
-				else router.push(target);
-			}
+			} else router.push("/");
 		} else
 			toast.error("No result data", {
 				description: "Try again now or later",
