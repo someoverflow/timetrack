@@ -1,5 +1,22 @@
 {
 	"Index": {
 		"title": "Hello world!"
-	}
+	},
+	"Timer": {
+		"Dialogs": {
+			"Stopped": {
+				"title": "Edit time and notes",
+				"description": "Do you want to edit your stopped timer now or later?",
+				"edit": "Now",
+				"cancel": "Later"
+			}
+		}
+	},
+	"Miscellaneous": {
+        "updating": "Updating",
+        "start": "Start",
+        "stop": "Stop",
+        "startWithWebsite": "Start now with Website",
+        "startedWith": "Started with {startType}"
+    }
 }

@@ -1,5 +1,22 @@
 {
 	"Index": {
 		"title": "Hallo Welt."
+	},
+	"Timer": {
+		"Dialogs": {
+			"Stopped": {
+				"title": "Zeiten und Notizen bearbeiten?",
+				"description": "Möchtest du deinen gestoppten Eintrag sofort bearbeiten?",
+				"edit": "Sofort",
+				"cancel": "Später"
+			}
+		}
+	},
+	"Miscellaneous": {
+		"updating": "Aktuallisiere",
+		"start": "Start",
+		"stop": "Stop",
+		"startWithWebsite": "Starte jetzt durch die Website",
+		"startedWith": "Gestartet mit {startType}"
 	}
 }
