@@ -27,9 +27,10 @@
 		"PageTitle": "Verlauf",
 
 		"Metadata": {
-			"title": "Time Track - History",
-			"description": "Track your Time"
+			"title": "Time Track - Verlauf",
+			"description": "Erfasse deine Zeiten"
 		},
+
 		"Dialogs": {
 			"Edit": {
 				"title": "Eintrag bearbeiten",
@@ -146,6 +147,17 @@
 				"6": "Samstag"
 			}
 		}
+	},
+	"SignOut": {
+		"Metadata": {
+			"title": "Time Track - Abmelden",
+			"description": "Erfasse deine Zeiten"
+		},
+
+		"title": "Abmelden",
+		"description": "Sicher dass du dich abmelden willst?",
+
+		"buttonText": "Abmelden"
 	},
 	"Navigation": {
 		"Theme": {

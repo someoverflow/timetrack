@@ -30,6 +30,7 @@
 			"title": "Time Track - History",
 			"description": "Track your Time"
 		},
+
 		"Dialogs": {
 			"Edit": {
 				"title": "Edit entry",
@@ -95,24 +96,24 @@
 					"title": "Filters",
 					"description": "Filter the data to download.",
 
-                    "search": "Search...",
+					"search": "Search...",
 
 					"yearMonth": "Year / Month",
 
-                    "project": "Project",
-                    "allProjects": "All Projects",
-                    "withoutProject": "Without a Project"
+					"project": "Project",
+					"allProjects": "All Projects",
+					"withoutProject": "Without a Project"
 				},
-                "visualisation": {
-                    "title": "Visualisation",
-                    "description": "Customize the table to export.",
+				"visualisation": {
+					"title": "Visualisation",
+					"description": "Customize the table to export.",
 
-                    "dateSpecificColumn": "Show the Date in a specific column",
-                    "structureByDateTree": "Structure by date in the tree",
-                    "projectSpecificColumn": "Show the Project in a specific column"
-                },
+					"dateSpecificColumn": "Show the Date in a specific column",
+					"structureByDateTree": "Structure by date in the tree",
+					"projectSpecificColumn": "Show the Project in a specific column"
+				},
 
-                "download": "Download"
+				"download": "Download"
 			}
 		},
 
@@ -146,6 +147,17 @@
 				"6": "Saturday"
 			}
 		}
+	},
+	"SignOut": {
+		"Metadata": {
+			"title": "Time Track - Sign Out",
+			"description": "Erfasse deine Zeiten"
+		},
+
+		"title": "Sign Out",
+		"description": "Are you sure you want to sign out?",
+
+		"buttonText": "Sign Out"
 	},
 	"Navigation": {
 		"Theme": {

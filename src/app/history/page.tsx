@@ -40,10 +40,14 @@ function formatHistory(data: Timer[]): Data {
 	return result;
 }
 
-export const metadata: Metadata = {
-	title: "Time Track - History",
-	description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "History.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function History({
 	searchParams,

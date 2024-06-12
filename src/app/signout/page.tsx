@@ -1,5 +1,4 @@
-import type { Metadata } from "next";
-import { signOut } from "@/lib/auth";
+// UI
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -9,18 +8,29 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 
-export const metadata: Metadata = {
-	title: "Time Track - Signout",
-	description: "Track your Time",
-};
+// Auth
+import { signOut } from "@/lib/auth";
 
-export default function SignOutPage() {
+// Utils
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "SignOut.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
+export default async function SignOutPage() {
+	const t = await getTranslations("SignOut");
+
 	return (
 		<main className="min-h-[90svh] flex flex-col items-center justify-center">
 			<Card className="w-[350px] text-center">
 				<CardHeader>
-					<CardTitle>Sign Out</CardTitle>
-					<CardDescription>Are you sure you want to sign out?</CardDescription>
+					<CardTitle>{t("title")}</CardTitle>
+					<CardDescription>{t("description")}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form
@@ -30,7 +40,7 @@ export default function SignOutPage() {
 						}}
 					>
 						<Button type="submit" variant="outline">
-							Sign Out
+							{t("buttonText")}
 						</Button>
 					</form>
 				</CardContent>
