@@ -3,10 +3,10 @@
 		"title": "Hallo Welt."
 	},
 	"Timer": {
-        "Metadata": {
-            "title": "Time Track",
-            "description": "Erfasse deine Zeiten"
-        },
+		"Metadata": {
+			"title": "Time Track",
+			"description": "Erfasse deine Zeiten"
+		},
 		"Dialogs": {
 			"Stopped": {
 				"title": "Zeiten und Notizen bearbeiten?",
@@ -14,13 +14,148 @@
 				"edit": "Sofort",
 				"cancel": "Später"
 			}
+		},
+		"Miscellaneous": {
+			"updating": "Aktuallisiere",
+			"start": "Start",
+			"stop": "Stop",
+			"startWithWebsite": "Starte jetzt durch die Website",
+			"startedWith": "Gestartet mit {startType}"
 		}
 	},
-	"Miscellaneous": {
-		"updating": "Aktuallisiere",
-		"start": "Start",
-		"stop": "Stop",
-		"startWithWebsite": "Starte jetzt durch die Website",
-		"startedWith": "Gestartet mit {startType}"
+	"History": {
+		"PageTitle": "Verlauf",
+
+		"Metadata": {
+			"title": "Time Track - History",
+			"description": "Track your Time"
+		},
+		"Dialogs": {
+			"Edit": {
+				"title": "Eintrag bearbeiten",
+
+				"details": "Details",
+				"time": "Zeit",
+				"breaks": "Pausen",
+
+				"project": {
+					"project": "Projekt",
+					"search": "Projekt Suchen...",
+					"noProjects": "Keine Projekte gefunden.",
+					"noProjectsDescription": "Klicke um eins zu erstellen",
+					"noRelated": "Kein zugehöriges Projekt"
+				},
+
+				"notes": "Notizen",
+				"distance": "Zurückgelegte Entfernung (km)",
+
+				"start": "Start",
+				"end": "Ende",
+				"startedWith": "Gestartet mit",
+				"stoppedWith": "Gestoppt mit",
+
+				"delete": "Löschen",
+				"save": "Speichern",
+				"saveDetails": "Details Speichern"
+			},
+			"Create": {
+				"title": "Eintrag hinzufügen",
+
+				"first": {
+					"title": "Erstelle einen ersten Eintrag",
+					"description": "<p>Wir haben keine Daten gefunden.</p><p>Du kannst hier einen Eintrag Manuell erstellen</p><p>oder einfach einen Timer starten.</p>"
+				},
+
+				"details": "Details",
+				"time": "Zeit",
+				"breaks": "Pausen",
+
+				"project": {
+					"project": "Projekt",
+					"search": "Projekt Suchen...",
+					"noProjects": "Keine Projekte gefunden.",
+					"noProjectsDescription": "Klicke um eins zu erstellen",
+					"noRelated": "Kein zugehöriges Projekt"
+				},
+
+				"notes": "Notizen",
+				"distance": "Zurückgelegte Entfernung (km)",
+
+				"start": "Start",
+				"end": "Ende",
+
+				"create": "Hinzufügen"
+			},
+			"Export": {
+				"title": "Verlauf Exportieren",
+
+				"buttonContent": "Lade eine <code>.csv</code> herunter<br /> mit deinem Verlauf.",
+
+				"filter": {
+					"title": "Filter",
+					"description": "Filter die herunterzuladenden Daten.",
+
+					"search": "Suchen...",
+
+					"yearMonth": "Jahr / Monat",
+
+					"project": "Projekt",
+					"allProjects": "Alle Projekte",
+					"withoutProject": "Ohne Projekt"
+				},
+				"visualisation": {
+					"title": "Visualisierung",
+					"description": "Passe die zu exportierende Tabelle an.",
+
+					"dateSpecificColumn": "Anzeige des Datums in einer bestimmten Spalte",
+					"structureByDateTree": "Struktur nach Datum im Baum",
+					"projectSpecificColumn": "Anzeige des Projekts in einer bestimmten Spalte"
+				},
+
+				"download": "Herunterladen"
+			}
+		},
+
+		"Miscellaneous": {
+			"searchYearMonth": "Suche Jahr/Monat...",
+			"newEntry": "Neuen Eintrag hinzufügen",
+			"nothingFound": "Nichts gefunden.",
+			"userNotFound": "Benutzer nicht gefunden.",
+
+			"Months": {
+				"January": "Januar",
+				"February": "Februar",
+				"March": "März",
+				"April": "April",
+				"May": "Mai",
+				"June": "Juni",
+				"July": "Juli",
+				"August": "August",
+				"September": "September",
+				"October": "Oktober",
+				"November": "November",
+				"December": "Dezember"
+			},
+			"Days": {
+				"0": "Sonntag",
+				"1": "Montag",
+				"2": "Dienstag",
+				"3": "Mittwoch",
+				"4": "Donnerstag",
+				"5": "Freitag",
+				"6": "Samstag"
+			}
+		}
+	},
+	"Navigation": {
+		"Theme": {
+			"title": "Theme",
+			"dark": "Dunkel",
+			"light": "Hell",
+			"system": "System"
+		},
+		"settings": "Einstellungen",
+		"users": "Benutzer",
+		"signOut": "Abmelden"
 	}
 }

@@ -19,6 +19,7 @@ import type { Metadata } from "next";
 import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "../timer-add";
 import { badgeVariants } from "@/components/ui/badge";
+import { getTranslations } from "next-intl/server";
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -62,6 +63,8 @@ export default async function History({
 	if (!session || !session.user) return redirect("/signin");
 	if (session.user.role !== "ADMIN") redirect("/history");
 
+	const t = await getTranslations("History");
+
 	const target = await prisma.user
 		.findUnique({
 			where: {
@@ -84,7 +87,7 @@ export default async function History({
 				userId: target?.id,
 			},
 			include: {
-				project: true
+				project: true,
 			},
 		}),
 		prisma.project.findMany(),
@@ -116,14 +119,14 @@ export default async function History({
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
 				<div className="w-full font-mono text-center pt-2">
 					<p className="text-2xl font-mono">
-						History
+						{t("PageTitle")}
 						<span
 							className={badgeVariants({
 								variant: "secondary",
 								className: "absolute",
 							})}
 						>
-							{target ? target?.name ?? target?.username : searchParams?.user}
+							{target?.name ? target.name : params.user}
 						</span>
 					</p>
 				</div>
@@ -136,14 +139,16 @@ export default async function History({
 								projects={projects}
 								totalTime={totalTime}
 								yearMonth={yearMonth}
-								username={target.username}
+								user={target.id}
 							/>
 						) : (
-							<TimerAddServer username={target.username} projects={projects} />
+							<TimerAddServer user={target.id} projects={projects} />
 						)}
 					</>
 				) : (
-					<p className="font-mono font-bold text-4xl">User not found</p>
+					<p className="font-mono font-bold text-xl">
+						{t("Miscellaneous.userNotFound")}
+					</p>
 				)}
 			</section>
 		</Navigation>

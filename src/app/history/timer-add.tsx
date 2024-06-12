@@ -40,6 +40,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { Prisma } from "@prisma/client";
+import { useTranslations } from "next-intl";
 
 interface timerAddState {
 	start: string;
@@ -52,16 +53,18 @@ interface timerAddState {
 }
 
 export default function TimerAdd({
-	username,
+	user,
 	projects,
 	visible,
 	setVisible,
 }: {
-	username: string;
+	user: string;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
+	const t = useTranslations("History");
+
 	const [data, setData] = useReducer(
 		(prev: timerAddState, next: Partial<timerAddState>) => ({
 			...prev,
@@ -90,7 +93,7 @@ export default function TimerAdd({
 		const result = await fetch("/api/times", {
 			method: "POST",
 			body: JSON.stringify({
-				username: username,
+				userId: user,
 				notes: data.notes,
 				traveledDistance: data.traveledDistance,
 				start: new Date(data.start).toISOString(),
@@ -156,7 +159,7 @@ export default function TimerAdd({
 			<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 				<DialogHeader>
 					<DialogTitle>
-						<div>Create entry</div>
+						<div>{t("Dialogs.Create.title")}</div>
 					</DialogTitle>
 				</DialogHeader>
 
@@ -164,13 +167,13 @@ export default function TimerAdd({
 					<Tabs defaultValue="details">
 						<TabsList className="flex w-full">
 							<TabsTrigger className="w-full" value="details">
-								Details
+								{t("Dialogs.Create.details")}
 							</TabsTrigger>
 							<TabsTrigger className="w-full" value="time">
-								Time
+								{t("Dialogs.Create.time")}
 							</TabsTrigger>
 							<TabsTrigger className="w-full" value="breaks">
-								Breaks
+								{t("Dialogs.Create.breaks")}
 							</TabsTrigger>
 						</TabsList>
 						<TabsContent value="details">
@@ -189,7 +192,7 @@ export default function TimerAdd({
 											htmlFor="project-button"
 											className="pl-2 text-muted-foreground"
 										>
-											Project
+											{t("Dialogs.Create.project.project")}
 										</Label>
 										<PopoverTrigger asChild>
 											<Button
@@ -199,19 +202,19 @@ export default function TimerAdd({
 												aria-expanded={data.projectSelectionOpen}
 												className="w-full justify-between border-2 transition duration-300"
 											>
-												{data.project ?? "No related project"}
+												{data.project ?? t("Dialogs.Create.project.noRelated")}
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
 										<PopoverContent className="p-2">
 											<Command>
 												<CommandInput
-													placeholder="Search project..."
+													placeholder={t("Dialogs.Create.project.search")}
 													className="h-8"
 												/>
 												{projects.length === 0 ? (
 													<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-														<p>No projects found.</p>
+														<p>{t("Dialogs.Create.project.noProjects")}</p>
 														<Link
 															href="http://localhost:3000/settings?page=projects"
 															className={buttonVariants({
@@ -219,7 +222,11 @@ export default function TimerAdd({
 																className: "flex-col items-start",
 															})}
 														>
-															<p>Click to create one now</p>
+															<p>
+																{t(
+																	"Dialogs.Create.project.noProjectsDescription",
+																)}
+															</p>
 														</Link>
 													</div>
 												) : (
@@ -263,7 +270,7 @@ export default function TimerAdd({
 										htmlFor="timerModal-notes-add"
 										className="text-muted-foreground pl-2"
 									>
-										Notes
+										{t("Dialogs.Create.notes")}
 									</Label>
 									<Textarea
 										id="timerModal-notes-add"
@@ -281,7 +288,7 @@ export default function TimerAdd({
 										htmlFor="distance-button"
 										className="pl-2 text-muted-foreground"
 									>
-										Distance traveled (km)
+										{t("Dialogs.Create.distance")}
 									</Label>
 									<Input
 										id="distance-button"
@@ -310,7 +317,7 @@ export default function TimerAdd({
 											htmlFor="name"
 											className="pl-2 text-muted-foreground"
 										>
-											Start
+											{t("Dialogs.Create.start")}
 										</Label>
 										<Input
 											className="!w-full font-mono border-2 transition-all duration-300"
@@ -327,7 +334,7 @@ export default function TimerAdd({
 											htmlFor="username"
 											className="pl-2 text-muted-foreground"
 										>
-											End
+											{t("Dialogs.Create.end")}
 										</Label>
 										<Input
 											className="w-full font-mono border-2 transition-all duration-300"
@@ -368,7 +375,7 @@ export default function TimerAdd({
 							disabled={data.loading}
 						>
 							<SaveAll className="mr-2 h-4 w-4" />
-							Create Entry
+							{t("Dialogs.Create.create")}
 						</Button>
 					</div>
 				</div>
@@ -378,12 +385,14 @@ export default function TimerAdd({
 }
 
 export function TimerAddServer({
-	username,
+	user,
 	projects,
 }: {
-	username: string;
+	user: string;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
+	const t = useTranslations("History");
+
 	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
 		(prev: timerAddState, next: Partial<timerAddState>) => ({
@@ -392,7 +401,9 @@ export function TimerAddServer({
 		}),
 		{
 			start: new Date().toLocaleString("sv").replace(" ", "T"),
-			end: new Date().toLocaleString("sv").replace(" ", "T"),
+			end: new Date(new Date().setHours(new Date().getHours() + 2))
+				.toLocaleString("sv")
+				.replace(" ", "T"),
 			notes: "",
 			traveledDistance: null,
 			loading: false,
@@ -411,7 +422,7 @@ export function TimerAddServer({
 		const result = await fetch("/api/times", {
 			method: "POST",
 			body: JSON.stringify({
-				username: username,
+				userId: user,
 				notes: data.notes,
 				traveledDistance: data.traveledDistance,
 				start: new Date(data.start).toISOString(),
@@ -474,14 +485,15 @@ export function TimerAddServer({
 				<TooltipTrigger asChild>
 					<Button variant="outline" onClick={() => setVisible(!visible)}>
 						<ListPlus className="mr-2 h-5 w-5" />
-						Add the first entry
+						{t("Dialogs.Create.first.title")}
 					</Button>
 				</TooltipTrigger>
 
 				<TooltipContent>
-					<p>We have not found any data.</p>
-					<p>You can create a new entry here</p>
-					<p>manually or start the timer.</p>
+					{t.rich("Dialogs.Create.first.description", {
+						p: (chunks: string) => <p>{chunks}</p>,
+					// biome-ignore lint/suspicious/noExplicitAny: Typescript does not want this
+					} as any)}
 				</TooltipContent>
 			</Tooltip>
 			<Dialog
@@ -492,7 +504,7 @@ export function TimerAddServer({
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Create entry</div>
+							<div>{t("Dialogs.Create.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
@@ -500,13 +512,13 @@ export function TimerAddServer({
 						<Tabs defaultValue="details">
 							<TabsList className="flex w-full">
 								<TabsTrigger className="w-full" value="details">
-									Details
+									{t("Dialogs.Create.details")}
 								</TabsTrigger>
 								<TabsTrigger className="w-full" value="time">
-									Time
+									{t("Dialogs.Create.time")}
 								</TabsTrigger>
 								<TabsTrigger className="w-full" value="breaks">
-									Breaks
+									{t("Dialogs.Create.breaks")}
 								</TabsTrigger>
 							</TabsList>
 							<TabsContent value="details">
@@ -525,7 +537,7 @@ export function TimerAddServer({
 												htmlFor="project-button"
 												className="pl-2 text-muted-foreground"
 											>
-												Project
+												{t("Dialogs.Create.project.project")}
 											</Label>
 											<PopoverTrigger asChild>
 												<Button
@@ -535,19 +547,20 @@ export function TimerAddServer({
 													aria-expanded={data.projectSelectionOpen}
 													className="w-full justify-between border-2 transition duration-300"
 												>
-													{data.project ?? "No related project"}
+													{data.project ??
+														t("Dialogs.Create.project.noRelated")}
 													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 												</Button>
 											</PopoverTrigger>
 											<PopoverContent className="p-2">
 												<Command>
 													<CommandInput
-														placeholder="Search project..."
+														placeholder={t("Dialogs.Create.project.search")}
 														className="h-8"
 													/>
 													{projects.length === 0 ? (
 														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-															<p>No projects found.</p>
+															<p>{t("Dialogs.Create.project.noProjects")}</p>
 															<Link
 																href="/settings?page=projects"
 																className={buttonVariants({
@@ -555,7 +568,11 @@ export function TimerAddServer({
 																	className: "flex-col items-start",
 																})}
 															>
-																<p>Click to manage projects</p>
+																<p>
+																	{t(
+																		"Dialogs.Create.project.noProjectsDescription",
+																	)}
+																</p>
 															</Link>
 														</div>
 													) : (
@@ -599,7 +616,7 @@ export function TimerAddServer({
 											htmlFor="timerModal-notes-add"
 											className="text-muted-foreground pl-2"
 										>
-											Notes
+											{t("Dialogs.Create.notes")}
 										</Label>
 										<Textarea
 											id="timerModal-notes-add"
@@ -619,7 +636,7 @@ export function TimerAddServer({
 											htmlFor="distance-button"
 											className="pl-2 text-muted-foreground"
 										>
-											Distance traveled (km)
+											{t("Dialogs.Create.distance")}
 										</Label>
 										<Input
 											id="distance-button"
@@ -650,7 +667,7 @@ export function TimerAddServer({
 												htmlFor="name"
 												className="pl-2 text-muted-foreground"
 											>
-												Start
+												{t("Dialogs.Create.start")}
 											</Label>
 											<Input
 												className="!w-full font-mono border-2 transition-all duration-300"
@@ -667,7 +684,7 @@ export function TimerAddServer({
 												htmlFor="username"
 												className="pl-2 text-muted-foreground"
 											>
-												End
+												{t("Dialogs.Create.end")}
 											</Label>
 											<Input
 												className="w-full font-mono border-2 transition-all duration-300"
@@ -708,7 +725,7 @@ export function TimerAddServer({
 								disabled={data.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
-								Create Entry
+								{t("Dialogs.Create.create")}
 							</Button>
 						</div>
 					</div>

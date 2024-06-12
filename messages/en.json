@@ -14,13 +14,148 @@
 				"edit": "Now",
 				"cancel": "Later"
 			}
+		},
+		"Miscellaneous": {
+			"updating": "Updating",
+			"start": "Start",
+			"stop": "Stop",
+			"startWithWebsite": "Start now with Website",
+			"startedWith": "Started with {startType}"
 		}
 	},
-	"Miscellaneous": {
-		"updating": "Updating",
-		"start": "Start",
-		"stop": "Stop",
-		"startWithWebsite": "Start now with Website",
-		"startedWith": "Started with {startType}"
+	"History": {
+		"PageTitle": "History",
+
+		"Metadata": {
+			"title": "Time Track - History",
+			"description": "Track your Time"
+		},
+		"Dialogs": {
+			"Edit": {
+				"title": "Edit entry",
+
+				"details": "Details",
+				"time": "Time",
+				"breaks": "Breaks",
+
+				"project": {
+					"project": "Project",
+					"search": "Search Project",
+					"noProjects": "No projects found.",
+					"noProjectsDescription": "Click to create one now",
+					"noRelated": "No related project"
+				},
+
+				"notes": "Notes",
+				"distance": "Distance traveled (km)",
+
+				"start": "Start",
+				"end": "End",
+				"startedWith": "Started with",
+				"stoppedWith": "Stopped with",
+
+				"delete": "Delete",
+				"save": "Save",
+				"saveDetails": "Save Details"
+			},
+			"Create": {
+				"title": "Create entry",
+
+				"first": {
+					"title": "Add the first entry",
+					"description:": "<p>We have not found any data.</p><p>You can create a new entry here</p><p>manually or start the timer.</p>"
+				},
+
+				"details": "Details",
+				"time": "Time",
+				"breaks": "Breaks",
+
+				"project": {
+					"project": "Project",
+					"search": "Search Project",
+					"noProjects": "No projects found.",
+					"noProjectsDescription": "Click to create one now",
+					"noRelated": "No related project"
+				},
+
+				"notes": "Notes",
+				"distance": "Distance traveled (km)",
+
+				"start": "Start",
+				"end": "End",
+
+				"create": "Create"
+			},
+			"Export": {
+				"title": "Export History",
+
+				"buttonContent": "Download a <code>.csv</code> containing all<br /> the current visible entries",
+
+				"filter": {
+					"title": "Filters",
+					"description": "Filter the data to download.",
+
+                    "search": "Search...",
+
+					"yearMonth": "Year / Month",
+
+                    "project": "Project",
+                    "allProjects": "All Projects",
+                    "withoutProject": "Without a Project"
+				},
+                "visualisation": {
+                    "title": "Visualisation",
+                    "description": "Customize the table to export.",
+
+                    "dateSpecificColumn": "Show the Date in a specific column",
+                    "structureByDateTree": "Structure by date in the tree",
+                    "projectSpecificColumn": "Show the Project in a specific column"
+                },
+
+                "download": "Download"
+			}
+		},
+
+		"Miscellaneous": {
+			"searchYearMonth": "Search year/month...",
+			"newEntry": "Add a new entry",
+			"nothingFound": "Nothing found.",
+			"userNotFound": "User not found.",
+
+			"Months": {
+				"January": "January",
+				"February": "February",
+				"March": "March",
+				"April": "April",
+				"May": "May",
+				"June": "June",
+				"July": "July",
+				"August": "August",
+				"September": "September",
+				"October": "October",
+				"November": "November",
+				"December": "December"
+			},
+			"Days": {
+				"0": "Sunday",
+				"1": "Monday",
+				"2": "Tuesday",
+				"3": "Wednesday",
+				"4": "Thursday",
+				"5": "Friday",
+				"6": "Saturday"
+			}
+		}
+	},
+	"Navigation": {
+		"Theme": {
+			"title": "Theme",
+			"dark": "Dark",
+			"light": "Light",
+			"system": "System"
+		},
+		"settings": "Settings",
+		"users": "Users",
+		"signOut": "Sign Out"
 	}
 }

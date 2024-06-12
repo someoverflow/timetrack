@@ -45,8 +45,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useReducer, useState } from "react";
 import Link from "next/link";
 
-import { cn, days, getTimePassed } from "@/lib/utils";
+import { cn, getTimePassed } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -71,6 +72,7 @@ export default function TimerInfo({
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	edit: boolean;
 }) {
+	const t = useTranslations("History");
 	const router = useRouter();
 
 	const [state, setState] = useReducer(
@@ -185,7 +187,7 @@ export default function TimerInfo({
 		});
 
 		if (resultData.success) {
-			//setVisible(false);
+			setVisible(false);
 
 			toast.success("Successfully updated entry", {
 				duration: 3000,
@@ -351,7 +353,7 @@ export default function TimerInfo({
 				>
 					<DialogHeader>
 						<DialogTitle>
-							<div>Edit entry</div>
+							<div>{t("Dialogs.Edit.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
@@ -359,13 +361,13 @@ export default function TimerInfo({
 						<Tabs defaultValue="details">
 							<TabsList className="flex w-full">
 								<TabsTrigger className="w-full" value="details">
-									Details
+									{t("Dialogs.Edit.details")}
 								</TabsTrigger>
 								<TabsTrigger className="w-full" value="time">
-									Time
+									{t("Dialogs.Edit.time")}
 								</TabsTrigger>
 								<TabsTrigger className="w-full" value="breaks">
-									Breaks
+									{t("Dialogs.Edit.breaks")}
 								</TabsTrigger>
 							</TabsList>
 							<TabsContent value="details">
@@ -389,7 +391,7 @@ export default function TimerInfo({
 														: "",
 												)}
 											>
-												Project
+												{t("Dialogs.Edit.project.project")}
 											</Label>
 											<PopoverTrigger asChild>
 												<Button
@@ -403,19 +405,19 @@ export default function TimerInfo({
 														? projects.find(
 																(project) => project.name === state.projectName,
 															)?.name
-														: "No related project"}
+														: t("Dialogs.Edit.project.noRelated")}
 													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 												</Button>
 											</PopoverTrigger>
 											<PopoverContent className="p-2">
 												<Command>
 													<CommandInput
-														placeholder="Search project..."
+														placeholder={t("Dialogs.Edit.project.search")}
 														className="h-8"
 													/>
 													{projects.length === 0 ? (
 														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-															<p>No projects found.</p>
+															<p>{t("Dialogs.Edit.project.noProjects")}</p>
 															<Link
 																href="http://localhost:3000/settings?page=projects"
 																className={buttonVariants({
@@ -423,7 +425,11 @@ export default function TimerInfo({
 																	className: "flex-col items-start",
 																})}
 															>
-																<p>Click to create one now</p>
+																<p>
+																	{t(
+																		"Dialogs.Edit.project.noProjectsDescription",
+																	)}
+																</p>
 															</Link>
 														</div>
 													) : (
@@ -472,7 +478,7 @@ export default function TimerInfo({
 													: "",
 											)}
 										>
-											Notes
+											{t("Dialogs.Edit.notes")}
 										</Label>
 										<Textarea
 											id={`timerModal-notes-${data.id}`}
@@ -495,7 +501,7 @@ export default function TimerInfo({
 													: "",
 											)}
 										>
-											Distance traveled (km)
+											{t("Dialogs.Edit.distance")}
 										</Label>
 										<Input
 											id="distance-button"
@@ -532,7 +538,7 @@ export default function TimerInfo({
 														: "",
 												)}
 											>
-												Start
+												{t("Dialogs.Edit.start")}
 											</Label>
 											<Input
 												className="w-full font-mono border-2"
@@ -559,7 +565,7 @@ export default function TimerInfo({
 														: "",
 												)}
 											>
-												End
+												{t("Dialogs.Edit.end")}
 											</Label>
 											<Input
 												className="w-full font-mono border-2"
@@ -579,7 +585,7 @@ export default function TimerInfo({
 												htmlFor="start-w"
 												className="pl-2 text-muted-foreground"
 											>
-												Started with
+												{t("Dialogs.Edit.startedWith")}
 											</Label>
 											<Input
 												disabled
@@ -595,7 +601,7 @@ export default function TimerInfo({
 												htmlFor="stopped-w"
 												className="pl-2 text-muted-foreground"
 											>
-												Stopped with
+												{t("Dialogs.Edit.stoppedWith")}
 											</Label>
 											<Input
 												disabled
@@ -654,7 +660,7 @@ export default function TimerInfo({
 								disabled={state.loading}
 							>
 								<Trash className="mr-2 h-4 w-4" />
-								Delete
+								{t("Dialogs.Edit.delete")}
 							</Button>
 							{!data.end && (
 								<Button
@@ -663,7 +669,7 @@ export default function TimerInfo({
 									disabled={state.loading}
 								>
 									<SaveAll className="mr-2 h-4 w-4" />
-									Save Details
+									{t("Dialogs.Edit.saveDetails")}
 								</Button>
 							)}
 							<Button
@@ -672,7 +678,7 @@ export default function TimerInfo({
 								disabled={state.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
-								Save Changes
+								{t("Dialogs.Edit.save")}
 							</Button>
 						</div>
 					</div>

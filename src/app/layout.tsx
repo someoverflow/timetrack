@@ -1,7 +1,7 @@
 // UI
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
-import { JetBrains_Mono, Ubuntu_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 
 // Translation
 import { NextIntlClientProvider } from "next-intl";

@@ -33,10 +33,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 // React
 import React, { useEffect, useState } from "react";
 
-import { cn, days } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 import dynamic from "next/dynamic";
 import TimerExportDialog from "./timer-export";
+import { useTranslations } from "next-intl";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 type Timer = Prisma.TimeGetPayload<{
@@ -47,18 +48,20 @@ interface Data {
 }
 
 export default function TimerSection({
-	username,
+	user,
 	history,
 	projects,
 	yearMonth,
 	totalTime,
 }: {
-	username: string;
+	user: string;
 	history: Data;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	yearMonth: string;
 	totalTime: string;
 }) {
+	const t = useTranslations("History");
+
 	const historyKeys = Object.keys(history);
 
 	const router = useRouter();
@@ -107,7 +110,7 @@ export default function TimerSection({
 								className="w-full justify-between"
 							>
 								<div className="flex flex-row items-center justify-start gap-2">
-									{yearMonth}
+									{`${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`}
 									<p className="font-mono text-muted-foreground">
 										(
 										{(history[yearMonth].find((e) => e.end === null)
@@ -122,10 +125,10 @@ export default function TimerSection({
 						<PopoverContent className="p-2">
 							<Command>
 								<CommandInput
-									placeholder="Search year/month..."
+									placeholder={t("Miscellaneous.searchYearMonth")}
 									className="h-8"
 								/>
-								<CommandEmpty>Nothing found.</CommandEmpty>
+								<CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
 								<CommandGroup>
 									{historyKeys.map((key) => (
 										<CommandItem
@@ -134,7 +137,7 @@ export default function TimerSection({
 											value={key}
 											className="font-mono"
 										>
-											{key}
+											{`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
 											<Check
 												className={cn(
 													"ml-auto h-4 w-4",
@@ -167,11 +170,11 @@ export default function TimerSection({
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent side="bottom">
-							<p className="text-center">Add a new entry</p>
+							<p className="text-center">{t("Miscellaneous.newEntry")}</p>
 						</TooltipContent>
 					</Tooltip>
 					<TimerAdd
-						username={username}
+						user={user}
 						projects={projects}
 						visible={addVisible}
 						setVisible={setAddVisible}
@@ -195,7 +198,10 @@ export default function TimerSection({
 										day.getMonth() + 1
 									)
 										.toString()
-										.padStart(2, "0")} ${days[day.getDay()]}`}
+										.padStart(
+											2,
+											"0",
+										)} ${t(`Miscellaneous.Days.${day.getDay()}`)}`}
 								</Badge>
 								<div className="w-1/2" />
 							</div>

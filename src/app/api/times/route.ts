@@ -149,7 +149,7 @@ export const POST = auth(async (request) => {
 
 	// Validate request
 	const validationResult = timesPostApiValidation.safeParse({
-		userId: json.id,
+		userId: json.userId,
 
 		notes: json.notes,
 

@@ -280,7 +280,7 @@ function ToggleSection({
 	startType: string;
 	toggleTimer: (toggle: boolean) => void;
 }) {
-	const t = useTranslations("Miscellaneous");
+	const t = useTranslations("Timer.Miscellaneous");
 
 	if (!loaded) {
 		return (
