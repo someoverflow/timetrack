@@ -3,6 +3,10 @@ import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { JetBrains_Mono, Ubuntu_Mono } from "next/font/google";
 
+// Translation
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
+
 // Provider
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider, ThemeProvider } from "@/lib/provider";
@@ -27,18 +31,26 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	const locale = await getLocale();
+
+	// Providing all messages to the client
+	// side is the easiest way to get started
+	const messages = await getMessages();
+
 	return (
-		<html lang="en" className={mono.variable} suppressHydrationWarning>
+		<html lang={locale} className={mono.variable} suppressHydrationWarning>
 			<body>
-				<NextTopLoader showSpinner={false} />
-				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-					<SessionProvider>
-						<TooltipProvider delayDuration={100}>
-							{children}
-							<Toaster position="top-right" />
-						</TooltipProvider>
-					</SessionProvider>
-				</ThemeProvider>
+				<NextIntlClientProvider messages={messages}>
+					<NextTopLoader showSpinner={false} />
+					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+						<SessionProvider>
+							<TooltipProvider delayDuration={100}>
+								{children}
+								<Toaster position="top-right" />
+							</TooltipProvider>
+						</SessionProvider>
+					</ThemeProvider>
+				</NextIntlClientProvider>
 			</body>
 		</html>
 	);
