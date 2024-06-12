@@ -22,6 +22,7 @@ export async function generateMetadata() {
 		description: t("description"),
 	};
 }
+
 export default async function SignOutPage() {
 	const t = await getTranslations("SignOut");
 

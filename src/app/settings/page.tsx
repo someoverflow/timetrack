@@ -10,6 +10,17 @@ import ProfileSection from "./profile-section";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "Settings.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function Profile({
 	searchParams,
@@ -22,6 +33,8 @@ export default async function Profile({
 	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
+
+	const t = useTranslations("SignIn");
 
 	const projects = await prisma.project.findMany({
 		include: {
@@ -55,10 +68,7 @@ export default async function Profile({
 								className="h-[calc(80svh-80px)] w-full rounded-sm border p-1.5 overflow-hidden"
 								type="scroll"
 							>
-								<ProjectSection
-									projects={projects}
-									userData={user}
-								/>
+								<ProjectSection projects={projects} userData={user} />
 							</ScrollArea>
 						</TabsContent>
 					</Tabs>

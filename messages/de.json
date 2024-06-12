@@ -1,7 +1,4 @@
 {
-	"Index": {
-		"title": "Hallo Welt."
-	},
 	"Timer": {
 		"Metadata": {
 			"title": "Time Track",
@@ -158,6 +155,21 @@
 		"description": "Sicher dass du dich abmelden willst?",
 
 		"buttonText": "Abmelden"
+	},
+	"SignIn": {
+		"Metadata": {
+			"title": "Time Track - Anmelden",
+			"description": "Erfasse deine Zeiten"
+		},
+
+		"title": "Anmelden",
+        
+        "username": "Benutzer",
+        "usernamePlaceholder": "Benutzer",
+        "password": "Passwort",
+        "passwordPlaceholder": "Passwort",
+
+		"buttonText": "Anmelden"
 	},
 	"Navigation": {
 		"Theme": {

@@ -1,7 +1,4 @@
 {
-	"Index": {
-		"title": "Hello world!"
-	},
 	"Timer": {
 		"Metadata": {
 			"title": "Time Track",
@@ -151,13 +148,28 @@
 	"SignOut": {
 		"Metadata": {
 			"title": "Time Track - Sign Out",
-			"description": "Erfasse deine Zeiten"
+			"description": "Track your Time"
 		},
 
 		"title": "Sign Out",
 		"description": "Are you sure you want to sign out?",
 
 		"buttonText": "Sign Out"
+	},
+	"SignIn": {
+		"Metadata": {
+			"title": "Time Track - Sign In",
+			"description": "Track your Time"
+		},
+
+		"title": "Sign In",
+        
+        "username": "Username",
+        "usernamePlaceholder": "Username",
+        "password": "Password",
+        "passwordPlaceholder": "Username",
+
+		"buttonText": "Sign In"
 	},
 	"Navigation": {
 		"Theme": {
