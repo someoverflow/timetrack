@@ -44,7 +44,7 @@ export const PUT = auth(async (request) => {
 			const createResult = await prisma.time.create({
 				data: {
 					userId: session.user.id,
-					start: data.fixTime ?? new Date(),
+					start: data.fixTime ?? new Date(new Date().setSeconds(0)),
 					startType: data.type ?? "API",
 				},
 			});

@@ -140,7 +140,7 @@ export default function TimerSection() {
 
 		const data: Partial<Timer> = {
 			id: "<0>",
-			start: new Date().toISOString(),
+			start: new Date(new Date().setSeconds(0)).toISOString(),
 			startType: "Website",
 		};
 

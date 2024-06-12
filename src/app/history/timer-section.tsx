@@ -186,7 +186,7 @@ export default function TimerSection({
 					return (
 						<section
 							key={`day-${day}`}
-							className={index === 0 ? "mt-2" : "mt-6 mb-2"}
+							className={index === 0 ? "mt-2" : "mt-6"}
 						>
 							<div className="flex flex-row items-center justify-center gap-2 mb-2 transition-all duration-300 animate__animated animate__slideInLeft">
 								<div className="w-1/2" />
