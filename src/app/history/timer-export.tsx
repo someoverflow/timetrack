@@ -3,13 +3,9 @@ import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, getTotalTime } from "@/lib/utils";
 
@@ -94,28 +90,10 @@ export default function TimerExportDialog({
 		},
 	);
 	const [visualisation, setVisualisation] = useReducer(
-		(prev: visualisationState, next: Partial<visualisationState>) => {
-			if (next.showProject !== undefined)
-				localStorage.setItem(
-					"export-visualisation-showProject",
-					`${next.showProject}`,
-				);
-			if (next.showDateColumn !== undefined)
-				localStorage.setItem(
-					"export-visualisation-showDateColumn",
-					`${next.showDateColumn}`,
-				);
-			if (next.structurizeDateTree !== undefined)
-				localStorage.setItem(
-					"export-visualisation-structurizeDateTree",
-					`${next.structurizeDateTree}`,
-				);
-
-			return {
-				...prev,
-				...next,
-			};
-		},
+		(prev: visualisationState, next: Partial<visualisationState>) => ({
+			...prev,
+			...next,
+		}),
 		{
 			showProject: true,
 			showDateColumn: true,
@@ -136,9 +114,9 @@ export default function TimerExportDialog({
 		);
 
 		setVisualisation({
-			showProject: Boolean(localShowProject ?? "true"),
-			showDateColumn: Boolean(localShowDateColumn ?? "true"),
-			structurizeDateTree: Boolean(localStructurizeDateTree ?? "true"),
+			showProject: (localShowProject ?? "true") === "true",
+			showDateColumn: (localShowDateColumn ?? "true") === "true",
+			structurizeDateTree: (localStructurizeDateTree ?? "true") === "true",
 		});
 	}, []);
 
@@ -444,6 +422,15 @@ export default function TimerExportDialog({
 											showDateColumn: value,
 											structurizeDateTree: false,
 										});
+
+										localStorage.setItem(
+											"export-visualisation-structurizeDateTree",
+											`${false}`,
+										);
+										localStorage.setItem(
+											"export-visualisation-showDateColumn",
+											`${value}`,
+										);
 									}}
 								/>
 								<Label
@@ -462,6 +449,15 @@ export default function TimerExportDialog({
 											structurizeDateTree: value,
 											showDateColumn: true,
 										});
+
+										localStorage.setItem(
+											"export-visualisation-showDateColumn",
+											`${true}`,
+										);
+										localStorage.setItem(
+											"export-visualisation-structurizeDateTree",
+											`${value}`,
+										);
 									}}
 								/>
 								<Label
@@ -479,6 +475,11 @@ export default function TimerExportDialog({
 										setVisualisation({
 											showProject: value,
 										});
+
+										localStorage.setItem(
+											"export-visualisation-showProject",
+											`${value}`,
+										);
 									}}
 								/>
 								<Label
