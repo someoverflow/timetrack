@@ -5,17 +5,20 @@ import { JetBrains_Mono, Ubuntu_Mono } from "next/font/google";
 
 // Translation
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
 // Provider
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider, ThemeProvider } from "@/lib/provider";
 
-import type { Metadata } from "next";
-export const metadata: Metadata = {
-	title: "Time Track",
-	description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "Timer.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 const mono = JetBrains_Mono({
 	variable: "--mono-font",

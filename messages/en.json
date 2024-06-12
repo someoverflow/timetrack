@@ -3,6 +3,10 @@
 		"title": "Hello world!"
 	},
 	"Timer": {
+		"Metadata": {
+			"title": "Time Track",
+			"description": "Track your Time"
+		},
 		"Dialogs": {
 			"Stopped": {
 				"title": "Edit time and notes",
@@ -13,10 +17,10 @@
 		}
 	},
 	"Miscellaneous": {
-        "updating": "Updating",
-        "start": "Start",
-        "stop": "Stop",
-        "startWithWebsite": "Start now with Website",
-        "startedWith": "Started with {startType}"
-    }
+		"updating": "Updating",
+		"start": "Start",
+		"stop": "Stop",
+		"startWithWebsite": "Start now with Website",
+		"startedWith": "Started with {startType}"
+	}
 }

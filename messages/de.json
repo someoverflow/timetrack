@@ -3,6 +3,10 @@
 		"title": "Hallo Welt."
 	},
 	"Timer": {
+        "Metadata": {
+            "title": "Time Track",
+            "description": "Erfasse deine Zeiten"
+        },
 		"Dialogs": {
 			"Stopped": {
 				"title": "Zeiten und Notizen bearbeiten?",
