@@ -185,7 +185,7 @@ export default function TimerInfo({
 		});
 
 		if (resultData.success) {
-			setVisible(false);
+			//setVisible(false);
 
 			toast.success("Successfully updated entry", {
 				duration: 3000,
@@ -663,7 +663,7 @@ export default function TimerInfo({
 									disabled={state.loading}
 								>
 									<SaveAll className="mr-2 h-4 w-4" />
-									Save Data
+									Save Details
 								</Button>
 							)}
 							<Button

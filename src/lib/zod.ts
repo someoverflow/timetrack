@@ -136,6 +136,7 @@ export const timesPutApiValidation = z
 				path: ["notes", "project", "start", "end", "traveledDistance"],
 			});
 
+		/**
 		if (data.start || data.end) {
 			if ((data.start && !data.end) || (data.end && !data.start))
 				ctx.addIssue({
@@ -144,6 +145,7 @@ export const timesPutApiValidation = z
 					path: ["start", "end"],
 				});
 		}
+			 */
 
 		if (data.end && data.start ? data.end < data.start : false)
 			ctx.addIssue({
@@ -188,19 +190,25 @@ export const todoUpdateApiValidation = z
 		priority: z.nativeEnum(TodoPriority),
 		description: todoDescriptionValidation.nullable(),
 		deadline: z.string().date().nullable(),
-		assignees: z.object({
-			add: z.array(nameValidation).nonempty(),
-			remove: z.array(nameValidation).nonempty(),
-		}).partial(),
-		projects: z.object({
-			add: z.array(nameValidation).nonempty(),
-			remove: z.array(nameValidation).nonempty(),
-		}).partial(),
+		assignees: z
+			.object({
+				add: z.array(nameValidation).nonempty(),
+				remove: z.array(nameValidation).nonempty(),
+			})
+			.partial(),
+		projects: z
+			.object({
+				add: z.array(nameValidation).nonempty(),
+				remove: z.array(nameValidation).nonempty(),
+			})
+			.partial(),
 	})
 	.partial()
 	.required({ id: true });
 
-export type todoUpdateApiValidationType = z.infer<typeof todoUpdateApiValidation>
+export type todoUpdateApiValidationType = z.infer<
+	typeof todoUpdateApiValidation
+>;
 //#endregion
 
 //#region Profile API

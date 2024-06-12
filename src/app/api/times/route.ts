@@ -62,7 +62,7 @@ export const GET = auth(async (request) => {
 				},
 				where: {
 					userId: session.user.id,
-					end: null
+					end: null,
 				},
 			});
 
@@ -277,6 +277,12 @@ export const PUT = auth(async (request) => {
 				"not-found",
 			);
 
+		if (databaseResult.end && data.start && !data.end)
+			return badRequestResponse(
+				{ message: "End Time is missing" },
+				"error-message",
+			);
+
 		if (data.project) {
 			const projectDatabaseResult = await prisma.project
 				.findUnique({
@@ -311,6 +317,11 @@ export const PUT = auth(async (request) => {
 		notes: data.notes,
 		traveledDistance: data.traveledDistance,
 	};
+
+	if (data.start && data.end === undefined) {
+		updateData.start = data.start;
+		updateData.startType = data.startType ?? "API";
+	}
 
 	if (data.start && data.end) {
 		const timePassed = getTimePassed(new Date(data.start), new Date(data.end));
