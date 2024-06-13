@@ -60,6 +60,15 @@ async function getUsers(skip: number, take: number, search: string | null) {
 	};
 }
 
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "Admin.Users.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
+
 export default async function AdminUserPage({
 	searchParams,
 }: {

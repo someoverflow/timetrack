@@ -145,6 +145,102 @@
 			}
 		}
 	},
+	"Todo": {
+		"Metadata": {
+			"title": "Time Track - Todos",
+			"description": "Track your Time"
+		},
+
+		"title": "Todos",
+
+		"searchTasks": "Search for tasks...",
+		"filter": "Filter",
+
+		"noResult": "No Results",
+
+		"rowsPerPage": "Rows per Page",
+
+		"currentPage": "Page {page} of {pages}",
+
+		"Dialogs": {
+			"Add": {
+				"title": "Create Todo",
+				"buttonToolTip": "Create a new todo",
+
+				"projects": "Projects",
+				"noRelatedProjects": "No related projects",
+
+				"noProjectsFound": "No Projects found",
+				"projectsManage": "Click to manage projects",
+
+				"searchUser": "Search for a User...",
+				"searchProject": "Search for a Project...",
+
+				"noAssignees": "No Assignees",
+
+				"create": "Create"
+			},
+			"Edit": {
+				"noAssignees": "No Assignees",
+
+				"searchUser": "Search for a User...",
+				"searchProject": "Search for a Project...",
+
+				"noProjectsFound": "No Projects found",
+				"projectsManage": "Click to manage projects",
+
+				"creator": "Creator",
+				"updated": "Updated",
+				"created": "Created",
+
+				"save": "Save",
+
+				"projects": "Projects",
+				"noRelatedProjects": "No related projects",
+
+				"status": "Status",
+				"details": "Details"
+			}
+		},
+
+		"Miscellaneous": {
+			"task": "Task",
+			"description": "Description",
+
+			"deadline": "Deadline",
+
+			"assignees": "Assignees",
+
+			"creator": "Creator",
+			"createdAt": "Created at",
+
+			"archived": "Archived",
+			"hidden": "Hidden",
+
+			"visibleColumns": "Visible Columns",
+
+			"none": "None",
+
+			"hoverInfo": "Click to edit the current todo.",
+
+			"actions": "Actions",
+			"copyLink": "Copy Link",
+			"archive": "Archive",
+			"hide": "Hide",
+			"show": "Show",
+
+			"steps": {
+				"todo": "Todo",
+				"inProgress": "In Progress",
+				"done": "Done"
+			},
+			"priorities": {
+				"high": "High Priority",
+				"medium": "Medium Priority",
+				"low": "Low Priority"
+			}
+		}
+	},
 	"Settings": {
 		"Metadata": {
 			"title": "Time Track - Settings",

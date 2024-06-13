@@ -12,12 +12,16 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 // React
-import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-	title: "Time Track - Todos",
-	description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "Todo.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function History({
 	searchParams,
@@ -29,6 +33,8 @@ export default async function History({
 	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
+
+	const t = await getTranslations("Todo")
 
 	const [todos, users, projects] = await prisma.$transaction([
 		prisma.todo.findMany({
@@ -76,7 +82,7 @@ export default async function History({
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
 				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">Todos</p>
+					<p className="text-2xl font-mono">{t("title")}</p>
 				</div>
 
 				<DataTable

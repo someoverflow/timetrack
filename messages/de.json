@@ -145,6 +145,102 @@
 			}
 		}
 	},
+	"Todo": {
+		"Metadata": {
+			"title": "Time Track - Aufgaben",
+			"description": "Track your Time"
+		},
+
+		"title": "Aufgaben",
+
+		"searchTasks": "Suche nach Aufgaben...",
+		"filter": "Filter",
+
+		"noResult": "Keine Ergebnisse",
+
+		"rowsPerPage": "Zeilen pro Seite",
+
+		"currentPage": "Seite {page} von {pages}",
+
+		"Dialogs": {
+			"Add": {
+				"title": "Eintrag hinzufügen",
+				"buttonToolTip": "Erstelle eine Aufgabe",
+
+				"projects": "Projekte",
+				"noRelatedProjects": "Keine zugehörige Projekte",
+
+				"noProjectsFound": "Keine Projekte gefunden",
+				"projectsManage": "Klicke um Projekte zu verwalten",
+
+				"searchUser": "Nach Benutzer suchen...",
+				"searchProject": "Nach Projekt suchen...",
+
+				"noAssignees": "Keine Beauftragten",
+
+				"create": "Hinzufügen"
+			},
+			"Edit": {
+				"noAssignees": "Keine Beauftragten",
+
+				"searchUser": "Nach Benutzer suchen...",
+				"searchProject": "Nach Projekt suchen...",
+
+				"noProjectsFound": "Keine Projekte gefunden",
+				"projectsManage": "Klicke um Projekte zu verwalten",
+
+				"creator": "Ersteller",
+				"updated": "Aktuallisiert",
+				"created": "Erstellt",
+
+				"save": "Speichern",
+
+				"projects": "Projekte",
+				"noRelatedProjects": "Keine zugehörige Projekte",
+
+				"status": "Status",
+				"details": "Details"
+			}
+		},
+
+		"Miscellaneous": {
+			"task": "Auftrag",
+			"description": "Beschreibung",
+
+			"deadline": "Deadline",
+
+			"assignees": "Beauftragte",
+
+			"creator": "Ersteller",
+			"createdAt": "Erstellt",
+
+			"archived": "Archiviert",
+			"hidden": "Versteckt",
+
+			"visibleColumns": "Sichtbare Spalten",
+
+			"none": "Keine",
+
+			"hoverInfo": "Klicke um die Aufgabe zu bearbeiten.",
+
+			"actions": "Aktionen",
+			"copyLink": "Link Kopieren",
+			"archive": "Archivieren",
+			"hide": "Verstecken",
+			"show": "Anzeigen",
+
+			"steps": {
+				"todo": "Todo",
+				"inProgress": "In Arbeit",
+				"done": "Fertig"
+			},
+			"priorities": {
+				"high": "Hohe Priorität",
+				"medium": "Mittlere Priorität",
+				"low": "Nidrige Priorität"
+			}
+		}
+	},
 	"Settings": {
 		"Metadata": {
 			"title": "Time Track - Einstellungen",

@@ -48,6 +48,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { TodoAdd } from "./todo-add";
+import { useTranslations } from "next-intl";
 
 type UsersType = { name: string | null; username: string }[];
 type ProjectsType = {
@@ -77,6 +78,8 @@ export function DataTable<TData, TValue>({
 	users,
 	projects,
 }: DataTableProps<TData, TValue>) {
+	const t = useTranslations("Todo");
+
 	const [sorting, setSorting] = React.useState<SortingState>([
 		{ id: "status", desc: false },
 		{ id: "priority", desc: false },
@@ -159,7 +162,7 @@ export function DataTable<TData, TValue>({
 				<div className="w-full">
 					<Input
 						id="searchTaskInput"
-						placeholder="Search for a tasks..."
+						placeholder={t("searchTasks")}
 						value={(table.getColumn("task")?.getFilterValue() as string) ?? ""}
 						onChange={(event) =>
 							table.getColumn("task")?.setFilterValue(event.target.value)
@@ -176,7 +179,7 @@ export function DataTable<TData, TValue>({
 								className="h-10 w-10 sm:w-fit sm:px-3"
 							>
 								<Filter className="sm:mr-2 h-4 w-4" />
-								<span className="hidden sm:block">Filter</span>
+								<span className="hidden sm:block">{t("filter")}</span>
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent className="w-full">
@@ -208,7 +211,7 @@ export function DataTable<TData, TValue>({
 										}}
 									/>
 									<Label htmlFor="archivedSwitch" className="text-nowrap">
-										Archived
+										{t("Miscellaneous.archived")}
 									</Label>
 								</div>
 								<div className="flex flex-row items-center gap-4">
@@ -237,7 +240,7 @@ export function DataTable<TData, TValue>({
 										}}
 									/>
 									<Label htmlFor="hiddenSwitch" className="text-nowrap">
-										Hidden
+										{t("Miscellaneous.hidden")}
 									</Label>
 								</div>
 
@@ -325,7 +328,7 @@ export function DataTable<TData, TValue>({
 									colSpan={columns.length}
 									className="h-24 text-center"
 								>
-									No results.
+									{t("noResults")}
 								</TableCell>
 							</TableRow>
 						)}
@@ -334,7 +337,7 @@ export function DataTable<TData, TValue>({
 			</ScrollArea>
 			<div className="flex items-center justify-evenly sm:justify-end space-x-4 p-2 sm:py-4 w-full">
 				<div className="flex flex-col sm:flex-row items-center space-x-2">
-					<p className="text-sm font-medium">Rows per page</p>
+					<p className="text-sm font-medium">{t("rowsPerPage")}</p>
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
@@ -356,9 +359,11 @@ export function DataTable<TData, TValue>({
 				</div>
 
 				<div className="flex flex-col sm:flex-row items-center justify-center sm:gap-2">
-					<p className="flex w-full sm:w-[80px] justify-center text-center text-sm font-medium">
-						Page {table.getState().pagination.pageIndex + 1} of{" "}
-						{table.getPageCount()}
+					<p className="flex w-full sm:w-[100px] justify-center text-center text-sm font-medium">
+						{t("currentPage", {
+							page: table.getState().pagination.pageIndex + 1,
+							pages: table.getPageCount(),
+						})}
 					</p>
 					<div className="flex flex-row items-center space-x-1">
 						<Button

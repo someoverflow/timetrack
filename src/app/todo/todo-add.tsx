@@ -45,6 +45,7 @@ import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { TodoPriority } from "@prisma/client";
+import { useTranslations } from "next-intl";
 
 interface todoAddState {
 	loading: boolean;
@@ -93,6 +94,8 @@ export function TodoAdd({
 	);
 
 	const [visible, setVisible] = useState(false);
+
+	const t = useTranslations("Todo");
 
 	const router = useRouter();
 
@@ -180,7 +183,7 @@ export function TodoAdd({
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent side="bottom">
-					<p className="text-center">Create a new todo</p>
+					<p className="text-center">{t("Dialogs.Add.buttonToolTip")}</p>
 				</TooltipContent>
 			</Tooltip>
 
@@ -192,7 +195,7 @@ export function TodoAdd({
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Create todo</div>
+							<div>{t("Dialogs.Add.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
@@ -213,21 +216,21 @@ export function TodoAdd({
 										<RadioGroupItem value="HIGH" id="r1" />
 										<Label htmlFor="r1">
 											<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />{" "}
-											High Priority
+											{t("Miscellaneous.priorities.high")}
 										</Label>
 									</div>
 									<div className="flex flex-col items-center gap-2">
 										<RadioGroupItem value="MEDIUM" id="r2" />
 										<Label htmlFor="r2">
 											<ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />{" "}
-											Medium Priority
+											{t("Miscellaneous.priorities.medium")}
 										</Label>
 									</div>
 									<div className="flex flex-col items-center gap-2">
 										<RadioGroupItem value="LOW" id="r3" />
 										<Label htmlFor="r3">
 											<ChevronDown className="h-5 w-5 text-blue-500 inline-block" />{" "}
-											Low Priority
+											{t("Miscellaneous.priorities.low")}
 										</Label>
 									</div>
 								</RadioGroup>
@@ -235,18 +238,15 @@ export function TodoAdd({
 								<div id="divider" className="h-1" />
 
 								<div className="grid w-full items-center gap-1.5">
-									<Label
-										htmlFor="todo-add-task"
-										className="pl-2 text-muted-foreground"
-									>
-										Task
+									<Label htmlFor="task" className="pl-2 text-muted-foreground">
+										{t("Miscellaneous.task")}
 									</Label>
 									<Input
 										className="!w-full border-2"
 										type="text"
 										spellCheck
 										name="Task"
-										id="todo-add-task"
+										id="task"
 										maxLength={100}
 										value={data.task}
 										onChange={(e) => setData({ task: e.target.value })}
@@ -257,16 +257,15 @@ export function TodoAdd({
 
 								<div className="grid w-full items-center gap-1.5">
 									<Label
-										htmlFor="todo-add-description"
+										htmlFor="description"
 										className="pl-2 text-muted-foreground"
 									>
-										Description
+										{t("Miscellaneous.description")}
 									</Label>
 									<Textarea
 										className="!w-full border-2"
 										name="Name"
-										id="todo-add-description"
-										placeholder="More details if required."
+										id="description"
 										maxLength={800}
 										value={data.description}
 										onChange={(e) => setData({ description: e.target.value })}
@@ -286,7 +285,7 @@ export function TodoAdd({
 											htmlFor="projects-button"
 											className="pl-2 text-muted-foreground"
 										>
-											Projects
+											{t("Dialogs.Add.projects")}
 										</Label>
 										<PopoverTrigger asChild>
 											<Button
@@ -298,7 +297,7 @@ export function TodoAdd({
 											>
 												<div className="flex flex-row gap-1">
 													{data.projects.length === 0
-														? "No related projects"
+														? t("Dialogs.Add.noRelatedProjects")
 														: data.projects.map((value, index) =>
 																index >= 3 ? undefined : (
 																	<Badge
@@ -321,12 +320,12 @@ export function TodoAdd({
 										<PopoverContent className="p-2 max-h-60">
 											<Command>
 												<CommandInput
-													placeholder="Search for a project..."
+													placeholder={t("Dialogs.Add.searchProject")}
 													className="h-8"
 												/>
 												{projects.length === 0 ? (
 													<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-														<p>No projects found.</p>
+														<p>{t("Dialogs.Add.noProjectsFound")}</p>
 														<Link
 															href="/settings?page=projects"
 															prefetch={false}
@@ -335,7 +334,7 @@ export function TodoAdd({
 																className: "flex-col items-start",
 															})}
 														>
-															<p>Click to manage projects</p>
+															<p>{t("Dialogs.Add.projectsManage")}</p>
 														</Link>
 													</div>
 												) : (
@@ -387,7 +386,7 @@ export function TodoAdd({
 											htmlFor="assignees-button"
 											className="pl-2 text-muted-foreground"
 										>
-											Assignees
+											{t("Miscellaneous.assignees")}
 										</Label>
 										<PopoverTrigger asChild>
 											<Button
@@ -399,7 +398,7 @@ export function TodoAdd({
 											>
 												<div className="flex flex-row gap-1">
 													{data.assignees.length === 0
-														? "No assignees"
+														? t("Dialogs.Add.noAssignees")
 														: data.assignees.map((value, index) =>
 																index >= 3 ? undefined : (
 																	<Badge
@@ -426,7 +425,7 @@ export function TodoAdd({
 										<PopoverContent className="p-2 max-h-60">
 											<Command>
 												<CommandInput
-													placeholder="Search for a user..."
+													placeholder={t("Dialogs.Add.searchUser")}
 													className="h-8"
 												/>
 												<CommandGroup>
@@ -436,7 +435,7 @@ export function TodoAdd({
 															className="text-nowrap"
 															value={user.username}
 															onSelect={() => {
-																const value = user.username
+																const value = user.username;
 																const currentAssignees = data.assignees;
 																if (currentAssignees.includes(value))
 																	currentAssignees.splice(
@@ -480,7 +479,7 @@ export function TodoAdd({
 											htmlFor="todo-add-deadline"
 											className="pl-2 text-muted-foreground"
 										>
-											Deadline
+											{t("Miscellaneous.deadline")}
 										</Label>
 										<Switch
 											checked={data.deadlineEnabled}
@@ -516,7 +515,7 @@ export function TodoAdd({
 								disabled={data.loading}
 							>
 								<ListPlus className="mr-2 h-4 w-4" />
-								Create Todo
+								{t("Dialogs.Add.create")}
 							</Button>
 						</div>
 					</div>
