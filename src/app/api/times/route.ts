@@ -263,6 +263,7 @@ export const PUT = auth(async (request) => {
 	const data = validationResult.data;
 
 	// Check the time entry
+	let dbStarted: Date | undefined = undefined;
 	try {
 		// TODO: Check
 		const databaseResult = await prisma.time.findUnique({
@@ -282,6 +283,7 @@ export const PUT = auth(async (request) => {
 				{ message: "End Time is missing" },
 				"error-message",
 			);
+		dbStarted = databaseResult.start;
 
 		if (data.project) {
 			const projectDatabaseResult = await prisma.project
@@ -321,6 +323,14 @@ export const PUT = auth(async (request) => {
 	if (data.start && data.end === undefined) {
 		updateData.start = data.start;
 		updateData.startType = data.startType ?? "API";
+	}
+
+	if (data.end && data.start === undefined) {
+		const timePassed = getTimePassed(dbStarted, new Date(data.end));
+
+		updateData.end = data.end;
+		updateData.time = timePassed;
+		updateData.endType = data.endType ?? "API";
 	}
 
 	if (data.start && data.end) {

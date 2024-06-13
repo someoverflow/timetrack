@@ -10,7 +10,6 @@ import ProfileSection from "./profile-section";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata() {
@@ -34,7 +33,10 @@ export default async function Profile({
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
-	const t = useTranslations("SignIn");
+	const userData = await prisma.user.findUnique({
+		where: { id: user.id },
+		select: { language: true },
+	});
 
 	const projects = await prisma.project.findMany({
 		include: {
@@ -61,7 +63,7 @@ export default async function Profile({
 							<TabsTrigger value="projects">Projects</TabsTrigger>
 						</TabsList>
 						<TabsContent value="profile">
-							<ProfileSection userData={user} />
+							<ProfileSection userData={user} language={userData?.language} />
 						</TabsContent>
 						<TabsContent value="projects">
 							<ScrollArea

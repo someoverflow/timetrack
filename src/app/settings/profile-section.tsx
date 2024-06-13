@@ -26,16 +26,30 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslations } from "next-intl";
+
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface profileSectionState {
 	loading: boolean;
 	name: string | undefined;
 	mail: string | undefined;
 	password: string;
+	language: string;
 }
 
 export default function ProfileSection({
 	userData,
+	language,
 }: {
 	userData: {
 		id?: string;
@@ -44,6 +58,7 @@ export default function ProfileSection({
 		name?: string | null | undefined;
 		email?: string | null | undefined;
 	};
+	language: string | undefined;
 }) {
 	const [data, setData] = useReducer(
 		(prev: profileSectionState, next: Partial<profileSectionState>) => ({
@@ -55,8 +70,11 @@ export default function ProfileSection({
 			name: userData.name ?? "",
 			mail: userData.email ?? "",
 			password: "",
+			language: language ?? "en",
 		},
 	);
+
+	const t = useTranslations("Settings.Profile");
 
 	const router = useRouter();
 
@@ -75,6 +93,7 @@ export default function ProfileSection({
 				mail:
 					(data.mail ?? "") !== (userData.email ?? "") ? data.mail : undefined,
 				password: changePassword ? data.password : undefined,
+				language: data.language !== language ? data.language : undefined,
 			}),
 		});
 
@@ -139,9 +158,9 @@ export default function ProfileSection({
 		<Card className="w-full">
 			<div className="flex flex-row">
 				<CardHeader className="w-full">
-					<CardTitle>Profile</CardTitle>
+					<CardTitle>{t("title")}</CardTitle>
 					<CardDescription>
-						<span>Make changes to your profile here.</span>
+						<span>{t("description")}</span>
 					</CardDescription>
 				</CardHeader>
 				<div className="flex flex-col space-y-1.5 p-6 text-right">
@@ -154,45 +173,86 @@ export default function ProfileSection({
 			<CardContent className="py-6">
 				<div className="flex flex-col gap-4 py-2">
 					<div className="grid w-full items-center gap-1.5">
-						<Label htmlFor="input-name">Name</Label>
+						<Label
+							htmlFor="input-name"
+							className={cn(
+								"transition-colors",
+								data.name !== userData.name ? "text-blue-500" : "",
+							)}
+						>
+							{t("name")}
+						</Label>
 						<Input
 							type="text"
 							name="Name"
 							id="input-name"
-							placeholder="Max Mustermann"
-							maxLength={50}
-							className={`transition-all duration-300 ${
-								data.name !== userData.name && "border-sky-700"
-							}`}
+							placeholder={t("namePlaceholder")}
 							value={data.name}
 							onChange={(e) => setData({ name: e.target.value })}
 						/>
 					</div>
 					<div className="grid w-full items-center gap-1.5">
-						<Label htmlFor="input-mail">Mail</Label>
+						<Label
+							htmlFor="input-mail"
+							className={cn(
+								"transition-colors",
+								(data.mail ?? "") !== (userData.email ?? "")
+									? "text-blue-500"
+									: "",
+							)}
+						>
+							{t("mail")}
+						</Label>
 						<Input
 							type="email"
 							name="Mail"
 							id="input-mail"
-							placeholder="max@example.com"
-							className={`transition-all duration-300 ${
-								(data.mail ?? "") !== (userData.email ?? "") && "border-sky-700"
-							}`}
+							placeholder={t("mailPlaceholder")}
 							value={data.mail}
 							onChange={(e) => setData({ mail: e.target.value })}
 						/>
 					</div>
 					<div className="grid w-full items-center gap-1.5">
-						<Label htmlFor="input-password">Password</Label>
+						<Label
+							htmlFor="select-language"
+							className={cn(
+								"transition-colors",
+								data.language !== language ? "text-blue-500" : "",
+							)}
+						>
+							{t("language")}
+						</Label>
+						<Select
+							value={data.language}
+							onValueChange={(e) => setData({ language: e })}
+						>
+							<SelectTrigger>
+								<SelectValue id="select-language" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectGroup>
+									<SelectItem value="de">{t("languages.de")}</SelectItem>
+									<SelectItem value="en">{t("languages.en")}</SelectItem>
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+					</div>
+					<div className="grid w-full items-center gap-1.5">
+						<Label
+							htmlFor="input-password"
+							className={cn(
+								"transition-colors",
+								data.password !== "" ? "text-blue-500" : "",
+							)}
+						>
+							{t("password")}
+						</Label>
 						<Input
 							type="password"
 							name="Password"
 							id="input-password"
-							placeholder="Secure123"
+							placeholder={t("passwordPlaceholder")}
 							maxLength={30}
-							className={`transition-all duration-300 ${
-								data.password !== "" && "border-sky-700"
-							}`}
 							value={data.password}
 							onChange={(e) => setData({ password: e.target.value })}
 						/>
@@ -211,14 +271,15 @@ export default function ProfileSection({
 							className="w-full"
 							onClick={() => updateData()}
 						>
-							<SaveAll className="mr-2 w-4 h-4" /> Save Changes
+							<SaveAll className="mr-2 w-4 h-4" /> {t("buttonContent")}
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent className="text-xs text-destructive-foreground font-mono text-center">
-						<p>Every device will be</p>
-						<p>
-							<u>signed out</u> after saving
-						</p>
+						<p
+							dangerouslySetInnerHTML={{
+								__html: t.raw("buttonToolTip"),
+							}}
+						/>
 					</TooltipContent>
 				</Tooltip>
 			</CardFooter>

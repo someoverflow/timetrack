@@ -145,6 +145,34 @@
 			}
 		}
 	},
+	"Settings": {
+		"Metadata": {
+			"title": "Time Track - Einstellungen",
+			"description": "Erfasse deine Zeiten"
+		},
+
+		"Profile": {
+			"title": "Profil",
+			"description": "Nehme Änderungen am Profil vor.",
+
+			"name": "Name",
+			"namePlaceholder": "Max Mustermann",
+			"mail": "Mail",
+			"mailPlaceholder": "max@example.com",
+
+			"language": "Sprache",
+			"languages": {
+				"en": "English",
+				"de": "Deutsch"
+			},
+
+			"password": "Passwort",
+			"passwordPlaceholder": "",
+
+			"buttonContent": "Speichern",
+			"buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort"
+		}
+	},
 	"SignOut": {
 		"Metadata": {
 			"title": "Time Track - Abmelden",
@@ -163,11 +191,11 @@
 		},
 
 		"title": "Anmelden",
-        
-        "username": "Benutzer",
-        "usernamePlaceholder": "Benutzer",
-        "password": "Passwort",
-        "passwordPlaceholder": "Passwort",
+
+		"username": "Benutzer",
+		"usernamePlaceholder": "Benutzer",
+		"password": "Passwort",
+		"passwordPlaceholder": "Passwort",
 
 		"buttonText": "Anmelden"
 	},

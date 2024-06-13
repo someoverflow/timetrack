@@ -145,6 +145,36 @@
 			}
 		}
 	},
+	"Settings": {
+		"Metadata": {
+			"title": "Time Track - Settings",
+			"description": "Track your Time"
+		},
+
+		"Profile": {
+			"title": "Profile",
+			"description": "Make changes to your profile here.",
+
+			"name": "Name",
+            "namePlaceholder": "Max Mustermann",
+			"mail": "Mail",
+            "mailPlaceholder": "max@example.com",
+
+			"language": "Language",
+			"languages": {
+                "en": "English",
+                "de": "Deutsch"
+            },
+
+			"password": "Password",
+            "passwordPlaceholder": "",
+
+			"buttonContent": "Save",
+			"buttonToolTip": "Every device will be<br/> <u>signed out</u> after changing: <br />Name, Mail & Password"
+		},
+
+		"title": "Anmelden"
+	},
 	"SignOut": {
 		"Metadata": {
 			"title": "Time Track - Sign Out",
@@ -163,11 +193,11 @@
 		},
 
 		"title": "Sign In",
-        
-        "username": "Username",
-        "usernamePlaceholder": "Username",
-        "password": "Password",
-        "passwordPlaceholder": "Username",
+
+		"username": "Username",
+		"usernamePlaceholder": "Username",
+		"password": "Password",
+		"passwordPlaceholder": "Username",
 
 		"buttonText": "Sign In"
 	},

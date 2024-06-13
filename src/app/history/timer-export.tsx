@@ -237,7 +237,6 @@ export default function TimerExportDialog({
 				<TooltipContent side="bottom">
 					<p
 						className="text-center"
-						// biome-ignore lint/security/noDangerouslySetInnerHtml: self-explaining
 						dangerouslySetInnerHTML={{
 							__html: t.raw("Dialogs.Export.buttonContent"),
 						}}

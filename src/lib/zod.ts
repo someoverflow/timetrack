@@ -215,14 +215,19 @@ export type todoUpdateApiValidationType = z.infer<
 export const profileApiValidation = z
 	.object({
 		name: nameValidation,
+		language: z.coerce.string(),
 		mail: mailValidation,
 		password: passwordValidation,
 	})
 	.partial()
-	.refine(({ name, mail, password }) => name || mail || password, {
-		message: "One of the fields must be given (name, mail, password)",
-		path: ["name", "mail", "password"],
-	});
+	.refine(
+		({ name, mail, password, language }) =>
+			name || mail || password || language,
+		{
+			message: "One of the fields must be given (name, mail, password)",
+			path: ["name", "mail", "password"],
+		},
+	);
 //#endregion
 
 //#region Projects API
