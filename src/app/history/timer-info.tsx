@@ -529,7 +529,7 @@ export default function TimerInfo({
 									<div className="grid gap-4 p-1 w-full">
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="name"
+												htmlFor="start"
 												className={cn(
 													"pl-2 text-muted-foreground transition-colors",
 													state.start !==
@@ -543,8 +543,8 @@ export default function TimerInfo({
 											<Input
 												className="w-full font-mono border-2"
 												type="datetime-local"
-												name="Updated"
-												id="updated"
+												name="Start"
+												id="start"
 												step={1}
 												value={state.start}
 												onChange={(e) => setState({ start: e.target.value })}
@@ -552,7 +552,7 @@ export default function TimerInfo({
 										</div>
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="username"
+												htmlFor="end"
 												className={cn(
 													"pl-2 text-muted-foreground transition-colors",
 													state.end !==
@@ -570,8 +570,8 @@ export default function TimerInfo({
 											<Input
 												className="w-full font-mono border-2"
 												type="datetime-local"
-												name="Created"
-												id="created"
+												name="End"
+												id="end"
 												step={1}
 												value={state.end}
 												onChange={(e) => setState({ end: e.target.value })}

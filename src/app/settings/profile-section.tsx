@@ -226,8 +226,8 @@ export default function ProfileSection({
 							value={data.language}
 							onValueChange={(e) => setData({ language: e })}
 						>
-							<SelectTrigger>
-								<SelectValue id="select-language" />
+							<SelectTrigger id="select-language">
+								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>

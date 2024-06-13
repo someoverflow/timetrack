@@ -43,17 +43,11 @@ export const PUT = auth(async (request) => {
 
 	// Check language
 	if (data.language) {
-		switch (data.language) {
-			case "de":
-				break;
-			case "en":
-				break;
-			default:
-				return badRequestResponse(
-					{ message: "Language not found" },
-					"error-message",
-				);
-		}
+		if (!["de", "en"].includes(data.language.toLowerCase()))
+			return badRequestResponse(
+				{ message: "Language not found" },
+				"error-message",
+			);
 	}
 
 	// Update the user
@@ -66,7 +60,7 @@ export const PUT = auth(async (request) => {
 				// Invalidate all sessions
 				validJwtId: randomUUID(),
 				name: data.name ?? undefined,
-				language: data.language ?? undefined,
+				language: data.language ? data.language.toLowerCase() : undefined,
 				email: data.mail ?? undefined,
 				password: password,
 			},

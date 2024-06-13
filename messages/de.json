@@ -173,6 +173,71 @@
 			"buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort"
 		}
 	},
+	"Admin": {
+		"Users": {
+			"Metadata": {
+				"title": "Time Track - Benutzer",
+				"description": "Track your Time"
+			},
+
+			"title": "Benutzer",
+
+			"login": "Login",
+			"name": "Name",
+			"action": "Aktionen",
+
+			"viewHistory": "Verlauf Anschauen",
+
+			"searchName": "Suche nach Namen...",
+
+			"Dialogs": {
+				"Add": {
+					"title": "Eintrag hinzufügen",
+					"buttonToolTip": "Erstelle einen Benutzer",
+
+					"username": "Benutzer",
+					"usernamePlaceholder": "maxmust",
+					"name": "Name",
+					"namePlaceholder": "Max Mustermann",
+					"role": "Rolle",
+					"mail": "Mail",
+					"mailPlaceholder": "max@example.com",
+					"password": "Passwort",
+					"passwordPlaceholder": "",
+
+					"create": "Hinzufügen",
+
+					"roles": {
+						"admin": "Admin",
+						"user": "Benutzer"
+					}
+				},
+				"Edit": {
+					"title": "Eintrag bearbeiten",
+
+					"preferences": "Einstellungen",
+					"chips": "Chips",
+
+					"username": "Benutzer",
+					"name": "Name",
+					"mail": "Mail",
+					"role": "Rolle",
+					"password": "Passwort",
+					"passwordPlaceholder": "Neues Passwort",
+
+					"addChip": "Chip Hinzufügen",
+
+					"delete": "Löschen",
+					"save": "Speichern",
+
+					"roles": {
+						"admin": "Admin",
+						"user": "Benutzer"
+					}
+				}
+			}
+		}
+	},
 	"SignOut": {
 		"Metadata": {
 			"title": "Time Track - Abmelden",

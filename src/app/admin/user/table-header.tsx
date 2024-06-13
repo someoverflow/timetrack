@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import UserAdd from "./user-add";
+import { useTranslations } from "next-intl";
 
 export default function UserTableHeader({
 	searchValid,
@@ -13,6 +14,7 @@ export default function UserTableHeader({
 }) {
 	const { replace } = useRouter();
 	const searchParams = useSearchParams();
+	const t = useTranslations("Admin.Users");
 	const searchPage = searchParams.get("search");
 
 	const changePage = useDebouncedCallback((value: string) => {
@@ -29,7 +31,7 @@ export default function UserTableHeader({
 			<div className="relative flex items-center w-full">
 				<Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform" />
 				<Input
-					placeholder="Search for name..."
+					placeholder={t("searchName")}
 					onChange={(e) => changePage(e.target.value)}
 					defaultValue={searchPage ?? ""}
 					className={`pl-10 transition-all duration-150 ${
