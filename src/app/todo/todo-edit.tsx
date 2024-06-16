@@ -1,10 +1,5 @@
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Prisma, Todo, TodoPriority, TodoStatus } from "@prisma/client";
-import {
-	Step,
-	Stepper,
-	useStepper,
-	type StepItem,
-} from "@/components/ui/stepper";
+import { Step, Stepper, type StepItem } from "@/components/ui/stepper";
 import {
 	Check,
 	ChevronDown,
@@ -30,7 +20,7 @@ import {
 	CircleDotDashed,
 	SaveAll,
 } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -50,6 +40,7 @@ import {
 } from "@/components/ui/command";
 import Link from "next/link";
 import type { todoUpdateApiValidationType } from "@/lib/zod";
+import { useTranslations } from "next-intl";
 
 const steps = [
 	{ id: "todo", label: "Todo", icon: CircleDot },
@@ -141,6 +132,8 @@ export function TodoTableEdit({
 		},
 	);
 	const [visible, setVisible] = useState(false);
+
+	const t = useTranslations("Todo");
 
 	const searchParams = useSearchParams();
 	const linkedTodo = searchParams.get("link");
@@ -364,8 +357,12 @@ export function TodoTableEdit({
 			>
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<div className="flex flex-row gap-1 absolute top-2 left-2">
-						{todo.archived && <Badge variant="destructive">Archived</Badge>}
-						{todo.hidden && <Badge variant="secondary">Hidden</Badge>}
+						{todo.archived && (
+							<Badge variant="destructive">{t("Miscellaneous.archived")}</Badge>
+						)}
+						{todo.hidden && (
+							<Badge variant="secondary">{t("Miscellaneous.hidden")}</Badge>
+						)}
 					</div>
 
 					<div className="w-full flex flex-col gap-2">
@@ -412,7 +409,7 @@ export function TodoTableEdit({
 								<Step
 									key={steps[0].id}
 									id={steps[0].id}
-									label={steps[0].label}
+									label={t("Miscellaneous.steps.todo")}
 									icon={steps[0].icon}
 									checkIcon={steps[0].icon}
 									className="!text-blue-500"
@@ -420,7 +417,7 @@ export function TodoTableEdit({
 								<Step
 									key={steps[1].id}
 									id={steps[1].id}
-									label={steps[1].label}
+									label={t("Miscellaneous.steps.inProgress")}
 									icon={steps[1].icon}
 									checkIcon={steps[1].icon}
 									className="!text-amber-500"
@@ -428,7 +425,7 @@ export function TodoTableEdit({
 								<Step
 									key={steps[2].id}
 									id={steps[2].id}
-									label={steps[2].label}
+									label={t("Miscellaneous.steps.done")}
 									icon={steps[2].icon}
 									checkIcon={steps[2].icon}
 									className="!text-green-500"
@@ -439,10 +436,10 @@ export function TodoTableEdit({
 						<Tabs defaultValue="status">
 							<TabsList className="flex w-full">
 								<TabsTrigger className="w-full" value="status">
-									Status
+									{t("Dialogs.Edit.status")}
 								</TabsTrigger>
 								<TabsTrigger className="w-full" value="details">
-									Details
+									{t("Dialogs.Edit.details")}
 								</TabsTrigger>
 							</TabsList>
 							<TabsContent value="status" className="h-full">
@@ -469,21 +466,21 @@ export function TodoTableEdit({
 												<RadioGroupItem value="HIGH" id="r1" />
 												<Label htmlFor="r1">
 													<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />{" "}
-													High Priority
+													{t("Miscellaneous.priorities.high")}
 												</Label>
 											</div>
 											<div className="flex flex-col items-center gap-2">
 												<RadioGroupItem value="MEDIUM" id="r2" />
 												<Label htmlFor="r2">
 													<ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />{" "}
-													Medium Priority
+													{t("Miscellaneous.priorities.medium")}
 												</Label>
 											</div>
 											<div className="flex flex-col items-center gap-2">
 												<RadioGroupItem value="LOW" id="r3" />
 												<Label htmlFor="r3">
 													<ChevronDown className="h-5 w-5 text-blue-500 inline-block" />{" "}
-													Low Priority
+													{t("Miscellaneous.priorities.low")}
 												</Label>
 											</div>
 										</RadioGroup>
@@ -491,20 +488,20 @@ export function TodoTableEdit({
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor={`todo-task-${todo.id}`}
+												htmlFor="task"
 												className={cn(
 													"pl-2 text-muted-foreground transition-colors",
 													todo.task !== state.task ? "text-blue-500" : "",
 												)}
 											>
-												Task
+												{t("Miscellaneous.task")}
 											</Label>
 											<Input
 												className="!w-full border-2"
 												type="text"
 												spellCheck
 												name="Task"
-												id={`todo-task-${todo.id}`}
+												id="task"
 												maxLength={100}
 												value={state.task}
 												onChange={(e) => setState({ task: e.target.value })}
@@ -515,7 +512,7 @@ export function TodoTableEdit({
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor={`todo-description-${todo.id}`}
+												htmlFor="description"
 												className={cn(
 													"pl-2 text-muted-foreground transition-colors",
 													(todo.description ?? "") !== state.description
@@ -523,12 +520,12 @@ export function TodoTableEdit({
 														: "",
 												)}
 											>
-												Description
+												{t("Miscellaneous.description")}
 											</Label>
 											<Textarea
 												className="!w-full border-2 min-h-32"
 												name="Description"
-												id={`todo-description-${todo.id}`}
+												id="description"
 												maxLength={800}
 												value={state.description}
 												onChange={(e) =>
@@ -542,7 +539,7 @@ export function TodoTableEdit({
 										<div className="grid w-full items-center gap-1.5">
 											<div className="flex flex-row items-center justify-between">
 												<Label
-													htmlFor="todo-add-deadline"
+													htmlFor="deadline"
 													className={cn(
 														"pl-2 text-muted-foreground",
 														(todo.deadline
@@ -553,10 +550,10 @@ export function TodoTableEdit({
 															: "",
 													)}
 												>
-													Deadline
+													{t("Miscellaneous.deadline")}
 												</Label>
 												<Switch
-													id="todo-add-deadline"
+													id="deadline"
 													checked={state.deadlineEnabled}
 													onCheckedChange={(checked) =>
 														setState({ deadlineEnabled: checked })
@@ -568,8 +565,8 @@ export function TodoTableEdit({
 													state.deadlineEnabled ? "opacity-100" : ""
 												}`}
 												disabled={!state.deadlineEnabled}
-												name="Name"
-												id="todo-add-deadline-input"
+												name="Deadline"
+												id="deadline-input"
 												type="date"
 												value={state.deadline}
 												onChange={(e) =>
@@ -603,7 +600,7 @@ export function TodoTableEdit({
 															: "",
 													)}
 												>
-													Assignees
+													{t("Miscellaneous.assignees")}
 												</Label>
 												<PopoverTrigger asChild>
 													<Button
@@ -615,11 +612,11 @@ export function TodoTableEdit({
 													>
 														<div className="flex flex-row gap-1">
 															{state.assignees.length === 0
-																? "No assignees"
+																? t("Dialogs.Edit.noAssignees")
 																: state.assignees.map((value, index) =>
 																		index >= 3 ? undefined : (
 																			<Badge
-																				key={`assignees-select-show-${value}`}
+																				key={`assignees-${value}`}
 																				variant="outline"
 																			>
 																				{
@@ -642,13 +639,13 @@ export function TodoTableEdit({
 												<PopoverContent className="p-2 max-h-60">
 													<Command>
 														<CommandInput
-															placeholder="Search for a user..."
+															placeholder={t("Dialogs.Edit.searchUser")}
 															className="h-8"
 														/>
 														<CommandGroup>
 															{users.map((user) => (
 																<CommandItem
-																	key={`user-selection-add-${user.username}`}
+																	key={`user-${user.username}`}
 																	className="text-nowrap"
 																	value={user.username}
 																	onSelect={() => {
@@ -711,7 +708,7 @@ export function TodoTableEdit({
 															: "",
 													)}
 												>
-													Projects
+													{t("Dialogs.Edit.projects")}
 												</Label>
 												<PopoverTrigger asChild>
 													<Button
@@ -723,11 +720,11 @@ export function TodoTableEdit({
 													>
 														<div className="flex flex-row gap-1">
 															{state.projects.length === 0
-																? "No related projects"
+																? t("Dialogs.Edit.noRelatedProjects")
 																: state.projects.map((value, index) =>
 																		index >= 3 ? undefined : (
 																			<Badge
-																				key={`projects-select-show-${value}`}
+																				key={`project-${value}`}
 																				variant="outline"
 																			>
 																				{value}
@@ -746,12 +743,12 @@ export function TodoTableEdit({
 												<PopoverContent className="p-2 max-h-60">
 													<Command>
 														<CommandInput
-															placeholder="Search for a project..."
+															placeholder={t("Dialogs.Edit.searchProject")}
 															className="h-8"
 														/>
 														{projects.length === 0 ? (
 															<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-																<p>No projects found.</p>
+																<p>{t("Dialogs.Edit.noProjectsFound")}</p>
 																<Link
 																	href="/settings?page=projects"
 																	prefetch={false}
@@ -760,14 +757,14 @@ export function TodoTableEdit({
 																		className: "flex-col items-start",
 																	})}
 																>
-																	<p>Click to manage projects</p>
+																	<p>{t("Dialogs.Edit.projectsManage")}</p>
 																</Link>
 															</div>
 														) : (
 															<CommandGroup>
 																{projects.map((project) => (
 																	<CommandItem
-																		key={`project-selection-add-${project.name}`}
+																		key={`project-${project.name}`}
 																		value={project.name}
 																		onSelect={() => {
 																			const value = project.name;
@@ -816,7 +813,7 @@ export function TodoTableEdit({
 												htmlFor="creator"
 												className="pl-2 text-muted-foreground"
 											>
-												Creator
+												{t("Dialogs.Edit.creator")}
 											</Label>
 											<Input
 												disabled
@@ -835,7 +832,7 @@ export function TodoTableEdit({
 												htmlFor="updatedAt"
 												className="pl-2 text-muted-foreground"
 											>
-												Updated
+												{t("Dialogs.Edit.updated")}
 											</Label>
 											<Input
 												disabled
@@ -853,7 +850,7 @@ export function TodoTableEdit({
 												htmlFor="createdAt"
 												className="pl-2 text-muted-foreground"
 											>
-												Created
+												{t("Dialogs.Edit.created")}
 											</Label>
 											<Input
 												disabled
@@ -897,7 +894,7 @@ export function TodoTableEdit({
 								disabled={state.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
-								Save Changes
+								{t("Dialogs.Edit.save")}
 							</Button>
 						</div>
 					</div>

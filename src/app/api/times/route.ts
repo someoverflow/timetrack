@@ -149,7 +149,7 @@ export const POST = auth(async (request) => {
 
 	// Validate request
 	const validationResult = timesPostApiValidation.safeParse({
-		userId: json.id,
+		userId: json.userId,
 
 		notes: json.notes,
 
@@ -263,6 +263,8 @@ export const PUT = auth(async (request) => {
 	const data = validationResult.data;
 
 	// Check the time entry
+	let dbStarted: Date | undefined = undefined;
+	let dbStopped: Date | undefined = undefined;
 	try {
 		// TODO: Check
 		const databaseResult = await prisma.time.findUnique({
@@ -276,12 +278,9 @@ export const PUT = auth(async (request) => {
 				"Entry with the given id not found",
 				"not-found",
 			);
-
-		if (databaseResult.end && data.start && !data.end)
-			return badRequestResponse(
-				{ message: "End Time is missing" },
-				"error-message",
-			);
+			
+		dbStarted = databaseResult.start;
+		dbStopped = databaseResult.end ?? undefined;
 
 		if (data.project) {
 			const projectDatabaseResult = await prisma.project
@@ -318,9 +317,24 @@ export const PUT = auth(async (request) => {
 		traveledDistance: data.traveledDistance,
 	};
 
-	if (data.start && data.end === undefined) {
+	if (data.start && !data.end && !dbStopped) {
 		updateData.start = data.start;
 		updateData.startType = data.startType ?? "API";
+	}
+	if (data.start && !data.end && dbStopped) {
+		const timePassed = getTimePassed(new Date(data.start), dbStopped);
+
+		updateData.start = data.start;
+		updateData.time = timePassed;
+		updateData.startType = data.startType ?? "API";
+	}
+
+	if (data.end && data.start === undefined) {
+		const timePassed = getTimePassed(dbStarted, new Date(data.end));
+
+		updateData.end = data.end;
+		updateData.time = timePassed;
+		updateData.endType = data.endType ?? "API";
 	}
 
 	if (data.start && data.end) {

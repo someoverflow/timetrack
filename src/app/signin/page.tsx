@@ -12,13 +12,15 @@ import { toast } from "sonner";
 import { signIn, useSession } from "next-auth/react";
 
 // Navigation
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 // React
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 export default function SignIn() {
 	const session = useSession();
+	const t = useTranslations("SignIn");
 
 	const router = useRouter();
 
@@ -57,7 +59,7 @@ export default function SignIn() {
 		<main className="min-h-[90svh] flex flex-col items-center justify-center">
 			<Card className="w-[350px]">
 				<CardHeader className="text-center">
-					<CardTitle>Sign In</CardTitle>
+					<CardTitle>{t("title")}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<form
@@ -68,26 +70,26 @@ export default function SignIn() {
 					>
 						<div className="grid w-full items-center gap-4">
 							<div className="flex flex-col space-y-1.5">
-								<Label htmlFor="username">Username</Label>
+								<Label htmlFor="username">{t("username")}</Label>
 								<Input
 									id="username"
-									placeholder="Username"
+									placeholder={t("usernamePlaceholder")}
 									value={username}
 									onChange={(event) => setUsername(event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col space-y-1.5">
-								<Label htmlFor="password">Password</Label>
+								<Label htmlFor="password">{t("password")}</Label>
 								<Input
 									id="password"
-									placeholder="Password"
+									placeholder={t("passwordPlaceholder")}
 									type="password"
 									value={password}
 									onChange={(event) => setPassword(event.target.value)}
 								/>
 							</div>
 							<Button type="submit" variant="outline" disabled={loading}>
-								Sign In
+								{t("buttonText")}
 							</Button>
 						</div>
 					</form>

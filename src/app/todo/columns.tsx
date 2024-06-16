@@ -7,7 +7,6 @@ import {
 	ArrowDownAZ,
 	ArrowDownZA,
 	ChevronDown,
-	ChevronRight,
 	ChevronUp,
 	ChevronsUp,
 	CircleCheckBig,
@@ -33,11 +32,12 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HoverCard, HoverCardContent } from "@/components/ui/hover-card";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { type Prisma, TodoPriority, TodoStatus } from "@prisma/client";
 import { TodoTableEdit } from "./todo-edit";
+import { useTranslations } from "next-intl";
 
 export const columns: ColumnDef<
 	Prisma.TodoGetPayload<{
@@ -69,28 +69,32 @@ export const columns: ColumnDef<
 		accessorKey: "task",
 		enableHiding: false,
 		sortingFn: "alphanumericCaseSensitive",
-		header: ({ column }) => (
-			<div className="flex items-center space-x-2">
-				<Button
-					onClick={() =>
-						column.toggleSorting(column.getIsSorted() === "asc", true)
-					}
-					variant="ghost"
-					size="sm"
-					className="-ml-3 h-8 data-[state=open]:bg-accent w-full"
-				>
-					<span>Task</span>
-					{column.getIsSorted() === "desc" ? (
-						<ArrowDownZA className="ml-2 h-4 w-4" />
-					) : column.getIsSorted() === "asc" ? (
-						<ArrowDownAZ className="ml-2 h-4 w-4" />
-					) : (
-						<ListFilter className="ml-2 h-4 w-4" />
-					)}
-				</Button>
-			</div>
-		),
+		header: ({ column }) => {
+			const t = useTranslations("Todo.Miscellaneous");
+			return (
+				<div className="flex items-center space-x-2">
+					<Button
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc", true)
+						}
+						variant="ghost"
+						size="sm"
+						className="-ml-3 h-8 data-[state=open]:bg-accent w-full"
+					>
+						<span>{t("task")}</span>
+						{column.getIsSorted() === "desc" ? (
+							<ArrowDownZA className="ml-2 h-4 w-4" />
+						) : column.getIsSorted() === "asc" ? (
+							<ArrowDownAZ className="ml-2 h-4 w-4" />
+						) : (
+							<ListFilter className="ml-2 h-4 w-4" />
+						)}
+					</Button>
+				</div>
+			);
+		},
 		cell: ({ row, table }) => {
+			const t = useTranslations("Todo.Miscellaneous");
 			const todo = row.original;
 			return (
 				<div className="flex flex-row items-center gap-2">
@@ -117,9 +121,9 @@ export const columns: ColumnDef<
 								)}
 							</TooltipTrigger>
 							<TooltipContent side="right">
-								{row.original.status === "TODO" && "Todo"}
-								{row.original.status === "IN_PROGRESS" && "In Progress"}
-								{row.original.status === "DONE" && "Done"}
+								{row.original.status === "TODO" && t("steps.todo")}
+								{row.original.status === "IN_PROGRESS" && t("steps.inProgress")}
+								{row.original.status === "DONE" && t("steps.done")}
 							</TooltipContent>
 						</Tooltip>
 
@@ -145,9 +149,9 @@ export const columns: ColumnDef<
 								)}
 							</TooltipTrigger>
 							<TooltipContent side="right">
-								{row.original.priority === "HIGH" && "High Priority"}
-								{row.original.priority === "MEDIUM" && "Medium Priority"}
-								{row.original.priority === "LOW" && "Low Priority"}
+								{row.original.priority === "HIGH" && t("priorities.high")}
+								{row.original.priority === "MEDIUM" && t("priorities.medium")}
+								{row.original.priority === "LOW" && t("priorities.low")}
 							</TooltipContent>
 						</Tooltip>
 					</div>
@@ -164,25 +168,25 @@ export const columns: ColumnDef<
 							{(todo.hidden || todo.archived) && (
 								<div className="flex flex-row gap-2 pb-2">
 									{todo.archived && (
-										<Badge variant="destructive">Archived</Badge>
+										<Badge variant="destructive">{t("archived")}</Badge>
 									)}
-									{todo.hidden && <Badge>Hidden</Badge>}
+									{todo.hidden && <Badge>{t("hidden")}</Badge>}
 								</div>
 							)}
 
 							<div className="flex flex-row items-center gap-2">
-								<Label className="flex flex-row">Deadline:</Label>
+								<Label className="flex flex-row">{t("deadline")}:</Label>
 								<p className="text-foreground">
 									{todo.deadline
 										? new Intl.DateTimeFormat().format(todo.deadline)
-										: "None"}
+										: t("none")}
 								</p>
 							</div>
 							{todo.description && (
 								<>
 									<Separator className="w-full my-2" />
 									<div className="flex flex-col">
-										<Label className="pr-2">Description:</Label>
+										<Label className="pr-2">{t("description")}:</Label>
 										<p className="text-foreground whitespace-pre-line">
 											{todo.description}
 										</p>
@@ -191,9 +195,7 @@ export const columns: ColumnDef<
 							)}
 
 							<Separator className="w-full my-2" />
-							<p className="text-muted-foreground/80">
-								Click to edit the current todo.
-							</p>
+							<p className="text-muted-foreground/80">{t("hoverInfo")}</p>
 						</HoverCardContent>
 					</HoverCard>
 				</div>
@@ -237,7 +239,7 @@ export const columns: ColumnDef<
 	{
 		id: "assignees",
 		accessorKey: "assignees",
-		header: "Assignees",
+		header: () => useTranslations("Todo.Miscellaneous")("assignees"),
 		cell: ({ row }) => {
 			const todo = row.original;
 			return (
@@ -258,7 +260,7 @@ export const columns: ColumnDef<
 	{
 		id: "creator",
 		accessorKey: "creator",
-		header: "Creator",
+		header: () => useTranslations("Todo.Miscellaneous")("creator"),
 		cell: ({ row }) => (
 			<div className="text-center">{row.original.creator.name}</div>
 		),
@@ -267,7 +269,7 @@ export const columns: ColumnDef<
 		id: "createdAt",
 		accessorKey: "createdAt",
 		sortingFn: "datetime",
-		header: "Created at",
+		header: () => useTranslations("Todo.Miscellaneous")("createdAt"),
 		cell: ({ row }) => {
 			const todo = row.original;
 			return (
@@ -303,7 +305,9 @@ export const columns: ColumnDef<
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
-					<DropdownMenuLabel>Visible Columns</DropdownMenuLabel>
+					<DropdownMenuLabel>
+						{useTranslations("Todo.Miscellaneous")("visibleColumns")}
+					</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					{table
 						.getAllColumns()
@@ -324,8 +328,9 @@ export const columns: ColumnDef<
 			</DropdownMenu>
 		),
 		cell: ({ row }) => {
+			const t = useTranslations("Todo.Miscellaneous");
+
 			const router = useRouter();
-			const pathname = usePathname()
 			const todo = row.original;
 
 			async function archive() {
@@ -427,30 +432,33 @@ export const columns: ColumnDef<
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="ghost" className="h-8 w-8 p-0">
-							<span className="sr-only">Open menu</span>
 							<MoreHorizontal className="h-4 w-4" />
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
-						<DropdownMenuLabel>Actions</DropdownMenuLabel>
+						<DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							onClick={() => navigator.clipboard.writeText(`${window.location.host}/todo?link=${todo.id}`)}
+							onClick={() =>
+								navigator.clipboard.writeText(
+									`${window.location.host}/todo?link=${todo.id}`,
+								)
+							}
 						>
-							Copy Link
+							{t("copyLink")}
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem disabled={todo.archived} onClick={archive}>
-							Archive
+							{t("archive")}
 						</DropdownMenuItem>
 						{!todo.hidden && (
 							<DropdownMenuItem onClick={() => visibiltyToggle()}>
-								Hide
+								{t("hide")}
 							</DropdownMenuItem>
 						)}
 						{todo.hidden && (
 							<DropdownMenuItem onClick={() => visibiltyToggle()}>
-								Show
+								{t("show")}
 							</DropdownMenuItem>
 						)}
 					</DropdownMenuContent>

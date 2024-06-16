@@ -16,6 +16,7 @@ import type { Metadata } from "next";
 // Utils
 import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "./timer-add";
+import { getTranslations } from "next-intl/server";
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -39,10 +40,14 @@ function formatHistory(data: Timer[]): Data {
 	return result;
 }
 
-export const metadata: Metadata = {
-	title: "Time Track - History",
-	description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "History.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function History({
 	searchParams,
@@ -55,6 +60,8 @@ export default async function History({
 	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
+
+	const t = await getTranslations("History");
 
 	const [history, projects] = await prisma.$transaction([
 		prisma.time.findMany({
@@ -95,7 +102,7 @@ export default async function History({
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
 				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">History</p>
+					<p className="text-2xl font-mono">{t("PageTitle")}</p>
 				</div>
 
 				{dataFound() ? (
@@ -104,10 +111,10 @@ export default async function History({
 						projects={projects}
 						totalTime={totalTime}
 						yearMonth={yearMonth}
-						username={user.username}
+						user={user.id ?? ""}
 					/>
 				) : (
-					<TimerAddServer username={user.username} projects={projects} />
+					<TimerAddServer user={user.id ?? ""} projects={projects} />
 				)}
 			</section>
 		</Navigation>

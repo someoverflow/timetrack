@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
+import { getTranslations } from "next-intl/server";
 
 type User = Prisma.UserGetPayload<{ include: { projects: true; chips: true } }>;
 
@@ -59,6 +60,15 @@ async function getUsers(skip: number, take: number, search: string | null) {
 	};
 }
 
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "Admin.Users.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
+
 export default async function AdminUserPage({
 	searchParams,
 }: {
@@ -71,6 +81,8 @@ export default async function AdminUserPage({
 	const session = await auth();
 	if (!session || !session.user) return redirect("/");
 	if (session.user.role !== "ADMIN") return redirect("/");
+
+	const t = await getTranslations("Admin.Users");
 
 	let currentPage = Number(searchParams?.page) || 1;
 	const searchName = searchParams?.search || null;
@@ -108,7 +120,7 @@ export default async function AdminUserPage({
 		<Navigation>
 			<section className="flex flex-col items-center gap-4 p-4 ">
 				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">Users</p>
+					<p className="text-2xl font-mono">{t("title")}</p>
 				</div>
 
 				<div className="flex flex-col max-h-[90svh] w-full max-w-md animate__animated animate__fadeIn">
@@ -121,9 +133,9 @@ export default async function AdminUserPage({
 						<Table className="rounded-none h-[calc(80svh-80px)]">
 							<TableHeader className="sticky z-10 top-0 bg-secondary">
 								<TableRow>
-									<TableHead className="w-fit">Login</TableHead>
-									<TableHead className="w-full">Name</TableHead>
-									<TableHead className="text-right">Action</TableHead>
+									<TableHead className="w-fit">{t("login")}</TableHead>
+									<TableHead className="w-full">{t("name")}</TableHead>
+									<TableHead className="text-right">{t("action")}</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -152,7 +164,7 @@ export default async function AdminUserPage({
 															</Button>
 														</TooltipTrigger>
 														<TooltipContent side="left">
-															<p>View History</p>
+															<p>{t("viewHistory")}</p>
 														</TooltipContent>
 													</Tooltip>
 

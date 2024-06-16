@@ -30,6 +30,7 @@ export const PUT = auth(async (request) => {
 		name: json.name,
 		mail: json.mail,
 		password: json.password,
+		language: json.language,
 	});
 	if (!validationResult.success) {
 		const validationError = validationResult.error;
@@ -39,6 +40,15 @@ export const PUT = auth(async (request) => {
 
 	// Prepare password
 	const password = data.password ? await hash(data.password, 12) : undefined;
+
+	// Check language
+	if (data.language) {
+		if (!["de", "en"].includes(data.language.toLowerCase()))
+			return badRequestResponse(
+				{ message: "Language not found" },
+				"error-message",
+			);
+	}
 
 	// Update the user
 	try {
@@ -50,6 +60,7 @@ export const PUT = auth(async (request) => {
 				// Invalidate all sessions
 				validJwtId: randomUUID(),
 				name: data.name ?? undefined,
+				language: data.language ? data.language.toLowerCase() : undefined,
 				email: data.mail ?? undefined,
 				password: password,
 			},

@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "next-intl";
 
 const umlautMap: Record<string, string> = {
 	"\u00dc": "UE",
@@ -79,6 +80,8 @@ export default function TimerExportDialog({
 	yearMonth: string;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
+	const t = useTranslations("History");
+
 	const [filters, setFilters] = useReducer(
 		(prev: exportFilterState, next: Partial<exportFilterState>) => ({
 			...prev,
@@ -232,10 +235,12 @@ export default function TimerExportDialog({
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent side="bottom">
-					<p className="text-center">
-						Download a <code>.csv</code> containing all
-						<br /> the current visible entries
-					</p>
+					<p
+						className="text-center"
+						dangerouslySetInnerHTML={{
+							__html: t.raw("Dialogs.Export.buttonContent"),
+						}}
+					/>
 				</TooltipContent>
 			</Tooltip>
 
@@ -247,16 +252,18 @@ export default function TimerExportDialog({
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Export History</div>
+							<div>{t("Dialogs.Export.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
 					<div className="rounded-md border p-4">
 						<div className="flex items-center space-x-4">
 							<div className="flex-1 space-y-1">
-								<p className="text-sm font-medium leading-none">Filters</p>
+								<p className="text-sm font-medium leading-none">
+									{t("Dialogs.Export.filter.title")}
+								</p>
 								<p className="text-sm text-muted-foreground">
-									Filter the data to download.
+									{t("Dialogs.Export.filter.description")}
 								</p>
 							</div>
 						</div>
@@ -270,7 +277,7 @@ export default function TimerExportDialog({
 										htmlFor="yearMonth-button"
 										className="pl-2 text-muted-foreground"
 									>
-										Year / Month
+										{t("Dialogs.Export.filter.yearMonth")}
 									</Label>
 									<PopoverTrigger asChild>
 										<Button
@@ -278,13 +285,16 @@ export default function TimerExportDialog({
 											variant="outline"
 											role="combobox"
 										>
-											{filters.yearMonth}
+											{`${filters.yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${filters.yearMonth.replace(`${filters.yearMonth.slice(0, 4)} `, "")}`)}`}
 											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 										</Button>
 									</PopoverTrigger>
 									<PopoverContent className="p-2">
 										<Command>
-											<CommandInput placeholder="Search..." className="h-8" />
+											<CommandInput
+												placeholder={t("Dialogs.Export.filter.search")}
+												className="h-8"
+											/>
 											<CommandGroup>
 												{Object.keys(history).map((yearMonth) => (
 													<CommandItem
@@ -304,7 +314,7 @@ export default function TimerExportDialog({
 																	: "opacity-0",
 															)}
 														/>
-														{yearMonth}
+														{`${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`}
 													</CommandItem>
 												))}
 											</CommandGroup>
@@ -322,7 +332,7 @@ export default function TimerExportDialog({
 										htmlFor="project-button"
 										className="pl-2 text-muted-foreground"
 									>
-										Project
+										{t("Dialogs.Export.filter.project")}
 									</Label>
 									<PopoverTrigger asChild>
 										<Button
@@ -331,15 +341,16 @@ export default function TimerExportDialog({
 											role="combobox"
 										>
 											{filters.project !== undefined
-												? filters.project ?? "Without a Project"
-												: "All Projects"}
+												? filters.project ??
+													t("Dialogs.Export.filter.withoutProject")
+												: t("Dialogs.Export.filter.allProjects")}
 											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 										</Button>
 									</PopoverTrigger>
 									<PopoverContent className="p-2">
 										<Command>
 											<CommandInput
-												placeholder="Search project..."
+												placeholder={t("Dialogs.Export.filter.search")}
 												className="h-8"
 											/>
 											<CommandGroup>
@@ -361,7 +372,7 @@ export default function TimerExportDialog({
 																	: "opacity-0",
 															)}
 														/>
-														Without a Project
+														{t("Dialogs.Export.filter.withoutProject")}
 													</CommandItem>
 												</CommandGroup>
 												<CommandGroup heading="Projects">
@@ -402,10 +413,10 @@ export default function TimerExportDialog({
 						<div className="flex items-center space-x-4">
 							<div className="flex-1 space-y-1">
 								<p className="text-sm font-medium leading-none">
-									Visualisation
+									{t("Dialogs.Export.visualisation.title")}
 								</p>
 								<p className="text-sm text-muted-foreground">
-									Customize the table to export.
+									{t("Dialogs.Export.visualisation.description")}
 								</p>
 							</div>
 						</div>
@@ -437,7 +448,7 @@ export default function TimerExportDialog({
 									htmlFor="date-toggle"
 									className="pl-2 text-muted-foreground"
 								>
-									Show the Date in a specific column
+									{t("Dialogs.Export.visualisation.dateSpecificColumn")}
 								</Label>
 							</div>
 							<div className="flex items-center space-x-2">
@@ -464,7 +475,7 @@ export default function TimerExportDialog({
 									htmlFor="date-tree-toggle"
 									className="pl-2 text-muted-foreground"
 								>
-									Structure by date in the tree
+									{t("Dialogs.Export.visualisation.structureByDateTree")}
 								</Label>
 							</div>
 							<div className="flex items-center space-x-2">
@@ -486,14 +497,15 @@ export default function TimerExportDialog({
 									htmlFor="project-toggle"
 									className="pl-2 text-muted-foreground"
 								>
-									Show the Project in a specific column
+									{t("Dialogs.Export.visualisation.projectSpecificColumn")}
 								</Label>
 							</div>
 						</div>
 					</div>
 
 					<Button onClick={downloadCSV}>
-						<Download className="mr-2 h-4 w-4" /> Download
+						<Download className="mr-2 h-4 w-4" />
+						{t("Dialogs.Export.download")}
 					</Button>
 				</DialogContent>
 			</Dialog>

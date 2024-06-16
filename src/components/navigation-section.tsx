@@ -21,6 +21,7 @@ import {
 	Timer,
 	User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 // Navigation
@@ -34,6 +35,7 @@ export default function NavigationSection({
 		role: string;
 	};
 }) {
+	const t = useTranslations("Navigation");
 	const { theme, setTheme } = useTheme();
 	const pathname = usePathname();
 
@@ -89,7 +91,7 @@ export default function NavigationSection({
 							prefetch
 							className={pathname === "/settings" ? "bg-accent" : ""}
 						>
-							Settings
+							{t("settings")}
 						</Link>
 					</MenubarItem>
 					{user?.role === "ADMIN" && (
@@ -99,39 +101,39 @@ export default function NavigationSection({
 								prefetch
 								className={pathname === "/admin/user" ? "bg-accent" : ""}
 							>
-								Users
+								{t("users")}
 							</Link>
 						</MenubarItem>
 					)}
 
 					<MenubarItem asChild>
 						<Link href="/signout" prefetch>
-							Sign Out
+							{t("signOut")}
 						</Link>
 					</MenubarItem>
 
 					<MenubarSeparator />
 
 					<MenubarSub>
-						<MenubarSubTrigger>Theme</MenubarSubTrigger>
+						<MenubarSubTrigger>{t("Theme.title")}</MenubarSubTrigger>
 						<MenubarSubContent>
 							<MenubarItem
 								disabled={theme === "light"}
 								onClick={() => setTheme("light")}
 							>
-								<Sun className="mr-2 h-4 w-4" /> Light
+								<Sun className="mr-2 h-4 w-4" /> {t("Theme.light")}
 							</MenubarItem>
 							<MenubarItem
 								disabled={theme === "dark"}
 								onClick={() => setTheme("dark")}
 							>
-								<Moon className="mr-2 h-4 w-4" /> Dark
+								<Moon className="mr-2 h-4 w-4" /> {t("Theme.dark")}
 							</MenubarItem>
 							<MenubarItem
 								disabled={theme === "system"}
 								onClick={() => setTheme("system")}
 							>
-								<SunMoon className="mr-2 h-4 w-4" /> System
+								<SunMoon className="mr-2 h-4 w-4" /> {t("Theme.system")}
 							</MenubarItem>
 						</MenubarSubContent>
 					</MenubarSub>

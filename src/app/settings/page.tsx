@@ -10,6 +10,16 @@ import ProfileSection from "./profile-section";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "Settings.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function Profile({
 	searchParams,
@@ -22,6 +32,11 @@ export default async function Profile({
 	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
+
+	const userData = await prisma.user.findUnique({
+		where: { id: user.id },
+		select: { language: true },
+	});
 
 	const projects = await prisma.project.findMany({
 		include: {
@@ -48,17 +63,14 @@ export default async function Profile({
 							<TabsTrigger value="projects">Projects</TabsTrigger>
 						</TabsList>
 						<TabsContent value="profile">
-							<ProfileSection userData={user} />
+							<ProfileSection userData={user} language={userData?.language} />
 						</TabsContent>
 						<TabsContent value="projects">
 							<ScrollArea
 								className="h-[calc(80svh-80px)] w-full rounded-sm border p-1.5 overflow-hidden"
 								type="scroll"
 							>
-								<ProjectSection
-									projects={projects}
-									userData={user}
-								/>
+								<ProjectSection projects={projects} userData={user} />
 							</ScrollArea>
 						</TabsContent>
 					</Tabs>

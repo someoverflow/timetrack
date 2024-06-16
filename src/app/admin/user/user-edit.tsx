@@ -29,7 +29,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Role } from "@prisma/client";
+import { useTranslations } from "next-intl";
 
 type User = Prisma.UserGetPayload<{ include: { projects: true; chips: true } }>;
 
@@ -39,7 +40,7 @@ interface userEditState {
 	username: string;
 	name: string | null;
 	mail: string | null;
-	role: "ADMIN" | "USER";
+	role: Role;
 	password: string;
 	chipAdd: string;
 }
@@ -61,6 +62,8 @@ export default function UserEdit({ user }: { user: User }) {
 		},
 	);
 	const [visible, setVisible] = useState(false);
+
+	const t = useTranslations("Admin.Users");
 
 	const router = useRouter();
 
@@ -334,15 +337,19 @@ export default function UserEdit({ user }: { user: User }) {
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Edit entry</div>
+							<div>{t("Dialogs.Edit.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
 					<div className="w-full flex flex-col gap-2">
 						<Tabs defaultValue="preferences">
 							<TabsList className="grid w-full grid-cols-2 h-fit">
-								<TabsTrigger value="preferences">Preferences</TabsTrigger>
-								<TabsTrigger value="chips">Chips</TabsTrigger>
+								<TabsTrigger value="preferences">
+									{t("Dialogs.Edit.preferences")}
+								</TabsTrigger>
+								<TabsTrigger value="chips">
+									{t("Dialogs.Edit.chips")}
+								</TabsTrigger>
 							</TabsList>
 							<TabsContent value="preferences">
 								<ScrollArea
@@ -352,10 +359,10 @@ export default function UserEdit({ user }: { user: User }) {
 									<div className="grid gap-4 p-1 w-full">
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="loginName"
+												htmlFor="username"
 												className="pl-2 text-muted-foreground"
 											>
-												Login Name
+												{t("Dialogs.Edit.username")}
 											</Label>
 											<Input
 												className={`w-full border-2 transition duration-300 ${
@@ -365,8 +372,8 @@ export default function UserEdit({ user }: { user: User }) {
 												}`}
 												disabled={data.username === "admin"}
 												type="text"
-												name="Login Name"
-												id="loginName"
+												name="Username"
+												id="username"
 												value={data.username}
 												onChange={(e) => setData({ username: e.target.value })}
 											/>
@@ -376,7 +383,7 @@ export default function UserEdit({ user }: { user: User }) {
 												htmlFor="name"
 												className="pl-2 text-muted-foreground"
 											>
-												Name
+												{t("Dialogs.Edit.name")}
 											</Label>
 											<Input
 												className={`w-full border-2 transition duration-300 ${
@@ -395,10 +402,10 @@ export default function UserEdit({ user }: { user: User }) {
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="userAdd-mail"
+												htmlFor="mail"
 												className="pl-2 text-muted-foreground"
 											>
-												Mail
+												{t("Dialogs.Edit.mail")}
 											</Label>
 											<Input
 												className={`w-full border-2 transition duration-300 ${
@@ -407,8 +414,7 @@ export default function UserEdit({ user }: { user: User }) {
 												}`}
 												type="email"
 												name="Mail"
-												id="userAdd-mail"
-												placeholder="max@muster.com"
+												id="mail"
 												value={data.mail ?? ""}
 												onChange={(e) => setData({ mail: e.target.value })}
 											/>
@@ -416,13 +422,13 @@ export default function UserEdit({ user }: { user: User }) {
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="userAdd-role"
+												htmlFor="role"
 												className="pl-2 text-muted-foreground"
 											>
-												Role
+												{t("Dialogs.Edit.role")}
 											</Label>
 											<Select
-												key="userAdd-role"
+												key="role"
 												disabled={data.username === "admin"}
 												value={data.role}
 												onValueChange={(role) =>
@@ -435,15 +441,20 @@ export default function UserEdit({ user }: { user: User }) {
 												}
 											>
 												<SelectTrigger
+													id="role"
 													className={`w-full border-2 transition duration-300 ${
 														user.role !== data.role && "border-sky-700"
 													}`}
 												>
-													<SelectValue placeholder="Theme" />
+													<SelectValue />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectItem value="ADMIN">Admin</SelectItem>
-													<SelectItem value="USER">User</SelectItem>
+													<SelectItem value="ADMIN">
+														{t("Dialogs.Edit.roles.admin")}
+													</SelectItem>
+													<SelectItem value="USER">
+														{t("Dialogs.Edit.roles.user")}
+													</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
@@ -452,10 +463,10 @@ export default function UserEdit({ user }: { user: User }) {
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="userAdd-password"
+												htmlFor="password"
 												className="pl-2 text-muted-foreground"
 											>
-												Password
+												{t("Dialogs.Edit.password")}
 											</Label>
 											<Input
 												className={`!w-full transition duration-300 border-2 ${
@@ -463,8 +474,8 @@ export default function UserEdit({ user }: { user: User }) {
 												}`}
 												type="password"
 												name="Password"
-												id="userAdd-password"
-												placeholder="New password"
+												id="password"
+												placeholder={t("Dialogs.Edit.passwordPlaceholder")}
 												value={data.password}
 												onChange={(e) => setData({ password: e.target.value })}
 											/>
@@ -499,17 +510,17 @@ export default function UserEdit({ user }: { user: User }) {
 									<div className="grid gap-4 p-1 w-full">
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="id"
+												htmlFor="chip"
 												className="pl-2 text-muted-foreground"
 											>
-												Add new chip
+												{t("Dialogs.Edit.addChip")}
 											</Label>
 											<div className="flex w-full items-center space-x-2">
 												<Input
 													className="w-full font-mono"
 													type="text"
 													name="Chip Add"
-													id="chip-add"
+													id="chip"
 													maxLength={50}
 													value={data.chipAdd}
 													onChange={(e) => setData({ chipAdd: e.target.value })}
@@ -575,7 +586,7 @@ export default function UserEdit({ user }: { user: User }) {
 								) : (
 									<Trash className="mr-2 h-4 w-4" />
 								)}
-								Delete
+								{t("Dialogs.Edit.delete")}
 							</Button>
 							<Button
 								variant="outline"
@@ -587,7 +598,7 @@ export default function UserEdit({ user }: { user: User }) {
 								) : (
 									<SaveAll className="mr-2 h-4 w-4" />
 								)}
-								Save Changes
+								{t("Dialogs.Edit.save")}
 							</Button>
 						</div>
 					</div>

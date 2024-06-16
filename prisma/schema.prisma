@@ -24,6 +24,8 @@ model User {
   password String
   role     Role   @default(USER)
 
+  language String @default("en")
+
   email         String?
   emailVerified DateTime? @map("email_verified")
 
