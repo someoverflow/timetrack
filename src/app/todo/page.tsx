@@ -34,7 +34,7 @@ export default async function History({
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
-	const t = await getTranslations("Todo")
+	const t = await getTranslations("Todo");
 
 	const [todos, users, projects] = await prisma.$transaction([
 		prisma.todo.findMany({

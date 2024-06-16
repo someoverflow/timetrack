@@ -7,7 +7,6 @@ import {
 	ArrowDownAZ,
 	ArrowDownZA,
 	ChevronDown,
-	ChevronRight,
 	ChevronUp,
 	ChevronsUp,
 	CircleCheckBig,
@@ -33,13 +32,12 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HoverCard, HoverCardContent } from "@/components/ui/hover-card";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { type Prisma, TodoPriority, TodoStatus } from "@prisma/client";
 import { TodoTableEdit } from "./todo-edit";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
 
 export const columns: ColumnDef<
 	Prisma.TodoGetPayload<{
@@ -330,10 +328,9 @@ export const columns: ColumnDef<
 			</DropdownMenu>
 		),
 		cell: ({ row }) => {
-			const t = useTranslations("Todo.Miscellaneous")
+			const t = useTranslations("Todo.Miscellaneous");
 
 			const router = useRouter();
-			const pathname = usePathname();
 			const todo = row.original;
 
 			async function archive() {
@@ -452,7 +449,7 @@ export const columns: ColumnDef<
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem disabled={todo.archived} onClick={archive}>
-						{t("archive")}
+							{t("archive")}
 						</DropdownMenuItem>
 						{!todo.hidden && (
 							<DropdownMenuItem onClick={() => visibiltyToggle()}>
