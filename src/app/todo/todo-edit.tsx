@@ -106,12 +106,8 @@ export function TodoTableEdit({
 	projects: ProjectsType;
 	users: UsersType;
 }) {
-	const [state, setState] = useReducer(
-		(prev: todoInfoState, next: Partial<todoInfoState>) => ({
-			...prev,
-			...next,
-		}),
-		{
+	const getDefaultReducerState = (): todoInfoState => {
+		return {
 			loading: false,
 
 			task: todo.task,
@@ -129,7 +125,15 @@ export function TodoTableEdit({
 			status: todo.status,
 			statusState: undefined,
 			priority: todo.priority,
-		},
+		};
+	};
+
+	const [state, setState] = useReducer(
+		(prev: todoInfoState, next: Partial<todoInfoState>) => ({
+			...prev,
+			...next,
+		}),
+		getDefaultReducerState(),
 	);
 	const [visible, setVisible] = useState(false);
 
@@ -139,17 +143,15 @@ export function TodoTableEdit({
 	const linkedTodo = searchParams.get("link");
 
 	const router = useRouter();
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Only change on page load
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		setVisible(linkedTodo === todo.id);
-	}, [router]);
+		setState(getDefaultReducerState());
+	}, [router, linkedTodo, todo]);
 
-	const updateSearch = (value: string) => {
+	const updateLink = () => {
 		const current = new URLSearchParams(window.location.search);
-
-		if (value.trim() === "") current.delete("search");
-		else current.set("search", value);
-
+		current.set("link", todo.id);
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 		router.replace(`/todo${query}`);
@@ -310,6 +312,7 @@ export function TodoTableEdit({
 		});
 
 		if (resultData.success) {
+			updateLink();
 			setStep(step);
 
 			toast.success("Successfully changed", {

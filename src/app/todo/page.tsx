@@ -32,6 +32,7 @@ export default async function History({
 		query?: string;
 		page?: string;
 		search?: string;
+		link?: string;
 	};
 }) {
 	const session = await auth();
@@ -113,31 +114,40 @@ export default async function History({
 		prisma.user.findMany({ select: { username: true, name: true } }),
 		prisma.project.findMany(),
 	]);
-	const sortedTodos = todos.sort((a, b) => {
-		const statusOrder = {
-			[TodoStatus.TODO]: 1,
-			[TodoStatus.IN_PROGRESS]: 2,
-			[TodoStatus.DONE]: 3,
-		};
-		const priorityOrder = {
-			[TodoPriority.HIGH]: 1,
-			[TodoPriority.MEDIUM]: 2,
-			[TodoPriority.LOW]: 3,
-		};
+	const processedTodos = todos
+		.sort((a, b) => {
+			const statusOrder = {
+				[TodoStatus.TODO]: 1,
+				[TodoStatus.IN_PROGRESS]: 2,
+				[TodoStatus.DONE]: 3,
+			};
+			const priorityOrder = {
+				[TodoPriority.HIGH]: 1,
+				[TodoPriority.MEDIUM]: 2,
+				[TodoPriority.LOW]: 3,
+			};
 
-		const status =
-			statusOrder[a.status as TodoStatus] - statusOrder[b.status as TodoStatus];
-		const priority =
-			priorityOrder[a.priority as TodoPriority] -
-			priorityOrder[b.priority as TodoPriority];
+			const status =
+				statusOrder[a.status as TodoStatus] -
+				statusOrder[b.status as TodoStatus];
+			const priority =
+				priorityOrder[a.priority as TodoPriority] -
+				priorityOrder[b.priority as TodoPriority];
 
-		const task = a.task.localeCompare(b.task, undefined, {
-			numeric: true,
-			sensitivity: "base",
-		});
+			const task = a.task.localeCompare(b.task, undefined, {
+				numeric: true,
+				sensitivity: "base",
+			});
 
-		return status || priority || task;
-	});
+			return status || priority || task;
+		})
+		.slice((page - 1) * pageSize, page * pageSize);
+	if (searchParams?.link) {
+		if (processedTodos.find((e) => e.id === searchParams.link) === undefined) {
+			const linkedTodo = todos.find((e) => e.id === searchParams.link);
+			if (linkedTodo) processedTodos.unshift(linkedTodo);
+		}
+	}
 
 	// Intensive task, which the client would have done...
 	return (
@@ -150,7 +160,7 @@ export default async function History({
 				<DataTable
 					paginationData={{ page: page, pages: pages, pageSize: pageSize }}
 					columns={columns}
-					data={sortedTodos.slice((page - 1) * pageSize, page * pageSize)}
+					data={processedTodos}
 					projects={projects}
 					users={users}
 				/>
