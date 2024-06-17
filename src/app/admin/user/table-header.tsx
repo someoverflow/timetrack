@@ -14,8 +14,8 @@ export default function UserTableHeader({
 }) {
 	const { replace } = useRouter();
 	const searchParams = useSearchParams();
-	const t = useTranslations("Admin.Users");
 	const searchPage = searchParams.get("search");
+	const t = useTranslations("Admin.Users");
 
 	const changePage = useDebouncedCallback((value: string) => {
 		const current = new URLSearchParams(Array.from(searchParams.entries()));

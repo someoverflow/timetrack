@@ -16,6 +16,7 @@ import { useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 
 async function getUserProjects() {
 	return await prisma.project.findMany({
@@ -177,7 +178,11 @@ export function ProjectSection({
 				</div>
 				<div className="w-max h-full">
 					<Button
-						disabled={data.loading}
+						disabled={data.loading || search === ""}
+						className={cn(
+							"transition-all duration-200",
+							search === "" && "w-0",
+						)}
 						size="icon"
 						onClick={() => createProject()}
 					>

@@ -49,6 +49,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { TodoAdd } from "./todo-add";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useDebouncedCallback } from "use-debounce";
 
 type UsersType = { name: string | null; username: string }[];
 type ProjectsType = {
@@ -61,6 +63,11 @@ interface DataTableProps<TData, TValue> {
 	data: TData[];
 	users: UsersType;
 	projects: ProjectsType;
+	paginationData: {
+		pages: number;
+		page: number;
+		pageSize: number;
+	};
 }
 
 declare module "@tanstack/table-core" {
@@ -77,14 +84,11 @@ export function DataTable<TData, TValue>({
 	data,
 	users,
 	projects,
+	paginationData,
 }: DataTableProps<TData, TValue>) {
+	const router = useRouter();
 	const t = useTranslations("Todo");
 
-	const [sorting, setSorting] = React.useState<SortingState>([
-		{ id: "status", desc: false },
-		{ id: "priority", desc: false },
-		{ id: "task", desc: false },
-	]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([
 		{ id: "archived", value: false },
 		{ id: "hidden", value: false },
@@ -94,9 +98,6 @@ export function DataTable<TData, TValue>({
 		data,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		onSortingChange: setSorting,
-		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		onColumnFiltersChange: setColumnFilters,
 		isMultiSortEvent: () => true,
@@ -107,54 +108,42 @@ export function DataTable<TData, TValue>({
 			},
 		},
 		state: {
-			sorting,
 			columnFilters,
 		},
 		initialState: {
 			pagination: {
-				pageSize: 15,
+				pageSize: paginationData.pageSize,
 			},
-			columnVisibility: [
-				"createdAt",
-				"creator",
-				"status",
-				"priority",
-				"archived",
-				"hidden",
-			].reduce((acc: Record<string, boolean>, item) => {
-				acc[item] = false;
-				return acc;
-			}, {}),
+			columnVisibility: ["createdAt", "creator", "archived", "hidden"].reduce(
+				(acc: Record<string, boolean>, item) => {
+					acc[item] = false;
+					return acc;
+				},
+				{},
+			),
 		},
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Get localstorage only run on page load
-	useEffect(() => {
-		// Load page size
-		const localPageSize = Number(localStorage.getItem("pageSizes") ?? 15);
-		if (!Number.isNaN(localPageSize)) table.setPageSize(localPageSize);
+	const changePage = (page: number) => {
+		if (page > paginationData.pages) return;
+		if (page <= 0) return;
 
-		// Load filters
-		const localHiddenFilter = localStorage.getItem("todoHiddenFilter");
-		if (["true", "false", "indeterminate"].includes(localHiddenFilter ?? ""))
-			table
-				.getColumn("hidden")
-				?.setFilterValue(
-					localHiddenFilter === "indeterminate"
-						? undefined
-						: localHiddenFilter === "true",
-				);
+		const current = new URLSearchParams(window.location.search);
+		current.set("page", `${page}`);
+		const search = current.toString();
+		const query = search ? `?${search}` : "";
+		router.replace(`/todo${query}`);
+	};
+	const updateSearch = useDebouncedCallback((value: string) => {
+		const current = new URLSearchParams(window.location.search);
 
-		const localArchivedFilter = localStorage.getItem("todoArchivedFilter");
-		if (["true", "false", "indeterminate"].includes(localArchivedFilter ?? ""))
-			table
-				.getColumn("archived")
-				?.setFilterValue(
-					localArchivedFilter === "indeterminate"
-						? undefined
-						: localArchivedFilter === "true",
-				);
-	}, []);
+		if (value.trim() === "") current.delete("search");
+		else current.set("search", value);
+
+		const search = current.toString();
+		const query = search ? `?${search}` : "";
+		router.replace(`/todo${query}`);
+	}, 300);
 
 	return (
 		<div>
@@ -163,9 +152,12 @@ export function DataTable<TData, TValue>({
 					<Input
 						id="searchTaskInput"
 						placeholder={t("searchTasks")}
-						value={(table.getColumn("task")?.getFilterValue() as string) ?? ""}
-						onChange={(event) =>
-							table.getColumn("task")?.setFilterValue(event.target.value)
+						onChange={(e) => updateSearch(e.target.value)}
+						defaultValue={
+							typeof window !== "undefined"
+								? new URLSearchParams(window.location.search).get("search") ??
+									""
+								: ""
 						}
 						className="max-w-xs"
 					/>
@@ -341,12 +333,16 @@ export function DataTable<TData, TValue>({
 					<Select
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
-							localStorage.setItem("pageSizes", value);
 							table.setPageSize(Number(value));
+							document.cookie = `pageSize=${value};max-age=31536000;path=/`;
+							router.refresh();
 						}}
 					>
 						<SelectTrigger className="h-9 w-[65px]">
-							<SelectValue placeholder={table.getState().pagination.pageSize} />
+							<SelectValue
+								defaultValue={paginationData.page}
+								placeholder={table.getState().pagination.pageSize}
+							/>
 						</SelectTrigger>
 						<SelectContent side="top">
 							{[15, 25, 50, 100].map((pageSize) => (
@@ -361,8 +357,8 @@ export function DataTable<TData, TValue>({
 				<div className="flex flex-col sm:flex-row items-center justify-center sm:gap-2">
 					<p className="flex w-full sm:w-[100px] justify-center text-center text-sm font-medium">
 						{t("currentPage", {
-							page: table.getState().pagination.pageIndex + 1,
-							pages: table.getPageCount(),
+							page: paginationData.page,
+							pages: paginationData.pages,
 						})}
 					</p>
 					<div className="flex flex-row items-center space-x-1">
@@ -370,8 +366,10 @@ export function DataTable<TData, TValue>({
 							variant="outline"
 							size="icon"
 							className="w-9 h-9"
-							onClick={() => table.firstPage()}
-							disabled={!table.getCanPreviousPage()}
+							onClick={() => {
+								changePage(1);
+							}}
+							disabled={paginationData.page === 1}
 						>
 							<ChevronsLeft className="w-4 h-4" />
 						</Button>
@@ -379,8 +377,10 @@ export function DataTable<TData, TValue>({
 							variant="outline"
 							size="icon"
 							className="w-9 h-9"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
+							onClick={() => {
+								changePage(paginationData.page - 1);
+							}}
+							disabled={paginationData.page === 1}
 						>
 							<ChevronLeft className="w-4 h-4" />
 						</Button>
@@ -388,8 +388,10 @@ export function DataTable<TData, TValue>({
 							variant="outline"
 							size="icon"
 							className="w-9 h-9"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
+							onClick={() => {
+								changePage(paginationData.page + 1);
+							}}
+							disabled={paginationData.page >= paginationData.pages}
 						>
 							<ChevronRight className="w-4 h-4" />
 						</Button>
@@ -397,8 +399,10 @@ export function DataTable<TData, TValue>({
 							variant="outline"
 							size="icon"
 							className="w-9 h-9"
-							onClick={() => table.lastPage()}
-							disabled={!table.getCanNextPage()}
+							onClick={() => {
+								changePage(paginationData.pages);
+							}}
+							disabled={paginationData.page >= paginationData.pages}
 						>
 							<ChevronsRight className="w-4 h-4" />
 						</Button>

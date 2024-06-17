@@ -137,12 +137,23 @@ export function TodoTableEdit({
 
 	const searchParams = useSearchParams();
 	const linkedTodo = searchParams.get("link");
+
+	const router = useRouter();
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Only change on page load
 	useEffect(() => {
 		setVisible(linkedTodo === todo.id);
-	}, []);
+	}, [router]);
 
-	const router = useRouter();
+	const updateSearch = (value: string) => {
+		const current = new URLSearchParams(window.location.search);
+
+		if (value.trim() === "") current.delete("search");
+		else current.set("search", value);
+
+		const search = current.toString();
+		const query = search ? `?${search}` : "";
+		router.replace(`/todo${query}`);
+	};
 
 	async function sendRequest() {
 		setState({

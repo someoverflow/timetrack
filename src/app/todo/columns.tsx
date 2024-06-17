@@ -203,40 +203,6 @@ export const columns: ColumnDef<
 		},
 	},
 	{
-		id: "status",
-		accessorKey: "status",
-		sortingFn: (a, b) => {
-			const actionOrder = {
-				[TodoStatus.TODO]: 1,
-				[TodoStatus.IN_PROGRESS]: 2,
-				[TodoStatus.DONE]: 3,
-			};
-
-			return (
-				actionOrder[a.original.status as TodoStatus] -
-				actionOrder[b.original.status as TodoStatus]
-			);
-		},
-		enableHiding: false,
-	},
-	{
-		id: "priority",
-		accessorKey: "priority",
-		sortingFn: (a, b) => {
-			const actionOrder = {
-				[TodoPriority.HIGH]: 1,
-				[TodoPriority.MEDIUM]: 2,
-				[TodoPriority.LOW]: 3,
-			};
-
-			return (
-				actionOrder[a.original.priority as TodoPriority] -
-				actionOrder[b.original.priority as TodoPriority]
-			);
-		},
-		enableHiding: false,
-	},
-	{
 		id: "assignees",
 		accessorKey: "assignees",
 		header: () => useTranslations("Todo.Miscellaneous")("assignees"),
