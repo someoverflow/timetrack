@@ -241,35 +241,48 @@
 			}
 		}
 	},
-	"Settings": {
+	"Profile": {
 		"Metadata": {
-			"title": "Time Track - Settings",
+			"title": "Time Track - Profile",
 			"description": "Track your Time"
 		},
 
-		"Profile": {
-			"title": "Profile",
-			"description": "Make changes to your profile here.",
+		"title": "Profile",
+		"description": "Make changes to your profile here.",
 
-			"name": "Name",
-			"namePlaceholder": "Max Mustermann",
-			"mail": "Mail",
-			"mailPlaceholder": "max@example.com",
+		"name": "Name",
+		"namePlaceholder": "Max Mustermann",
+		"mail": "Mail",
+		"mailPlaceholder": "max@example.com",
 
-			"language": "Language",
-			"languages": {
-				"en": "English",
-				"de": "Deutsch"
-			},
-
-			"password": "Password",
-			"passwordPlaceholder": "",
-
-			"buttonContent": "Save",
-			"buttonToolTip": "Every device will be<br/> <u>signed out</u> after changing: <br />Name, Mail & Password"
+		"language": "Language",
+		"languages": {
+			"en": "English",
+			"de": "Deutsch"
 		},
 
-		"title": "Anmelden"
+		"password": "New Password",
+		"passwordPlaceholder": "",
+
+		"buttonContent": "Save",
+		"buttonToolTip": "Every device will be<br/> <u>signed out</u> after changing: <br />Name, Mail & Password"
+	},
+	"Projects": {
+		"Metadata": {
+			"title": "Time Track - Projects",
+			"description": "Track your Time"
+		},
+
+		"title": "Projects",
+
+		"searchPlaceholder": "Search or add input",
+
+		"noProjects": "No projects found.",
+
+		"projects": "Projects ({projects})",
+
+		"times": "Times: {times}",
+		"todos": "Todos: {todos}"
 	},
 	"Admin": {
 		"Users": {
@@ -369,7 +382,8 @@
 			"light": "Light",
 			"system": "System"
 		},
-		"settings": "Settings",
+		"profile": "Profile",
+		"projects": "Projects",
 		"users": "Users",
 		"signOut": "Sign Out"
 	}

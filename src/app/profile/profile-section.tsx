@@ -74,7 +74,7 @@ export default function ProfileSection({
 		},
 	);
 
-	const t = useTranslations("Settings.Profile");
+	const t = useTranslations("Profile");
 
 	const router = useRouter();
 
@@ -155,7 +155,7 @@ export default function ProfileSection({
 	}
 
 	return (
-		<Card className="w-full">
+		<Card className="w-full rounded-md">
 			<div className="flex flex-row">
 				<CardHeader className="w-full">
 					<CardTitle>{t("title")}</CardTitle>
@@ -187,6 +187,7 @@ export default function ProfileSection({
 							name="Name"
 							id="input-name"
 							placeholder={t("namePlaceholder")}
+							autoComplete="name"
 							value={data.name}
 							onChange={(e) => setData({ name: e.target.value })}
 						/>
@@ -207,6 +208,7 @@ export default function ProfileSection({
 							type="email"
 							name="Mail"
 							id="input-mail"
+							autoComplete="email"
 							placeholder={t("mailPlaceholder")}
 							value={data.mail}
 							onChange={(e) => setData({ mail: e.target.value })}

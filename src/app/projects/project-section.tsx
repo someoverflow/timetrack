@@ -8,19 +8,14 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { Plus, RefreshCw, Trash } from "lucide-react";
+import { Ellipsis, Plus, RefreshCw, Trash } from "lucide-react";
 import { useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "next-intl";
 
 async function getUserProjects() {
 	return await prisma.project.findMany({
@@ -56,6 +51,7 @@ export function ProjectSection({
 			loading: false,
 		},
 	);
+	const t = useTranslations("Projects");
 
 	const [search, setSearch] = useState("");
 
@@ -173,7 +169,7 @@ export function ProjectSection({
 			<div className="flex flex-row items-center gap-2 p-2">
 				<div className="w-full p-1 px-2">
 					<CommandInput
-						placeholder="Search or add input"
+						placeholder={t("searchPlaceholder")}
 						className="h-8"
 						onValueChange={setSearch}
 						value={search}
@@ -195,16 +191,15 @@ export function ProjectSection({
 			</div>
 			<CommandList className="max-h-none h-full">
 				<CommandGroup
-					heading={`Projects (${projects.length})`}
+					heading={t("projects", { projects: projects.length })}
 					forceMount={projects.length === 0}
 				>
 					{projects.length === 0 && (
 						<div className="py-6 text-center text-sm">
-							<p>No project found.</p>
-							<p>Create a new project now!</p>
+							<p>{t("noProjects")}</p>
 						</div>
 					)}
-					{/* TODO: Interaction & Description & Renaming */}
+					{/* TODO: Interaction & Renaming */}
 					{projects.map((project) => (
 						<CommandItem
 							key={`projects-${project.name}`}
@@ -213,20 +208,34 @@ export function ProjectSection({
 							<div className="w-full flex flex-row items-center justify-between">
 								<div className="w-full">
 									<h4 className="text-sm font-semibold">{project.name}</h4>
-									<div className="w-fit">
-										<Separator className="mt-2 mb-4 w-full" />
+									<p className="text-xs text-muted-foreground whitespace-pre-wrap">
+										{project.description}
+									</p>
+									<div className="w-fit pt-3">
 										<div className="flex flex-row items-center gap-1 text-xs">
 											<Badge variant="secondary" className="font-normal">
-												Times: {project._count.times}
+												{t("times", { times: project._count.times })}
 											</Badge>
 											<Badge variant="secondary" className="font-normal">
-												Todos: {project._count.todos}
+												{t("todos", { todos: project._count.todos })}
 											</Badge>
 										</div>
 									</div>
 								</div>
 
-								{userData.role === "ADMIN" && (
+								<div className="flex flex-col w-min gap-1">
+									<Button
+										size="icon"
+										variant="outline"
+										className="transition-all duration-150 opacity-0 group-hover:opacity-100"
+										disabled={data.loading}
+										onClick={() => {}}
+									>
+										<Ellipsis className="w-4 h-4" />
+									</Button>
+								</div>
+								{/*
+								userData.role === "ADMIN" && (
 									<div className="flex flex-col w-min gap-1">
 										<Button
 											size="icon"
@@ -238,7 +247,8 @@ export function ProjectSection({
 											<Trash className="w-4 h-4" />
 										</Button>
 									</div>
-								)}
+								) 
+								 */}
 							</div>
 						</CommandItem>
 					))}

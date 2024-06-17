@@ -87,11 +87,20 @@ export default function NavigationSection({
 				<MenubarContent className="space-y-1">
 					<MenubarItem asChild>
 						<Link
-							href="/settings"
+							href="/profile"
 							prefetch
-							className={pathname === "/settings" ? "bg-accent" : ""}
+							className={pathname === "/profile" ? "bg-accent" : ""}
 						>
-							{t("settings")}
+							{t("profile")}
+						</Link>
+					</MenubarItem>
+					<MenubarItem asChild>
+						<Link
+							href="/projects"
+							prefetch
+							className={pathname === "/projects" ? "bg-accent" : ""}
+						>
+							{t("projects")}
 						</Link>
 					</MenubarItem>
 					{user?.role === "ADMIN" && (

@@ -241,33 +241,48 @@
 			}
 		}
 	},
-	"Settings": {
+	"Profile": {
 		"Metadata": {
-			"title": "Time Track - Einstellungen",
+			"title": "Time Track - Profil",
 			"description": "Erfasse deine Zeiten"
 		},
 
-		"Profile": {
-			"title": "Profil",
-			"description": "Nehme Änderungen am Profil vor.",
+		"title": "Profil",
+		"description": "Nehme Änderungen am Profil vor.",
 
-			"name": "Name",
-			"namePlaceholder": "Max Mustermann",
-			"mail": "Mail",
-			"mailPlaceholder": "max@example.com",
+		"name": "Name",
+		"namePlaceholder": "Max Mustermann",
+		"mail": "Mail",
+		"mailPlaceholder": "max@example.com",
 
-			"language": "Sprache",
-			"languages": {
-				"en": "English",
-				"de": "Deutsch"
-			},
+		"language": "Sprache",
+		"languages": {
+			"en": "English",
+			"de": "Deutsch"
+		},
 
-			"password": "Passwort",
-			"passwordPlaceholder": "",
+		"password": "Neues Passwort",
+		"passwordPlaceholder": "",
 
-			"buttonContent": "Speichern",
-			"buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort"
-		}
+		"buttonContent": "Speichern",
+		"buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort"
+	},
+	"Projects": {
+		"Metadata": {
+			"title": "Time Track - Projekte",
+			"description": "Erfasse deine Zeiten"
+		},
+
+		"title": "Projekte",
+
+		"searchPlaceholder": "Suche oder erstelle ein Projekt",
+
+		"noProjects": "Keine Projekte gefunden.",
+
+		"projects": "Projekte ({projects})",
+
+		"times": "Zeiten: {times}",
+		"todos": "Todos: {todos}"
 	},
 	"Admin": {
 		"Users": {
@@ -367,7 +382,8 @@
 			"light": "Hell",
 			"system": "System"
 		},
-		"settings": "Einstellungen",
+		"profile": "Profil",
+		"projects": "Projekte",
 		"users": "Benutzer",
 		"signOut": "Abmelden"
 	}
