@@ -266,6 +266,30 @@ export default function TimerInfo({
 		}
 	}
 
+	const preventClosing = () => {
+		let prevent = false;
+		if (state.loading) prevent = true;
+
+		if (state.notes !== data.notes ?? "") prevent = true;
+
+		if (
+			state.start !== data.start.toLocaleString("sv").replace(" ", "T") ||
+			state.end !==
+				(data.end
+					? data.end.toLocaleString("sv").replace(" ", "T")
+					: new Date().toLocaleString("sv").replace(" ", "T"))
+		)
+			prevent = true;
+
+		if (state.traveledDistance !== data.traveledDistance ?? null)
+			prevent = true;
+
+		if (state.projectName !== data.projectName || state.projectSelectionOpen)
+			prevent = true;
+
+		return prevent;
+	};
+
 	return (
 		<>
 			<SwipeableListItem
@@ -345,10 +369,10 @@ export default function TimerInfo({
 				<DialogContent
 					className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
 					onPointerDownOutside={(e) => {
-						e.preventDefault();
+						if (preventClosing()) e.preventDefault();
 					}}
 					onInteractOutside={(e) => {
-						e.preventDefault();
+						if (preventClosing()) e.preventDefault();
 					}}
 				>
 					<DialogHeader>
