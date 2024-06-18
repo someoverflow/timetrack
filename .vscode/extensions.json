@@ -1,11 +1,13 @@
 {
-  "recommendations": [
-    "dsznajder.es7-react-js-snippets",
-    "mhutchie.git-graph",
-    "christian-kohler.npm-intellisense",
-    "esbenp.prettier-vscode",
-    "yoavbls.pretty-ts-errors",
-    "prisma.prisma",
-    "bradlc.vscode-tailwindcss"
-  ]
+	"recommendations": [
+		"mhutchie.git-graph",
+		"christian-kohler.npm-intellisense",
+		"esbenp.prettier-vscode",
+		"yoavbls.pretty-ts-errors",
+		"prisma.prisma",
+		"formulahendry.auto-rename-tag",
+		"biomejs.biome",
+		"bradlc.vscode-tailwindcss",
+		"meganrogge.template-string-converter"
+	]
 }

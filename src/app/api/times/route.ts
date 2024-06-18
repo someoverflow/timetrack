@@ -266,7 +266,6 @@ export const PUT = auth(async (request) => {
 	let dbStarted: Date | undefined = undefined;
 	let dbStopped: Date | undefined = undefined;
 	try {
-		// TODO: Check
 		const databaseResult = await prisma.time.findUnique({
 			where: {
 				id: data.id,
@@ -278,7 +277,7 @@ export const PUT = auth(async (request) => {
 				"Entry with the given id not found",
 				"not-found",
 			);
-			
+
 		dbStarted = databaseResult.start;
 		dbStopped = databaseResult.end ?? undefined;
 
@@ -317,19 +316,15 @@ export const PUT = auth(async (request) => {
 		traveledDistance: data.traveledDistance,
 	};
 
-	if (data.start && !data.end && !dbStopped) {
+	if (data.start && !data.end) {
+		if (dbStopped)
+			updateData.time = getTimePassed(new Date(data.start), dbStopped);
+
 		updateData.start = data.start;
 		updateData.startType = data.startType ?? "API";
 	}
-	if (data.start && !data.end && dbStopped) {
-		const timePassed = getTimePassed(new Date(data.start), dbStopped);
 
-		updateData.start = data.start;
-		updateData.time = timePassed;
-		updateData.startType = data.startType ?? "API";
-	}
-
-	if (data.end && data.start === undefined) {
+	if (data.end && !data.start) {
 		const timePassed = getTimePassed(dbStarted, new Date(data.end));
 
 		updateData.end = data.end;
