@@ -146,7 +146,10 @@ export function DataTable<TData, TValue>({
 
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
-		router.replace(`/todo${query}`);
+
+		startTransition(() => {
+			router.replace(`/todo${query}`);
+		});
 	}, 300);
 
 	return (
@@ -163,7 +166,6 @@ export function DataTable<TData, TValue>({
 									""
 								: ""
 						}
-						className="max-w-xs"
 					/>
 				</div>
 				<div className="flex flex-row gap-2">
