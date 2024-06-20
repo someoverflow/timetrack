@@ -149,7 +149,6 @@ export default async function History({
 		}
 	}
 
-	// Intensive task, which the client would have done...
 	return (
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">

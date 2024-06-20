@@ -5,9 +5,6 @@ import {
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
-	getPaginationRowModel,
-	getSortedRowModel,
-	type SortingState,
 	type ColumnFiltersState,
 	getFilteredRowModel,
 	type RowData,
@@ -22,7 +19,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import React, { useEffect } from "react";
+import React, { useEffect, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -31,6 +28,7 @@ import {
 	ChevronsLeft,
 	ChevronsRight,
 	Filter,
+	LoaderPinwheel,
 } from "lucide-react";
 import {
 	Select,
@@ -51,6 +49,7 @@ import { TodoAdd } from "./todo-add";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { cn } from "@/lib/utils";
 
 type UsersType = { name: string | null; username: string }[];
 type ProjectsType = {
@@ -89,6 +88,8 @@ export function DataTable<TData, TValue>({
 	const router = useRouter();
 	const t = useTranslations("Todo");
 
+	const [isPending, startTransition] = useTransition();
+
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([
 		{ id: "archived", value: false },
 		{ id: "hidden", value: false },
@@ -124,7 +125,7 @@ export function DataTable<TData, TValue>({
 		},
 	});
 
-	const changePage = (page: number) => {
+	const changePage = async (page: number) => {
 		if (page > paginationData.pages) return;
 		if (page <= 0) return;
 
@@ -132,7 +133,10 @@ export function DataTable<TData, TValue>({
 		current.set("page", `${page}`);
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
-		router.replace(`/todo${query}`);
+
+		startTransition(() => {
+			router.replace(`/todo${query}`);
+		});
 	};
 	const updateSearch = useDebouncedCallback((value: string) => {
 		const current = new URLSearchParams(window.location.search);
@@ -163,6 +167,14 @@ export function DataTable<TData, TValue>({
 					/>
 				</div>
 				<div className="flex flex-row gap-2">
+					<div className="grid place-items-center">
+						<LoaderPinwheel
+							className={cn(
+								"h-5 w-0 transition-all",
+								isPending && "w-5 animate-spin",
+							)}
+						/>
+					</div>
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button

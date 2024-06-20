@@ -147,7 +147,7 @@ export function TodoTableEdit({
 	useEffect(() => {
 		setVisible(linkedTodo === todo.id);
 		setState(getDefaultReducerState());
-	}, [router, linkedTodo, todo]);
+	}, [linkedTodo, todo]);
 
 	const updateLink = () => {
 		const current = new URLSearchParams(window.location.search);
@@ -476,21 +476,21 @@ export function TodoTableEdit({
 												})
 											}
 										>
-											<div className="flex flex-col items-center gap-2">
+											<div className="flex flex-col items-center text-center gap-2">
 												<RadioGroupItem value="HIGH" id="r1" />
 												<Label htmlFor="r1">
 													<ChevronsUp className="h-5 w-5 text-red-500 inline-block" />{" "}
 													{t("Miscellaneous.priorities.high")}
 												</Label>
 											</div>
-											<div className="flex flex-col items-center gap-2">
+											<div className="flex flex-col items-center text-center gap-2">
 												<RadioGroupItem value="MEDIUM" id="r2" />
 												<Label htmlFor="r2">
 													<ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />{" "}
 													{t("Miscellaneous.priorities.medium")}
 												</Label>
 											</div>
-											<div className="flex flex-col items-center gap-2">
+											<div className="flex flex-col items-center text-center gap-2">
 												<RadioGroupItem value="LOW" id="r3" />
 												<Label htmlFor="r3">
 													<ChevronDown className="h-5 w-5 text-blue-500 inline-block" />{" "}
