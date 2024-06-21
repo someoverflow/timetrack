@@ -215,7 +215,6 @@
 			"createdAt": "Erstellt",
 
 			"archived": "Archiviert",
-			"hidden": "Versteckt",
 
 			"visibleColumns": "Sichtbare Spalten",
 
@@ -233,6 +232,11 @@
 				"todo": "Todo",
 				"inProgress": "In Arbeit",
 				"done": "Fertig"
+			},
+			"stepsNext": {
+				"todo": "Anfangen",
+				"inProgress": "Fertigstellen",
+				"done": "Todo"
 			},
 			"priorities": {
 				"high": "Hohe Priorität",

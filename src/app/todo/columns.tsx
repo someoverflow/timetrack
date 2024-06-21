@@ -14,6 +14,7 @@ import {
 	CircleDotDashed,
 	ListFilter,
 	MoreHorizontal,
+	MousePointerClick,
 	Settings2,
 } from "lucide-react";
 import {
@@ -35,7 +36,7 @@ import { HoverCard, HoverCardContent } from "@/components/ui/hover-card";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { type Prisma, TodoPriority, TodoStatus } from "@prisma/client";
+import type { Prisma, Todo } from "@prisma/client";
 import { TodoTableEdit } from "./todo-edit";
 import { useTranslations } from "next-intl";
 
@@ -74,8 +75,10 @@ export const columns: ColumnDef<
 			return (
 				<div className="flex items-center space-x-2">
 					<Button
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc", true)
+						onClick={
+							() => {}
+							// TODO: Sorting
+							// column.toggleSorting(column.getIsSorted() === "asc", true)
 						}
 						variant="ghost"
 						size="sm"
@@ -95,63 +98,138 @@ export const columns: ColumnDef<
 		},
 		cell: ({ row, table }) => {
 			const t = useTranslations("Todo.Miscellaneous");
+			const router = useRouter();
 			const todo = row.original;
+
+			async function stepChange() {
+				const request: Partial<Todo> = {
+					id: todo.id,
+				};
+
+				switch (todo.status) {
+					case "TODO":
+						request.status = "IN_PROGRESS";
+						break;
+					case "IN_PROGRESS":
+						request.status = "DONE";
+						break;
+					case "DONE":
+						request.status = "TODO";
+						break;
+				}
+
+				const result = await fetch("/api/todo", {
+					method: "PUT",
+					body: JSON.stringify(request),
+				});
+
+				const resultData: APIResult = await result.json().catch(() => {
+					toast.error("An error occurred", {
+						description: "Result could not be proccessed",
+						important: true,
+						duration: 8000,
+					});
+					return;
+				});
+
+				if (resultData.success) {
+					toast.success("Successfully changed", {
+						duration: 3000,
+					});
+					router.refresh();
+					return;
+				}
+
+				switch (resultData.type) {
+					case "error-message":
+						toast.warning("An error occurred", {
+							description: resultData.result.message,
+							important: true,
+							duration: 5000,
+						});
+						break;
+					case "validation":
+						toast.warning(`An error occurred (${resultData.result[0].code})`, {
+							description: resultData.result[0].message,
+							important: true,
+							duration: 5000,
+						});
+						break;
+					default:
+						toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+							description: "Error could not be identified. You can try again.",
+							important: true,
+							duration: 8000,
+						});
+						break;
+				}
+			}
+
 			return (
 				<div className="flex flex-row items-center gap-2">
 					<div className="flex flex-col justify-between gap-1 h-10">
 						<Tooltip>
-							<TooltipTrigger
-								onClick={() => {
-									const statusColumn = table.getColumn("status");
-									if (statusColumn)
-										statusColumn.toggleSorting(
-											statusColumn.getIsSorted() === "asc",
-											true,
-										);
-								}}
-							>
-								{row.original.status === "TODO" && (
+							<TooltipTrigger onClick={stepChange}>
+								{todo.status === "TODO" && (
 									<CircleDot className="h-4 w-4 text-blue-500" />
 								)}
-								{row.original.status === "IN_PROGRESS" && (
+								{todo.status === "IN_PROGRESS" && (
 									<CircleDotDashed className="h-4 w-4 text-amber-500" />
 								)}
-								{row.original.status === "DONE" && (
+								{todo.status === "DONE" && (
 									<CircleCheckBig className="h-4 w-4 text-emerald-500" />
 								)}
 							</TooltipTrigger>
 							<TooltipContent side="right">
-								{row.original.status === "TODO" && t("steps.todo")}
-								{row.original.status === "IN_PROGRESS" && t("steps.inProgress")}
-								{row.original.status === "DONE" && t("steps.done")}
+								{todo.status === "TODO" && (
+									<div className="text-muted-foreground">
+										{t("steps.todo")}
+										<br />
+										<span className="text-primary flex flex-row items-center gap-1">
+											<MousePointerClick className="h-4 w-4 inline-flex" />{" "}
+											{t("stepsNext.todo")}
+										</span>
+									</div>
+								)}
+								{todo.status === "IN_PROGRESS" && (
+									<div className="text-muted-foreground">
+										{t("steps.inProgress")}
+										<br />
+										<span className="text-primary flex flex-row items-center gap-1">
+											<MousePointerClick className="h-4 w-4 inline-flex" />{" "}
+											{t("stepsNext.todo")}
+										</span>
+									</div>
+								)}
+								{todo.status === "DONE" && (
+									<div className="text-muted-foreground">
+										{t("steps.done")}
+										<br />
+										<span className="text-primary flex flex-row items-center gap-1">
+											<MousePointerClick className="h-4 w-4 inline-flex" />{" "}
+											{t("stepsNext.todo")}
+										</span>
+									</div>
+								)}
 							</TooltipContent>
 						</Tooltip>
 
 						<Tooltip>
-							<TooltipTrigger
-								onClick={() => {
-									const priorityColumn = table.getColumn("priority");
-									if (priorityColumn)
-										priorityColumn.toggleSorting(
-											priorityColumn.getIsSorted() === "asc",
-											true,
-										);
-								}}
-							>
-								{row.original.priority === "HIGH" && (
+							<TooltipTrigger onClick={() => {}}>
+								{todo.priority === "HIGH" && (
 									<ChevronsUp className="h-4 w-4 text-red-500" />
 								)}
-								{row.original.priority === "MEDIUM" && (
+								{todo.priority === "MEDIUM" && (
 									<ChevronUp className="h-4 w-4 text-emerald-500" />
 								)}
-								{row.original.priority === "LOW" && (
+								{todo.priority === "LOW" && (
 									<ChevronDown className="h-4 w-4 text-blue-500" />
 								)}
 							</TooltipTrigger>
 							<TooltipContent side="right">
-								{row.original.priority === "HIGH" && t("priorities.high")}
-								{row.original.priority === "MEDIUM" && t("priorities.medium")}
-								{row.original.priority === "LOW" && t("priorities.low")}
+								{todo.priority === "HIGH" && t("priorities.high")}
+								{todo.priority === "MEDIUM" && t("priorities.medium")}
+								{todo.priority === "LOW" && t("priorities.low")}
 							</TooltipContent>
 						</Tooltip>
 					</div>

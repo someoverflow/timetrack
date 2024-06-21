@@ -33,6 +33,7 @@ export default async function History({
 		page?: string;
 		search?: string;
 		link?: string;
+		archived?: string;
 	};
 }) {
 	const session = await auth();
@@ -43,8 +44,15 @@ export default async function History({
 
 	const cookieStore = cookies();
 
+	const archived = (searchParams?.archived ?? "false") === "true"
+
 	const todoCount = await prisma.todo.count({
 		where: {
+			task: {
+				contains: searchParams?.search,
+			},
+			hidden: false,
+			archived: archived,
 			OR: [
 				{
 					creatorId: user.id,
@@ -76,6 +84,8 @@ export default async function History({
 				task: {
 					contains: searchParams?.search,
 				},
+				hidden: false,
+				archived: archived,
 				OR: [
 					{
 						creatorId: user.id,
@@ -160,6 +170,7 @@ export default async function History({
 					paginationData={{ page: page, pages: pages, pageSize: pageSize }}
 					columns={columns}
 					data={processedTodos}
+					archived={archived}
 					projects={projects}
 					users={users}
 				/>

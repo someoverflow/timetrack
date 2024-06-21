@@ -215,7 +215,6 @@
 			"createdAt": "Created at",
 
 			"archived": "Archived",
-			"hidden": "Hidden",
 
 			"visibleColumns": "Visible Columns",
 
@@ -233,6 +232,11 @@
 				"todo": "Todo",
 				"inProgress": "In Progress",
 				"done": "Done"
+			},
+			"stepsNext": {
+				"todo": "Start Progressing",
+				"inProgress": "Finish",
+				"done": "Todo"
 			},
 			"priorities": {
 				"high": "High Priority",

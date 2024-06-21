@@ -19,7 +19,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import React, { useEffect, useTransition } from "react";
+import React, { useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -28,6 +28,7 @@ import {
 	ChevronsLeft,
 	ChevronsRight,
 	Filter,
+	Loader,
 	LoaderPinwheel,
 } from "lucide-react";
 import {
@@ -61,6 +62,7 @@ interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	users: UsersType;
+	archived: boolean;
 	projects: ProjectsType;
 	paginationData: {
 		pages: number;
@@ -82,6 +84,7 @@ export function DataTable<TData, TValue>({
 	columns,
 	data,
 	users,
+	archived,
 	projects,
 	paginationData,
 }: DataTableProps<TData, TValue>) {
@@ -90,26 +93,17 @@ export function DataTable<TData, TValue>({
 
 	const [isPending, startTransition] = useTransition();
 
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([
-		{ id: "archived", value: false },
-		{ id: "hidden", value: false },
-	]);
-
 	const table = useReactTable({
 		data,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		onColumnFiltersChange: setColumnFilters,
 		isMultiSortEvent: () => true,
 		meta: {
 			todo: {
 				projects: projects,
 				users: users,
 			},
-		},
-		state: {
-			columnFilters,
 		},
 		initialState: {
 			pagination: {
@@ -131,6 +125,16 @@ export function DataTable<TData, TValue>({
 
 		const current = new URLSearchParams(window.location.search);
 		current.set("page", `${page}`);
+		const search = current.toString();
+		const query = search ? `?${search}` : "";
+
+		startTransition(() => {
+			router.replace(`/todo${query}`);
+		});
+	};
+	const changeFilter = async () => {
+		const current = new URLSearchParams(window.location.search);
+		current.set("archived", `${!archived}`);
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 
@@ -170,7 +174,7 @@ export function DataTable<TData, TValue>({
 				</div>
 				<div className="flex flex-row gap-2">
 					<div className="grid place-items-center">
-						<LoaderPinwheel
+						<Loader
 							className={cn(
 								"h-5 w-0 transition-all",
 								isPending && "w-5 animate-spin",
@@ -193,82 +197,12 @@ export function DataTable<TData, TValue>({
 								<div className="flex flex-row items-center gap-4">
 									<Checkbox
 										id="archivedSwitch"
-										checked={
-											table.getColumn("archived")?.getFilterValue() ===
-											undefined
-												? "indeterminate"
-												: (table
-														.getColumn("archived")
-														?.getFilterValue() as boolean)
-										}
-										onCheckedChange={(checked) => {
-											let value = checked ? true : undefined;
-											if (
-												table.getColumn("archived")?.getFilterValue() ===
-												undefined
-											)
-												value = false;
-
-											table.getColumn("archived")?.setFilterValue(value);
-											localStorage.setItem(
-												"todoArchivedFilter",
-												value === undefined ? "indeterminate" : String(value),
-											);
-										}}
+										checked={archived}
+										onCheckedChange={() => changeFilter()}
 									/>
 									<Label htmlFor="archivedSwitch" className="text-nowrap">
 										{t("Miscellaneous.archived")}
 									</Label>
-								</div>
-								<div className="flex flex-row items-center gap-4">
-									<Checkbox
-										id="hiddenSwitch"
-										checked={
-											table.getColumn("hidden")?.getFilterValue() === undefined
-												? "indeterminate"
-												: (table
-														.getColumn("hidden")
-														?.getFilterValue() as boolean)
-										}
-										onCheckedChange={(checked) => {
-											let value = checked ? true : undefined;
-											if (
-												table.getColumn("hidden")?.getFilterValue() ===
-												undefined
-											)
-												value = false;
-
-											table.getColumn("hidden")?.setFilterValue(value);
-											localStorage.setItem(
-												"todoHiddenFilter",
-												value === undefined ? "indeterminate" : String(value),
-											);
-										}}
-									/>
-									<Label htmlFor="hiddenSwitch" className="text-nowrap">
-										{t("Miscellaneous.hidden")}
-									</Label>
-								</div>
-
-								<Separator className="w-full mt-2" />
-
-								<div className="opacity-75 scale-75 flex flex-col gap-2">
-									<div className="flex flex-row items-center gap-4">
-										<Checkbox id="previewChecked" checked disabled />
-										<Label htmlFor="previewChecked">Show only … todos</Label>
-									</div>
-									<div className="flex flex-row items-center gap-4">
-										<Checkbox
-											id="previewIndeterminate"
-											checked="indeterminate"
-											disabled
-										/>
-										<Label htmlFor="previewIndeterminate">Show … todos</Label>
-									</div>
-									<div className="flex flex-row items-center gap-4">
-										<Checkbox id="previewNotChecked" checked={false} disabled />
-										<Label htmlFor="previewNotChecked">Hide … todos</Label>
-									</div>
 								</div>
 							</div>
 						</PopoverContent>
@@ -313,9 +247,6 @@ export function DataTable<TData, TValue>({
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
-									className={`${row.getValue("hidden") ? "bg-muted/10" : ""} ${
-										row.getValue("archived") ? "bg-muted/30" : ""
-									}`}
 									data-state={row.getIsSelected() && "selected"}
 								>
 									{row.getVisibleCells().map((cell) => (
