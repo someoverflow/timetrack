@@ -153,6 +153,58 @@ export default function ProfileSection({
 				break;
 		}
 	}
+	async function changeLanguage(language: string) {
+		setData({
+			loading: true,
+		});
+
+		const result = await fetch("/api/profile", {
+			method: "PUT",
+			body: JSON.stringify({
+				language: language,
+			}),
+		});
+
+		setData({
+			loading: false,
+		});
+
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
+			toast.success("Successfully updated profile.", {
+				description: "Session is getting updated",
+				duration: 3000,
+			});
+
+			router.refresh();
+			return;
+		}
+
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
+		}
+	}
 
 	return (
 		<Card className="w-full rounded-md">
@@ -219,14 +271,19 @@ export default function ProfileSection({
 							htmlFor="select-language"
 							className={cn(
 								"transition-colors",
-								data.language !== language ? "text-blue-500" : "",
+								//data.language !== language ? "text-blue-500" : "",
 							)}
 						>
 							{t("language")}
 						</Label>
 						<Select
 							value={data.language}
-							onValueChange={(e) => setData({ language: e })}
+							onValueChange={(e) => {
+								setData({
+									language: e,
+								});
+								changeLanguage(e);
+							}}
 						>
 							<SelectTrigger id="select-language">
 								<SelectValue />
