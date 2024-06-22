@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
-import { randomUUID } from "node:crypto";
 
 const prisma = new PrismaClient();
 
