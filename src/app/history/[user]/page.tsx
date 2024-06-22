@@ -6,21 +6,21 @@ import TimerSection from "../timer-section";
 import { redirect } from "next/navigation";
 
 // Auth
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 // Database
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
-// React
-import type { Metadata } from "next";
-
 // Utils
 import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "../timer-add";
+import { badgeVariants } from "@/components/ui/badge";
+import { getTranslations } from "next-intl/server";
 
-type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
+type Timer = Prisma.TimeGetPayload<{
+	include: { project: true };
+}>;
 interface Data {
 	[yearMonth: string]: Timer[];
 }
@@ -40,10 +40,14 @@ function formatHistory(data: Timer[]): Data {
 	return result;
 }
 
-export const metadata: Metadata = {
-	title: "Time Track - History",
-	description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "History.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function History({
 	searchParams,
@@ -56,42 +60,39 @@ export default async function History({
 	};
 	params: { user: string };
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
+	if (session.user.role !== "ADMIN") redirect("/history");
 
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-	});
-
-	if (!user) return redirect("/");
-	if (user.role !== "admin") redirect("/history");
+	const t = await getTranslations("History");
 
 	const target = await prisma.user
 		.findUnique({
 			where: {
-				tag: params.user,
+				username: params.user,
 			},
 			select: {
 				id: true,
-				tag: true,
+				username: true,
 				name: true,
 			},
 		})
 		.catch(() => null);
 
-	const history = await prisma.time
-		.findMany({
+	const [history, projects] = await prisma.$transaction([
+		prisma.time.findMany({
 			orderBy: {
-				//id: "desc",
 				start: "desc",
 			},
 			where: {
 				userId: target?.id,
 			},
-		})
-		.catch(() => null);
+			include: {
+				project: true,
+			},
+		}),
+		prisma.project.findMany(),
+	]);
 
 	function dataFound(): boolean {
 		if (!history) return false;
@@ -99,16 +100,18 @@ export default async function History({
 		return !(history.length === 1 && history[0].end == null);
 	}
 
-	const historyData = history ? formatHistory(history) : null;
+	const historyData = history ? formatHistory(history) : {};
+
+	let yearMonth = searchParams?.ym;
+	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
+		yearMonth = Object.keys(historyData)[0];
 
 	const timeStrings: string[] = [];
-	if (historyData) {
-		if (searchParams?.ym) {
-			for (const data of historyData[searchParams.ym]) {
-				if (data.time) timeStrings.push(data.time);
-			}
+	try {
+		for (const data of historyData[yearMonth]) {
+			if (data.time) timeStrings.push(data.time);
 		}
-	}
+	} catch (e) {}
 	const totalTime =
 		timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
 
@@ -116,9 +119,17 @@ export default async function History({
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
 				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">{`History of ${
-						target ? target.name : "?"
-					}`}</p>
+					<p className="text-2xl font-mono">
+						{t("PageTitle")}
+						<span
+							className={badgeVariants({
+								variant: "secondary",
+								className: "absolute",
+							})}
+						>
+							{target?.name ? target.name : params.user}
+						</span>
+					</p>
 				</div>
 
 				{target ? (
@@ -126,15 +137,19 @@ export default async function History({
 						{dataFound() && historyData != null ? (
 							<TimerSection
 								history={historyData}
+								projects={projects}
 								totalTime={totalTime}
-								tag={target.tag}
+								yearMonth={yearMonth}
+								user={target.id}
 							/>
 						) : (
-							<TimerAddServer tag={target.tag} />
+							<TimerAddServer user={target.id} projects={projects} />
 						)}
 					</>
 				) : (
-					<p className="font-mono font-bold text-4xl">User not found</p>
+					<p className="font-mono font-bold text-xl">
+						{t("Miscellaneous.userNotFound")}
+					</p>
 				)}
 			</section>
 		</Navigation>

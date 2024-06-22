@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, ChevronDown, FileDown, ListPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronDown, ListPlus, Loader } from "lucide-react";
 import TimerAdd from "./timer-add";
 
 // Database
@@ -30,77 +31,77 @@ import type { Prisma } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // React
-import React, { useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 
 import { cn } from "@/lib/utils";
 
 import dynamic from "next/dynamic";
+import TimerExportDialog from "./timer-export";
+import { useTranslations } from "next-intl";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
-type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
+type Timer = Prisma.TimeGetPayload<{
+	include: { project: true };
+}>;
 interface Data {
 	[yearMonth: string]: Timer[];
 }
 
 export default function TimerSection({
-	tag,
+	user,
 	history,
+	projects,
+	yearMonth,
 	totalTime,
 }: {
-	tag: string;
+	user: string;
 	history: Data;
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
+	yearMonth: string;
 	totalTime: string;
 }) {
+	const t = useTranslations("History");
+
 	const historyKeys = Object.keys(history);
 
 	const router = useRouter();
 	const pathname = usePathname();
 
+	const [isPending, startTransition] = useTransition();
+
 	const searchParams = useSearchParams();
 	const editTime = searchParams.get("edit");
-	const yearMonth = searchParams.get("ym");
 
 	const [addVisible, setAddVisible] = useState(false);
 
-	function changeYearMonth(change: string) {
+	useEffect(() => {
+		router.refresh();
+	}, [router]);
+
+	const changeYearMonth = (change: string) => {
 		const current = new URLSearchParams(Array.from(searchParams.entries()));
 		current.set("ym", change);
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 		router.push(`${pathname}${query}`);
-	}
-
-	// Set selected yearMonth if not set
-	if (yearMonth == null || !historyKeys.includes(yearMonth)) {
-		changeYearMonth(historyKeys[0]);
-		return <></>;
-	}
-
-	const downloadCSV = (yearMonth: string, totalTime: string) => {
-		let result = "Date;Start;End;Time;Notes";
-
-		for (const time of history[yearMonth].reverse()) {
-			if (!time.end) return;
-			result = `${result}\n${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
-				time.time
-			};"${time.notes ? time.notes : ""}"`;
-		}
-
-		result = `${result}\n\n;;;${totalTime};`;
-
-		const element = document.createElement("a");
-		const file = new Blob([result], {
-			type: "text/plain",
+		startTransition(() => {
+			router.refresh();
 		});
-		element.href = URL.createObjectURL(file);
-		element.download = `Time ${yearMonth}.csv`;
-		document.body.appendChild(element);
-		element.click();
 	};
+
+	const historyDays = history[yearMonth]
+		.map((entry) => entry.start)
+		.filter(
+			(item, index, array) =>
+				array.indexOf(
+					array.find((v) => item.toDateString() === v.toDateString()) ??
+						new Date(),
+				) === index,
+		);
 
 	return (
 		<section
-			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
+			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start"
 			key={yearMonth}
 		>
 			<div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
@@ -113,30 +114,34 @@ export default function TimerSection({
 								className="w-full justify-between"
 							>
 								<div className="flex flex-row items-center justify-start gap-2">
-									{yearMonth}
+									{`${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`}
 									<p className="font-mono text-muted-foreground">
-										({totalTime})
+										(
+										{(history[yearMonth].find((e) => e.end === null)
+											? "~"
+											: "") + totalTime}
+										)
 									</p>
 								</div>
 								<ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
 							</Button>
 						</PopoverTrigger>
-						<PopoverContent className="p-1">
+						<PopoverContent className="p-2">
 							<Command>
 								<CommandInput
-									placeholder="Search year/month..."
+									placeholder={t("Miscellaneous.searchYearMonth")}
 									className="h-8"
 								/>
-								<CommandEmpty>Nothing found.</CommandEmpty>
+								<CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
 								<CommandGroup>
 									{historyKeys.map((key) => (
 										<CommandItem
 											key={`history-${key}`}
+											onSelect={() => changeYearMonth(key)}
 											value={key}
 											className="font-mono"
-											onSelect={() => changeYearMonth(key)}
 										>
-											{key}
+											{`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
 											<Check
 												className={cn(
 													"ml-auto h-4 w-4",
@@ -150,24 +155,20 @@ export default function TimerSection({
 						</PopoverContent>
 					</Popover>
 				</div>
+				<div className="grid place-items-center">
+					<Loader
+						className={cn(
+							"h-5 w-0 transition-all",
+							isPending && "w-5 animate-spin",
+						)}
+					/>
+				</div>
 				<div className="w-max">
-					<Tooltip delayDuration={500}>
-						<TooltipTrigger asChild>
-							<Button
-								variant="outline"
-								size="icon"
-								onClick={() => downloadCSV(yearMonth, totalTime)}
-							>
-								<FileDown className="h-5 w-5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent side="bottom">
-							<p className="text-center">
-								Download a <code>.csv</code> containing all
-								<br /> the current visible entries
-							</p>
-						</TooltipContent>
-					</Tooltip>
+					<TimerExportDialog
+						history={history}
+						yearMonth={yearMonth}
+						projects={projects}
+					/>
 				</div>
 				<div className="w-max">
 					<Tooltip delayDuration={500}>
@@ -181,23 +182,56 @@ export default function TimerSection({
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent side="bottom">
-							<p className="text-center">Add a new entry</p>
+							<p className="text-center">{t("Miscellaneous.newEntry")}</p>
 						</TooltipContent>
 					</Tooltip>
-					<TimerAdd tag={tag} visible={addVisible} setVisible={setAddVisible} />
+					<TimerAdd
+						user={user}
+						projects={projects}
+						visible={addVisible}
+						setVisible={setAddVisible}
+					/>
 				</div>
 			</div>
 			<ScrollArea
-				className="h-[calc(80svh-80px)] w-full rounded-sm border p-1.5 overflow-hidden"
+				className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border p-1.5 overflow-hidden"
 				type="scroll"
 			>
-				{history[yearMonth].map((time) => (
-					<TimerInfo
-						key={`timerHistory-${yearMonth}-${time.id}`}
-						edit={Number.parseInt(editTime ?? "-1") === time.id}
-						data={time}
-					/>
-				))}
+				{historyDays.map((day, index) => {
+					return (
+						<section
+							key={`day-${day}`}
+							className={index === 0 ? "mt-2" : "mt-6"}
+						>
+							<div className="flex flex-row items-center justify-center gap-2 mb-2 transition-all duration-300 animate__animated animate__slideInLeft">
+								<div className="w-1/2" />
+								<Badge className="justify-center w-full font-semibold text-sm">
+									{`${day.getDate().toString().padStart(2, "0")}.${(
+										day.getMonth() + 1
+									)
+										.toString()
+										.padStart(
+											2,
+											"0",
+										)} ${t(`Miscellaneous.Days.${day.getDay()}`)}`}
+								</Badge>
+								<div className="w-1/2" />
+							</div>
+
+							{history[yearMonth]
+								.filter((v) => v.start.toDateString() === day.toDateString())
+								.reverse()
+								.map((time) => (
+									<TimerInfo
+										key={`timerHistory-${yearMonth}-${time.id}`}
+										edit={editTime === time.id}
+										projects={projects}
+										data={time}
+									/>
+								))}
+						</section>
+					);
+				})}
 			</ScrollArea>
 		</section>
 	);

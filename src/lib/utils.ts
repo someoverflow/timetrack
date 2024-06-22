@@ -1,10 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
-
 export const days = [
 	"Sunday",
 	"Monday",
@@ -28,6 +24,10 @@ export const months = [
 	"November",
 	"December",
 ];
+
+export function cn(...inputs: ClassValue[]) {
+	return twMerge(clsx(inputs));
+}
 
 export function validatePassword(password: string): boolean {
 	const regex = /^(?=.*[0-9])[a-zA-Z0-9]{8,20}$/;

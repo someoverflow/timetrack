@@ -1,6 +1,5 @@
 // Auth
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 // Navigation
 import NavigationSection from "./navigation-section";
@@ -11,7 +10,7 @@ export default async function Navigation({
 }: {
 	children: React.ReactNode;
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session) return redirect("/signin");
 	const user = session.user;
 
@@ -19,7 +18,7 @@ export default async function Navigation({
 		<main>
 			{children}
 
-			<section className="w-full fixed bottom-[1svh] p-4">
+			<section className="fixed left-1/2 -translate-x-1/2 bottom-[1svh] p-4">
 				<div className="flex flex-row items-center justify-center">
 					<NavigationSection user={user} />
 				</div>

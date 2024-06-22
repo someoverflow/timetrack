@@ -22,14 +22,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListPlus, UserPlus, XCircle } from "lucide-react";
+import { ListPlus, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface userAddState {
 	loading: boolean;
-	tag: string;
+	username: string;
 	name: string;
 	password: string;
 	mail: string;
@@ -43,7 +44,7 @@ export default function UserAdd() {
 		}),
 		{
 			loading: false,
-			tag: "",
+			username: "",
 			name: "",
 			password: "",
 			mail: "",
@@ -52,6 +53,8 @@ export default function UserAdd() {
 	);
 
 	const [visible, setVisible] = useState(false);
+
+	const t = useTranslations("Admin.Users");
 
 	const router = useRouter();
 
@@ -63,11 +66,11 @@ export default function UserAdd() {
 		const result = await fetch("/api/user", {
 			method: "PUT",
 			body: JSON.stringify({
-				tag: data.tag,
+				username: data.username,
 				name: data.name,
-				email: data.mail,
+				email: data.mail.length !== 0 ? data.mail : undefined,
 				password: data.password,
-				role: data.role,
+				role: data.role.toUpperCase(),
 			}),
 		});
 
@@ -75,11 +78,20 @@ export default function UserAdd() {
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setVisible(false);
 
 			setData({
-				tag: "",
+				username: "",
 				name: "",
 				password: "",
 				mail: "",
@@ -93,30 +105,29 @@ export default function UserAdd() {
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "duplicate-found":
+				toast.warning(`An error occurred (${resultData.type})`, {
+					description: resultData.result.message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
 
 	return (
@@ -132,7 +143,7 @@ export default function UserAdd() {
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent side="bottom">
-					<p className="text-center">Create a new user</p>
+					<p className="text-center">{t("Dialogs.Add.buttonToolTip")}</p>
 				</TooltipContent>
 			</Tooltip>
 
@@ -144,7 +155,7 @@ export default function UserAdd() {
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Create entry</div>
+							<div>{t("Dialogs.Add.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
@@ -156,54 +167,51 @@ export default function UserAdd() {
 							<div className="grid gap-4 p-1 w-full">
 								<div className="grid w-full items-center gap-1.5">
 									<Label
-										htmlFor="userAdd-username"
+										htmlFor="username"
 										className="pl-2 text-muted-foreground"
 									>
-										Login Name
+										{t("Dialogs.Add.username")}
 									</Label>
 									<Input
 										className="!w-full border-2"
 										type="text"
 										name="Name"
-										id="userAdd-username"
-										placeholder="maxmust"
-										value={data.tag}
-										onChange={(e) => setData({ tag: e.target.value })}
+										id="username"
+										placeholder={t("Dialogs.Add.usernamePlaceholder")}
+										value={data.username}
+										onChange={(e) => setData({ username: e.target.value })}
 									/>
 								</div>
 
 								<div id="divider" className="h-1" />
 
 								<div className="grid w-full items-center gap-1.5">
-									<Label
-										htmlFor="userAdd-login-name"
-										className="pl-2 text-muted-foreground"
-									>
-										Name
+									<Label htmlFor="name" className="pl-2 text-muted-foreground">
+										{t("Dialogs.Add.name")}
 									</Label>
 									<Input
 										className="!w-full border-2"
 										type="text"
 										name="Name"
-										id="userAdd-login-name"
-										placeholder="Max Mustermann"
+										id="name"
+										placeholder={t("Dialogs.Add.namePlaceholder")}
 										value={data.name}
 										onChange={(e) => setData({ name: e.target.value })}
 									/>
 								</div>
 								<div className="grid w-full items-center gap-1.5">
 									<Label
-										htmlFor="userAdd-password"
+										htmlFor="password"
 										className="pl-2 text-muted-foreground"
 									>
-										Password
+										{t("Dialogs.Add.password")}
 									</Label>
 									<Input
 										className="!w-full font-mono border-2"
 										type="password"
 										name="Password"
-										id="userAdd-password"
-										placeholder="#SuperSecure123"
+										id="password"
+										placeholder={t("Dialogs.Add.passwordPlaceholder")}
 										value={data.password}
 										onChange={(e) => setData({ password: e.target.value })}
 									/>
@@ -212,41 +220,39 @@ export default function UserAdd() {
 								<div id="divider" className="h-1" />
 
 								<div className="grid w-full items-center gap-1.5">
-									<Label
-										htmlFor="userAdd-mail"
-										className="pl-2 text-muted-foreground"
-									>
-										Mail
+									<Label htmlFor="mail" className="pl-2 text-muted-foreground">
+										{t("Dialogs.Add.mail")}
 									</Label>
 									<Input
 										className="!w-full border-2"
 										type="email"
 										name="Mail"
-										id="userAdd-mail"
-										placeholder="max@muster.com"
+										id="mail"
+										placeholder={t("Dialogs.Add.mailPlaceholder")}
 										value={data.mail}
 										onChange={(e) => setData({ mail: e.target.value })}
 									/>
 								</div>
 
 								<div className="grid w-full items-center gap-1.5">
-									<Label
-										htmlFor="userAdd-role"
-										className="pl-2 text-muted-foreground"
-									>
-										Role
+									<Label htmlFor="role" className="pl-2 text-muted-foreground">
+										{t("Dialogs.Add.role")}
 									</Label>
 									<Select
-										key="userAdd-role"
+										key="role"
 										value={data.role}
 										onValueChange={(role) => setData({ role: role })}
 									>
-										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Theme" />
+										<SelectTrigger className="w-full" id="role">
+											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="admin">Admin</SelectItem>
-											<SelectItem value="user">User</SelectItem>
+											<SelectItem value="admin">
+												{t("Dialogs.Add.roles.admin")}
+											</SelectItem>
+											<SelectItem value="user">
+												{t("Dialogs.Add.roles.user")}
+											</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
@@ -260,7 +266,7 @@ export default function UserAdd() {
 								disabled={data.loading}
 							>
 								<UserPlus className="mr-2 h-4 w-4" />
-								Create Entry
+								{t("Dialogs.Add.create")}
 							</Button>
 						</div>
 					</div>

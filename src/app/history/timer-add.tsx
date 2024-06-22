@@ -1,11 +1,10 @@
 "use client";
 
 // UI
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ListPlus, SaveAll } from "lucide-react";
+import { Check, ChevronsUpDown, ListPlus, SaveAll } from "lucide-react";
 import { toast } from "sonner";
 
 // Navigation
@@ -27,23 +26,45 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import type { Prisma } from "@prisma/client";
+import { useTranslations } from "next-intl";
 
 interface timerAddState {
 	start: string;
 	end: string;
 	notes: string;
+	traveledDistance: number | null;
 	loading: boolean;
+	projectSelectionOpen: boolean;
+	project: string | null;
 }
 
 export default function TimerAdd({
-	tag,
+	user,
+	projects,
 	visible,
 	setVisible,
 }: {
-	tag: string;
+	user: string;
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
+	const t = useTranslations("History");
+
 	const [data, setData] = useReducer(
 		(prev: timerAddState, next: Partial<timerAddState>) => ({
 			...prev,
@@ -51,9 +72,14 @@ export default function TimerAdd({
 		}),
 		{
 			start: new Date().toLocaleString("sv").replace(" ", "T"),
-			end: new Date().toLocaleString("sv").replace(" ", "T"),
+			end: new Date(new Date().setHours(new Date().getHours() + 2))
+				.toLocaleString("sv")
+				.replace(" ", "T"),
+			traveledDistance: null,
 			notes: "",
 			loading: false,
+			projectSelectionOpen: false,
+			project: null,
 		},
 	);
 
@@ -67,12 +93,15 @@ export default function TimerAdd({
 		const result = await fetch("/api/times", {
 			method: "POST",
 			body: JSON.stringify({
-				tag: tag,
+				userId: user,
 				notes: data.notes,
-				start: new Date(data.start).toUTCString(),
-				end: new Date(data.end).toUTCString(),
+				traveledDistance:
+					data.traveledDistance === 0 ? null : data.traveledDistance,
+				start: new Date(data.start).toISOString(),
+				end: new Date(data.end).toISOString(),
 				startType: "Website",
 				endType: "Website",
+				project: data.project ?? undefined,
 			}),
 		});
 
@@ -80,7 +109,16 @@ export default function TimerAdd({
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setData({
 				start: new Date().toLocaleString("sv").replace(" ", "T"),
 				end: new Date().toLocaleString("sv").replace(" ", "T"),
@@ -95,30 +133,22 @@ export default function TimerAdd({
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
 
 	return (
@@ -130,36 +160,149 @@ export default function TimerAdd({
 			<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 				<DialogHeader>
 					<DialogTitle>
-						<div>Create entry</div>
+						<div>{t("Dialogs.Create.title")}</div>
 					</DialogTitle>
 				</DialogHeader>
 
 				<div className="w-full flex flex-col gap-2">
-					<Tabs defaultValue="time">
-						<TabsList className="grid w-full grid-cols-2 h-fit">
-							<TabsTrigger value="notes">Notes</TabsTrigger>
-							<TabsTrigger value="time">Time</TabsTrigger>
+					<Tabs defaultValue="details">
+						<TabsList className="flex w-full">
+							<TabsTrigger className="w-full" value="details">
+								{t("Dialogs.Create.details")}
+							</TabsTrigger>
+							<TabsTrigger className="w-full" value="time">
+								{t("Dialogs.Create.time")}
+							</TabsTrigger>
+							<TabsTrigger className="w-full" value="breaks">
+								{t("Dialogs.Create.breaks")}
+							</TabsTrigger>
 						</TabsList>
-						<TabsContent value="notes">
+						<TabsContent value="details">
 							<ScrollArea
 								className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 								type="always"
 							>
 								<div className="h-full w-full grid p-1 gap-1.5">
+									<Popover
+										open={data.projectSelectionOpen}
+										onOpenChange={(open) =>
+											setData({ projectSelectionOpen: open })
+										}
+									>
+										<Label
+											htmlFor="project-button"
+											className="pl-2 text-muted-foreground"
+										>
+											{t("Dialogs.Create.project.project")}
+										</Label>
+										<PopoverTrigger asChild>
+											<Button
+												id="project-button"
+												variant="outline"
+												role="combobox"
+												aria-expanded={data.projectSelectionOpen}
+												className="w-full justify-between border-2 transition duration-300"
+											>
+												{data.project ?? t("Dialogs.Create.project.noRelated")}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="p-2">
+											<Command>
+												<CommandInput
+													placeholder={t("Dialogs.Create.project.search")}
+													className="h-8"
+												/>
+												{projects.length === 0 ? (
+													<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+														<p>{t("Dialogs.Create.project.noProjects")}</p>
+														<Link
+															href="http://localhost:3000/settings?page=projects"
+															className={buttonVariants({
+																variant: "link",
+																className: "flex-col items-start",
+															})}
+														>
+															<p>
+																{t(
+																	"Dialogs.Create.project.noProjectsDescription",
+																)}
+															</p>
+														</Link>
+													</div>
+												) : (
+													<CommandGroup>
+														{projects.map((project) => (
+															<CommandItem
+																key={`project-selection-add-${project.name}`}
+																value={`${project.name}`}
+																onSelect={() => {
+																	setData({
+																		project:
+																			data.project !== project.name
+																				? project.name
+																				: null,
+																		projectSelectionOpen: false,
+																	});
+																}}
+															>
+																<Check
+																	className={cn(
+																		"mr-2 h-4 w-4",
+																		data.project === project.name
+																			? "opacity-100"
+																			: "opacity-0",
+																	)}
+																/>
+																{project.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												)}
+											</Command>
+										</PopoverContent>
+									</Popover>
+								</div>
+
+								<div id="divider" className="h-4" />
+
+								<div className="h-full w-full grid p-1 gap-1.5">
 									<Label
 										htmlFor="timerModal-notes-add"
 										className="text-muted-foreground pl-2"
 									>
-										Notes
+										{t("Dialogs.Create.notes")}
 									</Label>
 									<Textarea
 										id="timerModal-notes-add"
-										className={`h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300 ${
-											data.notes !== (data.notes ?? "") && "border-sky-700"
-										}`}
+										className="h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300"
 										spellCheck={true}
-										value={data.notes}
 										onChange={(e) => setData({ notes: e.target.value })}
+										value={data.notes}
+									/>
+								</div>
+
+								<div id="divider" className="h-4" />
+
+								<div className="h-full w-full grid p-1 gap-1.5">
+									<Label
+										htmlFor="distance-button"
+										className="pl-2 text-muted-foreground"
+									>
+										{t("Dialogs.Create.distance")}
+									</Label>
+									<Input
+										id="distance-button"
+										type="number"
+										min={0}
+										className="w-full justify-between border-2 transition duration-300"
+										onChange={(change) => {
+											const target = change.target.valueAsNumber;
+											setData({
+												traveledDistance: Number.isNaN(target) ? null : target,
+											});
+										}}
+										value={data.traveledDistance ?? ""}
 									/>
 								</div>
 							</ScrollArea>
@@ -175,14 +318,10 @@ export default function TimerAdd({
 											htmlFor="name"
 											className="pl-2 text-muted-foreground"
 										>
-											Start
+											{t("Dialogs.Create.start")}
 										</Label>
 										<Input
-											className={`!w-full font-mono border-2 transition-all duration-300 ${
-												data.start !==
-													data.start.toLocaleString("sv").replace(" ", "T") &&
-												"border-sky-700"
-											}`}
+											className="!w-full font-mono border-2 transition-all duration-300"
 											type="datetime-local"
 											name="Updated"
 											id="updated"
@@ -196,17 +335,10 @@ export default function TimerAdd({
 											htmlFor="username"
 											className="pl-2 text-muted-foreground"
 										>
-											End
+											{t("Dialogs.Create.end")}
 										</Label>
 										<Input
-											className={`w-full font-mono border-2 transition-all duration-300 ${
-												data.end !==
-													(data.end
-														? data.end.toLocaleString("sv").replace(" ", "T")
-														: new Date()
-																.toLocaleString("sv")
-																.replace(" ", "T")) && "border-sky-700"
-											}`}
+											className="w-full font-mono border-2 transition-all duration-300"
 											type="datetime-local"
 											name="Created"
 											id="created"
@@ -214,6 +346,23 @@ export default function TimerAdd({
 											value={data.end}
 											onChange={(e) => setData({ end: e.target.value })}
 										/>
+									</div>
+								</div>
+							</ScrollArea>
+						</TabsContent>
+						<TabsContent value="breaks" className="h-full">
+							<ScrollArea
+								className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+								type="always"
+							>
+								<div className="grid gap-4 p-1 w-full">
+									<div className="grid w-full items-center gap-1.5">
+										<Label
+											htmlFor="name"
+											className="pl-2 text-muted-foreground"
+										>
+											In work...
+										</Label>
 									</div>
 								</div>
 							</ScrollArea>
@@ -227,7 +376,7 @@ export default function TimerAdd({
 							disabled={data.loading}
 						>
 							<SaveAll className="mr-2 h-4 w-4" />
-							Create Entry
+							{t("Dialogs.Create.create")}
 						</Button>
 					</div>
 				</div>
@@ -236,7 +385,15 @@ export default function TimerAdd({
 	);
 }
 
-export function TimerAddServer({ tag }: { tag: string }) {
+export function TimerAddServer({
+	user,
+	projects,
+}: {
+	user: string;
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
+}) {
+	const t = useTranslations("History");
+
 	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
 		(prev: timerAddState, next: Partial<timerAddState>) => ({
@@ -245,9 +402,14 @@ export function TimerAddServer({ tag }: { tag: string }) {
 		}),
 		{
 			start: new Date().toLocaleString("sv").replace(" ", "T"),
-			end: new Date().toLocaleString("sv").replace(" ", "T"),
+			end: new Date(new Date().setHours(new Date().getHours() + 2))
+				.toLocaleString("sv")
+				.replace(" ", "T"),
 			notes: "",
+			traveledDistance: null,
 			loading: false,
+			project: null,
+			projectSelectionOpen: false,
 		},
 	);
 
@@ -261,12 +423,15 @@ export function TimerAddServer({ tag }: { tag: string }) {
 		const result = await fetch("/api/times", {
 			method: "POST",
 			body: JSON.stringify({
-				tag: tag,
+				userId: user,
 				notes: data.notes,
-				start: new Date(data.start).toUTCString(),
-				end: new Date(data.end).toUTCString(),
+				traveledDistance:
+					data.traveledDistance === 0 ? null : data.traveledDistance,
+				start: new Date(data.start).toISOString(),
+				end: new Date(data.end).toISOString(),
 				startType: "Website",
 				endType: "Website",
+				project: data.project ?? undefined,
 			}),
 		});
 
@@ -274,7 +439,16 @@ export function TimerAddServer({ tag }: { tag: string }) {
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setData({
 				start: new Date().toLocaleString("sv").replace(" ", "T"),
 				end: new Date().toLocaleString("sv").replace(" ", "T"),
@@ -289,30 +463,22 @@ export function TimerAddServer({ tag }: { tag: string }) {
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
 
 	return (
@@ -321,14 +487,15 @@ export function TimerAddServer({ tag }: { tag: string }) {
 				<TooltipTrigger asChild>
 					<Button variant="outline" onClick={() => setVisible(!visible)}>
 						<ListPlus className="mr-2 h-5 w-5" />
-						Add the first entry
+						{t("Dialogs.Create.first.title")}
 					</Button>
 				</TooltipTrigger>
 
 				<TooltipContent>
-					<p>We have not found any data.</p>
-					<p>You can create a new entry here</p>
-					<p>manually or start the timer.</p>
+					{t.rich("Dialogs.Create.first.description", {
+						p: (chunks: string) => <p>{chunks}</p>,
+						// biome-ignore lint/suspicious/noExplicitAny: Typescript does not want this
+					} as any)}
 				</TooltipContent>
 			</Tooltip>
 			<Dialog
@@ -339,27 +506,119 @@ export function TimerAddServer({ tag }: { tag: string }) {
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Create entry</div>
+							<div>{t("Dialogs.Create.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
 					<div className="w-full flex flex-col gap-2">
-						<Tabs defaultValue="time">
-							<TabsList className="grid w-full grid-cols-2 h-fit">
-								<TabsTrigger value="notes">Notes</TabsTrigger>
-								<TabsTrigger value="time">Time</TabsTrigger>
+						<Tabs defaultValue="details">
+							<TabsList className="flex w-full">
+								<TabsTrigger className="w-full" value="details">
+									{t("Dialogs.Create.details")}
+								</TabsTrigger>
+								<TabsTrigger className="w-full" value="time">
+									{t("Dialogs.Create.time")}
+								</TabsTrigger>
+								<TabsTrigger className="w-full" value="breaks">
+									{t("Dialogs.Create.breaks")}
+								</TabsTrigger>
 							</TabsList>
-							<TabsContent value="notes">
+							<TabsContent value="details">
 								<ScrollArea
 									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
 									type="always"
 								>
 									<div className="h-full w-full grid p-1 gap-1.5">
+										<Popover
+											open={data.projectSelectionOpen}
+											onOpenChange={(open) =>
+												setData({ projectSelectionOpen: open })
+											}
+										>
+											<Label
+												htmlFor="project-button"
+												className="pl-2 text-muted-foreground"
+											>
+												{t("Dialogs.Create.project.project")}
+											</Label>
+											<PopoverTrigger asChild>
+												<Button
+													id="project-button"
+													variant="outline"
+													role="combobox"
+													aria-expanded={data.projectSelectionOpen}
+													className="w-full justify-between border-2 transition duration-300"
+												>
+													{data.project ??
+														t("Dialogs.Create.project.noRelated")}
+													<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+												</Button>
+											</PopoverTrigger>
+											<PopoverContent className="p-2">
+												<Command>
+													<CommandInput
+														placeholder={t("Dialogs.Create.project.search")}
+														className="h-8"
+													/>
+													{projects.length === 0 ? (
+														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+															<p>{t("Dialogs.Create.project.noProjects")}</p>
+															<Link
+																href="/settings?page=projects"
+																className={buttonVariants({
+																	variant: "link",
+																	className: "flex-col items-start",
+																})}
+															>
+																<p>
+																	{t(
+																		"Dialogs.Create.project.noProjectsDescription",
+																	)}
+																</p>
+															</Link>
+														</div>
+													) : (
+														<CommandGroup>
+															{projects.map((project) => (
+																<CommandItem
+																	key={`project-selection-add-${project.name}`}
+																	value={`${project.name}`}
+																	onSelect={() => {
+																		setData({
+																			project:
+																				data.project !== project.name
+																					? project.name
+																					: null,
+																			projectSelectionOpen: false,
+																		});
+																	}}
+																>
+																	<Check
+																		className={cn(
+																			"mr-2 h-4 w-4",
+																			data.project === project.name
+																				? "opacity-100"
+																				: "opacity-0",
+																		)}
+																	/>
+																	{project.name}
+																</CommandItem>
+															))}
+														</CommandGroup>
+													)}
+												</Command>
+											</PopoverContent>
+										</Popover>
+									</div>
+
+									<div id="divider" className="h-4" />
+
+									<div className="h-full w-full grid p-1 gap-1.5">
 										<Label
 											htmlFor="timerModal-notes-add"
 											className="text-muted-foreground pl-2"
 										>
-											Notes
+											{t("Dialogs.Create.notes")}
 										</Label>
 										<Textarea
 											id="timerModal-notes-add"
@@ -369,6 +628,32 @@ export function TimerAddServer({ tag }: { tag: string }) {
 											spellCheck={true}
 											value={data.notes}
 											onChange={(e) => setData({ notes: e.target.value })}
+										/>
+									</div>
+
+									<div id="divider" className="h-4" />
+
+									<div className="h-full w-full grid p-1 gap-1.5">
+										<Label
+											htmlFor="distance-button"
+											className="pl-2 text-muted-foreground"
+										>
+											{t("Dialogs.Create.distance")}
+										</Label>
+										<Input
+											id="distance-button"
+											type="number"
+											min={0}
+											className="w-full justify-between border-2 transition duration-300"
+											onChange={(change) => {
+												const target = change.target.valueAsNumber;
+												setData({
+													traveledDistance: Number.isNaN(target)
+														? null
+														: target,
+												});
+											}}
+											value={data.traveledDistance ?? ""}
 										/>
 									</div>
 								</ScrollArea>
@@ -384,14 +669,10 @@ export function TimerAddServer({ tag }: { tag: string }) {
 												htmlFor="name"
 												className="pl-2 text-muted-foreground"
 											>
-												Start
+												{t("Dialogs.Create.start")}
 											</Label>
 											<Input
-												className={`!w-full font-mono border-2 transition-all duration-300 ${
-													data.start !==
-														data.start.toLocaleString("sv").replace(" ", "T") &&
-													"border-sky-700"
-												}`}
+												className="!w-full font-mono border-2 transition-all duration-300"
 												type="datetime-local"
 												name="Updated"
 												id="updated"
@@ -405,17 +686,10 @@ export function TimerAddServer({ tag }: { tag: string }) {
 												htmlFor="username"
 												className="pl-2 text-muted-foreground"
 											>
-												End
+												{t("Dialogs.Create.end")}
 											</Label>
 											<Input
-												className={`w-full font-mono border-2 transition-all duration-300 ${
-													data.end !==
-														(data.end
-															? data.end.toLocaleString("sv").replace(" ", "T")
-															: new Date()
-																	.toLocaleString("sv")
-																	.replace(" ", "T")) && "border-sky-700"
-												}`}
+												className="w-full font-mono border-2 transition-all duration-300"
 												type="datetime-local"
 												name="Created"
 												id="created"
@@ -423,6 +697,23 @@ export function TimerAddServer({ tag }: { tag: string }) {
 												value={data.end}
 												onChange={(e) => setData({ end: e.target.value })}
 											/>
+										</div>
+									</div>
+								</ScrollArea>
+							</TabsContent>
+							<TabsContent value="breaks" className="h-full">
+								<ScrollArea
+									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+									type="always"
+								>
+									<div className="grid gap-4 p-1 w-full">
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="name"
+												className="pl-2 text-muted-foreground"
+											>
+												In work...
+											</Label>
 										</div>
 									</div>
 								</ScrollArea>
@@ -436,7 +727,7 @@ export function TimerAddServer({ tag }: { tag: string }) {
 								disabled={data.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
-								Create Entry
+								{t("Dialogs.Create.create")}
 							</Button>
 						</div>
 					</div>

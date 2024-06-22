@@ -12,11 +12,13 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Minus,
-	PencilRuler,
 	Plus,
 	SaveAll,
 	Trash,
 	RefreshCw,
+	MoreHorizontal,
+	Eye,
+	Pencil,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
@@ -29,17 +31,41 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Role } from "@prisma/client";
+import { useTranslations } from "next-intl";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-type User = Prisma.userGetPayload<{ include: { projects: true; chips: true } }>;
+type User = Prisma.UserGetPayload<{
+	select: {
+		id: true;
+		username: true;
+		name: true;
+		email: true;
+		role: true;
+
+		createdAt: true;
+		updatedAt: true;
+
+		chips: true;
+	};
+}>;
 
 interface userEditState {
 	loading: boolean;
 	loadingIndicator: string;
-	tag: string;
+	username: string;
 	name: string | null;
-	mail: string;
-	role: string;
+	mail: string | null;
+	role: Role;
 	password: string;
 	chipAdd: string;
 }
@@ -52,8 +78,8 @@ export default function UserEdit({ user }: { user: User }) {
 		{
 			loading: false,
 			loadingIndicator: "",
-			tag: user.tag,
-			name: user.name !== "?" ? user.name : "",
+			username: user.username,
+			name: user.name ?? "",
 			mail: user.email,
 			role: user.role,
 			password: "",
@@ -61,6 +87,8 @@ export default function UserEdit({ user }: { user: User }) {
 		},
 	);
 	const [visible, setVisible] = useState(false);
+
+	const t = useTranslations("Admin.Users");
 
 	const router = useRouter();
 
@@ -74,9 +102,9 @@ export default function UserEdit({ user }: { user: User }) {
 			method: "POST",
 			body: JSON.stringify({
 				id: user.id,
-				tag: data.tag,
+				username: data.username,
 				name: data.name,
-				mail: data.mail,
+				mail: data.mail ?? undefined,
 				role: data.role,
 				password: data.password.trim().length === 0 ? undefined : data.password,
 			}),
@@ -86,7 +114,16 @@ export default function UserEdit({ user }: { user: User }) {
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setVisible(false);
 
 			setData({
@@ -101,32 +138,30 @@ export default function UserEdit({ user }: { user: User }) {
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "duplicate-found":
+				toast.warning(`An error occurred (${resultData.type})`, {
+					description: resultData.result.message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
-
 	async function sendDeleteRequest() {
 		setData({
 			loading: true,
@@ -144,7 +179,16 @@ export default function UserEdit({ user }: { user: User }) {
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setVisible(false);
 
 			setData({
@@ -159,30 +203,22 @@ export default function UserEdit({ user }: { user: User }) {
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
 
 	async function sendChipCreateRequest() {
@@ -204,7 +240,16 @@ export default function UserEdit({ user }: { user: User }) {
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setData({
 				chipAdd: "",
 			});
@@ -216,32 +261,30 @@ export default function UserEdit({ user }: { user: User }) {
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
+		switch (resultData.type) {
+			case "validation":
+				toast.warning(`An error occurred (${resultData.result[0].code})`, {
+					description: resultData.result[0].message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			case "duplicate-found":
+				toast.error("An error occurred", {
+					description: resultData.result.message,
+					important: true,
+					duration: 5000,
+				});
+				break;
+			default:
+				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
+					description: "Error could not be identified. You can try again.",
+					important: true,
+					duration: 8000,
+				});
+				break;
 		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
 	}
-
 	async function sendChipDeleteRequest(chip: string) {
 		setData({
 			loading: true,
@@ -260,7 +303,16 @@ export default function UserEdit({ user }: { user: User }) {
 			loading: false,
 		});
 
-		if (result.ok) {
+		const resultData: APIResult = await result.json().catch(() => {
+			toast.error("An error occurred", {
+				description: "Result could not be proccessed",
+				important: true,
+				duration: 8000,
+			});
+			return;
+		});
+
+		if (resultData.success) {
 			setData({
 				chipAdd: "",
 			});
@@ -272,27 +324,11 @@ export default function UserEdit({ user }: { user: User }) {
 			return;
 		}
 
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-		if (!resultData) return;
-
-		if (result.status === 400 && !!resultData.result[1]) {
-			toast.warning(`An error occurred (${resultData.result[0]})`, {
-				description: resultData.result[1],
-				important: true,
-				duration: 10000,
-			});
-			return;
-		}
-
-		toast.error("An error occurred", {
-			description: "Error could not be identified. You can try again.",
+		toast.error(`An error occurred (${resultData.type})`, {
+			description:
+				typeof resultData.result === "string"
+					? resultData.result
+					: "Error could not be identified. You can try again.",
 			important: true,
 			duration: 8000,
 		});
@@ -300,23 +336,40 @@ export default function UserEdit({ user }: { user: User }) {
 
 	return (
 		<>
-			<Button
-				variant="secondary"
-				size="icon"
-				onClick={() => {
-					setVisible(!visible);
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="ghost" className="h-8 w-8 p-0">
+						<MoreHorizontal className="h-4 w-4" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem
+						onClick={() => {
+							setVisible(!visible);
 
-					setData({
-						tag: user.tag,
-						name: user.name !== "?" ? user.name : "",
-						mail: user.email,
-						role: user.role,
-						password: "",
-					});
-				}}
-			>
-				<PencilRuler className="h-5 w-5" />
-			</Button>
+							setData({
+								username: user.username,
+								name: user.name !== "?" ? user.name : "",
+								mail: user.email,
+								role: user.role,
+								password: "",
+							});
+						}}
+					>
+						<Pencil className="mr-2 h-4 w-4" />
+						{t("edit")}
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem asChild>
+						<Link href={`/history/${user.username}`}>
+							<Eye className="mr-2 h-4 w-4" />
+							{t("viewHistory")}
+						</Link>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 
 			<Dialog
 				key={`userModal-${user.id}`}
@@ -326,15 +379,22 @@ export default function UserEdit({ user }: { user: User }) {
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<DialogHeader>
 						<DialogTitle>
-							<div>Edit entry</div>
+							<div>{t("Dialogs.Edit.title")}</div>
 						</DialogTitle>
 					</DialogHeader>
 
 					<div className="w-full flex flex-col gap-2">
 						<Tabs defaultValue="preferences">
-							<TabsList className="grid w-full grid-cols-2 h-fit">
-								<TabsTrigger value="preferences">Preferences</TabsTrigger>
-								<TabsTrigger value="chips">Chips</TabsTrigger>
+							<TabsList className="grid w-full grid-cols-3 h-fit">
+								<TabsTrigger value="preferences">
+									{t("Dialogs.Edit.preferences")}
+								</TabsTrigger>
+								<TabsTrigger value="chips">
+									{t("Dialogs.Edit.chips")}
+								</TabsTrigger>
+								<TabsTrigger value="details">
+									{t("Dialogs.Edit.details")}
+								</TabsTrigger>
 							</TabsList>
 							<TabsContent value="preferences">
 								<ScrollArea
@@ -344,36 +404,40 @@ export default function UserEdit({ user }: { user: User }) {
 									<div className="grid gap-4 p-1 w-full">
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="loginName"
-												className="pl-2 text-muted-foreground"
+												htmlFor="username"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													user.username !== (data.username ?? "")
+														? "text-blue-500"
+														: "",
+												)}
 											>
-												Login Name
+												{t("Dialogs.Edit.username")}
 											</Label>
 											<Input
-												className={`w-full border-2 transition duration-300 ${
-													user.tag !== (data.tag ? data.tag : "") &&
-													"border-sky-700"
-												}`}
-												disabled={data.tag === "admin"}
+												className="w-full border-2"
+												disabled={data.username === "admin"}
 												type="text"
-												name="Login Name"
-												id="loginName"
-												value={data.tag}
-												onChange={(e) => setData({ tag: e.target.value })}
+												name="Username"
+												id="username"
+												value={data.username}
+												onChange={(e) => setData({ username: e.target.value })}
 											/>
 										</div>
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="name"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													user.name !== (data.name ?? "")
+														? "text-blue-500"
+														: "",
+												)}
 											>
-												Name
+												{t("Dialogs.Edit.name")}
 											</Label>
 											<Input
-												className={`w-full border-2 transition duration-300 ${
-													user.name !== (data.name ? data.name : "") &&
-													"border-sky-700"
-												}`}
+												className="w-full border-2"
 												type="text"
 												name="Name"
 												id="name"
@@ -386,48 +450,59 @@ export default function UserEdit({ user }: { user: User }) {
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="userAdd-mail"
-												className="pl-2 text-muted-foreground"
+												htmlFor="mail"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													(user.email ?? "") !== (data.mail ?? "")
+														? "text-blue-500"
+														: "",
+												)}
 											>
-												Mail
+												{t("Dialogs.Edit.mail")}
 											</Label>
 											<Input
-												className={`w-full border-2 transition duration-300 ${
-													user.email !== (data.mail ? data.mail : "") &&
-													"border-sky-700"
-												}`}
+												className="w-full border-2"
 												type="email"
 												name="Mail"
-												id="userAdd-mail"
-												placeholder="max@muster.com"
-												value={data.mail}
+												id="mail"
+												value={data.mail ?? ""}
 												onChange={(e) => setData({ mail: e.target.value })}
 											/>
 										</div>
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="userAdd-role"
-												className="pl-2 text-muted-foreground"
+												htmlFor="role"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													user.role !== data.role ? "text-blue-500" : "",
+												)}
 											>
-												Role
+												{t("Dialogs.Edit.role")}
 											</Label>
 											<Select
-												key="userAdd-role"
-												disabled={data.tag === "admin"}
+												key="role"
+												disabled={data.username === "admin"}
 												value={data.role}
-												onValueChange={(role) => setData({ role: role })}
+												onValueChange={(role) =>
+													setData({
+														role:
+															role === "ADMIN" || role === "USER"
+																? role
+																: "USER",
+													})
+												}
 											>
-												<SelectTrigger
-													className={`w-full border-2 transition duration-300 ${
-														user.role !== data.role && "border-sky-700"
-													}`}
-												>
-													<SelectValue placeholder="Theme" />
+												<SelectTrigger id="role" className="w-full border-2">
+													<SelectValue />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectItem value="admin">Admin</SelectItem>
-													<SelectItem value="user">User</SelectItem>
+													<SelectItem value="ADMIN">
+														{t("Dialogs.Edit.roles.admin")}
+													</SelectItem>
+													<SelectItem value="USER">
+														{t("Dialogs.Edit.roles.user")}
+													</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
@@ -436,40 +511,22 @@ export default function UserEdit({ user }: { user: User }) {
 
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="userAdd-password"
-												className="pl-2 text-muted-foreground"
+												htmlFor="password"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													data.password !== "" ? "text-blue-500" : "",
+												)}
 											>
-												Password
+												{t("Dialogs.Edit.password")}
 											</Label>
 											<Input
-												className={`!w-full transition duration-300 border-2 ${
-													data.password !== "" && "border-sky-700"
-												}`}
+												className="w-full border-2"
 												type="password"
 												name="Password"
-												id="userAdd-password"
-												placeholder="New password"
+												id="password"
+												placeholder={t("Dialogs.Edit.passwordPlaceholder")}
 												value={data.password}
 												onChange={(e) => setData({ password: e.target.value })}
-											/>
-										</div>
-
-										<div id="divider" className="h-1" />
-
-										<div className="grid w-full items-center gap-1.5">
-											<Label
-												htmlFor="id"
-												className="pl-2 text-muted-foreground"
-											>
-												ID
-											</Label>
-											<Input
-												disabled
-												className="w-full font-mono"
-												type="number"
-												name="Id"
-												id="id"
-												value={user.id}
 											/>
 										</div>
 									</div>
@@ -483,17 +540,18 @@ export default function UserEdit({ user }: { user: User }) {
 									<div className="grid gap-4 p-1 w-full">
 										<div className="grid w-full items-center gap-1.5">
 											<Label
-												htmlFor="id"
+												htmlFor="chip"
 												className="pl-2 text-muted-foreground"
 											>
-												Add new chip
+												{t("Dialogs.Edit.addChip")}
 											</Label>
 											<div className="flex w-full items-center space-x-2">
 												<Input
 													className="w-full font-mono"
 													type="text"
 													name="Chip Add"
-													id="chip-add"
+													id="chip"
+													maxLength={50}
 													value={data.chipAdd}
 													onChange={(e) => setData({ chipAdd: e.target.value })}
 												/>
@@ -545,20 +603,82 @@ export default function UserEdit({ user }: { user: User }) {
 									</div>
 								</ScrollArea>
 							</TabsContent>
+							<TabsContent value="details">
+								<ScrollArea
+									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+									type="always"
+								>
+									<div className="grid gap-4 p-1 w-full">
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="updatedAt"
+												className="pl-2 text-muted-foreground"
+											>
+												{t("Dialogs.Edit.updated")}
+											</Label>
+											<Input
+												disabled
+												className="w-full font-mono"
+												type="datetime-local"
+												name="Updated At"
+												id="updatedAt"
+												value={user.updatedAt
+													.toLocaleString("sv")
+													.replace(" ", "T")}
+											/>
+										</div>
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="createdAt"
+												className="pl-2 text-muted-foreground"
+											>
+												{t("Dialogs.Edit.created")}
+											</Label>
+											<Input
+												disabled
+												className="w-full font-mono"
+												type="datetime-local"
+												name="Created At"
+												id="createdAt"
+												value={user.createdAt
+													.toLocaleString("sv")
+													.replace(" ", "T")}
+											/>
+										</div>
+										<div id="divider" className="h-1" />
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="id"
+												className="pl-2 text-muted-foreground"
+											>
+												ID
+											</Label>
+											<Input
+												disabled
+												className="w-full border-2 font-mono"
+												type="text"
+												name="Id"
+												id="id"
+												value={user.id}
+											/>
+										</div>
+									</div>
+								</ScrollArea>
+							</TabsContent>
 						</Tabs>
 
 						<div className="w-full gap-2 flex flex-row justify-end">
 							<Button
 								variant="destructive"
 								onClick={() => sendDeleteRequest()}
-								disabled={data.loading || user.id === 1}
+								disabled={data.loading || user.username === "admin"}
 							>
 								{data.loading && data.loadingIndicator === "delete" ? (
 									<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
 								) : (
 									<Trash className="mr-2 h-4 w-4" />
 								)}
-								Delete
+								{t("Dialogs.Edit.delete")}
 							</Button>
 							<Button
 								variant="outline"
@@ -570,7 +690,7 @@ export default function UserEdit({ user }: { user: User }) {
 								) : (
 									<SaveAll className="mr-2 h-4 w-4" />
 								)}
-								Save Changes
+								{t("Dialogs.Edit.save")}
 							</Button>
 						</div>
 					</div>

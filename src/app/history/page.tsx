@@ -5,37 +5,25 @@ import TimerSection from "./timer-section";
 // Database
 import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 // Navigation
 import { redirect } from "next/navigation";
 
 // React
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
 
 // Utils
-import { getTotalTime } from "@/lib/utils";
-import { authOptions } from "@/lib/auth";
+import { getTotalTime, months } from "@/lib/utils";
 import { TimerAddServer } from "./timer-add";
+import { getTranslations } from "next-intl/server";
 
-type Timer = Prisma.timeGetPayload<{ [k: string]: never }>;
+type Timer = Prisma.TimeGetPayload<{
+	include: { project: true };
+}>;
 interface Data {
 	[yearMonth: string]: Timer[];
 }
-const months = [
-	"January",
-	"February",
-	"March",
-	"April",
-	"May",
-	"June",
-	"July",
-	"August",
-	"September",
-	"October",
-	"November",
-	"December",
-];
 
 function formatHistory(data: Timer[]): Data {
 	const result: Data = {};
@@ -52,10 +40,14 @@ function formatHistory(data: Timer[]): Data {
 	return result;
 }
 
-export const metadata: Metadata = {
-	title: "Time Track - History",
-	description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "History.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function History({
 	searchParams,
@@ -65,19 +57,26 @@ export default async function History({
 		ym?: string;
 	};
 }) {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
 	const user = session.user;
 
-	const history = await prisma.time.findMany({
-		orderBy: {
-			//id: "desc",
-			start: "desc",
-		},
-		where: {
-			userId: user.id,
-		},
-	});
+	const t = await getTranslations("History");
+
+	const [history, projects] = await prisma.$transaction([
+		prisma.time.findMany({
+			orderBy: {
+				start: "desc",
+			},
+			where: {
+				userId: user.id,
+			},
+			include: {
+				project: true,
+			},
+		}),
+		prisma.project.findMany(),
+	]);
 
 	function dataFound(): boolean {
 		if (history.length === 0) return false;
@@ -86,32 +85,36 @@ export default async function History({
 
 	const historyData = formatHistory(history);
 
-	const timeStrings: string[] = [];
-	if (searchParams?.ym) {
-		for (const data of historyData[searchParams.ym]) {
-			if (data.time) timeStrings.push(data.time);
-		}
-	}
+	let yearMonth = searchParams?.ym;
+	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
+		yearMonth = Object.keys(historyData)[0];
+
+	const timeStrings = (historyData[yearMonth] || [])
+		.map((data) => data.time)
+		.filter(Boolean); // Remove all undefined or null
+
 	const totalTime =
-		timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
+		timeStrings.length === 0
+			? "00:00:00"
+			: getTotalTime(timeStrings as string[]);
 
 	return (
 		<Navigation>
 			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
 				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">History</p>
+					<p className="text-2xl font-mono">{t("PageTitle")}</p>
 				</div>
-
-				{/** Add button when no data found */}
 
 				{dataFound() ? (
 					<TimerSection
 						history={historyData}
+						projects={projects}
 						totalTime={totalTime}
-						tag={user.tag}
+						yearMonth={yearMonth}
+						user={user.id ?? ""}
 					/>
 				) : (
-					<TimerAddServer tag={user.tag} />
+					<TimerAddServer user={user.id ?? ""} projects={projects} />
 				)}
 			</section>
 		</Navigation>

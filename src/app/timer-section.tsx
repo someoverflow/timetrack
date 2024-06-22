@@ -26,18 +26,21 @@ import { toast } from "sonner";
 import { PlayCircle, RefreshCcw, StopCircle, X } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface timerSectionState {
 	firstRun: boolean;
 	loaded: boolean;
 	running: boolean;
 	changeModal: boolean;
-	changeTimer: number | undefined;
+	changeTimer: string | undefined;
 	stop: boolean;
 	delay: number;
 }
 
 export default function TimerSection() {
+	const t = useTranslations("Timer");
+
 	const [data, updateData] = useReducer(
 		(prev: timerSectionState, next: Partial<timerSectionState>) => ({
 			...prev,
@@ -85,17 +88,16 @@ export default function TimerSection() {
 	}, [currentTimer, fetchedTimer, data.running]);
 
 	const fetchCurrentTimer = useCallback(() => {
-		fetch("/api/times?indicator=current")
+		fetch("/api/times")
 			.then((result) => result.json())
 			.then((result) => {
 				if (result.success === false) {
 					updateData({
 						stop: true,
 					});
-					toast.error("An error occurred while updating", {
+					toast.error(`An error occurred while updating (${result.type})`, {
 						description: "Reloading the page could solve the problem",
 					});
-					console.error(result);
 					return;
 				}
 
@@ -106,20 +108,20 @@ export default function TimerSection() {
 					});
 				}
 
-				if (result.result.length === 0) {
+				if (result.result?.end === null) {
+					const timer: Timer = result.result;
+					setFetchedTimer(timer);
+
+					updateData({
+						running: true,
+					});
+				} else {
 					updateData({
 						running: false,
 					});
 
 					setFetchedTimer(undefined);
 					setCurrentTimer(undefined);
-				} else {
-					const timer: Timer = result.result[0];
-					setFetchedTimer(timer);
-
-					updateData({
-						running: true,
-					});
 				}
 				count();
 			})
@@ -140,8 +142,8 @@ export default function TimerSection() {
 		});
 
 		const data: Partial<Timer> = {
-			id: 0,
-			start: new Date().toISOString(),
+			id: "<0>",
+			start: new Date(new Date().setSeconds(0)).toISOString(),
 			startType: "Website",
 		};
 
@@ -165,12 +167,9 @@ export default function TimerSection() {
 			setCurrentTimer(undefined);
 		}
 
-		fetch(
-			`/api/times/toggle?type=Website&fixTime=${data.start}&value=${
-				start ? "start" : "stop"
-			}`,
-			{ method: "PUT" },
-		)
+		fetch(`/api/times/toggle?type=Website&fixTime=${data.start}`, {
+			method: "PUT",
+		})
 			.then((result) => result.json())
 			.then(() => {
 				updateData({
@@ -249,18 +248,18 @@ export default function TimerSection() {
 				open={data.changeModal}
 				onOpenChange={(e) => updateData({ changeModal: e })}
 			>
-				<AlertDialogContent className="max-w-lg w-[95vw] rounded-sm">
+				<AlertDialogContent className="max-w-sm w-[95vw] rounded-sm">
 					<AlertDialogHeader>
-						<AlertDialogTitle>Edit time and notes</AlertDialogTitle>
+						<AlertDialogTitle>{t("Dialogs.Stopped.title")}</AlertDialogTitle>
 						<AlertDialogDescription>
-							Do you want to edit your stopped timer now or later?
+							{t("Dialogs.Stopped.description")}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Later</AlertDialogCancel>
+						<AlertDialogCancel>{t("Dialogs.Stopped.cancel")}</AlertDialogCancel>
 						<Button asChild>
 							<Link href={`/history?edit=${data.changeTimer}`} prefetch={false}>
-								Now
+								{t("Dialogs.Stopped.edit")}
 							</Link>
 						</Button>
 					</AlertDialogFooter>
@@ -281,11 +280,13 @@ function ToggleSection({
 	startType: string;
 	toggleTimer: (toggle: boolean) => void;
 }) {
+	const t = useTranslations("Timer.Miscellaneous");
+
 	if (!loaded) {
 		return (
 			<Button className="btn-lg btn-loading" disabled>
 				<RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-				Updating
+				{t("updating")}
 			</Button>
 		);
 	}
@@ -300,11 +301,11 @@ function ToggleSection({
 						onClick={() => toggleTimer(false)}
 					>
 						<StopCircle className="mr-2 h-4 w-4" />
-						<p>Stop</p>
+						<p>{t("stop")}</p>
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent>
-					<p>Started with {startType}</p>
+					<p>{t("startedWith", { startType: startType })}</p>
 				</TooltipContent>
 			</Tooltip>
 		);
@@ -319,11 +320,11 @@ function ToggleSection({
 					onClick={() => toggleTimer(true)}
 				>
 					<PlayCircle className="mr-2 h-4 w-4" />
-					<p>Start</p>
+					<p>{t("start")}</p>
 				</Button>
 			</TooltipTrigger>
 			<TooltipContent>
-				<p>Start now with Website</p>
+				<p>{t("startWithWebsite")}</p>
 			</TooltipContent>
 		</Tooltip>
 	);
@@ -339,11 +340,11 @@ function CurrentTimerTime({
 	if (running && currentTimer) {
 		return (
 			<div className="flex w-full justify-center items-center gap-4">
-				<p className="text-muted-foreground text-center h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
+				<p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
 					{`${currentTimer.start}`}
 				</p>
-				<Separator orientation="vertical" className="h-5" />
-				<p className="text-muted-foreground text-center h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
+				<Separator orientation="horizontal" className="w-5" />
+				<p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
 					{`${currentTimer.end}`}
 				</p>
 			</div>
@@ -353,7 +354,7 @@ function CurrentTimerTime({
 	return (
 		<div className="flex w-full justify-center items-center gap-4">
 			<Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
-			<Separator orientation="vertical" className="h-5" />
+			<Separator orientation="horizontal" className="w-5" />
 			<Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
 		</div>
 	);

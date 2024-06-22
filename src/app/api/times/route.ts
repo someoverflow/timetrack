@@ -1,439 +1,441 @@
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
-import { getServerSession } from "next-auth";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import {
+	FORBIDDEN,
+	NO_AUTH_RESPONSE,
+	defaultResult,
+	parseJsonBody,
+	badRequestResponse,
+} from "@/lib/server-utils";
+import { auth } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
+import {
+	nanoIdValidation,
+	timesGetApiValidation,
+	timesPostApiValidation,
+	timesPutApiValidation,
+} from "@/lib/zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-const NO_AUTH: APIResult = Object.freeze({
-	success: false,
-	status: 401,
-	result: "Unauthorized",
-});
-const FORBIDDEN: APIResult = Object.freeze({
-	success: false,
-	status: 403,
-	result: "Forbidden",
-});
-const BAD_REQUEST: APIResult = Object.freeze({
-	success: false,
-	status: 400,
-	result: "Bad Request",
-});
+// Get time/times
+/*  
+	/?<all>=true
+	/?periodFrom=""&periodTo=""  DateTimes (ISO)
+*/
+export const GET = auth(async (request) => {
+	// Check auth
+	const session = request.auth;
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-//     indicator
-// Get current    timer
-// Get all        timers
-export async function GET(request: NextRequest) {
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+	// Prepare data
+	const result = defaultResult("ok");
 
-	const indicator = request.nextUrl.searchParams.get("indicator");
+	// Prepare request
+	const searchParams = request.nextUrl.searchParams;
+	const allSearch = searchParams.get("all");
+	const periodFrom = searchParams.get("periodFrom");
+	const periodTo = searchParams.get("periodTo");
 
-	const result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
+	// Validate request
+	const validationResult = timesGetApiValidation.safeParse({
+		all: allSearch ?? undefined,
+		period:
+			periodFrom && periodTo
+				? {
+						from: periodFrom,
+						to: periodTo,
+					}
+				: undefined,
+	});
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const data = validationResult.data;
 
-	const userId = Number.parseInt(`${session.user.id}`);
-
-	if (indicator === "current") {
-		result.result = await prisma.time
-			.findMany({
-				take: 1,
+	// Return the current time
+	if (!data.all && !data.period) {
+		// Get the latest time entry
+		try {
+			const databaseResult = await prisma.time.findFirst({
 				orderBy: {
-					id: "desc",
+					start: "desc",
 				},
 				where: {
-					userId: userId,
+					userId: session.user.id,
 					end: null,
 				},
-			})
-			.catch((e) => {
-				result.success = false;
-				result.status = 500;
-				return e.meta.cause;
 			});
-	} else {
-		result.result = await prisma.time
-			.findMany({
+
+			result.result = databaseResult;
+			return NextResponse.json(result, { status: result.status });
+		} catch (e) {
+			result.success = false;
+			result.status = 500;
+			result.type = "unknown";
+			result.result = `Server issue occurred ${
+				e instanceof PrismaClientKnownRequestError ? e.code : ""
+			}`;
+			console.warn(e);
+			return NextResponse.json(result, { status: result.status });
+		}
+	}
+
+	// Return all times
+	if (data.all || !data.period) {
+		try {
+			const databaseResult = await prisma.time.findMany({
 				orderBy: {
-					id: "desc",
+					start: "desc",
 				},
 				where: {
-					userId: userId,
+					userId: session.user.id,
 				},
-			})
-			.catch((e) => {
-				result.success = false;
-				result.status = 500;
-				return e.meta.cause;
 			});
+
+			result.result = databaseResult;
+			return NextResponse.json(result, { status: result.status });
+		} catch (e) {
+			result.success = false;
+			result.status = 500;
+			result.type = "unknown";
+			result.result = `Server issue occurred ${
+				e instanceof PrismaClientKnownRequestError ? e.code : ""
+			}`;
+			console.warn(e);
+			return NextResponse.json(result, { status: result.status });
+		}
 	}
 
-	return NextResponse.json(result, { status: result.status });
-}
+	try {
+		const databaseResult = await prisma.time.findMany({
+			orderBy: {
+				start: "desc",
+			},
+			where: {
+				userId: session.user.id,
+				start: {
+					lte: data.period.from,
+					gte: data.period.to,
+				},
+			},
+		});
+
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
+});
 
 // Create timer
-export async function POST(request: NextRequest) {
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+export const POST = auth(async (request) => {
+	// Check auth
+	const session = request.auth;
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-		select: {
-			tag: true,
-			role: true,
-			id: true,
-		},
-	});
+	// Prepare data
+	const result = defaultResult("created", 201);
 
-	if (user == null)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
-
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
-
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON Body could not be parsed"];
-		console.log(result.result);
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	if (
-		json.tag == null ||
-		json.notes == null ||
-		json.start == null ||
-		json.end == null
-	) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Validate request
+	const validationResult = timesPostApiValidation.safeParse({
+		userId: json.userId,
 
-		result.result = [
-			result.result,
-			json.tag == null ? "Tag Missing" : undefined,
-			json.notes == null ? "Notes Missing" : undefined,
-			json.start == null ? "Start Missing" : undefined,
-			json.end == null ? "End Missing" : undefined,
-		];
+		notes: json.notes,
 
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+		project: json.project,
+
+		traveledDistance: json.traveledDistance,
+
+		start: json.start,
+		end: json.end,
+
+		startType: json.startType,
+		endType: json.endType,
+	});
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const data = validationResult.data;
+
+	// Check if user is given
+	if (data.userId) {
+		if (data.userId !== session.user.id && session.user.role !== "ADMIN")
+			return NextResponse.json(FORBIDDEN, {
+				status: FORBIDDEN.status,
+				statusText: FORBIDDEN.result,
+			});
 	}
 
-	const startDate = new Date(Date.parse(json.start));
-	const endDate = new Date(Date.parse(json.end));
-	if (endDate < startDate) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "The end time is before the start time"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
+	// Check if user is included in project when given
+	if (data.project) {
+		try {
+			const project = await prisma.project.findUniqueOrThrow({
+				where: {
+					name: data.project,
+				},
+			});
+			data.project = project.name;
+		} catch {
+			return badRequestResponse(
+				{
+					id: data.project,
+					message: "Project not found.",
+				},
+				"not-found",
+			);
+		}
 	}
 
-	const timePassed = getTimePassed(startDate, endDate);
+	// Prepare passed time
+	const timePassed = getTimePassed(new Date(data.start), new Date(data.end));
 
-	let targetUser: number | undefined;
-	if (user.tag === json.tag) targetUser = user.id;
-
-	if (!targetUser) {
-		targetUser = (
-			await prisma.user
-				.findUnique({
-					where: {
-						tag: json.tag,
-					},
-					select: {
-						id: true,
-					},
-				})
-				.catch(() => undefined)
-		)?.id;
-	}
-
-	if (!targetUser) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "User not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	if (user?.role !== "admin" && targetUser !== user.id)
-		return NextResponse.json(FORBIDDEN, {
-			status: FORBIDDEN.status,
-			statusText: FORBIDDEN.result,
-		});
-
-	result.result = await prisma.time
-		.create({
+	// Create the time entry
+	try {
+		const databaseResult = await prisma.time.create({
 			data: {
-				userId: targetUser,
-				notes: json.notes,
-				start: startDate,
-				end: endDate,
-				startType: json.startType ? json.startType : "API",
-				endType: json.endType ? json.endType : "API",
+				userId: data.userId ?? session.user.id,
+				projectName: data.project,
+				notes: data.notes,
+				traveledDistance: data.traveledDistance ?? null,
+				start: data.start,
+				end: data.end,
+				startType: data.startType ?? "API",
+				endType: data.endType ?? "API",
 				time: timePassed,
 			},
-		})
-		.catch((e) => {
-			result.success = false;
-			result.status = 500;
-			return e.meta.cause;
 		});
 
-	return NextResponse.json(result, { status: result.status });
-}
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
+});
 
 // Update timer
-export async function PUT(request: NextRequest) {
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+export const PUT = auth(async (request) => {
+	// Check auth
+	const session = request.auth;
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-		select: {
-			id: true,
-			tag: true,
-			role: true,
-		},
-	});
+	// Prepare data
+	const result = defaultResult("updated");
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
-
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON Body could not be parsed"];
-		console.log(result.result);
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	if (json.id == null || json.notes == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Validate request
+	const validationResult = timesPutApiValidation.safeParse({
+		id: json.id,
 
-		result.result = [
-			result.result,
-			json.id == null ? "ID Missing" : undefined,
-			json.notes == null ? "Notes Missing" : undefined,
-		];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	const timer = await prisma.time
-		.findUnique({
-			where: {
-				id: Number.parseInt(json.id),
-			},
-		})
-		.catch(() => null);
-
-	if (timer == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "Timer not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	}
-
-	if (user?.role !== "admin" && user?.id !== timer?.userId)
-		return NextResponse.json(FORBIDDEN, {
-			status: FORBIDDEN.status,
-			statusText: FORBIDDEN.result,
-		});
-
-	// TODO: Do this
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const data: any = {
 		notes: json.notes,
+
+		project: json.project,
+
+		traveledDistance: json.traveledDistance,
+
+		start: json.start,
+		end: json.end,
+
+		startType: json.startType,
+		endType: json.endType,
+	});
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const data = validationResult.data;
+
+	// Check the time entry
+	let dbStarted: Date | undefined = undefined;
+	let dbStopped: Date | undefined = undefined;
+	try {
+		const databaseResult = await prisma.time.findUnique({
+			where: {
+				id: data.id,
+			},
+		});
+
+		if (!databaseResult)
+			return badRequestResponse(
+				"Entry with the given id not found",
+				"not-found",
+			);
+
+		dbStarted = databaseResult.start;
+		dbStopped = databaseResult.end ?? undefined;
+
+		if (data.project) {
+			const projectDatabaseResult = await prisma.project
+				.findUnique({
+					where: {
+						name: data.project,
+					},
+				})
+				.catch(() => null);
+
+			if (data.project && projectDatabaseResult == null)
+				return badRequestResponse(
+					"Project with the given id not found",
+					"not-found",
+				);
+		}
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
+
+	const updateData: Prisma.XOR<
+		Prisma.TimeUpdateInput,
+		Prisma.TimeUncheckedUpdateInput
+	> = {
+		projectName: data.project,
+		notes: data.notes,
+		traveledDistance: data.traveledDistance,
 	};
 
-	if (json.start && json.end) {
-		const startDate = new Date(Date.parse(json.start));
-		const endDate = new Date(Date.parse(json.end));
+	if (data.start && !data.end) {
+		if (dbStopped)
+			updateData.time = getTimePassed(new Date(data.start), dbStopped);
 
-		if (endDate < startDate) {
-			result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-			result.result = [result.result, "The end time is before the start time"];
-
-			return NextResponse.json(result, {
-				status: BAD_REQUEST.status,
-				statusText: BAD_REQUEST.result,
-			});
-		}
-
-		const timePassed = getTimePassed(startDate, endDate);
-
-		if (startDate.getTime() !== timer?.start.getTime()) {
-			data.start = startDate;
-			data.startType = json.startType ? json.startType : "API";
-		}
-
-		if (endDate.getTime() !== timer?.end?.getTime()) {
-			data.end = endDate;
-			data.endType = json.endType ? json.endType : "API";
-		}
-
-		data.time = timePassed;
+		updateData.start = data.start;
+		updateData.startType = data.startType ?? "API";
 	}
 
-	result.result = await prisma.time
-		.update({
+	if (data.end && !data.start) {
+		const timePassed = getTimePassed(dbStarted, new Date(data.end));
+
+		updateData.end = data.end;
+		updateData.time = timePassed;
+		updateData.endType = data.endType ?? "API";
+	}
+
+	if (data.start && data.end) {
+		const timePassed = getTimePassed(new Date(data.start), new Date(data.end));
+
+		updateData.start = data.start;
+		updateData.end = data.end;
+		updateData.time = timePassed;
+
+		updateData.startType = data.startType ?? "API";
+		updateData.endType = data.endType ?? "API";
+	}
+
+	// Update the entry
+	try {
+		const databaseResult = await prisma.time.update({
 			where: {
-				id: Number.parseInt(json.id),
+				id: data.id,
 			},
-			data: data,
-		})
-		.catch((e) => {
-			result.success = false;
-			result.status = 500;
-			return e.meta.cause;
+			data: updateData,
 		});
 
-	return NextResponse.json(result, { status: result.status });
-}
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
+	}
+});
 
 // Delete timer
-export async function DELETE(request: NextRequest) {
-	const session = await getServerSession(authOptions);
-	if (!session || !session.user)
-		return NextResponse.json(NO_AUTH, {
-			status: NO_AUTH.status,
-			statusText: NO_AUTH.result,
-		});
+export const DELETE = auth(async (request) => {
+	// Check auth
+	const session = request.auth;
+	if (!session || !session.user) return NO_AUTH_RESPONSE;
 
-	console.log(session);
-	const user = await prisma.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-		select: {
-			tag: true,
-			id: true,
-			role: true,
-		},
-	});
+	// Prepare data
+	const result = defaultResult("deleted");
 
-	let result: APIResult = {
-		success: true,
-		status: 200,
-		result: undefined,
-	};
-
-	const json = await request.json().catch((e) => {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "JSON Body could not be parsed"];
-		console.log(result.result);
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
-		});
-	});
+	// Check JSON
+	const json = await parseJsonBody(request);
 	if (json instanceof NextResponse) return json;
 
-	if (json.id == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
+	// Validate request
+	const validationResult = nanoIdValidation.safeParse(json.id);
+	if (!validationResult.success)
+		return badRequestResponse(validationResult.error.issues, "validation");
+	const id = validationResult.data;
 
-		result.result = [result.result, json.id == null ? "ID Missing" : undefined];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
+	// Check the time entry
+	try {
+		const databaseResult = await prisma.time.findUnique({
+			where: {
+				id: id,
+			},
 		});
+
+		if (!databaseResult)
+			return badRequestResponse(
+				"Entry with the given id not found",
+				"not-found",
+			);
+
+		if (
+			databaseResult.userId !== session.user.id &&
+			session.user.role !== "ADMIN"
+		)
+			return NextResponse.json(FORBIDDEN, {
+				status: FORBIDDEN.status,
+				statusText: FORBIDDEN.result,
+			});
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
 	}
 
-	const timer = await prisma.time
-		.findUnique({
+	// Delete the entry
+	try {
+		const databaseResult = await prisma.time.delete({
 			where: {
-				id: Number.parseInt(json.id),
+				id: id,
 			},
-		})
-		.catch(() => null);
-
-	if (timer == null) {
-		result = JSON.parse(JSON.stringify(BAD_REQUEST));
-
-		result.result = [result.result, "Timer not found"];
-
-		return NextResponse.json(result, {
-			status: BAD_REQUEST.status,
-			statusText: BAD_REQUEST.result,
 		});
+
+		result.result = databaseResult;
+		return NextResponse.json(result, { status: result.status });
+	} catch (e) {
+		result.success = false;
+		result.status = 500;
+		result.type = "unknown";
+		result.result = `Server issue occurred ${
+			e instanceof PrismaClientKnownRequestError ? e.code : ""
+		}`;
+		console.warn(e);
+		return NextResponse.json(result, { status: result.status });
 	}
-
-	if (user?.role !== "admin" && user?.id !== timer?.userId)
-		return NextResponse.json(FORBIDDEN, {
-			status: FORBIDDEN.status,
-			statusText: FORBIDDEN.result,
-		});
-
-	result.result = await prisma.time
-		.delete({
-			where: {
-				id: Number.parseInt(json.id),
-			},
-		})
-		.catch((e) => {
-			result.success = false;
-			result.status = 500;
-			return e.meta.cause;
-		});
-
-	return NextResponse.json(result, { status: result.status });
-}
+});

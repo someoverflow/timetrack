@@ -1,5 +1,5 @@
 interface Timer {
-	id: number;
+	id: string;
 
 	user: string;
 
@@ -13,9 +13,24 @@ interface Timer {
 	state: string | null;
 }
 
+type APIResultType =
+	| "unknown"
+	// No Success
+	| "validation"
+	| "json-parsing"
+	| "error-message"
+	| "not-found"
+	| "duplicate-found"
+	// Success
+	| "ok"
+	| "deleted"
+	| "created"
+	| "updated";
+
 interface APIResult {
 	success: boolean;
 	status: number;
+	type: APIResultType;
 	// biome-ignore lint/suspicious/noExplicitAny: API Result Data can be anything
-	result: any;
+	result?: any;
 }
