@@ -9,12 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { Project, Role } from "@prisma/client";
+import type { Role } from "@prisma/client";
 import { Ellipsis, Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -171,6 +170,8 @@ export function ProjectEdit({
 		}
 	}
 
+	console.log(project.description);
+
 	return (
 		<>
 			<CommandItem
@@ -180,9 +181,13 @@ export function ProjectEdit({
 				<div className="w-full flex flex-row items-center justify-between">
 					<div className="w-full">
 						<h4 className="text-sm font-semibold">{project.name}</h4>
-						<p className="text-xs text-muted-foreground whitespace-pre-wrap">
-							{project.description}
-						</p>
+						{project.description && (
+							<p className="text-xs text-muted-foreground flex flex-col">
+								{project.description.split("\n").map((line) => (
+									<span key={line}>{line}</span>
+								))}
+							</p>
+						)}
 						<div className="w-fit pt-3">
 							<div className="flex flex-row items-center gap-1 text-xs">
 								<Badge variant="secondary" className="font-normal">
