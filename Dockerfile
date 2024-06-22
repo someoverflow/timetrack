@@ -1,5 +1,4 @@
-#syntax=docker/dockerfile:1.4
-FROM node:18-alpine AS base
+FROM node:current-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
@@ -19,31 +18,43 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl mysql-client mariadb-connector-c
+
+RUN npm install -g npm@latest
 
 ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-
 RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN chown nextjs:nodejs /app
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+COPY --from=builder --chown=nextjs:nodejs /app/docker-start.sh ./
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/
+
+RUN mkdir /backups && chown nextjs:nodejs /backups
+
 USER nextjs
 
-EXPOSE 3000
+ENV AUTH_TRUST_HOST true
 
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-ENV NEXTAUTH_URL http://localhost:3000/api/auth
+ENV BACKUP false
+ENV BACKUP_DELAY 86400
 
-ENV DATABASE_URL mysql://root:root@localhost:3306/timetrack
+ENV DATABASE_HOST localhost
+ENV DATABASE_USER timetrack
+ENV DATABASE_PASSWORD timetrack
+ENV DATABASE_PORT 3306
+ENV DATABASE_DB timetrack
 
-CMD ["./docker-start.sh"]
+EXPOSE 3000
+VOLUME ["/backups"]
+CMD ["/bin/sh", "./docker-start.sh"]

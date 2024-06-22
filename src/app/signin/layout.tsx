@@ -1,14 +1,20 @@
-import type { Metadata } from "next";
+// React
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 
-export const metadata: Metadata = {
-  title: "Time Track - Signin",
-  description: "Track your Time",
-};
+export async function generateMetadata() {
+	const t = await getTranslations({ namespace: "SignIn.Metadata" });
+
+	return {
+		title: t("title"),
+		description: t("description"),
+	};
+}
 
 export default async function SignInLayout({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  return <>{children}</>;
+	return <Suspense>{children}</Suspense>;
 }

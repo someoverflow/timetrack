@@ -1,34 +1,102 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# TimeTrack
 
-First, run the development server:
+Manage your work, tasks, and projects effortlessly with TimeTrack for your
+entire team. Log hours, prioritize to-do's, add notes & projects, and stay
+organized in one place.
 
+
+[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+
+## Screenshots (TODO)
+
+![TODO](https://example.com)
+
+
+## Tech Stack
+
+**Framework:** ![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+
+**Authentication:** [AuthJS](https://authjs.dev/)
+
+**Database:** [Prisma](https://www.prisma.io/)
+
+**UI:**
+- [NextIntl](https://next-intl-docs.vercel.app/) - *Translations*
+- [TailwindCSS](https://tailwindcss.com/) - *Styling*
+- [ShadcnUI](https://ui.shadcn.com/) - *UI Components*
+- [animate.css](https://animate.style/) - *UI Animations*
+- [Lucide React](https://lucide.dev/guide/packages/lucide-react) - *Icons*
+
+
+## Deployment
+
+Mainly built and maintained for Docker. However, the possibility of vercel is also there because of nextjs but has not been tested.
+
+A MySQL database is required for data storage. Other databases are currently not supported.
+
+**Build the Docker Image:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+git clone https://github.com/someoverflow/timetrack
+cd timetrack
+docker build -t some/timetrack:prod .
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Run the Docker Image**
+```bash
+docker run --name timetrack -p 8080:3000 
+--env=DATABASE_HOST=<DatabaseHost> 
+--env=DATABASE_USER=<DatabaseUser> 
+--env=DATABASE_PASSWORD=<DatabasePassword> 
+--env=DATABASE_DB=<Database>
+-d some/timetrack:prod
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Environment Variables
 
-## Learn More
+| Variable            | Description                                       | Default     |
+| ------------------- | ------------------------------------------------- | ----------- |
+| PORT                | Port                                              | 3000        |
+| HOSTNAME            | Hostname                                          | "0.0.0.0"   |
+| BACKUP              | Execute mysqldumps to a mountable volume (Docker) | false       |
+| BACKUP_DELAY        | Delay when the Backup executes in seconds         | 86400 (24h) |
+| DATABASE_HOST       | MySQL Database Hostname or IP                     | localhost   |
+| DATABASE_PORT       | MySQL Database Port                               | 3306        |
+| DATABASE_USER       | MySQL Database Username                           | timetrack   |
+| DATABASE_PASSWORD   | MySQL Database Password                           | timetrack   |
+| DATABASE_DB         | MySQL Database                                    | timetrack   |
+| AUTH_SECRET         | Used to encrypt the Auth.js JWT                   | *Generated* |
+| NEXT_PUBLIC_API_URL | The URL that is mainly used *(AuthJS)*            |             |
 
-To learn more about Next.js, take a look at the following resources:
+**Docker Volumes**
+| Name   | Path       |
+| ------ | -----------|
+| Backup | /backups   |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Reference (TODO)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+#### Get all items
 
-## Deploy on Vercel
+```http
+  GET /api/items
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `api_key` | `string` | **Required**. Your API key |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+#### Get item
+
+```http
+  GET /api/items/${id}
+```
+
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `id`      | `string` | **Required**. Id of item to fetch |
+
+#### add(num1, num2)
+
+Takes two numbers and returns the sum.
+

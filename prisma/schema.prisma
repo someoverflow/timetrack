@@ -8,39 +8,136 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model times {
-  id   Int    @id @default(autoincrement())
-  user String @db.Text
+enum Role {
+  USER
+  ADMIN
 
-  start     DateTime  @db.DateTime(2)
-  startType String?   @db.Text
-  end       DateTime? @db.DateTime(2)
-  endType   String?   @db.Text
-
-  time  String? @db.Text
-  notes String? @db.MediumText
+  @@map("roles")
 }
 
-model user {
-  id       Int     @id @default(autoincrement())
+model User {
+  id String @id @default(nanoid(12))
+
   username String  @unique
   name     String?
-  email    String  @unique
+
   password String
-  role     String
-  chips    chip[]
+  role     Role   @default(USER)
+
+  language String @default("en")
+
+  email         String?
+  emailVerified DateTime? @map("email_verified")
+
+  validJwtId String @default(uuid()) @map("valid_jwt_id")
+
+  times Time[]
+  chips Chip[]
+
+  assignedTodos Todo[] @relation("assignee_to_todo")
+  createdTodos  Todo[] @relation("creator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@fulltext([name])
+  @@map("users")
 }
 
-model chip {
-  id     String @id
-  user   user   @relation(fields: [userId], references: [id])
-  userId Int
+model Chip {
+  id String @id
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("chips")
+}
+
+model Time {
+  id String @id @default(nanoid(12))
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
+
+  start     DateTime  @db.DateTime(2)
+  startType String?   @map("start_type") @db.Text
+  end       DateTime? @db.DateTime(2)
+  endType   String?   @map("end_type") @db.Text
+
+  time  String? // Passed time from start to end
+  notes String? @db.MediumText
+
+  traveledDistance Int? @map("traveled_distance") // Stored in km
+
+  materials String      @default("[]") // Array of materials used
+  breaks    TimeBreak[] @relation("break")
+
+  project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
+  projectName String?  @map("project_name")
+
+  @@map("times")
+}
+
+model TimeBreak {
+  id String @id @default(nanoid(12))
+
+  time   Time   @relation("break", references: [id], fields: [timeId], onDelete: Cascade)
+  timeId String @map("time_id")
+
+  start DateTime  @db.DateTime(2)
+  end   DateTime? @db.DateTime(2)
+
+  @@map("times_breaks")
+}
+
+model Project {
+  name        String  @id @unique
+  description String?
+
+  todos Todo[] @relation("project_to_todo") // Related Todos
+  times Time[] // Related Times
+
+  @@map("projects")
+}
+
+enum TodoPriority {
+  HIGH
+  MEDIUM
+  LOW
+
+  @@map("todo_priorities")
+}
+
+enum TodoStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+
+  @@map("todo_statuses")
+}
+
+model Todo {
+  id String @id @default(nanoid(12))
+
+  task        String       @db.MediumText
+  description String?      @db.Text
+  status      TodoStatus   @default(TODO)
+  archived    Boolean      @default(false)
+  hidden      Boolean      @default(false)
+  priority    TodoPriority @default(MEDIUM)
+  deadline    DateTime?
+
+  relatedProjects Project[] @relation("project_to_todo") // Any related projects to this todo
+
+  assignees User[] @relation("assignee_to_todo") // Assigned users of the todo
+
+  creator   User   @relation("creator", fields: [creatorId], references: [id], onDelete: Restrict)
+  creatorId String @map("creator_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("todos")
 }

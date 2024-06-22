@@ -1,202 +1,238 @@
 "use client";
 
-import "@/lib/types";
-
-import { cn, getTotalTime } from "@/lib/utils";
-
-import { Check, ChevronDown, FileDown, ListPlus, Plus } from "lucide-react";
-
+// UI
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronDown, ListPlus, Loader } from "lucide-react";
+import TimerAdd from "./timer-add";
 
-import dynamic from "next/dynamic";
+// Database
+import type { Prisma } from "@prisma/client";
+
+// Navigation
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import TimerAdd from "./timer-add";
-import React, { useState } from "react";
+// React
+import React, { useEffect, useState, useTransition } from "react";
+
+import { cn } from "@/lib/utils";
+
+import dynamic from "next/dynamic";
+import TimerExportDialog from "./timer-export";
+import { useTranslations } from "next-intl";
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
+type Timer = Prisma.TimeGetPayload<{
+	include: { project: true };
+}>;
 interface Data {
-  [yearMonth: string]: TimerWithDate[];
+	[yearMonth: string]: Timer[];
 }
 
 export default function TimerSection({
-  username,
-  history,
-  totalTime,
+	user,
+	history,
+	projects,
+	yearMonth,
+	totalTime,
 }: {
-  username: string;
-  history: Data;
-  totalTime: string;
+	user: string;
+	history: Data;
+	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
+	yearMonth: string;
+	totalTime: string;
 }) {
-  const historyKeys = Object.keys(history);
+	const t = useTranslations("History");
 
-  const router = useRouter();
-  const pathname = usePathname();
+	const historyKeys = Object.keys(history);
 
-  const searchParams = useSearchParams();
-  const editTime = searchParams.get("edit");
-  const yearMonth = searchParams.get("ym");
+	const router = useRouter();
+	const pathname = usePathname();
 
-  const [addVisible, setAddVisible] = useState(false);
+	const [isPending, startTransition] = useTransition();
 
-  function changeYearMonth(change: string) {
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.set("ym", change);
-    const search = current.toString();
-    const query = search ? `?${search}` : "";
-    router.push(`${pathname}${query}`);
-  }
+	const searchParams = useSearchParams();
+	const editTime = searchParams.get("edit");
 
-  // Set selected yearMonth if not set
-  if (yearMonth == null || !historyKeys.includes(yearMonth)) {
-    changeYearMonth(historyKeys[0]);
-    return <></>;
-  }
+	const [addVisible, setAddVisible] = useState(false);
 
-  const downloadCSV = (yearMonth: string, totalTime: string) => {
-    let result = "Start;End;Time;Notes";
+	useEffect(() => {
+		router.refresh();
+	}, [router]);
 
-    history[yearMonth].forEach((time) => {
-      result = `${result}\n${time.start.toLocaleString()};${time.end?.toLocaleString()};${
-        time.time
-      };"${time.notes ? time.notes : ""}"`;
-    });
+	const changeYearMonth = (change: string) => {
+		const current = new URLSearchParams(Array.from(searchParams.entries()));
+		current.set("ym", change);
+		const search = current.toString();
+		const query = search ? `?${search}` : "";
+		router.push(`${pathname}${query}`);
+		startTransition(() => {
+			router.refresh();
+		});
+	};
 
-    result = `${result}\n\n;;${totalTime};`;
+	const historyDays = history[yearMonth]
+		.map((entry) => entry.start)
+		.filter(
+			(item, index, array) =>
+				array.indexOf(
+					array.find((v) => item.toDateString() === v.toDateString()) ??
+						new Date(),
+				) === index,
+		);
 
-    const element = document.createElement("a");
-    const file = new Blob([result], {
-      type: "text/plain",
-    });
-    element.href = URL.createObjectURL(file);
-    element.download = `Time ${yearMonth}.csv`;
-    document.body.appendChild(element);
-    element.click();
-  };
+	return (
+		<section
+			className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start"
+			key={yearMonth}
+		>
+			<div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
+				<div className="font-bold w-full">
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button
+								variant="outline"
+								role="combobox"
+								className="w-full justify-between"
+							>
+								<div className="flex flex-row items-center justify-start gap-2">
+									{`${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`}
+									<p className="font-mono text-muted-foreground">
+										(
+										{(history[yearMonth].find((e) => e.end === null)
+											? "~"
+											: "") + totalTime}
+										)
+									</p>
+								</div>
+								<ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent className="p-2">
+							<Command>
+								<CommandInput
+									placeholder={t("Miscellaneous.searchYearMonth")}
+									className="h-8"
+								/>
+								<CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
+								<CommandGroup>
+									{historyKeys.map((key) => (
+										<CommandItem
+											key={`history-${key}`}
+											onSelect={() => changeYearMonth(key)}
+											value={key}
+											className="font-mono"
+										>
+											{`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
+											<Check
+												className={cn(
+													"ml-auto h-4 w-4",
+													yearMonth === key ? "opacity-100" : "opacity-0",
+												)}
+											/>
+										</CommandItem>
+									))}
+								</CommandGroup>
+							</Command>
+						</PopoverContent>
+					</Popover>
+				</div>
+				<div className="grid place-items-center">
+					<Loader
+						className={cn(
+							"h-5 w-0 transition-all",
+							isPending && "w-5 animate-spin",
+						)}
+					/>
+				</div>
+				<div className="w-max">
+					<TimerExportDialog
+						history={history}
+						yearMonth={yearMonth}
+						projects={projects}
+					/>
+				</div>
+				<div className="w-max">
+					<Tooltip delayDuration={500}>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={() => setAddVisible(true)}
+							>
+								<ListPlus className="h-5 w-5" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="bottom">
+							<p className="text-center">{t("Miscellaneous.newEntry")}</p>
+						</TooltipContent>
+					</Tooltip>
+					<TimerAdd
+						user={user}
+						projects={projects}
+						visible={addVisible}
+						setVisible={setAddVisible}
+					/>
+				</div>
+			</div>
+			<ScrollArea
+				className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border p-1.5 overflow-hidden"
+				type="scroll"
+			>
+				{historyDays.map((day, index) => {
+					return (
+						<section
+							key={`day-${day}`}
+							className={index === 0 ? "mt-2" : "mt-6"}
+						>
+							<div className="flex flex-row items-center justify-center gap-2 mb-2 transition-all duration-300 animate__animated animate__slideInLeft">
+								<div className="w-1/2" />
+								<Badge className="justify-center w-full font-semibold text-sm">
+									{`${day.getDate().toString().padStart(2, "0")}.${(
+										day.getMonth() + 1
+									)
+										.toString()
+										.padStart(
+											2,
+											"0",
+										)} ${t(`Miscellaneous.Days.${day.getDay()}`)}`}
+								</Badge>
+								<div className="w-1/2" />
+							</div>
 
-  return (
-    <section
-      className="w-full max-w-md max-h-[75dvh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn"
-      key={yearMonth}
-    >
-      <div className="w-full flex flex-row items-center justify-stretch gap-2 p-2">
-        <div className="font-bold w-full">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                className="w-full justify-between"
-              >
-                <div className="flex flex-row items-center justify-start gap-2">
-                  {yearMonth}
-                  <p className="font-mono text-muted-foreground">
-                    ({totalTime})
-                  </p>
-                </div>
-                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-1">
-              <Command>
-                <CommandInput
-                  placeholder="Search year/month..."
-                  className="h-8"
-                />
-                <CommandEmpty>No data found.</CommandEmpty>
-                <CommandGroup>
-                  {historyKeys.map((key) => (
-                    <CommandItem
-                      key={`history-${key}`}
-                      value={key}
-                      className="font-mono"
-                      onSelect={() => changeYearMonth(key)}
-                    >
-                      {key}
-                      <Check
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          yearMonth === key ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-        <div className="w-max">
-          <Tooltip delayDuration={500}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => downloadCSV(yearMonth, totalTime)}
-              >
-                <FileDown className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-center">
-                Download a <code>.csv</code> containing all
-                <br /> the current visible entries
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="w-max">
-          <Tooltip delayDuration={500}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setAddVisible(true)}
-              >
-                <ListPlus className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-center">Add a new entry</p>
-            </TooltipContent>
-          </Tooltip>
-          <TimerAdd
-            username={username}
-            visible={addVisible}
-            setVisible={setAddVisible}
-          />
-        </div>
-      </div>
-      <ScrollArea
-        className="h-[65dvh] w-full rounded-sm border p-1.5 overflow-hidden"
-        type="scroll"
-      >
-        {history[yearMonth].map((time) => (
-          <TimerInfo
-            key={`timerHistory-${yearMonth}-${time.id}`}
-            edit={parseInt(editTime + "") == time.id}
-            data={time}
-          />
-        ))}
-      </ScrollArea>
-    </section>
-  );
+							{history[yearMonth]
+								.filter((v) => v.start.toDateString() === day.toDateString())
+								.reverse()
+								.map((time) => (
+									<TimerInfo
+										key={`timerHistory-${yearMonth}-${time.id}`}
+										edit={editTime === time.id}
+										projects={projects}
+										data={time}
+									/>
+								))}
+						</section>
+					);
+				})}
+			</ScrollArea>
+		</section>
+	);
 }

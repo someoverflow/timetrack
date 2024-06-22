@@ -1,35 +1,28 @@
-import prisma from "@/lib/prisma";
+// Auth
+import { auth } from "@/lib/auth";
 
-import { getServerSession } from "next-auth";
+// Navigation
 import NavigationSection from "./navigation-section";
+import { redirect } from "next/navigation";
 
 export default async function Navigation({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  const session = await getServerSession();
+	const session = await auth();
+	if (!session) return redirect("/signin");
+	const user = session.user;
 
-  const user = await prisma.user.findUnique({
-    where: {
-      username: session?.user?.name + "",
-    },
-    select: {
-      username: true,
-      role: true,
-      name: true,
-    },
-  });
+	return (
+		<main>
+			{children}
 
-  return (
-    <main>
-      {children}
-
-      <section className="w-full fixed bottom-5 p-4">
-        <div className="flex flex-row items-center justify-center">
-          <NavigationSection user={user} />
-        </div>
-      </section>
-    </main>
-  );
+			<section className="fixed left-1/2 -translate-x-1/2 bottom-[1svh] p-4">
+				<div className="flex flex-row items-center justify-center">
+					<NavigationSection user={user} />
+				</div>
+			</section>
+		</main>
+	);
 }
