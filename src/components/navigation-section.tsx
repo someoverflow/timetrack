@@ -13,13 +13,19 @@ import {
 	MenubarTrigger,
 } from "@/components/ui/menubar";
 import {
+	Folder,
 	History,
 	ListTodo,
+	LogOut,
+	MonitorSmartphone,
 	Moon,
 	Sun,
 	SunMoon,
+	SwatchBook,
 	Timer,
 	User,
+	UserIcon,
+	Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -91,6 +97,7 @@ export default function NavigationSection({
 							prefetch
 							className={pathname === "/profile" ? "bg-accent" : ""}
 						>
+							<UserIcon className="mr-2 h-4 w-4" />
 							{t("profile")}
 						</Link>
 					</MenubarItem>
@@ -100,6 +107,7 @@ export default function NavigationSection({
 							prefetch
 							className={pathname === "/projects" ? "bg-accent" : ""}
 						>
+							<Folder className="mr-2 h-4 w-4" />
 							{t("projects")}
 						</Link>
 					</MenubarItem>
@@ -110,6 +118,7 @@ export default function NavigationSection({
 								prefetch
 								className={pathname === "/admin/user" ? "bg-accent" : ""}
 							>
+								<Users className="mr-2 h-4 w-4" />
 								{t("users")}
 							</Link>
 						</MenubarItem>
@@ -117,6 +126,7 @@ export default function NavigationSection({
 
 					<MenubarItem asChild>
 						<Link href="/signout" prefetch>
+							<LogOut className="mr-2 h-4 w-4" />
 							{t("signOut")}
 						</Link>
 					</MenubarItem>
@@ -124,7 +134,10 @@ export default function NavigationSection({
 					<MenubarSeparator />
 
 					<MenubarSub>
-						<MenubarSubTrigger>{t("Theme.title")}</MenubarSubTrigger>
+						<MenubarSubTrigger>
+							<SwatchBook className="mr-2 h-4 w-4" />
+							{t("Theme.title")}
+						</MenubarSubTrigger>
 						<MenubarSubContent>
 							<MenubarItem
 								disabled={theme === "light"}
@@ -142,7 +155,8 @@ export default function NavigationSection({
 								disabled={theme === "system"}
 								onClick={() => setTheme("system")}
 							>
-								<SunMoon className="mr-2 h-4 w-4" /> {t("Theme.system")}
+								<MonitorSmartphone className="mr-2 h-4 w-4" />{" "}
+								{t("Theme.system")}
 							</MenubarItem>
 						</MenubarSubContent>
 					</MenubarSub>
