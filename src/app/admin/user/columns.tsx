@@ -50,10 +50,16 @@ export const columns: ColumnDef<
 		id: "actions",
 		enableHiding: false,
 		header: () => (
-			<div className="grid place-items-center">
-				<Settings2 className="h-4 w-4" />
+			<div className="grid place-items-end">
+				<div className="grid place-items-center h-8 w-8 p-0">
+					<Settings2 className="h-4 w-4" />
+				</div>
 			</div>
 		),
-		cell: ({ row }) => <UserEdit user={row.original} />,
+		cell: ({ row }) => (
+			<div className="grid place-items-end">
+				<UserEdit user={row.original} />
+			</div>
+		),
 	},
 ];

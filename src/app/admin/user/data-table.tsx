@@ -35,17 +35,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { cn } from "@/lib/utils";
+import UserAdd from "./user-add";
 
 type UsersType = { name: string | null; username: string }[];
 type ProjectsType = {
@@ -157,19 +151,20 @@ export function DataTable<TData, TValue>({
 							)}
 						/>
 					</div>
+					<UserAdd />
 				</div>
 			</div>
 			<ScrollArea
 				className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"
 				type="always"
 			>
-				<Table>
+				<Table className="table-auto w-full">
 					<TableHeader className="sticky top-0 bg-secondary/40 z-10">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
 									return (
-										<TableHead key={header.id} className="w-full">
+										<TableHead key={header.id}>
 											{header.isPlaceholder
 												? null
 												: flexRender(

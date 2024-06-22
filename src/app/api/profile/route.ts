@@ -58,7 +58,8 @@ export const PUT = auth(async (request) => {
 			},
 			data: {
 				// Invalidate all sessions
-				validJwtId: randomUUID(),
+				validJwtId:
+					data.name || data.mail || password ? randomUUID() : undefined,
 				name: data.name ?? undefined,
 				language: data.language ? data.language.toLowerCase() : undefined,
 				email: data.mail ?? undefined,
