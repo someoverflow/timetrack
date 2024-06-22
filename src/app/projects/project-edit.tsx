@@ -144,8 +144,6 @@ export function ProjectEdit({
 			return;
 		});
 
-		console.log(resultData);
-
 		if (resultData.success) {
 			toast.success("Successfully saved.");
 			router.refresh();
@@ -169,8 +167,6 @@ export function ProjectEdit({
 				break;
 		}
 	}
-
-	console.log(project.description);
 
 	return (
 		<>
