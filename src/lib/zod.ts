@@ -246,6 +246,7 @@ export const projectCreateApiValidation = z.object({
 
 export const projectUpdateApiValidation = z.object({
 	name: nameValidation,
+	newName: nameValidation.optional(),
 	description: projectDescriptionValidation.optional(),
 });
 //#endregion

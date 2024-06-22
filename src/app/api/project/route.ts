@@ -98,8 +98,9 @@ export const PUT = auth(async (request) => {
 
 	// Validate request
 	const validationResult = projectUpdateApiValidation.safeParse({
-		id: json.id,
-		userId: json.userId,
+		name: json.name,
+		newName: json.newName,
+		description: json.description,
 	});
 	if (!validationResult.success) {
 		const validationError = validationResult.error;
@@ -114,8 +115,8 @@ export const PUT = auth(async (request) => {
 				name: data.name,
 			},
 			data: {
-				name: data.name,
-				description: data.description ?? undefined,
+				name: data.newName ?? undefined,
+				description: data.description,
 			},
 		});
 

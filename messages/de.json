@@ -285,7 +285,18 @@
 		"projects": "Projekte ({projects})",
 
 		"times": "Zeiten: {times}",
-		"todos": "Todos: {todos}"
+		"todos": "Todos: {todos}",
+
+		"Dialogs": {
+			"Edit": {
+				"title": "Projekt bearbeiten",
+
+				"details": "Details",
+
+				"name": "Name",
+				"description": "Beschreibung"
+			}
+		}
 	},
 	"Admin": {
 		"Users": {

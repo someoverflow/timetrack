@@ -10,13 +10,14 @@ import {
 } from "@/components/ui/command";
 import { toast } from "sonner";
 import prisma from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
-import { Ellipsis, Plus, RefreshCw, Trash } from "lucide-react";
+import type { Prisma, Role } from "@prisma/client";
+import { Plus, RefreshCw, Trash } from "lucide-react";
 import { useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { ProjectEdit } from "./project-edit";
 
 async function getUserProjects() {
 	return await prisma.project.findMany({
@@ -116,55 +117,6 @@ export function ProjectSection({
 		}
 	}
 
-	async function deleteProject(id: string) {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/project", {
-			method: "DELETE",
-			body: JSON.stringify({
-				id: id,
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
-			toast.success("Successfully deleted project.");
-			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-
 	return (
 		<Command className="h-full">
 			<div className="flex flex-row items-center gap-2 p-2">
@@ -204,58 +156,12 @@ export function ProjectSection({
 							<p>{t("noProjects")}</p>
 						</div>
 					)}
-					{/* TODO: Interaction & Renaming */}
 					{projects.map((project) => (
-						<CommandItem
-							key={`projects-${project.name}`}
-							className="font-mono rounded-md aria-selected:!bg-accent/20 border my-2 p-4 outline-none group"
-						>
-							<div className="w-full flex flex-row items-center justify-between">
-								<div className="w-full">
-									<h4 className="text-sm font-semibold">{project.name}</h4>
-									<p className="text-xs text-muted-foreground whitespace-pre-wrap">
-										{project.description}
-									</p>
-									<div className="w-fit pt-3">
-										<div className="flex flex-row items-center gap-1 text-xs">
-											<Badge variant="secondary" className="font-normal">
-												{t("times", { times: project._count.times })}
-											</Badge>
-											<Badge variant="secondary" className="font-normal">
-												{t("todos", { todos: project._count.todos })}
-											</Badge>
-										</div>
-									</div>
-								</div>
-
-								<div className="flex flex-col w-min gap-1">
-									<Button
-										size="icon"
-										variant="outline"
-										className="transition-all duration-150 opacity-0 group-hover:opacity-100"
-										disabled={data.loading}
-										onClick={() => {}}
-									>
-										<Ellipsis className="w-4 h-4" />
-									</Button>
-								</div>
-								{/*
-								userData.role === "ADMIN" && (
-									<div className="flex flex-col w-min gap-1">
-										<Button
-											size="icon"
-											variant="destructive"
-											className="transition-all duration-150 opacity-0 group-hover:opacity-100"
-											disabled={data.loading}
-											onClick={() => deleteProject(project.name)}
-										>
-											<Trash className="w-4 h-4" />
-										</Button>
-									</div>
-								) 
-								 */}
-							</div>
-						</CommandItem>
+						<ProjectEdit
+							key={`edit-${project.name}`}
+							project={project}
+							role={userData.role as Role}
+						/>
 					))}
 				</CommandGroup>
 			</CommandList>
