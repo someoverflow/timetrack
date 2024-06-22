@@ -12,11 +12,13 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Minus,
-	PencilRuler,
 	Plus,
 	SaveAll,
 	Trash,
 	RefreshCw,
+	MoreHorizontal,
+	Eye,
+	Pencil,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReducer, useState } from "react";
@@ -31,8 +33,31 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Prisma, Role } from "@prisma/client";
 import { useTranslations } from "next-intl";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-type User = Prisma.UserGetPayload<{ include: { projects: true; chips: true } }>;
+type User = Prisma.UserGetPayload<{
+	select: {
+		id: true;
+		username: true;
+		name: true;
+		email: true;
+		role: true;
+
+		createdAt: true;
+		updatedAt: true;
+
+		chips: true;
+	};
+}>;
 
 interface userEditState {
 	loading: boolean;
@@ -311,23 +336,40 @@ export default function UserEdit({ user }: { user: User }) {
 
 	return (
 		<>
-			<Button
-				variant="secondary"
-				size="icon"
-				onClick={() => {
-					setVisible(!visible);
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="ghost" className="h-8 w-8 p-0">
+						<MoreHorizontal className="h-4 w-4" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem
+						onClick={() => {
+							setVisible(!visible);
 
-					setData({
-						username: user.username,
-						name: user.name !== "?" ? user.name : "",
-						mail: user.email,
-						role: user.role,
-						password: "",
-					});
-				}}
-			>
-				<PencilRuler className="h-5 w-5" />
-			</Button>
+							setData({
+								username: user.username,
+								name: user.name !== "?" ? user.name : "",
+								mail: user.email,
+								role: user.role,
+								password: "",
+							});
+						}}
+					>
+						<Pencil className="mr-2 h-4 w-4" />
+						{t("edit")}
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem asChild>
+						<Link href={`/history/${user.username}`}>
+							<Eye className="mr-2 h-4 w-4" />
+							{t("viewHistory")}
+						</Link>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 
 			<Dialog
 				key={`userModal-${user.id}`}
@@ -360,16 +402,17 @@ export default function UserEdit({ user }: { user: User }) {
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="username"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													user.username !== (data.username ?? "")
+														? "text-blue-500"
+														: "",
+												)}
 											>
 												{t("Dialogs.Edit.username")}
 											</Label>
 											<Input
-												className={`w-full border-2 transition duration-300 ${
-													user.username !==
-														(data.username ? data.username : "") &&
-													"border-sky-700"
-												}`}
+												className="w-full border-2"
 												disabled={data.username === "admin"}
 												type="text"
 												name="Username"
@@ -381,15 +424,17 @@ export default function UserEdit({ user }: { user: User }) {
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="name"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													user.name !== (data.name ?? "")
+														? "text-blue-500"
+														: "",
+												)}
 											>
 												{t("Dialogs.Edit.name")}
 											</Label>
 											<Input
-												className={`w-full border-2 transition duration-300 ${
-													user.name !== (data.name ? data.name : "") &&
-													"border-sky-700"
-												}`}
+												className="w-full border-2"
 												type="text"
 												name="Name"
 												id="name"
@@ -403,15 +448,17 @@ export default function UserEdit({ user }: { user: User }) {
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="mail"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													(user.email ?? "") !== (data.mail ?? "")
+														? "text-blue-500"
+														: "",
+												)}
 											>
 												{t("Dialogs.Edit.mail")}
 											</Label>
 											<Input
-												className={`w-full border-2 transition duration-300 ${
-													(user.email ?? "") !== (data.mail ?? "") &&
-													"border-sky-700"
-												}`}
+												className="w-full border-2"
 												type="email"
 												name="Mail"
 												id="mail"
@@ -423,7 +470,10 @@ export default function UserEdit({ user }: { user: User }) {
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="role"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													user.role !== data.role ? "text-blue-500" : "",
+												)}
 											>
 												{t("Dialogs.Edit.role")}
 											</Label>
@@ -440,12 +490,7 @@ export default function UserEdit({ user }: { user: User }) {
 													})
 												}
 											>
-												<SelectTrigger
-													id="role"
-													className={`w-full border-2 transition duration-300 ${
-														user.role !== data.role && "border-sky-700"
-													}`}
-												>
+												<SelectTrigger id="role" className="w-full border-2">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent>
@@ -464,14 +509,15 @@ export default function UserEdit({ user }: { user: User }) {
 										<div className="grid w-full items-center gap-1.5">
 											<Label
 												htmlFor="password"
-												className="pl-2 text-muted-foreground"
+												className={cn(
+													"pl-2 text-muted-foreground transition-colors",
+													data.password !== "" ? "text-blue-500" : "",
+												)}
 											>
 												{t("Dialogs.Edit.password")}
 											</Label>
 											<Input
-												className={`!w-full transition duration-300 border-2 ${
-													data.password !== "" && "border-sky-700"
-												}`}
+												className="w-full border-2"
 												type="password"
 												name="Password"
 												id="password"
@@ -492,7 +538,7 @@ export default function UserEdit({ user }: { user: User }) {
 											</Label>
 											<Input
 												disabled
-												className="w-full font-mono"
+												className="w-full border-2 font-mono"
 												type="text"
 												name="Id"
 												id="id"

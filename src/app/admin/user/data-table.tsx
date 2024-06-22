@@ -5,7 +5,6 @@ import {
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
-	type ColumnFiltersState,
 	getFilteredRowModel,
 	type RowData,
 } from "@tanstack/react-table";
@@ -27,9 +26,7 @@ import {
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
-	Filter,
 	Loader,
-	LoaderPinwheel,
 } from "lucide-react";
 import {
 	Select,
@@ -45,8 +42,6 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { TodoAdd } from "./todo-add";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -62,7 +57,6 @@ interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	users: UsersType;
-	archived: boolean;
 	projects: ProjectsType;
 	paginationData: {
 		pages: number;
@@ -84,12 +78,11 @@ export function DataTable<TData, TValue>({
 	columns,
 	data,
 	users,
-	archived,
 	projects,
 	paginationData,
 }: DataTableProps<TData, TValue>) {
 	const router = useRouter();
-	const t = useTranslations("Todo");
+	const t = useTranslations("Admin.Users");
 
 	const [isPending, startTransition] = useTransition();
 
@@ -109,13 +102,6 @@ export function DataTable<TData, TValue>({
 			pagination: {
 				pageSize: paginationData.pageSize,
 			},
-			columnVisibility: ["createdAt", "creator", "archived", "hidden"].reduce(
-				(acc: Record<string, boolean>, item) => {
-					acc[item] = false;
-					return acc;
-				},
-				{},
-			),
 		},
 	});
 
@@ -129,17 +115,7 @@ export function DataTable<TData, TValue>({
 		const query = search ? `?${search}` : "";
 
 		startTransition(() => {
-			router.replace(`/todo${query}`);
-		});
-	};
-	const changeFilter = async () => {
-		const current = new URLSearchParams(window.location.search);
-		current.set("archived", `${!archived}`);
-		const search = current.toString();
-		const query = search ? `?${search}` : "";
-
-		startTransition(() => {
-			router.replace(`/todo${query}`);
+			router.replace(`/admin/user${query}`);
 		});
 	};
 	const updateSearch = useDebouncedCallback((value: string) => {
@@ -152,7 +128,7 @@ export function DataTable<TData, TValue>({
 		const query = search ? `?${search}` : "";
 
 		startTransition(() => {
-			router.replace(`/todo${query}`);
+			router.replace(`/admin/user${query}`);
 		});
 	}, 300);
 
@@ -161,8 +137,8 @@ export function DataTable<TData, TValue>({
 			<div className="w-full flex flex-row items-center justify-between gap-2 p-2">
 				<div className="w-full">
 					<Input
-						id="searchTaskInput"
-						placeholder={t("searchTasks")}
+						id="searchInput"
+						placeholder={t("searchName")}
 						onChange={(e) => updateSearch(e.target.value)}
 						defaultValue={
 							typeof window !== "undefined"
@@ -181,34 +157,6 @@ export function DataTable<TData, TValue>({
 							)}
 						/>
 					</div>
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button
-								variant="outline"
-								size="sm"
-								className="h-10 w-10 sm:w-fit sm:px-3"
-							>
-								<Filter className="sm:mr-2 h-4 w-4" />
-								<span className="hidden sm:block">{t("filter")}</span>
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className="w-full">
-							<div className="grid gap-2 p-2">
-								<div className="flex flex-row items-center gap-4">
-									<Checkbox
-										id="archivedSwitch"
-										checked={archived}
-										onCheckedChange={changeFilter}
-										disabled={isPending}
-									/>
-									<Label htmlFor="archivedSwitch" className="text-nowrap">
-										{t("Miscellaneous.archived")}
-									</Label>
-								</div>
-							</div>
-						</PopoverContent>
-					</Popover>
-					<TodoAdd users={users} projects={projects} />
 				</div>
 			</div>
 			<ScrollArea
@@ -221,16 +169,7 @@ export function DataTable<TData, TValue>({
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
 									return (
-										<TableHead
-											key={header.id}
-											style={{
-												minWidth:
-													header.getSize() === 150
-														? "auto"
-														: `${header.getSize()}px`,
-											}}
-											className="w-full"
-										>
+										<TableHead key={header.id} className="w-full">
 											{header.isPlaceholder
 												? null
 												: flexRender(

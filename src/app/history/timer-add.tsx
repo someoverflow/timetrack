@@ -95,7 +95,8 @@ export default function TimerAdd({
 			body: JSON.stringify({
 				userId: user,
 				notes: data.notes,
-				traveledDistance: data.traveledDistance,
+				traveledDistance:
+					data.traveledDistance === 0 ? null : data.traveledDistance,
 				start: new Date(data.start).toISOString(),
 				end: new Date(data.end).toISOString(),
 				startType: "Website",
@@ -424,7 +425,8 @@ export function TimerAddServer({
 			body: JSON.stringify({
 				userId: user,
 				notes: data.notes,
-				traveledDistance: data.traveledDistance,
+				traveledDistance:
+					data.traveledDistance === 0 ? null : data.traveledDistance,
 				start: new Date(data.start).toISOString(),
 				end: new Date(data.end).toISOString(),
 				startType: "Website",
@@ -492,7 +494,7 @@ export function TimerAddServer({
 				<TooltipContent>
 					{t.rich("Dialogs.Create.first.description", {
 						p: (chunks: string) => <p>{chunks}</p>,
-					// biome-ignore lint/suspicious/noExplicitAny: Typescript does not want this
+						// biome-ignore lint/suspicious/noExplicitAny: Typescript does not want this
 					} as any)}
 				</TooltipContent>
 			</Tooltip>

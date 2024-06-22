@@ -159,7 +159,6 @@
 		"noResults": "No Results",
 
 		"rowsPerPage": "Rows per Page",
-
 		"currentPage": "Page {page} of {pages}",
 
 		"Dialogs": {
@@ -236,7 +235,7 @@
 			"stepsNext": {
 				"todo": "Start Progressing",
 				"inProgress": "Finish",
-				"done": "Todo"
+				"done": "Reset"
 			},
 			"priorities": {
 				"high": "High Priority",
@@ -297,17 +296,23 @@
 
 			"title": "Users",
 
-			"login": "Login",
+			"username": "Username",
 			"name": "Name",
-			"action": "Action",
+			"actions": "Actions",
 
 			"viewHistory": "View History",
+			"edit": "Edit",
 
 			"searchName": "Search for name...",
+			
+			"noResults": "No Results",
+	
+			"rowsPerPage": "Rows per Page",
+			"currentPage": "Page {page} of {pages}",
 
 			"Dialogs": {
 				"Add": {
-					"title": "Create entry",
+					"title": "Create user",
 					"buttonToolTip": "Create a new user",
 
 					"username": "Username",
@@ -328,7 +333,7 @@
 					}
 				},
 				"Edit": {
-					"title": "Edit entry",
+					"title": "Edit user",
 
 					"preferences": "Preferences",
 					"chips": "Chips",

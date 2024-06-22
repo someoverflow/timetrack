@@ -159,7 +159,6 @@
 		"noResults": "Keine Ergebnisse",
 
 		"rowsPerPage": "Zeilen pro Seite",
-
 		"currentPage": "Seite {page} von {pages}",
 
 		"Dialogs": {
@@ -236,7 +235,7 @@
 			"stepsNext": {
 				"todo": "Anfangen",
 				"inProgress": "Fertigstellen",
-				"done": "Todo"
+				"done": "Rücksetzen"
 			},
 			"priorities": {
 				"high": "Hohe Priorität",
@@ -297,17 +296,23 @@
 
 			"title": "Benutzer",
 
-			"login": "Login",
+			"username": "Benutzername",
 			"name": "Name",
-			"action": "Aktionen",
+			"actions": "Aktionen",
 
 			"viewHistory": "Verlauf Anschauen",
+			"edit": "Bearbeiten",
 
 			"searchName": "Suche nach Namen...",
 
+			"noResults": "Keine Ergebnisse",
+
+			"rowsPerPage": "Zeilen pro Seite",
+			"currentPage": "Seite {page} von {pages}",
+
 			"Dialogs": {
 				"Add": {
-					"title": "Eintrag hinzufügen",
+					"title": "Benutzer hinzufügen",
 					"buttonToolTip": "Erstelle einen Benutzer",
 
 					"username": "Benutzer",
@@ -328,7 +333,7 @@
 					}
 				},
 				"Edit": {
-					"title": "Eintrag bearbeiten",
+					"title": "Benutzer bearbeiten",
 
 					"preferences": "Einstellungen",
 					"chips": "Chips",

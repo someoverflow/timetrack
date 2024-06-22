@@ -197,7 +197,7 @@ export const columns: ColumnDef<
 										<br />
 										<span className="text-primary flex flex-row items-center gap-1">
 											<MousePointerClick className="h-4 w-4 inline-flex" />{" "}
-											{t("stepsNext.todo")}
+											{t("stepsNext.inProgress")}
 										</span>
 									</div>
 								)}
@@ -207,7 +207,7 @@ export const columns: ColumnDef<
 										<br />
 										<span className="text-primary flex flex-row items-center gap-1">
 											<MousePointerClick className="h-4 w-4 inline-flex" />{" "}
-											{t("stepsNext.todo")}
+											{t("stepsNext.done")}
 										</span>
 									</div>
 								)}
@@ -322,21 +322,6 @@ export const columns: ColumnDef<
 				</div>
 			);
 		},
-	},
-	{
-		id: "archived",
-		accessorKey: "archived",
-		enableHiding: false,
-	},
-	{
-		id: "archived",
-		accessorKey: "archived",
-		enableHiding: false,
-	},
-	{
-		id: "hidden",
-		accessorKey: "hidden",
-		enableHiding: false,
 	},
 	{
 		id: "actions",
