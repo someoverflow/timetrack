@@ -36,7 +36,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, ChevronsUpDown, SaveAll, Trash, Trash2 } from "lucide-react";
 
 // Database
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Time, Todo } from "@prisma/client";
 
 // Navigation
 import { useRouter } from "next/navigation";
@@ -241,8 +241,34 @@ export default function TimerInfo({
 		if (resultData.success) {
 			setVisible(false);
 
+			console.log(resultData.result);
+			const undoTime: Time = resultData.result;
+
 			toast.success("Successfully deleted entry", {
 				duration: 3000,
+				action: undoTime.end
+					? {
+							label: "Undo",
+							onClick: async () => {
+								const result = await fetch("/api/times", {
+									method: "POST",
+									body: JSON.stringify({
+										userId: data.userId,
+										notes: undoTime.notes,
+										traveledDistance:
+											undoTime.traveledDistance === 0 ? null : undoTime,
+										start: undoTime.start,
+										end: undoTime.end,
+										startType: undoTime.startType ?? undefined,
+										endType: undoTime.endType ?? undefined,
+										project: undoTime.projectName ?? undefined,
+									}),
+								});
+								console.log("Undo:", result);
+								router.refresh();
+							},
+						}
+					: undefined,
 			});
 			router.refresh();
 			return;
