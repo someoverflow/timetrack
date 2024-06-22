@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronDown, ListPlus } from "lucide-react";
+import { Check, ChevronDown, ListPlus, Loader } from "lucide-react";
 import TimerAdd from "./timer-add";
 
 // Database
@@ -31,7 +31,7 @@ import type { Prisma } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // React
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -67,6 +67,8 @@ export default function TimerSection({
 	const router = useRouter();
 	const pathname = usePathname();
 
+	const [isPending, startTransition] = useTransition();
+
 	const searchParams = useSearchParams();
 	const editTime = searchParams.get("edit");
 
@@ -82,7 +84,9 @@ export default function TimerSection({
 		const search = current.toString();
 		const query = search ? `?${search}` : "";
 		router.push(`${pathname}${query}`);
-		router.refresh();
+		startTransition(() => {
+			router.refresh();
+		});
 	};
 
 	const historyDays = history[yearMonth]
@@ -150,6 +154,14 @@ export default function TimerSection({
 							</Command>
 						</PopoverContent>
 					</Popover>
+				</div>
+				<div className="grid place-items-center">
+					<Loader
+						className={cn(
+							"h-5 w-0 transition-all",
+							isPending && "w-5 animate-spin",
+						)}
+					/>
 				</div>
 				<div className="w-max">
 					<TimerExportDialog
