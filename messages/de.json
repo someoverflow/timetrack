@@ -336,6 +336,7 @@
 					"title": "Benutzer bearbeiten",
 
 					"preferences": "Einstellungen",
+					"details": "Details",
 					"chips": "Chips",
 
 					"username": "Benutzer",
@@ -344,6 +345,9 @@
 					"role": "Rolle",
 					"password": "Passwort",
 					"passwordPlaceholder": "Neues Passwort",
+
+					"updated": "Aktuallisiert",
+					"created": "Erstellt",
 
 					"addChip": "Chip Hinzufügen",
 

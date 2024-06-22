@@ -123,6 +123,8 @@ export default function NavigationSection({
 							</Link>
 						</MenubarItem>
 					)}
+					
+					<MenubarSeparator />
 
 					<MenubarItem asChild>
 						<Link href="/signout" prefetch>

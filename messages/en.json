@@ -304,9 +304,9 @@
 			"edit": "Edit",
 
 			"searchName": "Search for name...",
-			
+
 			"noResults": "No Results",
-	
+
 			"rowsPerPage": "Rows per Page",
 			"currentPage": "Page {page} of {pages}",
 
@@ -336,6 +336,7 @@
 					"title": "Edit user",
 
 					"preferences": "Preferences",
+					"details": "Details",
 					"chips": "Chips",
 
 					"username": "Login Name",
@@ -344,6 +345,9 @@
 					"role": "Role",
 					"password": "Password",
 					"passwordPlaceholder": "New Password",
+
+					"updated": "Updated",
+					"created": "Created",
 
 					"addChip": "Add new Chip",
 

@@ -385,12 +385,15 @@ export default function UserEdit({ user }: { user: User }) {
 
 					<div className="w-full flex flex-col gap-2">
 						<Tabs defaultValue="preferences">
-							<TabsList className="grid w-full grid-cols-2 h-fit">
+							<TabsList className="grid w-full grid-cols-3 h-fit">
 								<TabsTrigger value="preferences">
 									{t("Dialogs.Edit.preferences")}
 								</TabsTrigger>
 								<TabsTrigger value="chips">
 									{t("Dialogs.Edit.chips")}
+								</TabsTrigger>
+								<TabsTrigger value="details">
+									{t("Dialogs.Edit.details")}
 								</TabsTrigger>
 							</TabsList>
 							<TabsContent value="preferences">
@@ -526,25 +529,6 @@ export default function UserEdit({ user }: { user: User }) {
 												onChange={(e) => setData({ password: e.target.value })}
 											/>
 										</div>
-
-										<div id="divider" className="h-1" />
-
-										<div className="grid w-full items-center gap-1.5">
-											<Label
-												htmlFor="id"
-												className="pl-2 text-muted-foreground"
-											>
-												ID
-											</Label>
-											<Input
-												disabled
-												className="w-full border-2 font-mono"
-												type="text"
-												name="Id"
-												id="id"
-												value={user.id}
-											/>
-										</div>
 									</div>
 								</ScrollArea>
 							</TabsContent>
@@ -616,6 +600,68 @@ export default function UserEdit({ user }: { user: User }) {
 												</div>
 											</div>
 										))}
+									</div>
+								</ScrollArea>
+							</TabsContent>
+							<TabsContent value="details">
+								<ScrollArea
+									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+									type="always"
+								>
+									<div className="grid gap-4 p-1 w-full">
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="updatedAt"
+												className="pl-2 text-muted-foreground"
+											>
+												{t("Dialogs.Edit.updated")}
+											</Label>
+											<Input
+												disabled
+												className="w-full font-mono"
+												type="datetime-local"
+												name="Updated At"
+												id="updatedAt"
+												value={user.updatedAt
+													.toLocaleString("sv")
+													.replace(" ", "T")}
+											/>
+										</div>
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="createdAt"
+												className="pl-2 text-muted-foreground"
+											>
+												{t("Dialogs.Edit.created")}
+											</Label>
+											<Input
+												disabled
+												className="w-full font-mono"
+												type="datetime-local"
+												name="Created At"
+												id="createdAt"
+												value={user.createdAt
+													.toLocaleString("sv")
+													.replace(" ", "T")}
+											/>
+										</div>
+										<div id="divider" className="h-1" />
+										<div className="grid w-full items-center gap-1.5">
+											<Label
+												htmlFor="id"
+												className="pl-2 text-muted-foreground"
+											>
+												ID
+											</Label>
+											<Input
+												disabled
+												className="w-full border-2 font-mono"
+												type="text"
+												name="Id"
+												id="id"
+												value={user.id}
+											/>
+										</div>
 									</div>
 								</ScrollArea>
 							</TabsContent>
