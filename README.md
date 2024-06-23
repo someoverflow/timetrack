@@ -60,19 +60,20 @@ docker run --name timetrack -p 8080:3000
 
 ## Environment Variables
 
-| Variable            | Description                                       | Default     |
-| ------------------- | ------------------------------------------------- | ----------- |
-| PORT                | Port                                              | 3000        |
-| HOSTNAME            | Hostname                                          | "0.0.0.0"   |
-| BACKUP              | Execute mysqldumps to a mountable volume (Docker) | false       |
-| BACKUP_DELAY        | Delay when the Backup executes in seconds         | 86400 (24h) |
-| DATABASE_HOST       | MySQL Database Hostname or IP                     | localhost   |
-| DATABASE_PORT       | MySQL Database Port                               | 3306        |
-| DATABASE_USER       | MySQL Database Username                           | timetrack   |
-| DATABASE_PASSWORD   | MySQL Database Password                           | timetrack   |
-| DATABASE_DB         | MySQL Database                                    | timetrack   |
-| AUTH_SECRET         | Used to encrypt the Auth.js JWT                   | *Generated* |
-| NEXT_PUBLIC_API_URL | The URL that is mainly used *(AuthJS)*            |             |
+| Variable            | Description                                          | Default      |
+|---------------------|------------------------------------------------------|--------------|
+| `PORT`              | The port number on which the application listens     | `3000`       |
+| `HOSTNAME`          | The hostname or IP address the server binds to       | `"0.0.0.0"`  |
+| `BACKUP`            | Enables MySQL dumps to a mountable Docker volume     | `false`      |
+| `BACKUP_DELAY`      | Interval in seconds between backup executions        | `86400` (24h)|
+| `DATABASE_HOST`     | Hostname or IP of the MySQL database                 | `localhost`  |
+| `DATABASE_PORT`     | Port number of the MySQL database                    | `3306`       |
+| `DATABASE_USER`     | Username for connecting to the MySQL database        | `timetrack`  |
+| `DATABASE_PASSWORD` | Password for the MySQL database user                 | `timetrack`  |
+| `DATABASE_DB`       | Name of the MySQL database                           | `timetrack`  |
+| `AUTH_SECRET`       | Secret key for encrypting Auth.js JWT                | *Generated*  |
+| `NEXT_PUBLIC_API_URL` | The primary API URL used by the application        | *(empty)*    |
+
 
 **Docker Volumes**
 | Name   | Path       |
