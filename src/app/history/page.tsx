@@ -10,11 +10,8 @@ import { auth } from "@/lib/auth";
 // Navigation
 import { redirect } from "next/navigation";
 
-// React
-import type { Metadata } from "next";
-
 // Utils
-import { getTotalTime, months } from "@/lib/utils";
+import { sumTimes, months } from "@/lib/utils";
 import { TimerAddServer } from "./timer-add";
 import { getTranslations } from "next-intl/server";
 
@@ -89,14 +86,11 @@ export default async function History({
 	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
 		yearMonth = Object.keys(historyData)[0];
 
-	const timeStrings = (historyData[yearMonth] || [])
-		.map((data) => data.time)
-		.filter(Boolean); // Remove all undefined or null
-
+	const timeStrings = historyData[yearMonth]
+		.filter((data) => data.time !== null)
+		.map((e) => e.time);
 	const totalTime =
-		timeStrings.length === 0
-			? "00:00:00"
-			: getTotalTime(timeStrings as string[]);
+		timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
 
 	return (
 		<Navigation>

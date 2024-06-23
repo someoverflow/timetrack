@@ -7,7 +7,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { cn, getTotalTime } from "@/lib/utils";
+import { cn, sumTimes } from "@/lib/utils";
 
 import type { Prisma } from "@prisma/client";
 import {
@@ -139,9 +139,7 @@ export default function TimerExportDialog({
 			.map((data) => data.time)
 			.filter(Boolean); // Remove all undefined or null
 		const totalTime =
-			timeStrings.length === 0
-				? "00:00:00"
-				: getTotalTime(timeStrings as string[]);
+			timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
 
 		// Prepare CSV
 		let result = "";

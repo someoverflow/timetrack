@@ -36,23 +36,28 @@ export function validatePassword(password: string): boolean {
 
 export function getTimePassed(start: Date, end: Date): string {
 	const msPassed = Math.abs(start.getTime() - end.getTime());
-	const date = new Date(Date.UTC(0, 0, 0, 0, 0, 0, msPassed));
-	return [date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
-		.map((s) => String(s).padStart(2, "0"))
+	const totalSeconds = Math.floor(msPassed / 1000);
+
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+
+	return [hours, minutes, seconds]
+		.map((unit) => unit.toString().padStart(2, "0"))
 		.join(":");
 }
 
-export function getTotalTime(times: string[]): string {
+export function sumTimes(times: string[]): string {
 	const totalSeconds = times.reduce((total, timeString) => {
 		const [hours, minutes, seconds] = timeString.split(":").map(Number);
 		return total + hours * 3600 + minutes * 60 + seconds;
 	}, 0);
 
-	const totalHours = Math.floor(totalSeconds / 3600);
-	const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
-	const remainingSeconds = totalSeconds % 60;
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
 
-	return `${totalHours.toString().padStart(2, "0")}:${totalMinutes
+	return `${hours.toString().padStart(2, "0")}:${minutes
 		.toString()
-		.padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+		.padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }

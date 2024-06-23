@@ -15,5 +15,6 @@
     },
     "[shellscript]": {
         "editor.defaultFormatter": "shakram02.bash-beautify"
-    }
+    },
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }

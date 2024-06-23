@@ -13,7 +13,7 @@ import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
 // Utils
-import { getTotalTime, months } from "@/lib/utils";
+import { sumTimes, months } from "@/lib/utils";
 import { TimerAddServer } from "../timer-add";
 import { badgeVariants } from "@/components/ui/badge";
 import { getTranslations } from "next-intl/server";
@@ -106,14 +106,11 @@ export default async function History({
 	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
 		yearMonth = Object.keys(historyData)[0];
 
-	const timeStrings: string[] = [];
-	try {
-		for (const data of historyData[yearMonth]) {
-			if (data.time) timeStrings.push(data.time);
-		}
-	} catch (e) {}
+	const timeStrings = historyData[yearMonth]
+		.filter((data) => data.time !== null)
+		.map((e) => e.time);
 	const totalTime =
-		timeStrings.length === 0 ? "00:00:00" : getTotalTime(timeStrings);
+		timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
 
 	return (
 		<Navigation>
