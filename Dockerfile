@@ -17,6 +17,7 @@ RUN npm run build
 
 FROM base AS runner
 WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 
 RUN apk add --no-cache openssl mysql-client mariadb-connector-c
 
