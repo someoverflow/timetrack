@@ -17,7 +17,6 @@ echo ""
     
     echo "start prisma generation"
     
-    npm i prisma --yes --no-fund --loglevel error
     npx --yes prisma db push --accept-data-loss --skip-generate
     node prisma/seed.js
 }
