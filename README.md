@@ -49,11 +49,11 @@ docker build -t some/timetrack:prod .
 
 **Run the Docker Image**
 ```bash
-docker run --name timetrack -p 8080:3000 
---env=DATABASE_HOST=<DatabaseHost> 
---env=DATABASE_USER=<DatabaseUser> 
---env=DATABASE_PASSWORD=<DatabasePassword> 
---env=DATABASE_DB=<Database>
+docker run --name timetrack -p 8080:3000 \
+--env=DATABASE_HOST=<DatabaseHost> \
+--env=DATABASE_USER=<DatabaseUser> \
+--env=DATABASE_PASSWORD=<DatabasePassword> \
+--env=DATABASE_DB=<Database> \
 -d some/timetrack:prod
 ```
 
