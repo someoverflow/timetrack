@@ -294,9 +294,10 @@ export default function TimerInfo({
 
 	const preventClosing = () => {
 		let prevent = false;
+
 		if (state.loading) prevent = true;
 
-		if (state.notes !== data.notes ?? "") prevent = true;
+		if (state.notes !== (data.notes ?? "")) prevent = true;
 
 		if (
 			state.start !== data.start.toLocaleString("sv").replace(" ", "T") ||
@@ -388,7 +389,7 @@ export default function TimerInfo({
 			</SwipeableListItem>
 
 			<Dialog
-				key={`timerModal-${data.id}`}
+				key={`timer-modal-${data.id}`}
 				open={visible}
 				onOpenChange={(e) => setVisible(e)}
 			>
