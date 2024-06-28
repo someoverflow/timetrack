@@ -54,7 +54,7 @@
 
 				"delete": "Delete",
 				"save": "Save",
-				"saveDetails": "Save Details"
+				"saveDetails": "Save + Stop"
 			},
 			"Create": {
 				"title": "Create entry",

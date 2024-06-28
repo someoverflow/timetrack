@@ -54,7 +54,7 @@
 
 				"delete": "Löschen",
 				"save": "Speichern",
-				"saveDetails": "Details Speichern"
+				"saveDetails": "Speichern + Stoppen"
 			},
 			"Create": {
 				"title": "Eintrag hinzufügen",

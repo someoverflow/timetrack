@@ -719,7 +719,7 @@ export default function TimerInfo({
 									disabled={state.loading}
 								>
 									<SaveAll className="mr-2 h-4 w-4" />
-									{t("Dialogs.Edit.saveDetails")}
+									{t("Dialogs.Edit.save")}
 								</Button>
 							)}
 							<Button
@@ -728,7 +728,9 @@ export default function TimerInfo({
 								disabled={state.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
-								{t("Dialogs.Edit.save")}
+								{t(
+									!data.end ? "Dialogs.Edit.saveDetails" : "Dialogs.Edit.save",
+								)}
 							</Button>
 						</div>
 					</div>
