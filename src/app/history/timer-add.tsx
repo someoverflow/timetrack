@@ -173,9 +173,9 @@ export default function TimerAdd({
 							<TabsTrigger className="w-full" value="time">
 								{t("Dialogs.Create.time")}
 							</TabsTrigger>
-							<TabsTrigger className="w-full" value="breaks">
+							{/* <TabsTrigger className="w-full" value="breaks">
 								{t("Dialogs.Create.breaks")}
-							</TabsTrigger>
+							</TabsTrigger> */}
 						</TabsList>
 						<TabsContent value="details">
 							<ScrollArea
@@ -519,9 +519,9 @@ export function TimerAddServer({
 								<TabsTrigger className="w-full" value="time">
 									{t("Dialogs.Create.time")}
 								</TabsTrigger>
-								<TabsTrigger className="w-full" value="breaks">
-									{t("Dialogs.Create.breaks")}
-								</TabsTrigger>
+								{/* <TabsTrigger className="w-full" value="breaks">
+								{t("Dialogs.Create.breaks")}
+							</TabsTrigger> */}
 							</TabsList>
 							<TabsContent value="details">
 								<ScrollArea

@@ -256,7 +256,9 @@ export default function TimerInfo({
 										userId: data.userId,
 										notes: undoTime.notes,
 										traveledDistance:
-											undoTime.traveledDistance === 0 ? null : undoTime,
+											undoTime.traveledDistance === 0
+												? null
+												: undoTime.traveledDistance,
 										start: undoTime.start,
 										end: undoTime.end,
 										startType: undoTime.startType ?? undefined,
@@ -417,9 +419,9 @@ export default function TimerInfo({
 								<TabsTrigger className="w-full" value="time">
 									{t("Dialogs.Edit.time")}
 								</TabsTrigger>
-								<TabsTrigger className="w-full" value="breaks">
+								{/* <TabsTrigger className="w-full" value="breaks">
 									{t("Dialogs.Edit.breaks")}
-								</TabsTrigger>
+								</TabsTrigger> */}
 							</TabsList>
 							<TabsContent value="details">
 								<ScrollArea

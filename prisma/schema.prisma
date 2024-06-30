@@ -71,7 +71,7 @@ model Time {
 
   traveledDistance Int? @map("traveled_distance") // Stored in km
 
-  materials String      @default("[]") // Array of materials used
+  materials String      @default("[]") // Array of materials used [{"name":_,"price":_}]
   breaks    TimeBreak[] @relation("break")
 
   project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
