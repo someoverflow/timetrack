@@ -29,6 +29,7 @@ export default async function AdminUserPage({
 }) {
 	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
+	if (session.user.role !== "ADMIN") return redirect("/");
 	const user = session.user;
 
 	const t = await getTranslations("Admin.Users");
