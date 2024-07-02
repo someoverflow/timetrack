@@ -492,10 +492,12 @@ export function TimerAddServer({
 				</TooltipTrigger>
 
 				<TooltipContent>
-					{t.rich("Dialogs.Create.first.description", {
-						p: (chunks: string) => <p>{chunks}</p>,
-						// biome-ignore lint/suspicious/noExplicitAny: Typescript does not want this
-					} as any)}
+					<div
+						className="text-center"
+						dangerouslySetInnerHTML={{
+							__html: t.raw("Dialogs.Create.first.description"),
+						}}
+					/>
 				</TooltipContent>
 			</Tooltip>
 			<Dialog

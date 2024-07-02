@@ -61,7 +61,7 @@
 
 				"first": {
 					"title": "Add the first entry",
-					"description:": "<p>We have not found any data.</p><p>You can create a new entry here</p><p>manually or start the timer.</p>"
+					"description": "<p>We have not found any data.</p><p>You can create a new entry here</p><p>manually or start the timer.</p>"
 				},
 
 				"details": "Details",
