@@ -231,7 +231,7 @@ export default function TimerAdd({
 														</Link>
 													</div>
 												) : (
-													<CommandGroup>
+													<CommandGroup className="max-h-60">
 														{projects.map((project) => (
 															<CommandItem
 																key={`project-selection-add-${project.name}`}
@@ -580,7 +580,7 @@ export function TimerAddServer({
 															</Link>
 														</div>
 													) : (
-														<CommandGroup>
+														<CommandGroup className="max-h-60">
 															{projects.map((project) => (
 																<CommandItem
 																	key={`project-selection-add-${project.name}`}
