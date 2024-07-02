@@ -10,6 +10,7 @@ interface Timer {
 
 	time: string | null;
 	notes: string | null;
+	
 	state: string | null;
 }
 

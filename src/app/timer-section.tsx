@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import { toast } from "sonner";
 
-import { PlayCircle, RefreshCcw, StopCircle, X } from "lucide-react";
+import { PlayCircle, RefreshCcw, RefreshCw, StopCircle, X } from "lucide-react";
 import { getTimePassed } from "@/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -217,7 +217,7 @@ export default function TimerSection() {
 	return (
 		<>
 			<div>
-				<Card className="w-[350px]">
+				<Card className="w-[95vw] max-w-[400px]">
 					<CardHeader>
 						<div className="w-full flex justify-center items-center flex-row gap-2">
 							<ToggleSection
@@ -284,8 +284,12 @@ function ToggleSection({
 
 	if (!loaded) {
 		return (
-			<Button className="btn-lg btn-loading" disabled>
-				<RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+			<Button
+				variant="default"
+				className="font-mono text-2xl h-32 rounded-md w-full"
+				disabled
+			>
+				<RefreshCw className="mr-2 h-6 w-6 animate-spin" />
 				{t("updating")}
 			</Button>
 		);
@@ -297,10 +301,10 @@ function ToggleSection({
 				<TooltipTrigger asChild>
 					<Button
 						variant="destructive"
-						className="font-mono"
+						className="font-mono text-2xl h-32 rounded-md w-full"
 						onClick={() => toggleTimer(false)}
 					>
-						<StopCircle className="mr-2 h-4 w-4" />
+						<StopCircle className="mr-2 h-6 w-6" />
 						<p>{t("stop")}</p>
 					</Button>
 				</TooltipTrigger>
@@ -316,10 +320,10 @@ function ToggleSection({
 			<TooltipTrigger asChild>
 				<Button
 					variant="secondary"
-					className="font-mono"
+					className="font-mono text-2xl h-32 rounded-md w-full"
 					onClick={() => toggleTimer(true)}
 				>
-					<PlayCircle className="mr-2 h-4 w-4" />
+					<PlayCircle className="mr-2 h-6 w-6" />
 					<p>{t("start")}</p>
 				</Button>
 			</TooltipTrigger>

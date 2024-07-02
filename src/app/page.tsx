@@ -10,7 +10,7 @@ export default async function Home() {
 
 	return (
 		<Navigation>
-			<section className="min-h-[90svh] flex flex-col items-center justify-center gap-4">
+			<section className="min-h-[70svh] flex flex-col items-center justify-center gap-4">
 				{user.name && (
 					<h1 className="text-2xl font-mono text-content3">{user.name}</h1>
 				)}
