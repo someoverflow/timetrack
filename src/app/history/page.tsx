@@ -86,7 +86,7 @@ export default async function History({
 	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
 		yearMonth = Object.keys(historyData)[0];
 
-	const timeStrings = historyData[yearMonth]
+	const timeStrings = (historyData[yearMonth] ?? [])
 		.filter((data) => data.time !== null)
 		.map((e) => e.time);
 	const totalTime =

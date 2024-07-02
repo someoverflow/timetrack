@@ -262,6 +262,20 @@ export const PUT = auth(async (request) => {
 		return badRequestResponse(validationResult.error.issues, "validation");
 	const data = validationResult.data;
 
+	if (
+		!(
+			data.notes ||
+			data.project ||
+			data.project === null ||
+			data.start ||
+			data.end ||
+			data.startType ||
+			data.endType ||
+			data.traveledDistance
+		)
+	)
+		return NextResponse.json(result, { status: result.status });
+
 	// Check the time entry
 	let dbStarted: Date | undefined = undefined;
 	let dbStopped: Date | undefined = undefined;

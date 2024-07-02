@@ -117,36 +117,6 @@ export const timesPutApiValidation = z
 		id: true,
 	})
 	.superRefine((data, ctx) => {
-		if (
-			!(
-				data.notes ||
-				data.project ||
-				data.project === null ||
-				data.start ||
-				data.end ||
-				data.startType ||
-				data.endType ||
-				data.traveledDistance
-			)
-		)
-			ctx.addIssue({
-				code: "custom",
-				message:
-					"One of the fields must be given (notes, project, time, distance)",
-				path: ["notes", "project", "start", "end", "traveledDistance"],
-			});
-
-		/**
-		if (data.start || data.end) {
-			if ((data.start && !data.end) || (data.end && !data.start))
-				ctx.addIssue({
-					code: "custom",
-					message: "Start and End must be given",
-					path: ["start", "end"],
-				});
-		}
-			 */
-
 		if (data.end && data.start ? data.end < data.start : false)
 			ctx.addIssue({
 				code: "custom",
