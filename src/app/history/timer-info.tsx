@@ -472,7 +472,7 @@ export default function TimerInfo({
 														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 															<p>{t("Dialogs.Edit.project.noProjects")}</p>
 															<Link
-																href="http://localhost:3000/settings?page=projects"
+																href="/projects"
 																className={buttonVariants({
 																	variant: "link",
 																	className: "flex-col items-start",

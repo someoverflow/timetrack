@@ -764,7 +764,7 @@ export function TodoTableEdit({
 															<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 																<p>{t("Dialogs.Edit.noProjectsFound")}</p>
 																<Link
-																	href="/settings?page=projects"
+																	href="/projects"
 																	prefetch={false}
 																	className={buttonVariants({
 																		variant: "link",

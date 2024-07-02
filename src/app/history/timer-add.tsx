@@ -217,7 +217,7 @@ export default function TimerAdd({
 													<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 														<p>{t("Dialogs.Create.project.noProjects")}</p>
 														<Link
-															href="http://localhost:3000/settings?page=projects"
+															href="/projects"
 															className={buttonVariants({
 																variant: "link",
 																className: "flex-col items-start",
@@ -564,7 +564,7 @@ export function TimerAddServer({
 														<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 															<p>{t("Dialogs.Create.project.noProjects")}</p>
 															<Link
-																href="/settings?page=projects"
+																href="/projects"
 																className={buttonVariants({
 																	variant: "link",
 																	className: "flex-col items-start",
