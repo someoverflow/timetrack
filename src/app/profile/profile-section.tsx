@@ -223,6 +223,41 @@ export default function ProfileSection({
 			<Separator className="w-full" />
 
 			<CardContent className="py-6">
+				<div className="grid w-full items-center gap-1.5">
+					<Label
+						htmlFor="select-language"
+						className={cn(
+							"transition-colors",
+							//data.language !== language ? "text-blue-500" : "",
+						)}
+					>
+						{t("language")}
+					</Label>
+					<Select
+						value={data.language}
+						onValueChange={(e) => {
+							setData({
+								language: e,
+							});
+							changeLanguage(e);
+						}}
+					>
+						<SelectTrigger id="select-language">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectItem value="de">{t("languages.de")}</SelectItem>
+								<SelectItem value="en">{t("languages.en")}</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</div>
+			</CardContent>
+
+			<Separator className="w-full" />
+
+			<CardContent className="py-6">
 				<div className="flex flex-col gap-4 py-2">
 					<div className="grid w-full items-center gap-1.5">
 						<Label
@@ -268,36 +303,6 @@ export default function ProfileSection({
 					</div>
 					<div className="grid w-full items-center gap-1.5">
 						<Label
-							htmlFor="select-language"
-							className={cn(
-								"transition-colors",
-								//data.language !== language ? "text-blue-500" : "",
-							)}
-						>
-							{t("language")}
-						</Label>
-						<Select
-							value={data.language}
-							onValueChange={(e) => {
-								setData({
-									language: e,
-								});
-								changeLanguage(e);
-							}}
-						>
-							<SelectTrigger id="select-language">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectGroup>
-									<SelectItem value="de">{t("languages.de")}</SelectItem>
-									<SelectItem value="en">{t("languages.en")}</SelectItem>
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-					</div>
-					<div className="grid w-full items-center gap-1.5">
-						<Label
 							htmlFor="input-password"
 							className={cn(
 								"transition-colors",
@@ -317,11 +322,7 @@ export default function ProfileSection({
 						/>
 					</div>
 				</div>
-			</CardContent>
-
-			<Separator className="w-full" />
-
-			<CardFooter className="p-6 gap-2">
+				<div className="h-4" />
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -341,7 +342,7 @@ export default function ProfileSection({
 						/>
 					</TooltipContent>
 				</Tooltip>
-			</CardFooter>
+			</CardContent>
 		</Card>
 	);
 }
