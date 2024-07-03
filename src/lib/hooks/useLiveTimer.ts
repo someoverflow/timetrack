@@ -43,7 +43,7 @@ const stateReducer = (
 	}
 };
 
-const generateTimer = (): Time => {
+const generateTimer = (project: string | undefined): Time => {
 	return {
 		id: "string",
 		userId: null,
@@ -58,18 +58,23 @@ const generateTimer = (): Time => {
 		notes: null,
 		traveledDistance: null,
 		materials: "[]",
-		projectName: null,
+		projectName: project ?? null,
 	};
 };
 
 export default function useLiveTimer() {
 	const [timer, setTimer] = useState<Time | undefined>(undefined);
+	const [project, setProject] = useState<string | undefined>(undefined);
 	const [state, dispatch] = useReducer(stateReducer, {
 		error: false,
 		loading: true,
 
 		running: false,
 	});
+
+	const debouncedLoading = useDebouncedCallback(() => {
+		dispatch({ type: "loading", value: true });
+	}, 300);
 
 	const fetchLatest = useCallback(async () => {
 		const fetchResult: APIResult | undefined = await fetch("/api/times")
@@ -95,6 +100,7 @@ export default function useLiveTimer() {
 				end: end,
 				time: getTimePassed(start, end),
 			});
+			setProject(result.projectName);
 		} else setTimer(undefined);
 
 		dispatch({ type: "running", value: result && !result.end });
@@ -120,20 +126,16 @@ export default function useLiveTimer() {
 		});
 	}, [timer, state]);
 
-	const loading = useDebouncedCallback(() => {
-		dispatch({ type: "loading", value: true });
-	}, 300);
-
 	const toggle = useCallback(
 		async (start: boolean) => {
-			loading();
+			debouncedLoading();
 
-			const tempTimer = generateTimer();
+			const tempTimer = generateTimer(project);
 			setTimer(start ? tempTimer : undefined);
 			dispatch({ type: "running", value: start });
 
 			const apiResult: APIResult | undefined = await fetch(
-				`/api/times/toggle?type=Website&fixTime=${tempTimer.start.toISOString()}`,
+				`/api/times/toggle?type=Website&fixTime=${tempTimer.start.toISOString()}${project ? `&project=${project}` : ""}`,
 				{
 					method: "PUT",
 				},
@@ -151,11 +153,50 @@ export default function useLiveTimer() {
 				return;
 			}
 
-			loading.cancel();
+			debouncedLoading.cancel();
 			dispatch({ type: "loading", value: false });
 			fetchLatest();
 		},
-		[fetchLatest, loading],
+		[debouncedLoading, project, fetchLatest],
+	);
+
+	const changeProject = useCallback(
+		async (project: string | undefined) => {
+			if (state.running && !state.loading && timer?.id !== "string") {
+				debouncedLoading();
+
+				const result: APIResult | undefined = await fetch("/api/times", {
+					method: "PUT",
+					body: JSON.stringify({
+						id: timer?.id,
+						project: project ?? null,
+					}),
+				})
+					.then((result) => result.json())
+					.catch(() => {
+						return undefined;
+					});
+
+				if (!result) {
+					dispatch({
+						type: "error",
+						toast: "An error occurred while changing the project",
+					});
+					return;
+				}
+
+				toast.success("Successfully changed project", {
+					duration: 3000,
+				});
+
+				debouncedLoading.cancel();
+				dispatch({ type: "loading", value: false });
+				fetchLatest();
+			}
+
+			setProject(project);
+		},
+		[state.running, state.loading, timer?.id, debouncedLoading, fetchLatest],
 	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
@@ -170,7 +211,6 @@ export default function useLiveTimer() {
 		}, 250);
 		return () => clearInterval(intervalId);
 	}, [state.error, state.running, calculate]);
-
 	// Fetch Interval
 	useEffect(() => {
 		const intervalId = setInterval(() => {
@@ -182,8 +222,8 @@ export default function useLiveTimer() {
 		return () => clearInterval(intervalId);
 	}, [state.error, fetchLatest]);
 
-	useDebugValue(timer);
 	useDebugValue(state);
+	useDebugValue(timer);
 
-	return { timer, state, toggle };
+	return { timer, state, project, changeProject, toggle };
 }

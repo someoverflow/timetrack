@@ -17,7 +17,14 @@
 			"start": "Start",
 			"stop": "Stop",
 			"startWithWebsite": "Start now with Website",
-			"startedWith": "Started with {startType}"
+			"startedWith": "Started with {startType}",
+
+			"projects": {
+				"none": "No Project",
+				"search": "Search...",
+				"noneFound": "No Projects found",
+				"noneFoundDescription": "Click to manage projects"
+			}
 		}
 	},
 	"History": {

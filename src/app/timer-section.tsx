@@ -4,7 +4,7 @@
 import type { Time } from "@prisma/client";
 
 // UI
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -13,67 +13,107 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
 
-import { PlayCircle, RefreshCw, StopCircle, X } from "lucide-react";
+import {
+	Check,
+	ChevronsUpDown,
+	PlayCircle,
+	RefreshCw,
+	StopCircle,
+} from "lucide-react";
 
 // Utils
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 import useLiveTimer from "@/lib/hooks/useLiveTimer";
 
-export default function TimerSection() {
-	const { timer, state, toggle } = useLiveTimer();
+export default function TimerSection({
+	projects,
+}: {
+	projects: {
+		name: string;
+	}[];
+}) {
+	const { timer, state, project, changeProject, toggle } = useLiveTimer();
 
 	return (
 		<>
 			<div>
-				<Card className="w-[95vw] max-w-[400px]">
-					<CardHeader>
-						<div className="w-full flex justify-center items-center flex-row gap-2">
-							<ToggleSection
-								loaded={!state.loading}
-								running={state.running}
-								startType={`${timer?.startType}`}
-								toggleTimer={toggle}
-							/>
-						</div>
-					</CardHeader>
+				<Card className="w-[95vw] max-w-[350px] border-2">
 					<CardContent>
-						<div className="w-full h-full flex flex-col items-center gap-6 pb-2">
-							<h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
-								{state.running && timer?.time ? timer.time : "00:00:00"}
-							</h1>
-							<TimeSection running={state.running} timer={timer} />
+						<div
+							className={cn(
+								"w-full rounded-lg bg-secondary/5 border cursor-pointer border-border pt-2 mt-6 pb-6 mb-4",
+								state.loading && "!cursor-wait",
+							)}
+							onClick={(e) => {
+								if (!state.loading && !state.error) toggle(!state.running);
+							}}
+							onKeyUp={() => {
+								if (!state.loading && !state.error) toggle(!state.running);
+							}}
+						>
+							<CardHeader className="pt-4">
+								<div className="w-full flex justify-center items-center flex-row gap-2">
+									<ToggleSection
+										running={state.running}
+										loading={state.loading}
+										startType={`${timer?.startType}`}
+									/>
+								</div>
+							</CardHeader>
+							<div className="w-full h-full flex flex-col items-center gap-6">
+								<h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
+									{state.running && timer?.time ? timer.time : "00:00:00"}
+								</h1>
+								<TimeSection timer={timer} running={state.running} />
+							</div>
 						</div>
+
+						<ProjectSelection
+							error={state.error}
+							loading={state.loading}
+							projects={projects}
+							project={project}
+							changeProject={changeProject}
+						/>
 					</CardContent>
-					{/* TODO: Project Selection */}
 				</Card>
 			</div>
 		</>
 	);
 }
 
-function ToggleSection({
-	loaded,
+const ToggleSection = ({
+	loading,
 	running,
 	startType,
-	toggleTimer,
 }: {
-	loaded: boolean;
+	loading: boolean;
 	running: boolean;
 	startType: string;
-	toggleTimer: (toggle: boolean) => void;
-}) {
+}) => {
 	const t = useTranslations("Timer.Miscellaneous");
 
-	if (!loaded) {
+	if (loading) {
 		return (
-			<Button
-				variant="default"
-				className="font-mono text-2xl h-32 rounded-md w-full"
-				disabled
-			>
-				<RefreshCw className="mr-2 h-6 w-6 animate-spin" />
+			<Button variant="default" className="font-mono" disabled>
+				<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
 				{t("updating")}
 			</Button>
 		);
@@ -83,12 +123,8 @@ function ToggleSection({
 		return (
 			<Tooltip>
 				<TooltipTrigger asChild>
-					<Button
-						variant="destructive"
-						className="font-mono text-2xl h-32 rounded-md w-full"
-						onClick={() => toggleTimer(false)}
-					>
-						<StopCircle className="mr-2 h-6 w-6" />
+					<Button variant="destructive" className="font-mono">
+						<StopCircle className="mr-2 h-4 w-4" />
 						<p>{t("stop")}</p>
 					</Button>
 				</TooltipTrigger>
@@ -102,12 +138,8 @@ function ToggleSection({
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Button
-					variant="secondary"
-					className="font-mono text-2xl h-32 rounded-md w-full"
-					onClick={() => toggleTimer(true)}
-				>
-					<PlayCircle className="mr-2 h-6 w-6" />
+				<Button variant="ghost" className="font-mono">
+					<PlayCircle className="mr-2 h-4 w-4" />
 					<p>{t("start")}</p>
 				</Button>
 			</TooltipTrigger>
@@ -116,15 +148,15 @@ function ToggleSection({
 			</TooltipContent>
 		</Tooltip>
 	);
-}
+};
 
-function TimeSection({
-	running,
+const TimeSection = ({
 	timer,
+	running,
 }: {
-	running: boolean;
 	timer: Time | undefined;
-}) {
+	running: boolean;
+}) => {
 	if (running && timer) {
 		return (
 			<div className="flex w-full justify-center items-center gap-4">
@@ -146,4 +178,87 @@ function TimeSection({
 			<Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
 		</div>
 	);
-}
+};
+
+const ProjectSelection = ({
+	loading,
+	error,
+	projects,
+	project,
+	changeProject,
+}: {
+	loading: boolean;
+	error: boolean;
+	projects: {
+		name: string;
+	}[];
+	project: string | undefined;
+	changeProject: (project: string | undefined) => void;
+}) => {
+	const t = useTranslations("Timer.Miscellaneous");
+	const [open, setOpen] = useState(false);
+
+	return (
+		<Popover open={open} onOpenChange={(open) => setOpen(open)}>
+			<PopoverTrigger asChild>
+				<Button
+					id="projects-button"
+					variant="outline"
+					role="combobox"
+					aria-expanded={open}
+					disabled={error || loading}
+					className="w-full justify-between transition duration-300"
+				>
+					<div className="flex flex-row gap-1">
+						{!project ? t("projects.none") : project}
+					</div>
+					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent className="p-2">
+				<Command>
+					<CommandInput placeholder={t("projects.search")} className="h-8" />
+					{projects.length === 0 ? (
+						<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+							<p>{t("projects.noneFound")}</p>
+							<Link
+								href="/projects"
+								prefetch={false}
+								className={buttonVariants({
+									variant: "link",
+									className: "flex-col items-start",
+								})}
+							>
+								<p>{t("projects.noneFoundDescription")}</p>
+							</Link>
+						</div>
+					) : (
+						<CommandGroup className="max-h-60 overflow-y-scroll">
+							{/* TODO: Add overflow scroll everywhere */}
+							{projects.map((proj) => (
+								<CommandItem
+									key={`project-select-${proj.name}`}
+									value={proj.name}
+									onSelect={() => {
+										changeProject(
+											project !== proj.name ? proj.name : undefined,
+										);
+										setOpen(false);
+									}}
+								>
+									<Check
+										className={cn(
+											"mr-2 h-4 w-4",
+											project === proj.name ? "opacity-100" : "opacity-0",
+										)}
+									/>
+									{proj.name}
+								</CommandItem>
+							))}
+						</CommandGroup>
+					)}
+				</Command>
+			</PopoverContent>
+		</Popover>
+	);
+};

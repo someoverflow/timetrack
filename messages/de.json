@@ -17,7 +17,14 @@
 			"start": "Start",
 			"stop": "Stop",
 			"startWithWebsite": "Starte jetzt durch die Website",
-			"startedWith": "Gestartet mit {startType}"
+			"startedWith": "Gestartet mit {startType}",
+
+			"projects": {
+				"none": "Kein Projekt",
+				"search": "Suchen...",
+				"noneFound": "Keine Projekte gefunden",
+				"noneFoundDescription": "Klicke um Projekte zu verwalten"
+			}
 		}
 	},
 	"History": {
