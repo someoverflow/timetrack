@@ -8,6 +8,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { getTimePassed } from "../utils";
+import { useDebouncedCallback } from "use-debounce";
 
 type stateReducerType = { error: boolean; loading: boolean; running: boolean };
 const stateReducer = (
@@ -119,9 +120,13 @@ export default function useLiveTimer() {
 		});
 	}, [timer, state]);
 
+	const loading = useDebouncedCallback(() => {
+		dispatch({ type: "loading", value: true });
+	}, 300);
+
 	const toggle = useCallback(
 		async (start: boolean) => {
-			dispatch({ type: "loading", value: true });
+			loading();
 
 			const tempTimer = generateTimer();
 			setTimer(start ? tempTimer : undefined);
@@ -146,10 +151,11 @@ export default function useLiveTimer() {
 				return;
 			}
 
+			loading.cancel();
 			dispatch({ type: "loading", value: false });
 			fetchLatest();
 		},
-		[fetchLatest],
+		[fetchLatest, loading],
 	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run once

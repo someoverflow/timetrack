@@ -41,11 +41,12 @@ export default function TimerSection() {
 					<CardContent>
 						<div className="w-full h-full flex flex-col items-center gap-6 pb-2">
 							<h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
-								{state.running && timer?.time ? timer?.time : "00:00:00"}
+								{state.running && timer?.time ? timer.time : "00:00:00"}
 							</h1>
 							<TimeSection running={state.running} timer={timer} />
 						</div>
 					</CardContent>
+					{/* TODO: Project Selection */}
 				</Card>
 			</div>
 		</>
