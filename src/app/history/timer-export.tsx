@@ -118,7 +118,7 @@ export default function TimerExportDialog({
 
 		setVisualisation({
 			showProject: (localShowProject ?? "true") === "true",
-			showDateColumn: (localShowDateColumn ?? "true") === "true",
+			showDateColumn: (localShowDateColumn ?? "false") === "true",
 			structurizeDateTree: (localStructurizeDateTree ?? "true") === "true",
 		});
 	}, []);

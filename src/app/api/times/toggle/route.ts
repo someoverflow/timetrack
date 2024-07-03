@@ -19,9 +19,11 @@ export const PUT = auth(async (request) => {
 	const result = defaultResult("updated");
 
 	// Validate request
+	const searchParams = request.nextUrl.searchParams;
 	const validationResult = timesToggleApiValidation.safeParse({
-		type: request.nextUrl.searchParams.get("type") ?? undefined,
-		fixTime: request.nextUrl.searchParams.get("fixTime") ?? undefined,
+		type: searchParams.get("type") ?? undefined,
+		fixTime: searchParams.get("fixTime") ?? undefined,
+		project: searchParams.get("project"),
 	});
 	if (!validationResult.success)
 		return badRequestResponse(validationResult.error.issues, "validation");
@@ -46,6 +48,7 @@ export const PUT = auth(async (request) => {
 					userId: session.user.id,
 					start: data.fixTime ?? new Date(new Date().setSeconds(0)),
 					startType: data.type ?? "API",
+					projectName: data.project ?? null,
 				},
 			});
 			result.result = createResult;
@@ -58,6 +61,7 @@ export const PUT = auth(async (request) => {
 					time: timePassed,
 					end: changeDate,
 					endType: data.type ?? "API",
+					projectName: data.project,
 				},
 				where: {
 					id: databaseResult.id,

@@ -57,6 +57,7 @@ export const timesToggleApiValidation = z
 	.object({
 		type: z.string(),
 		fixTime: z.string().datetime(),
+		project: nameValidation.nullable(),
 	})
 	.partial();
 
