@@ -486,7 +486,7 @@ export default function TimerInfo({
 															</Link>
 														</div>
 													) : (
-														<CommandGroup className="max-h-60">
+														<CommandGroup>
 															{projects.map((project) => (
 																<CommandItem
 																	key={`project-selection-${project.name}`}

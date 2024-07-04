@@ -73,7 +73,7 @@ export default function TimerSection({
 									<ToggleSection
 										running={state.running}
 										loading={state.loading}
-										startType={`${timer?.startType}`}
+										startType={timer?.startType}
 									/>
 								</div>
 							</CardHeader>
@@ -106,7 +106,7 @@ const ToggleSection = ({
 }: {
 	loading: boolean;
 	running: boolean;
-	startType: string;
+	startType: string | null | undefined;
 }) => {
 	const t = useTranslations("Timer.Miscellaneous");
 
@@ -129,7 +129,7 @@ const ToggleSection = ({
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent>
-					<p>{t("startedWith", { startType: startType })}</p>
+					{startType && <p>{t("startedWith", { startType: startType })}</p>}
 				</TooltipContent>
 			</Tooltip>
 		);
@@ -138,7 +138,7 @@ const ToggleSection = ({
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Button variant="ghost" className="font-mono">
+				<Button variant="outline" className="font-mono">
 					<PlayCircle className="mr-2 h-4 w-4" />
 					<p>{t("start")}</p>
 				</Button>
@@ -233,8 +233,7 @@ const ProjectSelection = ({
 							</Link>
 						</div>
 					) : (
-						<CommandGroup className="max-h-60 overflow-y-scroll">
-							{/* TODO: Add overflow scroll everywhere */}
+						<CommandGroup>
 							{projects.map((proj) => (
 								<CommandItem
 									key={`project-select-${proj.name}`}

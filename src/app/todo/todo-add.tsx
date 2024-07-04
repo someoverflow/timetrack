@@ -338,7 +338,7 @@ export function TodoAdd({
 														</Link>
 													</div>
 												) : (
-													<CommandGroup className="max-h-60">
+													<CommandGroup>
 														{projects.map((project) => (
 															<CommandItem
 																key={`project-selection-add-${project.name}`}
