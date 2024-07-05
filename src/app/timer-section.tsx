@@ -1,9 +1,8 @@
 "use client";
 
-// Types
+//#region Imports
 import type { Time } from "@prisma/client";
 
-// UI
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,14 +32,13 @@ import {
 	StopCircle,
 } from "lucide-react";
 
-// Utils
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import useLiveTimer from "@/lib/hooks/useLiveTimer";
 
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-
-import useLiveTimer from "@/lib/hooks/useLiveTimer";
+//#endregion
 
 export default function TimerSection({
 	projects,

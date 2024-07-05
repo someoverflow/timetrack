@@ -1,15 +1,15 @@
-// UI
+//#region Imports
 import { Toaster } from "@/components/ui/sonner";
+
 import NextTopLoader from "nextjs-toploader";
 import { JetBrains_Mono } from "next/font/google";
 
-// Translation
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
-// Provider
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider, ThemeProvider } from "@/lib/provider";
+//#endregion
 
 export async function generateMetadata() {
 	const t = await getTranslations({ namespace: "Timer.Metadata" });

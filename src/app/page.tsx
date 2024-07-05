@@ -1,8 +1,11 @@
+//#region Imports
 import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
+
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+//#endregion
 
 export default async function Home() {
 	const session = await auth();

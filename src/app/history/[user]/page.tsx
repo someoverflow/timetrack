@@ -1,32 +1,25 @@
-//UI
-import Navigation from "@/components/navigation";
-import TimerSection from "../timer-section";
-
-// Navigation
-import { redirect } from "next/navigation";
-
-// Auth
-import { auth } from "@/lib/auth";
-
-// Database
-import prisma from "@/lib/prisma";
+//#region Imports
 import type { Prisma } from "@prisma/client";
 
-// Utils
-import { sumTimes, months } from "@/lib/utils";
-import { TimerAddServer } from "../timer-add";
+import Navigation from "@/components/navigation";
 import { badgeVariants } from "@/components/ui/badge";
+
+import { TimerAddServer } from "../timer-add";
+import TimerSection from "../timer-section";
+
+import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
+//#endregion
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
 }>;
-interface Data {
-	[yearMonth: string]: Timer[];
-}
 
-function formatHistory(data: Timer[]): Data {
-	const result: Data = {};
+function formatHistory(data: Timer[]) {
+	const result: { [yearMonth: string]: Timer[] } = {};
 
 	for (const item of data) {
 		const date = new Date(item.start);
@@ -94,12 +87,6 @@ export default async function History({
 		prisma.project.findMany(),
 	]);
 
-	function dataFound(): boolean {
-		if (!history) return false;
-		if (history.length === 0) return false;
-		return !(history.length === 1 && history[0].end == null);
-	}
-
 	const historyData = history ? formatHistory(history) : {};
 
 	let yearMonth = searchParams?.ym;
@@ -131,7 +118,7 @@ export default async function History({
 
 				{target ? (
 					<>
-						{dataFound() && historyData != null ? (
+						{history.length !== 0 && historyData != null ? (
 							<TimerSection
 								history={historyData}
 								projects={projects}

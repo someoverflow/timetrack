@@ -10,7 +10,7 @@ interface Timer {
 
 	time: string | null;
 	notes: string | null;
-	
+
 	state: string | null;
 }
 
@@ -28,10 +28,25 @@ type APIResultType =
 	| "created"
 	| "updated";
 
-interface APIResult {
+type APIResult = {
 	success: boolean;
 	status: number;
-	type: APIResultType;
-	// biome-ignore lint/suspicious/noExplicitAny: API Result Data can be anything
-	result?: any;
-}
+} & (
+	| {
+			type: APIResultType;
+			// biome-ignore lint/suspicious/noExplicitAny: API Result Data can be anything
+			result?: any;
+	  }
+	| {
+			type: "validation";
+			result?: ZodIssue[];
+	  }
+	| {
+			type: "duplicate-found";
+			result?: { message: string };
+	  }
+	/* | {
+			type: "error-message";
+			result: string;
+	  } */
+);

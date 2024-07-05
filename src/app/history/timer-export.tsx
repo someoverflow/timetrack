@@ -1,22 +1,19 @@
 "use client";
-import { Button } from "@/components/ui/button";
+
+//#region Imports
+import type { Prisma } from "@prisma/client";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { cn, sumTimes } from "@/lib/utils";
-
-import type { Prisma } from "@prisma/client";
 import {
 	Tooltip,
 	TooltipTrigger,
 	TooltipContent,
 } from "@/components/ui/tooltip";
-import { Check, ChevronsUpDown, Download, FileDown } from "lucide-react";
-import { useEffect, useMemo, useReducer, useState } from "react";
 import {
 	Popover,
 	PopoverContent,
@@ -28,9 +25,17 @@ import {
 	CommandInput,
 	CommandItem,
 } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Check, ChevronsUpDown, Download, FileDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+
 import { useTranslations } from "next-intl";
+
+import { useEffect, useMemo, useReducer, useState } from "react";
+import { cn, sumTimes } from "@/lib/utils";
+//#endregion
 
 const umlautMap: Record<string, string> = {
 	"\u00dc": "UE",

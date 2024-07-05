@@ -1,11 +1,28 @@
 "use client";
 
+//#region Imports
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,29 +37,17 @@ import {
 	Eye,
 	Pencil,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useReducer, useState } from "react";
 import { toast } from "sonner";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Prisma, Role } from "@prisma/client";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+import type { Prisma, Role } from "@prisma/client";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import useRequest from "@/lib/hooks/useRequest";
+//#endregion
 
 type User = Prisma.UserGetPayload<{
 	select: {
@@ -60,8 +65,7 @@ type User = Prisma.UserGetPayload<{
 }>;
 
 interface userEditState {
-	loading: boolean;
-	loadingIndicator: string;
+	chipIndicator: string;
 	username: string;
 	name: string | null;
 	mail: string | null;
@@ -76,8 +80,7 @@ export default function UserEdit({ user }: { user: User }) {
 			...next,
 		}),
 		{
-			loading: false,
-			loadingIndicator: "",
+			chipIndicator: "",
 			username: user.username,
 			name: user.name ?? "",
 			mail: user.email,
@@ -92,247 +95,107 @@ export default function UserEdit({ user }: { user: User }) {
 
 	const router = useRouter();
 
-	async function sendRequest() {
-		setData({
-			loading: true,
-			loadingIndicator: "update",
-		});
-
-		const result = await fetch("/api/user", {
-			method: "POST",
-			body: JSON.stringify({
-				id: user.id,
-				username: data.username,
-				name: data.name,
-				mail: data.mail ?? undefined,
-				role: data.role,
-				password: data.password.trim().length === 0 ? undefined : data.password,
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+	const { status, send } = useRequest(
+		useCallback(
+			() =>
+				fetch("/api/user", {
+					method: "POST",
+					body: JSON.stringify({
+						id: user.id,
+						username: data.username,
+						name: data.name,
+						mail: data.mail ?? undefined,
+						role: data.role,
+						password:
+							data.password.trim().length === 0 ? undefined : data.password,
+					}),
+				}),
+			[data, user.id],
+		),
+		(_request) => {
 			setVisible(false);
 
 			setData({
 				password: "",
-				loadingIndicator: "",
 			});
 
-			toast.success("Successfully changed entry", {
-				duration: 3000,
+			toast.success(t("updated"), {
+				duration: 3_000,
 			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "duplicate-found":
-				toast.warning(`An error occurred (${resultData.type})`, {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-	async function sendDeleteRequest() {
-		setData({
-			loading: true,
-			loadingIndicator: "delete",
-		});
-
-		const result = await fetch("/api/user", {
-			method: "DELETE",
-			body: JSON.stringify({
-				id: user.id,
+		},
+	);
+	const { status: deleteStatus, send: sendDelete } = useRequest(
+		() =>
+			fetch("/api/user", {
+				method: "DELETE",
+				body: JSON.stringify({
+					id: user.id,
+				}),
 			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+		(_result) => {
 			setVisible(false);
 
 			setData({
-				loadingIndicator: "",
 				password: "",
 			});
 
-			toast.success("Successfully deleted entry", {
-				duration: 3000,
+			toast.success(t("deleted"), {
+				duration: 3_000,
 			});
 			router.refresh();
-			return;
-		}
+		},
+	);
 
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-
-	async function sendChipCreateRequest() {
-		setData({
-			loading: true,
-			loadingIndicator: "chipCreate",
-		});
-
-		const result = await fetch("/api/chip", {
-			method: "POST",
-			body: JSON.stringify({
-				id: data.chipAdd,
-				userId: user.id,
+	const { status: chipCreateStatus, send: sendChipCreate } = useRequest(
+		(passed: { id: string } | undefined) =>
+			fetch("/api/chip", {
+				method: "POST",
+				body: JSON.stringify({
+					id: data.chipAdd,
+					userId: user.id,
+				}),
 			}),
-		});
-
-		setData({
-			loadingIndicator: "",
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+		(_result) => {
 			setData({
 				chipAdd: "",
 			});
 
-			toast.success("Successfully linked chip", {
-				duration: 3000,
+			toast.success(t("chipAdded"), {
+				duration: 3_000,
 			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "duplicate-found":
-				toast.error("An error occurred", {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-	async function sendChipDeleteRequest(chip: string) {
-		setData({
-			loading: true,
-			loadingIndicator: `chipDelete-${chip}`,
-		});
-
-		const result = await fetch("/api/chip", {
-			method: "DELETE",
-			body: JSON.stringify({
-				id: chip,
-			}),
-		});
-
-		setData({
-			loadingIndicator: "",
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
+		},
+	);
+	const { status: chipDeleteStatus, send: sendChipDelete } = useRequest(
+		(passed: { id: string } | undefined) => {
+			setData({
+				chipAdd: passed?.id,
 			});
-			return;
-		});
-
-		if (resultData.success) {
+			return fetch("/api/chip", {
+				method: "DELETE",
+				body: JSON.stringify({
+					id: passed?.id,
+				}),
+			});
+		},
+		(_result) => {
 			setData({
 				chipAdd: "",
 			});
 
-			toast.success("Successfully removed chip", {
+			toast.success(t("chipRemoved"), {
 				duration: 3000,
 			});
 			router.refresh();
-			return;
-		}
+		},
+	);
 
-		toast.error(`An error occurred (${resultData.type})`, {
-			description:
-				typeof resultData.result === "string"
-					? resultData.result
-					: "Error could not be identified. You can try again.",
-			important: true,
-			duration: 8000,
-		});
-	}
+	const loading =
+		status.loading ||
+		deleteStatus.loading ||
+		chipCreateStatus.loading ||
+		chipDeleteStatus.loading;
 
 	return (
 		<>
@@ -557,12 +420,11 @@ export default function UserEdit({ user }: { user: User }) {
 												/>
 												<div className="w-max">
 													<Button
-														disabled={data.loading}
+														disabled={loading}
 														size="icon"
-														onClick={() => sendChipCreateRequest()}
+														onClick={() => sendChipCreate()}
 													>
-														{data.loading &&
-														data.loadingIndicator === "chipCreate" ? (
+														{loading ? (
 															<RefreshCw className="h-4 w-4 animate-spin" />
 														) : (
 															<Plus className="h-5 w-5" />
@@ -584,14 +446,12 @@ export default function UserEdit({ user }: { user: User }) {
 												</div>
 												<div className="w-max">
 													<Button
-														disabled={data.loading}
+														disabled={loading}
 														variant="secondary"
 														size="icon"
-														onClick={() => sendChipDeleteRequest(chip.id)}
+														onClick={() => sendChipDelete({ id: chip.id })}
 													>
-														{data.loading &&
-														data.loadingIndicator ===
-															`chipDelete-${chip.id}` ? (
+														{loading && data.chipIndicator === chip.id ? (
 															<RefreshCw className="h-4 w-4 animate-spin" />
 														) : (
 															<Minus className="h-5 w-5" />
@@ -670,10 +530,10 @@ export default function UserEdit({ user }: { user: User }) {
 						<div className="w-full gap-2 flex flex-row justify-end">
 							<Button
 								variant="destructive"
-								onClick={() => sendDeleteRequest()}
-								disabled={data.loading || user.username === "admin"}
+								onClick={() => sendDelete()}
+								disabled={loading || user.username === "admin"}
 							>
-								{data.loading && data.loadingIndicator === "delete" ? (
+								{loading ? (
 									<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
 								) : (
 									<Trash className="mr-2 h-4 w-4" />
@@ -682,10 +542,10 @@ export default function UserEdit({ user }: { user: User }) {
 							</Button>
 							<Button
 								variant="outline"
-								onClick={() => sendRequest()}
-								disabled={data.loading}
+								onClick={() => send()}
+								disabled={loading}
 							>
-								{data.loading && data.loadingIndicator === "update" ? (
+								{loading ? (
 									<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
 								) : (
 									<SaveAll className="mr-2 h-4 w-4" />

@@ -1,5 +1,6 @@
 "use client";
 
+//#region Imports
 import {
 	Dialog,
 	DialogContent,
@@ -23,13 +24,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListPlus, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useReducer, useState } from "react";
 import { toast } from "sonner";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
+import useRequest from "@/lib/hooks/useRequest";
+//#endregion
 
 interface userAddState {
-	loading: boolean;
 	username: string;
 	name: string;
 	password: string;
@@ -43,7 +46,6 @@ export default function UserAdd() {
 			...next,
 		}),
 		{
-			loading: false,
 			username: "",
 			name: "",
 			password: "",
@@ -58,36 +60,26 @@ export default function UserAdd() {
 
 	const router = useRouter();
 
-	async function sendRequest() {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/user", {
-			method: "PUT",
-			body: JSON.stringify({
-				username: data.username,
-				name: data.name,
-				email: data.mail.length !== 0 ? data.mail : undefined,
-				password: data.password,
-				role: data.role.toUpperCase(),
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
+	const { status, send } = useRequest(
+		useCallback(
+			() =>
+				fetch("/api/user", {
+					method: "PUT",
+					body: JSON.stringify({
+						username: data.username,
+						name: data.name,
+						email: data.mail.length !== 0 ? data.mail : undefined,
+						password: data.password,
+						role: data.role.toUpperCase(),
+					}),
+				}),
+			[data],
+		),
+		(_result) => {
+			toast.success(t("created"), {
+				duration: 5_000,
 			});
-			return;
-		});
 
-		if (resultData.success) {
 			setVisible(false);
 
 			setData({
@@ -97,38 +89,9 @@ export default function UserAdd() {
 				mail: "",
 				role: "user",
 			});
-
-			toast.success("Successfully created user", {
-				duration: 3000,
-			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "duplicate-found":
-				toast.warning(`An error occurred (${resultData.type})`, {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<>
@@ -262,8 +225,8 @@ export default function UserAdd() {
 						<div className="w-full gap-2 flex flex-row justify-end">
 							<Button
 								variant="outline"
-								onClick={() => sendRequest()}
-								disabled={data.loading}
+								onClick={() => send()}
+								disabled={status.loading}
 							>
 								<UserPlus className="mr-2 h-4 w-4" />
 								{t("Dialogs.Add.create")}

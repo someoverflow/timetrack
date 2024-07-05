@@ -74,7 +74,7 @@ export default function useLiveTimer() {
 
 	const debouncedLoading = useDebouncedCallback(() => {
 		dispatch({ type: "loading", value: true });
-	}, 300);
+	}, 500);
 
 	const fetchLatest = useCallback(async () => {
 		const fetchResult: APIResult | undefined = await fetch("/api/times")

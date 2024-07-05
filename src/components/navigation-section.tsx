@@ -1,6 +1,6 @@
 "use client";
 
-// UI
+//#region Imports
 import {
 	Menubar,
 	MenubarContent,
@@ -20,19 +20,19 @@ import {
 	MonitorSmartphone,
 	Moon,
 	Sun,
-	SunMoon,
 	SwatchBook,
 	Timer,
 	User,
 	UserIcon,
 	Users,
 } from "lucide-react";
+
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
-// Navigation
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+//#endregion
 
 export default function NavigationSection({
 	user,
@@ -123,7 +123,7 @@ export default function NavigationSection({
 							</Link>
 						</MenubarItem>
 					)}
-					
+
 					<MenubarSeparator />
 
 					<MenubarItem asChild>

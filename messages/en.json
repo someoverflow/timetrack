@@ -127,6 +127,12 @@
 			"nothingFound": "Nothing found.",
 			"userNotFound": "User not found.",
 
+			"created": "Successfully created new entry",
+			"updated": "Successfully updated entry",
+			"deleted": "Successfully deleted entry",
+
+			"undo": "Undo",
+
 			"Months": {
 				"January": "January",
 				"February": "February",
@@ -234,6 +240,10 @@
 			"hide": "Hide",
 			"show": "Show",
 
+			"changed": "Successfully changed",
+			"updated": "Successfully updated todo",
+			"created": "Successfully created todo",
+
 			"steps": {
 				"todo": "Todo",
 				"inProgress": "In Progress",
@@ -274,6 +284,11 @@
 		"password": "New Password",
 		"passwordPlaceholder": "",
 
+		"updated": "Successfully updated your profile",
+		"sessionUpdate": "Session is getting updated.",
+		"languageUpdate": "Language changed.",
+		"passwordUpdate": "Password changed. Please sign in again.",
+
 		"buttonContent": "Save",
 		"buttonToolTip": "Every device will be<br/> <u>signed out</u> after changing: <br />Name, Mail & Password"
 	},
@@ -293,6 +308,10 @@
 
 		"times": "Times: {times}",
 		"todos": "Todos: {todos}",
+
+		"saved": "Successfully saved.",
+		"created": "Successfully created project.",
+		"deleted": "Successfully deleted project.",
 
 		"Dialogs": {
 			"Edit": {
@@ -327,6 +346,13 @@
 
 			"rowsPerPage": "Rows per Page",
 			"currentPage": "Page {page} of {pages}",
+
+			"created": "Successfully created user",
+			"updated": "Successfully updated user",
+			"deleted": "Successfully deleted entry",
+
+			"chipRemoved": "Successfully removed chip",
+			"chipAdded": "Successfully linked chip",
 
 			"Dialogs": {
 				"Add": {
@@ -417,5 +443,18 @@
 		"projects": "Projects",
 		"users": "Users",
 		"signOut": "Sign Out"
+	},
+	"Error": {
+		"message": "An error occurred",
+		"resultProcessing": "Result could not be proccessed",
+
+		"unknown": {
+			"message": "An unknown error occurred {type}",
+			"description": "You can try again."
+		},
+		"validation": {
+			"message": "{message}",
+			"description": "{code}"
+		}
 	}
 }

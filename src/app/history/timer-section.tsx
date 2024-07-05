@@ -1,6 +1,6 @@
 "use client";
 
-// UI
+//#region Imports
 import {
 	Tooltip,
 	TooltipContent,
@@ -22,22 +22,20 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronDown, ListPlus, Loader } from "lucide-react";
-import TimerAdd from "./timer-add";
 
-// Database
+import TimerAdd from "./timer-add";
+import TimerExportDialog from "./timer-export";
+
 import type { Prisma } from "@prisma/client";
 
-// Navigation
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-// React
 import React, { useEffect, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
-
 import dynamic from "next/dynamic";
-import TimerExportDialog from "./timer-export";
-import { useTranslations } from "next-intl";
+//#endregion
+
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 type Timer = Prisma.TimeGetPayload<{

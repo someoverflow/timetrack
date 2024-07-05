@@ -1,6 +1,6 @@
 "use client";
 
-// UI
+//#region Imports
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,15 +8,11 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "sonner";
 
-// Auth
 import { signIn, useSession } from "next-auth/react";
-
-// Navigation
 import { useRouter } from "next/navigation";
-
-// React
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+//#endregion
 
 export default function SignIn() {
 	const session = useSession();
@@ -28,10 +24,9 @@ export default function SignIn() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
 	useEffect(() => {
 		if (!loading && session.status === "authenticated") router.replace("/");
-	}, [session, loading, setLoading]);
+	});
 
 	async function start() {
 		setLoading(true);

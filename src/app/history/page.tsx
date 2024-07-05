@@ -1,19 +1,17 @@
-// UI
+//#region Imports
+import type { Prisma } from "@prisma/client";
+
 import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
+import { TimerAddServer } from "./timer-add";
 
-// Database
-import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-// Navigation
 import { redirect } from "next/navigation";
-
-// Utils
 import { sumTimes, months } from "@/lib/utils";
-import { TimerAddServer } from "./timer-add";
 import { getTranslations } from "next-intl/server";
+//#endregion
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -75,11 +73,6 @@ export default async function History({
 		prisma.project.findMany(),
 	]);
 
-	function dataFound(): boolean {
-		if (history.length === 0) return false;
-		return !(history.length === 1 && history[0].end == null);
-	}
-
 	const historyData = formatHistory(history);
 
 	let yearMonth = searchParams?.ym;
@@ -99,7 +92,7 @@ export default async function History({
 					<p className="text-2xl font-mono">{t("PageTitle")}</p>
 				</div>
 
-				{dataFound() ? (
+				{history.length !== 0 ? (
 					<TimerSection
 						history={historyData}
 						projects={projects}

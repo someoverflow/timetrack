@@ -1,9 +1,9 @@
-// Auth
-import { auth } from "@/lib/auth";
-
-// Navigation
+//#region Imports
 import NavigationSection from "./navigation-section";
+
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+//#endregion
 
 export default async function Navigation({
 	children,

@@ -1,4 +1,3 @@
-// React
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 

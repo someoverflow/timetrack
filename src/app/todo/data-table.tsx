@@ -1,36 +1,6 @@
 "use client";
 
-import {
-	type ColumnDef,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-	type ColumnFiltersState,
-	getFilteredRowModel,
-	type RowData,
-} from "@tanstack/react-table";
-
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import React, { useTransition } from "react";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-	ChevronLeft,
-	ChevronRight,
-	ChevronsLeft,
-	ChevronsRight,
-	Filter,
-	Loader,
-	LoaderPinwheel,
-} from "lucide-react";
+//#region Imports
 import {
 	Select,
 	SelectContent,
@@ -43,14 +13,45 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+	ChevronLeft,
+	ChevronRight,
+	ChevronsLeft,
+	ChevronsRight,
+	Filter,
+	Loader,
+} from "lucide-react";
+
 import { TodoAdd } from "./todo-add";
-import { useTranslations } from "next-intl";
+
+import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
+import {
+	useReactTable,
+	flexRender,
+	getCoreRowModel,
+	getFilteredRowModel,
+	type ColumnDef,
+	type RowData,
+} from "@tanstack/react-table";
+//#endregion
 
 type UsersType = { name: string | null; username: string }[];
 type ProjectsType = {

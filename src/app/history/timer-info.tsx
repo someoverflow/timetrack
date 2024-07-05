@@ -1,6 +1,9 @@
 "use client";
 
-// UI
+//#region Imports
+import type { Prisma, Time } from "@prisma/client";
+import type { timesPutApiValidation } from "@/lib/zod";
+
 import {
 	SwipeableListItem,
 	SwipeAction,
@@ -26,28 +29,25 @@ import {
 	CommandItem,
 } from "@/components/ui/command";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, ChevronsUpDown, SaveAll, Trash, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
-// Database
-import type { Prisma, Time, Todo } from "@prisma/client";
-
-// Navigation
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
-// React
-import { useEffect, useReducer, useState } from "react";
 import Link from "next/link";
 
 import { cn, getTimePassed } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { useTranslations } from "next-intl";
+import useRequest from "@/lib/hooks/useRequest";
+//#endregion
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -56,7 +56,6 @@ interface timerInfoState {
 	notes: string;
 	start: string;
 	end: string;
-	loading: boolean;
 
 	traveledDistance: number | null;
 
@@ -81,8 +80,6 @@ export default function TimerInfo({
 			...next,
 		}),
 		{
-			loading: false,
-
 			notes: data.notes ?? "",
 			start: data.start.toLocaleString("sv").replace(" ", "T"),
 			end: data.end
@@ -126,129 +123,71 @@ export default function TimerInfo({
 		}
 	});
 
-	async function sendRequest(updateEndTime: boolean) {
-		setState({
-			loading: true,
-		});
+	const { status: updateStatus, send: sendUpdate } = useRequest(
+		useCallback(
+			(passed: { stop: boolean } | undefined) => {
+				const request: timesPutApiValidation = {
+					id: data.id,
+					notes: state.notes,
+				};
 
-		const request: Partial<{
-			id: string;
-			notes: string;
-			startType: string;
-			start: string;
-			endType: string;
-			end: string;
-			project: string | null;
-			traveledDistance: number | null;
-		}> = {
-			id: data.id,
-			notes: state.notes,
-		};
+				const startChanged =
+					state.start !== data.start.toLocaleString("sv").replace(" ", "T");
+				if (startChanged) {
+					request.startType = "Website";
+					request.start = new Date(state.start).toISOString();
+				}
 
-		const startChanged =
-			state.start !== data.start.toLocaleString("sv").replace(" ", "T");
-		if (startChanged) {
-			request.startType = "Website";
-			request.start = new Date(state.start).toISOString();
-		}
+				if (passed?.stop) {
+					const endChanged =
+						state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
 
-		if (updateEndTime) {
-			const endChanged =
-				state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
+					if (endChanged) {
+						request.endType = "Website";
+						request.end = new Date(state.end).toISOString();
+					}
+				}
 
-			if (endChanged) {
-				request.endType = "Website";
-				request.end = new Date(state.end).toISOString();
-			}
-		}
+				if (state.projectName !== data.projectName)
+					request.project = state.projectName;
 
-		if (state.projectName !== data.projectName)
-			request.project = state.projectName;
+				if (state.traveledDistance !== data.traveledDistance)
+					request.traveledDistance = state.traveledDistance;
 
-		if (state.traveledDistance !== data.traveledDistance)
-			request.traveledDistance = state.traveledDistance;
-
-		const result = await fetch("/api/times", {
-			method: "PUT",
-			body: JSON.stringify(request),
-		});
-
-		setState({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+				return fetch("/api/times", {
+					method: "PUT",
+					body: JSON.stringify(request),
+				});
+			},
+			[data, state],
+		),
+		(_result) => {
 			setVisible(false);
 
-			toast.success("Successfully updated entry", {
-				duration: 3000,
+			toast.success(t("Miscellaneous.updated"), {
+				duration: 3_000,
 			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-	async function sendDeleteRequest() {
-		setState({
-			loading: true,
-		});
-
-		const result = await fetch("/api/times", {
-			method: "DELETE",
-			body: JSON.stringify({
-				id: data.id,
+		},
+	);
+	const { status: deleteStatus, send: sendDelete } = useRequest(
+		() =>
+			fetch("/api/times", {
+				method: "DELETE",
+				body: JSON.stringify({
+					id: data.id,
+				}),
 			}),
-		});
-
-		setState({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+		(result) => {
 			setVisible(false);
 
-			console.log(resultData.result);
-			const undoTime: Time = resultData.result;
+			const undoTime: Time = result.result;
 
-			toast.success("Successfully deleted entry", {
-				duration: 3000,
+			toast.success(t("Miscellaneous.deleted"), {
+				duration: 10_000,
 				action: undoTime.end
 					? {
-							label: "Undo",
+							label: t("Miscellaneous.undo"),
 							onClick: async () => {
 								const result = await fetch("/api/times", {
 									method: "POST",
@@ -256,9 +195,9 @@ export default function TimerInfo({
 										userId: data.userId,
 										notes: undoTime.notes,
 										traveledDistance:
-											undoTime.traveledDistance === 0
-												? null
-												: undoTime.traveledDistance,
+											undoTime.traveledDistance !== 0
+												? undoTime.traveledDistance
+												: null,
 										start: undoTime.start,
 										end: undoTime.end,
 										startType: undoTime.startType ?? undefined,
@@ -273,40 +212,21 @@ export default function TimerInfo({
 					: undefined,
 			});
 			router.refresh();
-			return;
-		}
+		},
+	);
 
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-
-	const preventClosing = () => {
+	const preventClosing = useCallback(() => {
 		let prevent = false;
 
-		if (state.loading) prevent = true;
+		if (deleteStatus.loading || updateStatus.loading) prevent = true;
 
 		if (state.notes !== (data.notes ?? "")) prevent = true;
 
+		if (state.start !== data.start.toLocaleString("sv").replace(" ", "T"))
+			prevent = true;
 		if (
-			state.start !== data.start.toLocaleString("sv").replace(" ", "T") ||
-			state.end !==
-				(data.end
-					? data.end.toLocaleString("sv").replace(" ", "T")
-					: new Date().toLocaleString("sv").replace(" ", "T"))
+			data.end &&
+			state.end !== data.end.toLocaleString("sv").replace(" ", "T")
 		)
 			prevent = true;
 
@@ -317,7 +237,7 @@ export default function TimerInfo({
 			prevent = true;
 
 		return prevent;
-	};
+	}, [data, state, updateStatus, deleteStatus]);
 
 	return (
 		<>
@@ -332,7 +252,7 @@ export default function TimerInfo({
 					<TrailingActions>
 						<SwipeAction
 							destructive={true}
-							onClick={() => setTimeout(() => sendDeleteRequest(), 500)}
+							onClick={() => setTimeout(() => sendDelete(), 500)}
 						>
 							<div className="flex flex-row items-center justify-between w-full h-full p-2">
 								<Trash2
@@ -419,9 +339,6 @@ export default function TimerInfo({
 								<TabsTrigger className="w-full" value="time">
 									{t("Dialogs.Edit.time")}
 								</TabsTrigger>
-								{/* <TabsTrigger className="w-full" value="breaks">
-									{t("Dialogs.Edit.breaks")}
-								</TabsTrigger> */}
 							</TabsList>
 							<TabsContent value="details">
 								<ScrollArea
@@ -687,54 +604,39 @@ export default function TimerInfo({
 									</div>
 								</ScrollArea>
 							</TabsContent>
-							<TabsContent value="breaks" className="h-full">
-								<ScrollArea
-									className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
-									type="always"
-								>
-									<div className="grid gap-4 p-1 w-full">
-										<div className="grid w-full items-center gap-1.5">
-											<Label
-												htmlFor="name"
-												className="pl-2 text-muted-foreground"
-											>
-												In work...
-											</Label>
-										</div>
-									</div>
-								</ScrollArea>
-							</TabsContent>
 						</Tabs>
 
 						<div className="w-full gap-2 flex flex-row justify-end">
-							<Button
-								variant="destructive"
-								onClick={() => sendDeleteRequest()}
-								disabled={state.loading}
-							>
-								<Trash className="mr-2 h-4 w-4" />
-								{t("Dialogs.Edit.delete")}
-							</Button>
-							{!data.end && (
+							{data.end && (
 								<Button
-									variant="outline"
-									onClick={() => sendRequest(false)}
-									disabled={state.loading}
+									variant="destructive"
+									onClick={() => sendDelete()}
+									disabled={updateStatus.loading || deleteStatus.loading}
 								>
-									<SaveAll className="mr-2 h-4 w-4" />
-									{t("Dialogs.Edit.save")}
+									<Trash className="mr-2 h-4 w-4" />
+									{t("Dialogs.Edit.delete")}
 								</Button>
 							)}
 							<Button
 								variant="outline"
-								onClick={() => sendRequest(true)}
-								disabled={state.loading}
+								onClick={() => sendUpdate({ stop: true })}
+								disabled={updateStatus.loading || deleteStatus.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
 								{t(
 									!data.end ? "Dialogs.Edit.saveDetails" : "Dialogs.Edit.save",
 								)}
 							</Button>
+							{!data.end && (
+								<Button
+									variant="secondary"
+									onClick={() => sendUpdate({ stop: false })}
+									disabled={updateStatus.loading || deleteStatus.loading}
+								>
+									<SaveAll className="mr-2 h-4 w-4" />
+									{t("Dialogs.Edit.save")}
+								</Button>
+							)}
 						</div>
 					</div>
 				</DialogContent>

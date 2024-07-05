@@ -1,26 +1,14 @@
 "use client";
 
-// UI
-import { Button, buttonVariants } from "@/components/ui/button";
+//#region Imports
+import type { Prisma } from "@prisma/client";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Check, ChevronsUpDown, ListPlus, SaveAll } from "lucide-react";
-import { toast } from "sonner";
-
-// Navigation
-import { useRouter } from "next/navigation";
-
-// React
-import { useReducer, useState } from "react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -37,17 +25,30 @@ import {
 	CommandInput,
 	CommandItem,
 } from "@/components/ui/command";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import type { Prisma } from "@prisma/client";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Check, ChevronsUpDown, ListPlus, SaveAll } from "lucide-react";
+import { toast } from "sonner";
+
+import { useReducer, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+
+import useRequest from "@/lib/hooks/useRequest";
+
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+//#endregion
 
 interface timerAddState {
 	start: string;
 	end: string;
 	notes: string;
 	traveledDistance: number | null;
-	loading: boolean;
 	projectSelectionOpen: boolean;
 	project: string | null;
 }
@@ -63,6 +64,7 @@ export default function TimerAdd({
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
+	const router = useRouter();
 	const t = useTranslations("History");
 
 	const [data, setData] = useReducer(
@@ -77,79 +79,43 @@ export default function TimerAdd({
 				.replace(" ", "T"),
 			traveledDistance: null,
 			notes: "",
-			loading: false,
 			projectSelectionOpen: false,
 			project: null,
 		},
 	);
 
-	const router = useRouter();
-
-	async function sendRequest() {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/times", {
-			method: "POST",
-			body: JSON.stringify({
-				userId: user,
-				notes: data.notes,
-				traveledDistance:
-					data.traveledDistance === 0 ? null : data.traveledDistance,
-				start: new Date(data.start).toISOString(),
-				end: new Date(data.end).toISOString(),
-				startType: "Website",
-				endType: "Website",
-				project: data.project ?? undefined,
+	const { status, send } = useRequest(
+		() =>
+			fetch("/api/times", {
+				method: "POST",
+				body: JSON.stringify({
+					userId: user,
+					notes: data.notes,
+					traveledDistance:
+						data.traveledDistance === 0 ? null : data.traveledDistance,
+					start: new Date(data.start).toISOString(),
+					end: new Date(data.end).toISOString(),
+					startType: "Website",
+					endType: "Website",
+					project: data.project ?? undefined,
+				}),
 			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+		(_result) => {
+			setVisible(false);
 			setData({
 				start: new Date().toLocaleString("sv").replace(" ", "T"),
-				end: new Date().toLocaleString("sv").replace(" ", "T"),
+				end: new Date(new Date().setHours(new Date().getHours() + 2))
+					.toLocaleString("sv")
+					.replace(" ", "T"),
 				notes: "",
 			});
-			setVisible(false);
 
-			toast.success("Successfully created new entry", {
-				duration: 3000,
+			toast.success(t("Miscellaneous.created"), {
+				duration: 5_000,
 			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<Dialog
@@ -173,9 +139,6 @@ export default function TimerAdd({
 							<TabsTrigger className="w-full" value="time">
 								{t("Dialogs.Create.time")}
 							</TabsTrigger>
-							{/* <TabsTrigger className="w-full" value="breaks">
-								{t("Dialogs.Create.breaks")}
-							</TabsTrigger> */}
 						</TabsList>
 						<TabsContent value="details">
 							<ScrollArea
@@ -231,7 +194,6 @@ export default function TimerAdd({
 														</Link>
 													</div>
 												) : (
-
 													<CommandGroup>
 														{projects.map((project) => (
 															<CommandItem
@@ -371,11 +333,7 @@ export default function TimerAdd({
 					</Tabs>
 
 					<div className="w-full gap-2 flex flex-row justify-end">
-						<Button
-							variant="outline"
-							onClick={() => sendRequest()}
-							disabled={data.loading}
-						>
+						<Button variant="outline" onClick={send} disabled={status.loading}>
 							<SaveAll className="mr-2 h-4 w-4" />
 							{t("Dialogs.Create.create")}
 						</Button>
@@ -393,6 +351,7 @@ export function TimerAddServer({
 	user: string;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
+	const router = useRouter();
 	const t = useTranslations("History");
 
 	const [visible, setVisible] = useState(false);
@@ -408,79 +367,43 @@ export function TimerAddServer({
 				.replace(" ", "T"),
 			notes: "",
 			traveledDistance: null,
-			loading: false,
 			project: null,
 			projectSelectionOpen: false,
 		},
 	);
 
-	const router = useRouter();
-
-	async function sendRequest() {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/times", {
-			method: "POST",
-			body: JSON.stringify({
-				userId: user,
-				notes: data.notes,
-				traveledDistance:
-					data.traveledDistance === 0 ? null : data.traveledDistance,
-				start: new Date(data.start).toISOString(),
-				end: new Date(data.end).toISOString(),
-				startType: "Website",
-				endType: "Website",
-				project: data.project ?? undefined,
+	const { status, send } = useRequest(
+		() =>
+			fetch("/api/times", {
+				method: "POST",
+				body: JSON.stringify({
+					userId: user,
+					notes: data.notes,
+					traveledDistance:
+						data.traveledDistance === 0 ? null : data.traveledDistance,
+					start: new Date(data.start).toISOString(),
+					end: new Date(data.end).toISOString(),
+					startType: "Website",
+					endType: "Website",
+					project: data.project ?? undefined,
+				}),
 			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
+		(_result) => {
+			setVisible(false);
 			setData({
 				start: new Date().toLocaleString("sv").replace(" ", "T"),
-				end: new Date().toLocaleString("sv").replace(" ", "T"),
+				end: new Date(new Date().setHours(new Date().getHours() + 2))
+					.toLocaleString("sv")
+					.replace(" ", "T"),
 				notes: "",
 			});
-			setVisible(false);
 
-			toast.success("Successfully created new entry", {
-				duration: 3000,
+			toast.success(t("Miscellaneous.created"), {
+				duration: 5_000,
 			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<>
@@ -522,9 +445,6 @@ export function TimerAddServer({
 								<TabsTrigger className="w-full" value="time">
 									{t("Dialogs.Create.time")}
 								</TabsTrigger>
-								{/* <TabsTrigger className="w-full" value="breaks">
-								{t("Dialogs.Create.breaks")}
-							</TabsTrigger> */}
 							</TabsList>
 							<TabsContent value="details">
 								<ScrollArea
@@ -726,8 +646,8 @@ export function TimerAddServer({
 						<div className="w-full gap-2 flex flex-row justify-end">
 							<Button
 								variant="outline"
-								onClick={() => sendRequest()}
-								disabled={data.loading}
+								onClick={send}
+								disabled={status.loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
 								{t("Dialogs.Create.create")}
