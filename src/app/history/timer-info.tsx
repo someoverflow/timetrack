@@ -35,6 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, ChevronsUpDown, SaveAll, Trash, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -57,6 +58,8 @@ interface timerInfoState {
 	start: string;
 	end: string;
 
+	invoiced: boolean;
+
 	traveledDistance: number | null;
 
 	projectSelectionOpen: boolean;
@@ -74,23 +77,29 @@ export default function TimerInfo({
 	const t = useTranslations("History");
 	const router = useRouter();
 
-	const [state, setState] = useReducer(
-		(prev: timerInfoState, next: Partial<timerInfoState>) => ({
-			...prev,
-			...next,
-		}),
-		{
+	const generateReducer = (): timerInfoState => {
+		return {
 			notes: data.notes ?? "",
 			start: data.start.toLocaleString("sv").replace(" ", "T"),
 			end: data.end
 				? data.end.toLocaleString("sv").replace(" ", "T")
 				: new Date().toLocaleString("sv").replace(" ", "T"),
 
+			invoiced: data.invoiced,
+
 			traveledDistance: data.traveledDistance ?? null,
 
 			projectSelectionOpen: false,
 			projectName: data.projectName,
-		},
+		};
+	};
+
+	const [state, setState] = useReducer(
+		(prev: timerInfoState, next: Partial<timerInfoState>) => ({
+			...prev,
+			...next,
+		}),
+		generateReducer(),
 	);
 
 	const [blockVisible, setBlockVisible] = useState(false);
@@ -99,17 +108,8 @@ export default function TimerInfo({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run when visibility changed
 	useEffect(() => {
-		if (visible) {
-			// Reset everything when opening/closing
-			setState({
-				notes: data.notes ?? "",
-				start: data.start.toLocaleString("sv").replace(" ", "T"),
-				end: data.end
-					? data.end.toLocaleString("sv").replace(" ", "T")
-					: new Date().toLocaleString("sv").replace(" ", "T"),
-				traveledDistance: data.traveledDistance ?? null,
-			});
-		}
+		// Reset everything when opening/closing
+		if (visible) setState(generateReducer());
 	}, [visible]);
 
 	useEffect(() => {
@@ -129,6 +129,8 @@ export default function TimerInfo({
 				const request: timesPutApiValidation = {
 					id: data.id,
 					notes: state.notes,
+					invoiced:
+						data.invoiced !== state.invoiced ? state.invoiced : undefined,
 				};
 
 				const startChanged =
@@ -170,6 +172,27 @@ export default function TimerInfo({
 			router.refresh();
 		},
 	);
+	const { status: invoicedStatus, send: sendInvoiced } = useRequest(
+		(passed: { invoiced: boolean } | undefined) => {
+			const request: timesPutApiValidation = {
+				id: data.id,
+				invoiced: passed?.invoiced,
+			};
+
+			return fetch("/api/times", {
+				method: "PUT",
+				body: JSON.stringify(request),
+			});
+		},
+		(_result) => {
+			setVisible(false);
+
+			toast.success(t("Miscellaneous.updated"), {
+				duration: 3_000,
+			});
+			router.refresh();
+		},
+	);
 	const { status: deleteStatus, send: sendDelete } = useRequest(
 		() =>
 			fetch("/api/times", {
@@ -193,7 +216,7 @@ export default function TimerInfo({
 									method: "POST",
 									body: JSON.stringify({
 										userId: data.userId,
-										notes: undoTime.notes,
+										notes: undoTime.notes ?? "",
 										traveledDistance:
 											undoTime.traveledDistance !== 0
 												? undoTime.traveledDistance
@@ -239,6 +262,10 @@ export default function TimerInfo({
 		return prevent;
 	}, [data, state, updateStatus, deleteStatus]);
 
+	const changeVisibility = () => {
+		if (!blockVisible) setVisible(true);
+	};
+
 	return (
 		<>
 			<SwipeableListItem
@@ -267,12 +294,13 @@ export default function TimerInfo({
 				threshold={0.5}
 				className="p-1"
 			>
-				<button
-					type="button"
-					className="w-full font-mono p-2 select-none rounded-sm border border-border hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft"
-					onClick={() => {
-						if (!blockVisible) setVisible(true);
-					}}
+				<div
+					className={cn(
+						"w-full font-mono p-2 select-none rounded-sm border-border border-2 hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft",
+						data.invoiced && "border-border/50",
+					)}
+					onClick={changeVisibility}
+					onKeyDown={changeVisibility}
 				>
 					<div className="flex items-center justify-between pb-2">
 						{data.project ? (
@@ -282,6 +310,19 @@ export default function TimerInfo({
 						) : (
 							<div className="pb-4" />
 						)}
+
+						<div
+							onClick={(e) => e.stopPropagation()}
+							onKeyDown={(e) => e.stopPropagation()}
+						>
+							<Checkbox
+								checked={data.invoiced}
+								onCheckedChange={() =>
+									sendInvoiced({ invoiced: !data.invoiced })
+								}
+								disabled={invoicedStatus.loading}
+							/>
+						</div>
 					</div>
 
 					<div className="flex flex-row justify-evenly items-center text-lg">
@@ -307,7 +348,7 @@ export default function TimerInfo({
 								? `${data.notes?.split("\n")[0].replace("- ", "")} …`
 								: data.notes?.split("\n")[0])}
 					</p>
-				</button>
+				</div>
 			</SwipeableListItem>
 
 			<Dialog
@@ -457,6 +498,26 @@ export default function TimerInfo({
 											value={state.notes}
 											onChange={(e) => setState({ notes: e.target.value })}
 										/>
+									</div>
+
+									<div id="divider" className="h-2" />
+
+									<div
+										className={cn(
+											"flex flex-row items-center gap-2 p-2 transition-all border-l-2",
+											data.invoiced !== state.invoiced ? "border-blue-500" : "",
+										)}
+									>
+										<Checkbox
+											id="invoiced"
+											checked={state.invoiced}
+											onCheckedChange={() =>
+												setState({ invoiced: !state.invoiced })
+											}
+										/>
+										<Label htmlFor="invoiced" className="text-muted-foreground">
+											{t("Miscellaneous.invoicedSingular")}
+										</Label>
 									</div>
 
 									<div id="divider" className="h-4" />

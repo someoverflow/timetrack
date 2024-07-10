@@ -281,7 +281,8 @@ export function DataTable<TData, TValue>({
 						value={`${table.getState().pagination.pageSize}`}
 						onValueChange={(value) => {
 							table.setPageSize(Number(value));
-							document.cookie = `pageSize=${value};max-age=31536000;path=/`;
+							if (typeof document !== "undefined")
+								document.cookie = `pageSize=${value};max-age=31536000;path=/`;
 							router.refresh();
 						}}
 					>

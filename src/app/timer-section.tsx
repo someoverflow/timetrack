@@ -49,29 +49,29 @@ export default function TimerSection({
 }) {
 	const { timer, state, project, changeProject, toggle } = useLiveTimer();
 
+	const onClick = () => {
+		if (!state.loading && !state.error) toggle(!state.running);
+	};
+
 	return (
 		<>
 			<div>
-				<Card className="w-[95vw] max-w-[350px] border-2">
+				<Card className="w-[95vw] max-w-[350px] border-2 shadow-2xl">
 					<CardContent>
 						<div
 							className={cn(
-								"w-full rounded-lg bg-secondary/5 border cursor-pointer border-border pt-2 mt-6 pb-6 mb-4",
+								"w-full rounded-lg bg-secondary/5 shadow-xl border border-border cursor-pointer pt-2 mt-6 pb-6 mb-4",
 								state.loading && "!cursor-wait",
 							)}
-							onClick={(e) => {
-								if (!state.loading && !state.error) toggle(!state.running);
-							}}
-							onKeyUp={() => {
-								if (!state.loading && !state.error) toggle(!state.running);
-							}}
+							onClick={onClick}
+							onKeyUp={onClick}
 						>
 							<CardHeader className="pt-4">
 								<div className="w-full flex justify-center items-center flex-row gap-2">
 									<ToggleSection
 										running={state.running}
 										loading={state.loading}
-										startType={timer?.startType}
+										startType={timer?.startType ?? "loading..."}
 									/>
 								</div>
 							</CardHeader>
@@ -159,11 +159,11 @@ const TimeSection = ({
 		return (
 			<div className="flex w-full justify-center items-center gap-4">
 				<p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
-					{`${timer.start.toLocaleTimeString()}`}
+					{timer.start.toLocaleTimeString()}
 				</p>
 				<Separator orientation="horizontal" className="w-5" />
 				<p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
-					{`${timer.end?.toLocaleTimeString()}`}
+					{(timer.end ?? new Date()).toLocaleTimeString()}
 				</p>
 			</div>
 		);
@@ -205,7 +205,7 @@ const ProjectSelection = ({
 					role="combobox"
 					aria-expanded={open}
 					disabled={error || loading}
-					className="w-full justify-between transition duration-300"
+					className="shadow-xl w-full justify-between transition duration-300"
 				>
 					<div className="flex flex-row gap-1">
 						{!project ? t("projects.none") : project}

@@ -11,6 +11,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
 //#endregion
 
 type Timer = Prisma.TimeGetPayload<{
@@ -58,6 +59,15 @@ export default async function History({
 
 	const t = await getTranslations("History");
 
+	const cookieStore = cookies();
+
+	const invoicedCookie = cookieStore.get("invoiced")?.value;
+	const invoiced = [undefined, "true", "false"].includes(invoicedCookie)
+		? invoicedCookie
+			? invoicedCookie === "true"
+			: undefined
+		: undefined;
+
 	const [history, projects] = await prisma.$transaction([
 		prisma.time.findMany({
 			orderBy: {
@@ -65,6 +75,7 @@ export default async function History({
 			},
 			where: {
 				userId: user.id,
+				invoiced: invoiced,
 			},
 			include: {
 				project: true,
@@ -98,6 +109,7 @@ export default async function History({
 						projects={projects}
 						totalTime={totalTime}
 						yearMonth={yearMonth}
+						invoicedFilter={invoiced}
 						user={user.id ?? ""}
 					/>
 				) : (

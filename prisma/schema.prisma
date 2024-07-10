@@ -66,8 +66,9 @@ model Time {
   end       DateTime? @db.DateTime(2)
   endType   String?   @map("end_type") @db.Text
 
-  time  String? // Passed time from start to end
-  notes String? @db.MediumText
+  time     String? // Passed time from start to end
+  notes    String? @db.MediumText
+  invoiced Boolean @default(false)
 
   traveledDistance Int? @map("traveled_distance") // Stored in km
 

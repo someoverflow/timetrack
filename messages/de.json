@@ -133,6 +133,11 @@
 
 			"undo": "Zurücksetzen",
 
+			"invoicedSingular": "Berechnet",
+			"invoiced": "Berechnete Zeiten",
+			"invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
+			"invoicedExportDescription": "werden {invoiced, select, true {nur exportiert} false {nicht exportiert} other {exportiert}}",
+
 			"Months": {
 				"January": "Januar",
 				"February": "Februar",

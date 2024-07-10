@@ -157,6 +157,8 @@ export const POST = auth(async (request) => {
 
 		traveledDistance: json.traveledDistance,
 
+		invoiced: json.invoiced,
+
 		start: json.start,
 		end: json.end,
 
@@ -204,14 +206,19 @@ export const POST = auth(async (request) => {
 		const databaseResult = await prisma.time.create({
 			data: {
 				userId: data.userId ?? session.user.id,
-				projectName: data.project,
-				notes: data.notes,
-				traveledDistance: data.traveledDistance ?? null,
+
 				start: data.start,
 				end: data.end,
 				startType: data.startType ?? "API",
 				endType: data.endType ?? "API",
+
 				time: timePassed,
+
+				notes: data.notes,
+
+				projectName: data.project,
+				traveledDistance: data.traveledDistance ?? null,
+				invoiced: data.invoiced,
 			},
 		});
 
@@ -252,6 +259,8 @@ export const PUT = auth(async (request) => {
 
 		traveledDistance: json.traveledDistance,
 
+		invoiced: json.invoiced,
+
 		start: json.start,
 		end: json.end,
 
@@ -265,8 +274,9 @@ export const PUT = auth(async (request) => {
 	if (
 		!(
 			data.notes ||
+			data.notes === "" ||
+			data.invoiced !== undefined ||
 			data.project ||
-			data.project === null ||
 			data.start ||
 			data.end ||
 			data.startType ||
@@ -328,6 +338,7 @@ export const PUT = auth(async (request) => {
 		projectName: data.project,
 		notes: data.notes,
 		traveledDistance: data.traveledDistance,
+		invoiced: data.invoiced,
 	};
 
 	if (data.start && !data.end) {

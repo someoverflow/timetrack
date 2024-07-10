@@ -81,17 +81,18 @@ export const timesPostApiValidation = z
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
 
+		invoiced: z.coerce.boolean(),
+
 		traveledDistance: z.coerce.number(),
 
 		startType: z.coerce.string().trim(),
 		endType: z.coerce.string().trim(),
 	})
-	.partial({
-		userId: true,
-		project: true,
-		startType: true,
-		endType: true,
-		traveledDistance: true,
+	.partial()
+	.required({
+		notes: true,
+		start: true,
+		end: true,
 	})
 	.refine((data) => data.end > data.start, {
 		message: "The end is earlier than start",
@@ -106,6 +107,8 @@ export const timesPutApiValidation = z
 		project: nameValidation.nullable(),
 
 		traveledDistance: z.coerce.number().nullable(),
+
+		invoiced: z.coerce.boolean(),
 
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),

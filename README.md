@@ -60,7 +60,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t some/time
 docker run --name timetrack -p 8080:3000 \
 --env=DATABASE_HOST=<DatabaseHost> \
 --env=DATABASE_USER=<DatabaseUser> \
---env=DATABASE_PASSWORD=<DatabasePassword> \no
+--env=DATABASE_PASSWORD=<DatabasePassword> \
 --env=DATABASE_DB=<Database> \
 -d some/timetrack:prod
 ```

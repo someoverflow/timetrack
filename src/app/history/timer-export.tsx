@@ -2,6 +2,7 @@
 
 //#region Imports
 import type { Prisma } from "@prisma/client";
+import type { CheckedState } from "@radix-ui/react-checkbox";
 
 import {
 	Dialog,
@@ -25,6 +26,7 @@ import {
 	CommandInput,
 	CommandItem,
 } from "@/components/ui/command";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Check, ChevronsUpDown, Download, FileDown } from "lucide-react";
@@ -32,8 +34,9 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
 import { useTranslations } from "next-intl";
-
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useReducer, useState } from "react";
+
 import { cn, sumTimes } from "@/lib/utils";
 //#endregion
 
@@ -79,12 +82,19 @@ interface visualisationState {
 export default function TimerExportDialog({
 	history,
 	yearMonth,
+	invoicedFilter,
 	projects,
 }: {
 	history: Data;
 	yearMonth: string;
+	invoicedFilter: boolean | undefined;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const editTime = searchParams.get("edit");
+
 	const t = useTranslations("History");
 
 	const [filters, setFilters] = useReducer(
@@ -225,6 +235,28 @@ export default function TimerExportDialog({
 		element.click();
 	};
 
+	const updateFilter = (invoiced?: undefined | CheckedState) => {
+		if (typeof document !== "undefined") {
+			if (invoiced === "indeterminate" || invoiced === undefined)
+				document.cookie = "invoiced=undefined;max-age=0;path=/";
+			else document.cookie = `invoiced=${invoiced};max-age=31536000;path=/`;
+		}
+
+		if (editTime) {
+			const current = new URLSearchParams(Array.from(searchParams.entries()));
+			current.delete("edit");
+			const search = current.toString();
+			const query = search ? `?${search}` : "";
+			router.replace(`${pathname}${query}`);
+		}
+
+		router.refresh();
+	};
+
+	const parseYearMonth = (yearMonth: string) => {
+		return `${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`;
+	};
+
 	return (
 		<>
 			<Tooltip delayDuration={500}>
@@ -288,7 +320,7 @@ export default function TimerExportDialog({
 											variant="outline"
 											role="combobox"
 										>
-											{`${filters.yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${filters.yearMonth.replace(`${filters.yearMonth.slice(0, 4)} `, "")}`)}`}
+											{parseYearMonth(filters.yearMonth)}
 											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 										</Button>
 									</PopoverTrigger>
@@ -317,7 +349,7 @@ export default function TimerExportDialog({
 																	: "opacity-0",
 															)}
 														/>
-														{`${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`}
+														{parseYearMonth(yearMonth)}
 													</CommandItem>
 												))}
 											</CommandGroup>
@@ -409,6 +441,41 @@ export default function TimerExportDialog({
 									</PopoverContent>
 								</Popover>
 							</div>
+						</div>
+
+						<div className="flex flex-row items-center gap-2 mt-6 ml-2">
+							<Checkbox
+								id="invoicedFilter"
+								checked={
+									{ true: true, false: "indeterminate", undefined: false }[
+										`${invoicedFilter}`
+									] as CheckedState
+								}
+								onCheckedChange={() => {
+									switch (invoicedFilter) {
+										case undefined:
+											updateFilter(true);
+											break;
+										case true:
+											updateFilter(false);
+											break;
+										case false:
+											updateFilter(undefined);
+											break;
+									}
+								}}
+							/>
+							<Label
+								htmlFor="invoicedFilter"
+								className="flex flex-col text-nowrap"
+							>
+								{t("Miscellaneous.invoiced")}
+								<span className="text-muted-foreground">
+									{t("Miscellaneous.invoicedExportDescription", {
+										invoiced: invoicedFilter,
+									})}
+								</span>
+							</Label>
 						</div>
 					</div>
 

@@ -133,6 +133,11 @@
 
 			"undo": "Undo",
 
+			"invoicedSingular": "Invoiced",
+			"invoiced": "Invoiced Times",
+			"invoicedDescription": "are {invoiced, select, true {only visible} false {hidden} other {visible}}",
+			"invoicedExportDescription": "will {invoiced, select, true {only be} false {not be} other {be}} exported",
+
 			"Months": {
 				"January": "January",
 				"February": "February",
