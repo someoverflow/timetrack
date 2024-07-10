@@ -54,6 +54,7 @@ const generateTimer = (project: string | undefined): Time => {
 		end: null,
 		endType: null,
 
+		invoiced: false,
 		time: null,
 		notes: null,
 		traveledDistance: null,

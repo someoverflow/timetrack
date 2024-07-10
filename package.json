@@ -2,15 +2,14 @@
 	"name": "timetrack",
 	"version": "0.1.0",
 	"private": true,
+	"author": "someoverflow",
 	"scripts": {
 		"dev": "next dev --experimental-https",
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"docker:prod": "docker build -t some/timetrack:prod .",
-		"docker:dev": "docker build -t some/timetrack:dev .",
-		"docker:prod:file": "npm run docker:prod && docker save --output timetrack.tar some/timetrack:prod",
-		"docker:dev:file": "npm run docker:dev && docker save --output timetrack.tar some/timetrack:dev"
+		"docker:prod": "docker buildx build --platform linux/amd64,linux/arm64 -t someoverflow/timetrack:$npm_package_version -t someoverflow/timetrack:latest --push .",
+		"docker:dev": "docker buildx build --platform linux/amd64,linux/arm64 -t someoverflow/timetrack:$npm_package_version -t someoverflow/timetrack:dev --push ."
 	},
 	"prisma": {
 		"seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

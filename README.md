@@ -4,6 +4,8 @@ Manage your work, tasks, and projects effortlessly with TimeTrack for your
 entire team. Log hours, prioritize to-do's, add notes & projects, and stay
 organized in one place.
 
+Built for [EBERT-Automation](https://ebert-automation.de/)
+
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
 ## Screenshots
@@ -37,21 +39,19 @@ Mainly built and maintained for Docker. However, the possibility of vercel is al
 
 A MySQL database is required for data storage. Other databases are currently not supported.
 
-**Build the Docker Image:**
+**Get the Docker Image:**
 
 ```bash
-git clone https://github.com/someoverflow/timetrack
-cd timetrack
-docker build -t some/timetrack:prod .
+docker pull someoverflow/timetrack
 ```
 
-_OR_
+_DIY Image_
 
 ```bash
 docker buildx create --name somebuilder
 docker buildx use somebuilder
 docker buildx inspect --bootstrap
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t some/timetrack:dev .
+docker buildx build --platform linux/amd64,linux/arm64 -t someoverflow/timetrack:dev .
 ```
 
 **Run the Docker Image**
@@ -62,7 +62,7 @@ docker run --name timetrack -p 8080:3000 \
 --env=DATABASE_USER=<DatabaseUser> \
 --env=DATABASE_PASSWORD=<DatabasePassword> \
 --env=DATABASE_DB=<Database> \
--d some/timetrack:prod
+-d someoverflow/timetrack:latest
 ```
 
 ## Environment Variables
