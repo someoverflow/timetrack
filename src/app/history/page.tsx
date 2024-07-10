@@ -113,7 +113,13 @@ export default async function History({
 						user={user.id ?? ""}
 					/>
 				) : (
-					<TimerAddServer user={user.id ?? ""} projects={projects} />
+					<TimerAddServer
+						user={user.id ?? ""}
+						projects={projects}
+						resetFilter={
+							historyData.toString() === {}.toString() && invoiced !== undefined
+						}
+					/>
 				)}
 			</section>
 		</Navigation>

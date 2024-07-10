@@ -34,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, ChevronsUpDown, ListPlus, SaveAll } from "lucide-react";
 import { toast } from "sonner";
 
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -347,12 +347,22 @@ export default function TimerAdd({
 export function TimerAddServer({
 	user,
 	projects,
+	resetFilter,
 }: {
 	user: string;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
+	resetFilter: boolean;
 }) {
 	const router = useRouter();
 	const t = useTranslations("History");
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
+	useEffect(() => {
+		if (resetFilter) {
+			document.cookie = "invoiced=undefined;max-age=0;path=/";
+			router.refresh();
+		}
+	}, []);
 
 	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
