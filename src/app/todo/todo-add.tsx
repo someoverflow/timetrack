@@ -386,7 +386,7 @@ export function TodoAdd({
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
-										<PopoverContent className="p-2 max-h-60">
+										<PopoverContent className="p-2">
 											<Command>
 												<CommandInput
 													placeholder={t("Dialogs.Add.searchUser")}
