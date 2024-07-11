@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import NextTopLoader from "nextjs-toploader";
 import { JetBrains_Mono } from "next/font/google";
+import type { Viewport } from "next";
 
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
@@ -19,6 +20,14 @@ export async function generateMetadata() {
 		description: t("description"),
 	};
 }
+
+export const viewport: Viewport = {
+	initialScale: 1,
+	maximumScale: 1,
+	minimumScale: 1,
+	userScalable: false,
+	width: "device-width",
+};
 
 const mono = JetBrains_Mono({
 	variable: "--mono-font",

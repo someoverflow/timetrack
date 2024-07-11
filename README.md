@@ -19,7 +19,9 @@ Built for [EBERT-Automation](https://ebert-automation.de/)
 
 ## Tech Stack
 
-**Framework:** ![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+**Framework:**
+
+[![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 
 **Authentication:** [AuthJS](https://authjs.dev/)
 
