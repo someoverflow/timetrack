@@ -389,53 +389,51 @@ export default function TimerExportDialog({
 												className="h-8"
 											/>
 											<CommandGroup>
-												<CommandGroup>
+												<CommandItem
+													key={"project-filter-none"}
+													onSelect={() => {
+														setFilters({
+															project:
+																filters.project !== null ? null : undefined,
+														});
+													}}
+												>
+													<Check
+														className={cn(
+															"mr-2 h-4 w-4",
+															filters.project === null
+																? "opacity-100"
+																: "opacity-0",
+														)}
+													/>
+													{t("Dialogs.Export.filter.withoutProject")}
+												</CommandItem>
+											</CommandGroup>
+											<CommandGroup heading="Projects">
+												{projects.map((project) => (
 													<CommandItem
-														key={"project-filter-none"}
+														key={`project-filter-${project.name}`}
+														value={project.name}
 														onSelect={() => {
 															setFilters({
 																project:
-																	filters.project !== null ? null : undefined,
+																	filters.project !== project.name
+																		? project.name
+																		: undefined,
 															});
 														}}
 													>
 														<Check
 															className={cn(
 																"mr-2 h-4 w-4",
-																filters.project === null
+																filters.project === project.name
 																	? "opacity-100"
 																	: "opacity-0",
 															)}
 														/>
-														{t("Dialogs.Export.filter.withoutProject")}
+														{project.name}
 													</CommandItem>
-												</CommandGroup>
-												<CommandGroup heading="Projects">
-													{projects.map((project) => (
-														<CommandItem
-															key={`project-filter-${project.name}`}
-															value={project.name}
-															onSelect={() => {
-																setFilters({
-																	project:
-																		filters.project !== project.name
-																			? project.name
-																			: undefined,
-																});
-															}}
-														>
-															<Check
-																className={cn(
-																	"mr-2 h-4 w-4",
-																	filters.project === project.name
-																		? "opacity-100"
-																		: "opacity-0",
-																)}
-															/>
-															{project.name}
-														</CommandItem>
-													))}
-												</CommandGroup>
+												))}
 											</CommandGroup>
 										</Command>
 									</PopoverContent>
