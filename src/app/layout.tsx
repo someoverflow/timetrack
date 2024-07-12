@@ -2,11 +2,13 @@
 import { Toaster } from "@/components/ui/sonner";
 
 import NextTopLoader from "nextjs-toploader";
-import { JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Inter as FontSans } from "next/font/google";
 import type { Viewport } from "next";
 
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+
+import { cn } from "@/lib/utils";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider, ThemeProvider } from "@/lib/provider";
@@ -34,9 +36,19 @@ const mono = JetBrains_Mono({
 	subsets: ["latin-ext"],
 	display: "swap",
 });
+const fontSans = FontSans({
+	subsets: ["latin"],
+	variable: "--font-sans",
+});
 
 import "./globals.css";
 import "animate.css";
+
+const enviroment = process.env.NODE_ENV;
+const instance =
+	enviroment === "production"
+		? process.env.INSTANCE_NAME
+		: enviroment.toUpperCase();
 
 export default async function RootLayout({
 	children,
@@ -50,7 +62,11 @@ export default async function RootLayout({
 	const messages = await getMessages();
 
 	return (
-		<html lang={locale} className={mono.variable} suppressHydrationWarning>
+		<html
+			lang={locale}
+			className={cn(mono.variable, fontSans.variable)}
+			suppressHydrationWarning
+		>
 			<body>
 				<NextIntlClientProvider messages={messages}>
 					<NextTopLoader showSpinner={false} />
@@ -59,6 +75,15 @@ export default async function RootLayout({
 							<TooltipProvider delayDuration={100}>
 								{children}
 								<Toaster position="top-right" />
+
+								{instance && (
+									<div
+										className="[writing-mode:vertical-rl] hidden fixed bottom-3 right-3 cursor-vertical-text p-0 m-0 text-muted-foreground/35 md:block"
+										style={{ transform: "rotate(180deg)" }}
+									>
+										{instance}
+									</div>
+								)}
 							</TooltipProvider>
 						</SessionProvider>
 					</ThemeProvider>

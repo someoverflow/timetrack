@@ -27,12 +27,20 @@ import {
 	Users,
 } from "lucide-react";
 
+import type clsx from "clsx";
+
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 //#endregion
+
+const linkClass =
+	"!cursor-pointer !p-2 aspect-square border border-transparent hover:bg-accent/50 transition-all duration-100";
+const isPathLinkClass = "border-border bg-accent/50";
+const menuClass = "border border-transparent";
 
 export default function NavigationSection({
 	user,
@@ -52,9 +60,7 @@ export default function NavigationSection({
 					<Link
 						href="/"
 						prefetch
-						className={`${
-							pathname === "/" ? "bg-accent" : "hover:bg-accent"
-						} !cursor-pointer aspect-square !p-2`}
+						className={cn(linkClass, pathname === "/" && isPathLinkClass)}
 					>
 						<Timer className="h-6 w-6" />
 					</Link>
@@ -65,9 +71,10 @@ export default function NavigationSection({
 					<Link
 						href="/history"
 						prefetch
-						className={`${
-							pathname === "/history" ? "bg-accent" : "hover:bg-accent"
-						} !cursor-pointer aspect-square !p-2`}
+						className={cn(
+							linkClass,
+							pathname === "/history" && isPathLinkClass,
+						)}
 					>
 						<History className="h-6 w-6" />
 					</Link>
@@ -78,9 +85,7 @@ export default function NavigationSection({
 					<Link
 						href="/todo"
 						prefetch
-						className={`${
-							pathname === "/todo" ? "bg-accent" : "hover:bg-accent"
-						} !cursor-pointer aspect-square !p-2`}
+						className={cn(linkClass, pathname === "/todo" && isPathLinkClass)}
 					>
 						<ListTodo className="h-6 w-6" />
 					</Link>
@@ -95,7 +100,10 @@ export default function NavigationSection({
 						<Link
 							href="/profile"
 							prefetch
-							className={pathname === "/profile" ? "bg-accent" : ""}
+							className={cn(
+								menuClass,
+								pathname === "/profile" && "border-border bg-accent",
+							)}
 						>
 							<UserIcon className="mr-2 h-4 w-4" />
 							{t("profile")}
@@ -105,23 +113,34 @@ export default function NavigationSection({
 						<Link
 							href="/projects"
 							prefetch
-							className={pathname === "/projects" ? "bg-accent" : ""}
+							className={
+								pathname === "/projects" ? "bg-accent border border-border" : ""
+							}
 						>
 							<Folder className="mr-2 h-4 w-4" />
 							{t("projects")}
 						</Link>
 					</MenubarItem>
+
 					{user?.role === "ADMIN" && (
-						<MenubarItem asChild>
-							<Link
-								href="/admin/user"
-								prefetch
-								className={pathname === "/admin/user" ? "bg-accent" : ""}
-							>
-								<Users className="mr-2 h-4 w-4" />
-								{t("users")}
-							</Link>
-						</MenubarItem>
+						<>
+							<MenubarSeparator />
+
+							<MenubarItem asChild>
+								<Link
+									href="/admin/user"
+									prefetch
+									className={
+										pathname === "/admin/user"
+											? "bg-accent border border-border"
+											: ""
+									}
+								>
+									<Users className="mr-2 h-4 w-4" />
+									{t("users")}
+								</Link>
+							</MenubarItem>
+						</>
 					)}
 
 					<MenubarSeparator />

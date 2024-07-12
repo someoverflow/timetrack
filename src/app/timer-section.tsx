@@ -60,7 +60,8 @@ export default function TimerSection({
 					<CardContent>
 						<div
 							className={cn(
-								"w-full rounded-lg bg-secondary/5 shadow-xl border border-border cursor-pointer pt-2 mt-6 pb-6 mb-4",
+								"w-full rounded-lg bg-secondary/5 shadow-md hover:shadow-lg border border-border/50 hover:border-border transition-all duration-300 cursor-pointer pt-2 mt-6 pb-6 mb-4",
+								state.error && "blur-sm",
 								state.loading && "!cursor-wait",
 							)}
 							onClick={onClick}
@@ -201,11 +202,11 @@ const ProjectSelection = ({
 			<PopoverTrigger asChild>
 				<Button
 					id="projects-button"
-					variant="outline"
+					variant="ghost"
 					role="combobox"
 					aria-expanded={open}
 					disabled={error || loading}
-					className="shadow-xl w-full justify-between transition duration-300"
+					className="shadow-xl w-full justify-between transition duration-300 border border-border/50 hover:border-border hover:bg-background"
 				>
 					<div className="flex flex-row gap-1">
 						{!project ? t("projects.none") : project}

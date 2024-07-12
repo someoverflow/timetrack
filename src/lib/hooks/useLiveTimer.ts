@@ -78,6 +78,8 @@ export default function useLiveTimer() {
 	}, 500);
 
 	const fetchLatest = useCallback(async () => {
+		if (state.error) return;
+
 		const fetchResult: APIResult | undefined = await fetch("/api/times")
 			.then((result) => result.json())
 			.catch((e) => {
@@ -106,7 +108,7 @@ export default function useLiveTimer() {
 
 		dispatch({ type: "running", value: result && !result.end });
 		dispatch({ type: "loading", value: false });
-	}, []);
+	}, [state.error]);
 
 	const calculate = useCallback(() => {
 		if (!timer || !state.running || state.error) return;
@@ -135,8 +137,9 @@ export default function useLiveTimer() {
 			setTimer(start ? tempTimer : undefined);
 			dispatch({ type: "running", value: start });
 
+			const projectString = project ? `&project=${project}` : "";
 			const apiResult: APIResult | undefined = await fetch(
-				`/api/times/toggle?type=Website&fixTime=${tempTimer.start.toISOString()}${project ? `&project=${project}` : ""}`,
+				`/api/times/toggle?type=Website&fixTime=${tempTimer.start.toISOString()}${projectString}`,
 				{
 					method: "PUT",
 				},
