@@ -71,6 +71,7 @@ docker run --name timetrack -p 8080:3000 \
 
 | Variable              | Description                                         | Default       |
 | --------------------- | --------------------------------------------------- | ------------- |
+| `INSTANCE_NAME`       | Shows a watermark at the bottom right corner if set | _(empty)_     |
 | `PORT`                | The port number on which the application listens    | `3000`        |
 | `HOSTNAME`            | The hostname or IP address the server binds to      | `"0.0.0.0"`   |
 | `BACKUP`              | Enables MySQL dumps to a mountable Docker volume    | `false`       |
@@ -81,36 +82,9 @@ docker run --name timetrack -p 8080:3000 \
 | `DATABASE_PASSWORD`   | Password for the MySQL database user                | `timetrack`   |
 | `DATABASE_DB`         | Name of the MySQL database                          | `timetrack`   |
 | `AUTH_SECRET`         | Secret key for encrypting Auth.js JWT               | _Generated_   |
-| `INSTANCE_NAME`       | Shows a watermark at the bottom right corner if set | _(empty)_     |
 | `NEXT_PUBLIC_API_URL` | The primary API URL used by the application         | _(empty)_     |
 
 **Docker Volumes**
 | Name | Path |
 | ------ | -------- |
 | Backup | /backups |
-
-## API Reference (TODO)
-
-#### Get all items
-
-```http
-  GET /api/items
-```
-
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `api_key` | `string` | **Required**. Your API key |
-
-#### Get item
-
-```http
-  GET /api/items/${id}
-```
-
-| Parameter | Type     | Description                       |
-| :-------- | :------- | :-------------------------------- |
-| `id`      | `string` | **Required**. Id of item to fetch |
-
-#### add(num1, num2)
-
-Takes two numbers and returns the sum.

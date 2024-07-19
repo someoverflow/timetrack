@@ -2,11 +2,11 @@ import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import {
-	FORBIDDEN,
 	NO_AUTH_RESPONSE,
 	defaultResult,
 	parseJsonBody,
 	badRequestResponse,
+	FORBIDDEN_RESPONSE,
 } from "@/lib/server-utils";
 import { auth } from "@/lib/auth";
 import type { Prisma } from "@prisma/client";
@@ -172,10 +172,7 @@ export const POST = auth(async (request) => {
 	// Check if user is given
 	if (data.userId) {
 		if (data.userId !== session.user.id && session.user.role !== "ADMIN")
-			return NextResponse.json(FORBIDDEN, {
-				status: FORBIDDEN.status,
-				statusText: FORBIDDEN.result,
-			});
+			return FORBIDDEN_RESPONSE;
 	}
 
 	// Check if user is included in project when given
@@ -428,10 +425,7 @@ export const DELETE = auth(async (request) => {
 			databaseResult.userId !== session.user.id &&
 			session.user.role !== "ADMIN"
 		)
-			return NextResponse.json(FORBIDDEN, {
-				status: FORBIDDEN.status,
-				statusText: FORBIDDEN.result,
-			});
+			return FORBIDDEN_RESPONSE;
 	} catch (e) {
 		result.success = false;
 		result.status = 500;

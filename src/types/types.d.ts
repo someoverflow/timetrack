@@ -33,8 +33,8 @@ type APIResult = {
 	status: number;
 } & (
 	| {
-			type: APIResultType;
-			// biome-ignore lint/suspicious/noExplicitAny: API Result Data can be anything
+			type: "unknown" | "ok" | "deleted" | "created" | "updated";
+			// biome-ignore lint/suspicious/noExplicitAny:
 			result?: any;
 	  }
 	| {
@@ -42,11 +42,7 @@ type APIResult = {
 			result?: ZodIssue[];
 	  }
 	| {
-			type: "duplicate-found";
-			result?: { message: string };
+			type: "error-message" | "duplicate-found" | "not-found" | "json-parsing";
+			result?: { message: string; [key: string]: unknown };
 	  }
-	/* | {
-			type: "error-message";
-			result: string;
-	  } */
 );
