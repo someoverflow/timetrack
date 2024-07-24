@@ -1,32 +1,26 @@
-//UI
-import Navigation from "@/components/navigation";
-import TimerSection from "../timer-section";
-
-// Navigation
-import { redirect } from "next/navigation";
-
-// Auth
-import { auth } from "@/lib/auth";
-
-// Database
-import prisma from "@/lib/prisma";
+//#region Imports
 import type { Prisma } from "@prisma/client";
 
-// Utils
-import { sumTimes, months } from "@/lib/utils";
-import { TimerAddServer } from "../timer-add";
+import Navigation from "@/components/navigation";
 import { badgeVariants } from "@/components/ui/badge";
+
+import { TimerAddServer } from "../timer-add";
+import TimerSection from "../timer-section";
+
+import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+//#endregion
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
 }>;
-interface Data {
-	[yearMonth: string]: Timer[];
-}
 
-function formatHistory(data: Timer[]): Data {
-	const result: Data = {};
+function formatHistory(data: Timer[]) {
+	const result: { [yearMonth: string]: Timer[] } = {};
 
 	for (const item of data) {
 		const date = new Date(item.start);
@@ -66,6 +60,15 @@ export default async function History({
 
 	const t = await getTranslations("History");
 
+	const cookieStore = cookies();
+
+	const invoicedCookie = cookieStore.get("invoiced")?.value;
+	const invoiced = [undefined, "true", "false"].includes(invoicedCookie)
+		? invoicedCookie
+			? invoicedCookie === "true"
+			: undefined
+		: undefined;
+
 	const target = await prisma.user
 		.findUnique({
 			where: {
@@ -86,6 +89,7 @@ export default async function History({
 			},
 			where: {
 				userId: target?.id,
+				invoiced: invoiced,
 			},
 			include: {
 				project: true,
@@ -94,19 +98,13 @@ export default async function History({
 		prisma.project.findMany(),
 	]);
 
-	function dataFound(): boolean {
-		if (!history) return false;
-		if (history.length === 0) return false;
-		return !(history.length === 1 && history[0].end == null);
-	}
-
 	const historyData = history ? formatHistory(history) : {};
 
 	let yearMonth = searchParams?.ym;
 	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
 		yearMonth = Object.keys(historyData)[0];
 
-	const timeStrings = historyData[yearMonth]
+	const timeStrings = (historyData[yearMonth] ?? [])
 		.filter((data) => data.time !== null)
 		.map((e) => e.time);
 	const totalTime =
@@ -131,16 +129,24 @@ export default async function History({
 
 				{target ? (
 					<>
-						{dataFound() && historyData != null ? (
+						{history.length !== 0 && historyData != null ? (
 							<TimerSection
 								history={historyData}
 								projects={projects}
 								totalTime={totalTime}
 								yearMonth={yearMonth}
+								invoicedFilter={invoiced}
 								user={target.id}
 							/>
 						) : (
-							<TimerAddServer user={target.id} projects={projects} />
+							<TimerAddServer
+								user={target.id}
+								projects={projects}
+								resetFilter={
+									historyData.toString() === {}.toString() &&
+									invoiced !== undefined
+								}
+							/>
 						)}
 					</>
 				) : (

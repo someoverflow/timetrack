@@ -1,22 +1,14 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Settings2 } from "lucide-react";
-import {
-	DropdownMenu,
-	DropdownMenuCheckboxItem,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
-import type { Prisma } from "@prisma/client";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+//#region Imports
+import { Settings2 } from "lucide-react";
 import UserEdit from "./user-edit";
+
+import { useTranslations } from "next-intl";
+
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+//#endregion
 
 export const columns: ColumnDef<
 	Prisma.UserGetPayload<{

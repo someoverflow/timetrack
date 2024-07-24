@@ -1,11 +1,15 @@
+//#region Imports
+import Navigation from "@/components/navigation";
+import { columns } from "./columns";
+import { DataTable } from "./data-table";
+
+import { cookies } from "next/headers";
+import { getTranslations } from "next-intl/server";
+
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import Navigation from "@/components/navigation";
 import { auth } from "@/lib/auth";
-import { getTranslations } from "next-intl/server";
-import { DataTable } from "./data-table";
-import { cookies } from "next/headers";
-import { columns } from "./columns";
+//#endregion
 
 export async function generateMetadata() {
 	const t = await getTranslations({ namespace: "Admin.Users.Metadata" });
@@ -29,6 +33,7 @@ export default async function AdminUserPage({
 }) {
 	const session = await auth();
 	if (!session || !session.user) return redirect("/signin");
+	if (session.user.role !== "ADMIN") return redirect("/");
 	const user = session.user;
 
 	const t = await getTranslations("Admin.Users");

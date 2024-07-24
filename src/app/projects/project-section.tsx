@@ -1,23 +1,28 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+//#region Imports
+import type { Prisma, Role } from "@prisma/client";
+
 import {
 	Command,
 	CommandGroup,
 	CommandInput,
-	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import prisma from "@/lib/prisma";
-import type { Prisma, Role } from "@prisma/client";
-import { Plus, RefreshCw, Trash } from "lucide-react";
-import { useReducer, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+
 import { ProjectEdit } from "./project-edit";
+
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import useRequest from "@/lib/hooks/useRequest";
+
+import prisma from "@/lib/prisma";
+import { cn } from "@/lib/utils";
+//#endregion
 
 async function getUserProjects() {
 	return await prisma.project.findMany({
@@ -27,10 +32,6 @@ async function getUserProjects() {
 	});
 }
 type userProjects = Prisma.PromiseReturnType<typeof getUserProjects>;
-
-interface projectSectionState {
-	loading: boolean;
-}
 
 export function ProjectSection({
 	projects,
@@ -44,78 +45,29 @@ export function ProjectSection({
 		role: string;
 	};
 }) {
-	const [data, setData] = useReducer(
-		(prev: projectSectionState, next: Partial<projectSectionState>) => ({
-			...prev,
-			...next,
-		}),
-		{
-			loading: false,
-		},
-	);
+	const router = useRouter();
 	const t = useTranslations("Projects");
 
 	const [search, setSearch] = useState("");
 
-	const router = useRouter();
-
-	async function createProject() {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/project", {
-			method: "POST",
-			body: JSON.stringify({
-				name: search,
-				userId: [userData.id],
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
-			toast.success("Successfully created project.");
+	const { status, send } = useRequest(
+		useCallback(
+			() =>
+				fetch("/api/project", {
+					method: "POST",
+					body: JSON.stringify({
+						name: search,
+						userId: [userData.id],
+					}),
+				}),
+			[search, userData],
+		),
+		(_result) => {
 			setSearch("");
+			toast.success(t("created"));
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "duplicate-found":
-				toast.warning(`An error occurred (${resultData.type})`, {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<Command className="h-full">
@@ -130,15 +82,15 @@ export function ProjectSection({
 				</div>
 				<div className="w-max h-full">
 					<Button
-						disabled={data.loading || search === ""}
+						disabled={status.loading || search === ""}
 						className={cn(
 							"transition-all duration-200",
 							search === "" && "w-0",
 						)}
 						size="icon"
-						onClick={() => createProject()}
+						onClick={() => send()}
 					>
-						{data.loading ? (
+						{status.loading ? (
 							<RefreshCw className="h-4 w-4 animate-spin" />
 						) : (
 							<Plus className="h-5 w-5" />
@@ -150,6 +102,7 @@ export function ProjectSection({
 				<CommandGroup
 					heading={t("projects", { projects: projects.length })}
 					forceMount={projects.length === 0}
+					className="!max-h-none"
 				>
 					{projects.length === 0 && (
 						<div className="py-6 text-center text-sm">

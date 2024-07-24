@@ -1,22 +1,20 @@
 "use client";
-import { Button } from "@/components/ui/button";
+
+//#region Imports
+import type { Prisma } from "@prisma/client";
+import type { CheckedState } from "@radix-ui/react-checkbox";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { cn, sumTimes } from "@/lib/utils";
-
-import type { Prisma } from "@prisma/client";
 import {
 	Tooltip,
 	TooltipTrigger,
 	TooltipContent,
 } from "@/components/ui/tooltip";
-import { Check, ChevronsUpDown, Download, FileDown } from "lucide-react";
-import { useEffect, useMemo, useReducer, useState } from "react";
 import {
 	Popover,
 	PopoverContent,
@@ -28,9 +26,19 @@ import {
 	CommandInput,
 	CommandItem,
 } from "@/components/ui/command";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Check, ChevronsUpDown, Download, FileDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+
 import { useTranslations } from "next-intl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useReducer, useState } from "react";
+
+import { cn, sumTimes } from "@/lib/utils";
+//#endregion
 
 const umlautMap: Record<string, string> = {
 	"\u00dc": "UE",
@@ -74,12 +82,19 @@ interface visualisationState {
 export default function TimerExportDialog({
 	history,
 	yearMonth,
+	invoicedFilter,
 	projects,
 }: {
 	history: Data;
 	yearMonth: string;
+	invoicedFilter: boolean | undefined;
 	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
 }) {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const editTime = searchParams.get("edit");
+
 	const t = useTranslations("History");
 
 	const [filters, setFilters] = useReducer(
@@ -118,7 +133,7 @@ export default function TimerExportDialog({
 
 		setVisualisation({
 			showProject: (localShowProject ?? "true") === "true",
-			showDateColumn: (localShowDateColumn ?? "true") === "true",
+			showDateColumn: (localShowDateColumn ?? "false") === "true",
 			structurizeDateTree: (localStructurizeDateTree ?? "true") === "true",
 		});
 	}, []);
@@ -220,6 +235,28 @@ export default function TimerExportDialog({
 		element.click();
 	};
 
+	const updateFilter = (invoiced?: undefined | CheckedState) => {
+		if (typeof document !== "undefined") {
+			if (invoiced === "indeterminate" || invoiced === undefined)
+				document.cookie = "invoiced=undefined;max-age=0;path=/";
+			else document.cookie = `invoiced=${invoiced};max-age=31536000;path=/`;
+		}
+
+		if (editTime) {
+			const current = new URLSearchParams(Array.from(searchParams.entries()));
+			current.delete("edit");
+			const search = current.toString();
+			const query = search ? `?${search}` : "";
+			router.replace(`${pathname}${query}`);
+		}
+
+		router.refresh();
+	};
+
+	const parseYearMonth = (yearMonth: string) => {
+		return `${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`;
+	};
+
 	return (
 		<>
 			<Tooltip delayDuration={500}>
@@ -283,7 +320,7 @@ export default function TimerExportDialog({
 											variant="outline"
 											role="combobox"
 										>
-											{`${filters.yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${filters.yearMonth.replace(`${filters.yearMonth.slice(0, 4)} `, "")}`)}`}
+											{parseYearMonth(filters.yearMonth)}
 											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 										</Button>
 									</PopoverTrigger>
@@ -312,7 +349,7 @@ export default function TimerExportDialog({
 																	: "opacity-0",
 															)}
 														/>
-														{`${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`}
+														{parseYearMonth(yearMonth)}
 													</CommandItem>
 												))}
 											</CommandGroup>
@@ -352,58 +389,91 @@ export default function TimerExportDialog({
 												className="h-8"
 											/>
 											<CommandGroup>
-												<CommandGroup>
+												<CommandItem
+													key={"project-filter-none"}
+													onSelect={() => {
+														setFilters({
+															project:
+																filters.project !== null ? null : undefined,
+														});
+													}}
+												>
+													<Check
+														className={cn(
+															"mr-2 h-4 w-4",
+															filters.project === null
+																? "opacity-100"
+																: "opacity-0",
+														)}
+													/>
+													{t("Dialogs.Export.filter.withoutProject")}
+												</CommandItem>
+											</CommandGroup>
+											<CommandGroup heading="Projects">
+												{projects.map((project) => (
 													<CommandItem
-														key={"project-filter-none"}
+														key={`project-filter-${project.name}`}
+														value={project.name}
 														onSelect={() => {
 															setFilters({
 																project:
-																	filters.project !== null ? null : undefined,
+																	filters.project !== project.name
+																		? project.name
+																		: undefined,
 															});
 														}}
 													>
 														<Check
 															className={cn(
 																"mr-2 h-4 w-4",
-																filters.project === null
+																filters.project === project.name
 																	? "opacity-100"
 																	: "opacity-0",
 															)}
 														/>
-														{t("Dialogs.Export.filter.withoutProject")}
+														{project.name}
 													</CommandItem>
-												</CommandGroup>
-												<CommandGroup heading="Projects">
-													{projects.map((project) => (
-														<CommandItem
-															key={`project-filter-${project.name}`}
-															value={project.name}
-															onSelect={() => {
-																setFilters({
-																	project:
-																		filters.project !== project.name
-																			? project.name
-																			: undefined,
-																});
-															}}
-														>
-															<Check
-																className={cn(
-																	"mr-2 h-4 w-4",
-																	filters.project === project.name
-																		? "opacity-100"
-																		: "opacity-0",
-																)}
-															/>
-															{project.name}
-														</CommandItem>
-													))}
-												</CommandGroup>
+												))}
 											</CommandGroup>
 										</Command>
 									</PopoverContent>
 								</Popover>
 							</div>
+						</div>
+
+						<div className="flex flex-row items-center gap-2 mt-6 ml-2">
+							<Checkbox
+								id="invoicedFilter"
+								checked={
+									{ true: true, false: "indeterminate", undefined: false }[
+										`${invoicedFilter}`
+									] as CheckedState
+								}
+								onCheckedChange={() => {
+									switch (invoicedFilter) {
+										case undefined:
+											updateFilter(true);
+											break;
+										case true:
+											updateFilter(false);
+											break;
+										case false:
+											updateFilter(undefined);
+											break;
+									}
+								}}
+							/>
+							<Label
+								htmlFor="invoicedFilter"
+								className="flex flex-col text-nowrap"
+							>
+								{t("Miscellaneous.invoiced")}
+								<span className="text-muted-foreground">
+									{t("Miscellaneous.invoicedExportDescription", {
+										invoiced: invoicedFilter,
+									})}
+								</span>
+							</Label>
 						</div>
 					</div>
 

@@ -1,14 +1,22 @@
 "use client";
 
+//#region Imports
 import {
-	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
 	getFilteredRowModel,
 	type RowData,
+	type ColumnDef,
 } from "@tanstack/react-table";
 
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import {
 	Table,
 	TableBody,
@@ -18,7 +26,6 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import React, { useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -28,18 +35,15 @@ import {
 	ChevronsRight,
 	Loader,
 } from "lucide-react";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import UserAdd from "./user-add";
+
+import React, { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+
 import { cn } from "@/lib/utils";
-import UserAdd from "./user-add";
+//#endregion
 
 type UsersType = { name: string | null; username: string }[];
 type ProjectsType = {

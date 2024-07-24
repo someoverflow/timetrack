@@ -57,6 +57,7 @@ export const timesToggleApiValidation = z
 	.object({
 		type: z.string(),
 		fixTime: z.string().datetime(),
+		project: nameValidation.nullable(),
 	})
 	.partial();
 
@@ -80,17 +81,18 @@ export const timesPostApiValidation = z
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
 
+		invoiced: z.coerce.boolean(),
+
 		traveledDistance: z.coerce.number(),
 
 		startType: z.coerce.string().trim(),
 		endType: z.coerce.string().trim(),
 	})
-	.partial({
-		userId: true,
-		project: true,
-		startType: true,
-		endType: true,
-		traveledDistance: true,
+	.partial()
+	.required({
+		notes: true,
+		start: true,
+		end: true,
 	})
 	.refine((data) => data.end > data.start, {
 		message: "The end is earlier than start",
@@ -106,6 +108,8 @@ export const timesPutApiValidation = z
 
 		traveledDistance: z.coerce.number().nullable(),
 
+		invoiced: z.coerce.boolean(),
+
 		start: z.coerce.string().datetime(),
 		end: z.coerce.string().datetime(),
 
@@ -117,36 +121,6 @@ export const timesPutApiValidation = z
 		id: true,
 	})
 	.superRefine((data, ctx) => {
-		if (
-			!(
-				data.notes ||
-				data.project ||
-				data.project === null ||
-				data.start ||
-				data.end ||
-				data.startType ||
-				data.endType ||
-				data.traveledDistance
-			)
-		)
-			ctx.addIssue({
-				code: "custom",
-				message:
-					"One of the fields must be given (notes, project, time, distance)",
-				path: ["notes", "project", "start", "end", "traveledDistance"],
-			});
-
-		/**
-		if (data.start || data.end) {
-			if ((data.start && !data.end) || (data.end && !data.start))
-				ctx.addIssue({
-					code: "custom",
-					message: "Start and End must be given",
-					path: ["start", "end"],
-				});
-		}
-			 */
-
 		if (data.end && data.start ? data.end < data.start : false)
 			ctx.addIssue({
 				code: "custom",

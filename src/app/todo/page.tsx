@@ -1,20 +1,16 @@
-// UI
+//#region Imports
 import Navigation from "@/components/navigation";
 
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 
-// Database
-import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-
-// Navigation
 import { redirect } from "next/navigation";
-
-// React
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { TodoPriority, TodoStatus } from "@prisma/client";
+import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+//#endregion
 
 export async function generateMetadata() {
 	const t = await getTranslations({ namespace: "Todo.Metadata" });
@@ -44,7 +40,8 @@ export default async function History({
 
 	const cookieStore = cookies();
 
-	const archived = (searchParams?.archived ?? "false") === "true"
+	// TODO: Store archived in cookies?
+	const archived = (searchParams?.archived ?? "false") === "true";
 
 	const todoCount = await prisma.todo.count({
 		where: {

@@ -1,50 +1,47 @@
 "use client";
 
-// UI
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { SaveAll } from "lucide-react";
-
-// React
-import { useRouter } from "next/navigation";
-import { useReducer } from "react";
-import { signOut, useSession } from "next-auth/react";
-import { Badge } from "@/components/ui/badge";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useTranslations } from "next-intl";
-
+//#region Imports
 import {
 	Select,
 	SelectContent,
 	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { SaveAll } from "lucide-react";
+import { toast } from "sonner";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useReducer } from "react";
+import { signOut, useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
+import useRequest from "@/lib/hooks/useRequest";
+//#endregion
 
 interface profileSectionState {
-	loading: boolean;
 	name: string | undefined;
 	mail: string | undefined;
 	password: string;
-	language: string;
 }
 
 export default function ProfileSection({
@@ -60,68 +57,53 @@ export default function ProfileSection({
 	};
 	language: string | undefined;
 }) {
+	const t = useTranslations("Profile");
+	const router = useRouter();
+
+	const { update } = useSession();
+
 	const [data, setData] = useReducer(
 		(prev: profileSectionState, next: Partial<profileSectionState>) => ({
 			...prev,
 			...next,
 		}),
 		{
-			loading: false,
 			name: userData.name ?? "",
 			mail: userData.email ?? "",
 			password: "",
-			language: language ?? "en",
 		},
 	);
 
-	const t = useTranslations("Profile");
+	const { status: updateStatus, send: sendUpdate } = useRequest(
+		useCallback(
+			() =>
+				fetch("/api/profile", {
+					method: "PUT",
+					body: JSON.stringify({
+						name: data.name !== userData.name ? data.name : undefined,
+						mail:
+							(data.mail ?? "") !== (userData.email ?? "")
+								? data.mail
+								: undefined,
+						password: data.password !== "" ? data.password : undefined,
+					}),
+				}),
+			[data, userData],
+		),
+		async (result) => {
+			const resultData = result.result;
 
-	const router = useRouter();
-
-	const { update } = useSession();
-
-	async function updateData() {
-		setData({
-			loading: true,
-		});
-
-		const changePassword = data.password !== "";
-		const result = await fetch("/api/profile", {
-			method: "PUT",
-			body: JSON.stringify({
-				name: data.name !== userData.name ? data.name : undefined,
-				mail:
-					(data.mail ?? "") !== (userData.email ?? "") ? data.mail : undefined,
-				password: changePassword ? data.password : undefined,
-				language: data.language !== language ? data.language : undefined,
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
-			if (changePassword) {
-				toast.success("Successfully updated profile.", {
-					description: "Password changed. Please sign in again.",
+			if (data.password !== "") {
+				toast.success(t("updated"), {
+					description: t("passwordUpdate"),
 					duration: 3000,
 				});
 				signOut();
 				return;
 			}
 
-			toast.success("Successfully updated profile.", {
-				description: "Session is getting updated",
+			toast.success(t("updated"), {
+				description: t("sessionUpdate"),
 				duration: 3000,
 			});
 
@@ -133,78 +115,25 @@ export default function ProfileSection({
 			});
 
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-	async function changeLanguage(language: string) {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/profile", {
-			method: "PUT",
-			body: JSON.stringify({
-				language: language,
+		},
+	);
+	const { status: languageStatus, send: sendLanguage } = useRequest(
+		(passed: { language: string } | undefined) =>
+			fetch("/api/profile", {
+				method: "PUT",
+				body: JSON.stringify({
+					language: passed?.language,
+				}),
 			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
-			toast.success("Successfully updated profile.", {
-				description: "Session is getting updated",
+		(_result) => {
+			toast.success(t("updated"), {
+				description: t("languageUpdate"),
 				duration: 3000,
 			});
 
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<Card className="w-full rounded-md">
@@ -219,6 +148,28 @@ export default function ProfileSection({
 					<Badge variant="default">{userData.username}</Badge>
 				</div>
 			</div>
+
+			<Separator className="w-full" />
+
+			<CardContent className="py-6">
+				<div className="grid w-full items-center gap-1.5">
+					<Label htmlFor="select-language">{t("language")}</Label>
+					<Select
+						value={language}
+						onValueChange={(e) => sendLanguage({ language: e })}
+					>
+						<SelectTrigger id="select-language">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectItem value="de">{t("languages.de")}</SelectItem>
+								<SelectItem value="en">{t("languages.en")}</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</div>
+			</CardContent>
 
 			<Separator className="w-full" />
 
@@ -268,36 +219,6 @@ export default function ProfileSection({
 					</div>
 					<div className="grid w-full items-center gap-1.5">
 						<Label
-							htmlFor="select-language"
-							className={cn(
-								"transition-colors",
-								//data.language !== language ? "text-blue-500" : "",
-							)}
-						>
-							{t("language")}
-						</Label>
-						<Select
-							value={data.language}
-							onValueChange={(e) => {
-								setData({
-									language: e,
-								});
-								changeLanguage(e);
-							}}
-						>
-							<SelectTrigger id="select-language">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectGroup>
-									<SelectItem value="de">{t("languages.de")}</SelectItem>
-									<SelectItem value="en">{t("languages.en")}</SelectItem>
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-					</div>
-					<div className="grid w-full items-center gap-1.5">
-						<Label
 							htmlFor="input-password"
 							className={cn(
 								"transition-colors",
@@ -317,18 +238,14 @@ export default function ProfileSection({
 						/>
 					</div>
 				</div>
-			</CardContent>
-
-			<Separator className="w-full" />
-
-			<CardFooter className="p-6 gap-2">
+				<div className="h-4" />
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
-							disabled={data.loading}
+							disabled={languageStatus.loading || updateStatus.loading}
 							variant="secondary"
 							className="w-full"
-							onClick={() => updateData()}
+							onClick={() => sendUpdate()}
 						>
 							<SaveAll className="mr-2 w-4 h-4" /> {t("buttonContent")}
 						</Button>
@@ -341,7 +258,7 @@ export default function ProfileSection({
 						/>
 					</TooltipContent>
 				</Tooltip>
-			</CardFooter>
+			</CardContent>
 		</Card>
 	);
 }
