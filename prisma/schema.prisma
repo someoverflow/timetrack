@@ -72,25 +72,12 @@ model Time {
 
   traveledDistance Int? @map("traveled_distance") // Stored in km
 
-  materials String      @default("[]") // Array of materials used [{"name":_,"price":_}]
-  breaks    TimeBreak[] @relation("break")
+  materials String @default("[]") // Array of materials used [{"name":_,"price":_}]
 
   project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
   projectName String?  @map("project_name")
 
   @@map("times")
-}
-
-model TimeBreak {
-  id String @id @default(nanoid(12))
-
-  time   Time   @relation("break", references: [id], fields: [timeId], onDelete: Cascade)
-  timeId String @map("time_id")
-
-  start DateTime  @db.DateTime(2)
-  end   DateTime? @db.DateTime(2)
-
-  @@map("times_breaks")
 }
 
 model Project {
@@ -134,7 +121,7 @@ model Todo {
 
   assignees User[] @relation("assignee_to_todo") // Assigned users of the todo
 
-  creator   User   @relation("creator", fields: [creatorId], references: [id], onDelete: Restrict)
+  creator   User   @relation("creator", fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String @map("creator_id")
 
   createdAt DateTime @default(now())

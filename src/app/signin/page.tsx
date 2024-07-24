@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "sonner";
 
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { authenticate } from "@/lib/actions";
 //#endregion
 
 export default function SignIn() {
@@ -20,35 +21,39 @@ export default function SignIn() {
 
 	const router = useRouter();
 
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		if (!loading && session.status === "authenticated") router.replace("/");
 	});
 
-	async function start() {
-		setLoading(true);
-		const result = await signIn("credentials", {
-			username: username,
-			password: password,
-			redirect: false,
-		});
-		console.log(result);
-		if (result) {
-			if (result.error) {
-				//  === "CredentialsSignin"
-				toast.error("Wrong Credentials", {
+	const handleSubmit = async (event: FormEvent) => {
+		event.preventDefault();
+
+		try {
+			setLoading(true);
+			const target = event.target as any;
+
+			const result = await authenticate({
+				username: target.username.value,
+				password: target.password.value,
+				redirect: false,
+			});
+
+			if (result.success !== true) {
+				toast.error(result.error?.message ?? "Wrong Credentials", {
 					description: "Try again with a different username and password",
 				});
-			} else router.push("/");
-		} else
-			toast.error("No result data", {
-				description: "Try again now or later",
-			});
-		setLoading(false);
-	}
+				setLoading(false);
+				return;
+			}
+
+			window.location.href = "/";
+		} catch (error) {
+			toast.error("Failed to sign in.");
+			setLoading(false);
+		}
+	};
 
 	return (
 		<main className="min-h-[90svh] flex flex-col items-center justify-center">
@@ -57,30 +62,23 @@ export default function SignIn() {
 					<CardTitle>{t("title")}</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							start();
-						}}
-					>
+					<form onSubmit={handleSubmit} method="post">
 						<div className="grid w-full items-center gap-4">
 							<div className="flex flex-col space-y-1.5">
 								<Label htmlFor="username">{t("username")}</Label>
 								<Input
 									id="username"
+									name="username"
 									placeholder={t("usernamePlaceholder")}
-									value={username}
-									onChange={(event) => setUsername(event.target.value)}
 								/>
 							</div>
 							<div className="flex flex-col space-y-1.5">
 								<Label htmlFor="password">{t("password")}</Label>
 								<Input
 									id="password"
+									name="password"
 									placeholder={t("passwordPlaceholder")}
 									type="password"
-									value={password}
-									onChange={(event) => setPassword(event.target.value)}
 								/>
 							</div>
 							<Button type="submit" variant="outline" disabled={loading}>
