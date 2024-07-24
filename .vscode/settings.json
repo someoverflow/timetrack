@@ -1,15 +1,5 @@
 {
-    "editor.defaultFormatter": "biomejs.biome",
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "biomejs.biome"
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "biomejs.biome"
-    },
-    "CodeGPT.apiKey": "Ollama",
-    "CodeGPT.Autocomplete.enabled": true,
-    "CodeGPT.Autocomplete.provider": "Ollama - llama3:instruct",
-    "CodeGPT.Autocomplete.maxTokens": 3000,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "[prisma]": {
         "editor.defaultFormatter": "Prisma.prisma"
     },
@@ -20,7 +10,4 @@
     "[dockerfile]": {
         "editor.defaultFormatter": "ms-azuretools.vscode-docker"
     },
-    "[markdown]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
 }
