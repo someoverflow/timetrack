@@ -32,6 +32,7 @@ export default function SignIn() {
 
 		try {
 			setLoading(true);
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			const target = event.target as any;
 
 			const result = await authenticate({
