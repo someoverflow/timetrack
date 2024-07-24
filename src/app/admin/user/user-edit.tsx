@@ -148,7 +148,7 @@ export default function UserEdit({ user }: { user: User }) {
 	);
 
 	const { status: chipCreateStatus, send: sendChipCreate } = useRequest(
-		(passed: { id: string } | undefined) =>
+		() =>
 			fetch("/api/chip", {
 				method: "POST",
 				body: JSON.stringify({

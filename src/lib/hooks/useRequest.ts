@@ -1,12 +1,6 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useReducer } from "react";
-import { type ExternalToast, toast } from "sonner";
-import type { ZodIssue } from "zod/lib/ZodError";
-
-type processError = {
-	toast?: { message: string; data: ExternalToast | undefined } | undefined;
-	setStatusError?: undefined | true;
-};
+import { toast } from "sonner";
 
 type stateReducerType = { error: boolean; loading: boolean };
 const statusReducer = (
@@ -44,7 +38,11 @@ const statusReducer = (
 
 export default function useRequest<T extends object>(
 	request: (passed?: T) => Promise<Response>,
-	successFn: (result: APIResult) => Promise<void> | void | processError,
+	successFn: (result: APIResult) => Promise<void> | void,
+	errorFn?: (
+		result: APIResult,
+		type: APIResultType,
+	) => Promise<boolean> | boolean,
 ) {
 	const t = useTranslations("Error");
 	const [status, dispatch] = useReducer(statusReducer, {
@@ -70,21 +68,21 @@ export default function useRequest<T extends object>(
 			dispatch({ type: "loading", value: false });
 
 			if (result.success) {
-				const processResult = await successFn(result);
-				if (processResult) {
-					if (processResult.toast)
-						toast(processResult.toast.message, processResult.toast.data);
-					if (processResult.setStatusError === true)
-						dispatch({ type: "error" });
-				}
+				await successFn(result);
 				return;
+			}
+
+			if (typeof errorFn !== "undefined") {
+				const fnResult = await errorFn(result, result.type);
+				if (fnResult) return;
 			}
 
 			const typeString = `(${result.type.replaceAll("_", "-")})`;
 
 			switch (result.type) {
 				case "validation": {
-					const issueArray: ZodIssue[] = result.result;
+					const issueArray = result.result;
+					if (!issueArray) throw new Error("Wrong result");
 					for (const issue of issueArray) {
 						toast.warning(
 							t("validation.message", {
@@ -105,7 +103,7 @@ export default function useRequest<T extends object>(
 				}
 				case "error-message":
 				case "duplicate-found":
-					toast.warning(result.result.message, {
+					toast.warning(result.result?.message, {
 						important: true,
 						duration: 5_000,
 					});
@@ -113,7 +111,7 @@ export default function useRequest<T extends object>(
 				default:
 					toast.error(
 						t("unknown.message", {
-							type: typeString === "undefined" ? "" : typeString,
+							type: typeString === "(undefined)" ? "" : typeString,
 						}),
 						{
 							description: "Error could not be identified. You can try again.",
@@ -124,7 +122,7 @@ export default function useRequest<T extends object>(
 					break;
 			}
 		},
-		[request, successFn, t],
+		[request, successFn, errorFn, t],
 	);
 
 	return { status, send };
