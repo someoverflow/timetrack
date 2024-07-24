@@ -356,6 +356,10 @@
 			"updated": "Benutzer erfolgreich aktualisiert",
 			"deleted": "Benutzer erfolgreich gelöscht",
 
+			"addDuplicate": "Benutzer existiert bereits.",
+			"updateNotFound": "Benutzer nicht gefunden.",
+			"updateDuplicate": "Benutzer mit diesem username existiert bereits.",
+
 			"chipRemoved": "Chip erfolgreich entfernt",
 			"chipAdded": "Chip erfolgreich verknüpft",
 

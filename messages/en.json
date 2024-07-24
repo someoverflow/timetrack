@@ -356,6 +356,10 @@
 			"updated": "Successfully updated user",
 			"deleted": "Successfully deleted entry",
 
+			"addDuplicate": "User with the username exists.",
+			"updateNotFound": "User not found.",
+			"updateDuplicate": "User with the new username exists.",
+
 			"chipRemoved": "Successfully removed chip",
 			"chipAdded": "Successfully linked chip",
 

@@ -124,6 +124,22 @@ export default function UserEdit({ user }: { user: User }) {
 			});
 			router.refresh();
 		},
+		(_request, type) => {
+			switch (type) {
+				case "not-found":
+					toast.success(t("updateNotFound"), {
+						duration: 5_000,
+					});
+					return true;
+				case "duplicate-found":
+					toast.success(t("updateDuplicate"), {
+						duration: 5_000,
+					});
+					return true;
+				default:
+					return false;
+			}
+		},
 	);
 	const { status: deleteStatus, send: sendDelete } = useRequest(
 		() =>

@@ -91,6 +91,15 @@ export default function UserAdd() {
 			});
 			router.refresh();
 		},
+		(_result, resultType) => {
+			if (resultType === "duplicate-found") {
+				toast.success(t("addDuplicate"), {
+					duration: 5_000,
+				});
+				return true;
+			}
+			return false;
+		},
 	);
 
 	return (
