@@ -1,5 +1,19 @@
 "use client";
 
+//#region Imports
+import type { TodoPriority } from "@prisma/client";
+
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +28,11 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
 	Check,
 	ChevronDown,
@@ -21,35 +40,19 @@ import {
 	ChevronsUp,
 	ChevronsUpDown,
 	ListPlus,
-	UserPlus,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useReducer, useState } from "react";
 import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Command,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-} from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import Link from "next/link";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { TodoPriority } from "@prisma/client";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
+import useRequest from "@/lib/hooks/useRequest";
+
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+//#endregion
 
 interface todoAddState {
-	loading: boolean;
-
 	priority: TodoPriority;
 
 	task: string;
@@ -74,13 +77,16 @@ export function TodoAdd({
 		description: string | null;
 	}[];
 }) {
+	const router = useRouter();
+	const t = useTranslations("Todo");
+
+	const [visible, setVisible] = useState(false);
 	const [data, setData] = useReducer(
 		(prev: todoAddState, next: Partial<todoAddState>) => ({
 			...prev,
 			...next,
 		}),
 		{
-			loading: false,
 			task: "",
 			description: "",
 			assignees: [],
@@ -93,44 +99,30 @@ export function TodoAdd({
 		},
 	);
 
-	const [visible, setVisible] = useState(false);
-
-	const t = useTranslations("Todo");
-
-	const router = useRouter();
-
-	async function sendRequest() {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/todo", {
-			method: "POST",
-			body: JSON.stringify({
-				task: data.task,
-				description:
-					data.description.trim() === "" ? undefined : data.description.trim(),
-				priority: data.priority,
-				deadline: data.deadlineEnabled ? data.deadline : undefined,
-				assignees: data.assignees.length !== 0 ? data.assignees : undefined,
-				projects: data.projects.length !== 0 ? data.projects : undefined,
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
+	const { status, send } = useRequest(
+		useCallback(
+			() =>
+				fetch("/api/todo", {
+					method: "POST",
+					body: JSON.stringify({
+						task: data.task,
+						description:
+							data.description.trim() === ""
+								? undefined
+								: data.description.trim(),
+						priority: data.priority,
+						deadline: data.deadlineEnabled ? data.deadline : undefined,
+						assignees: data.assignees.length !== 0 ? data.assignees : undefined,
+						projects: data.projects.length !== 0 ? data.projects : undefined,
+					}),
+				}),
+			[data],
+		),
+		(_result) => {
+			toast.success(t("Miscellaneous.created"), {
+				duration: 3000,
 			});
-			return;
-		});
 
-		if (resultData.success) {
 			setVisible(false);
 
 			setData({
@@ -138,37 +130,9 @@ export function TodoAdd({
 				description: "",
 			});
 
-			toast.success("Successfully created todo", {
-				duration: 3000,
-			});
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "duplicate-found":
-				toast.warning(`An error occurred (${resultData.type})`, {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<>
@@ -317,7 +281,7 @@ export function TodoAdd({
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
-										<PopoverContent className="p-2 max-h-60">
+										<PopoverContent className="p-2">
 											<Command>
 												<CommandInput
 													placeholder={t("Dialogs.Add.searchProject")}
@@ -327,7 +291,7 @@ export function TodoAdd({
 													<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 														<p>{t("Dialogs.Add.noProjectsFound")}</p>
 														<Link
-															href="/settings?page=projects"
+															href="/projects"
 															prefetch={false}
 															className={buttonVariants({
 																variant: "link",
@@ -422,7 +386,7 @@ export function TodoAdd({
 												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
-										<PopoverContent className="p-2 max-h-60">
+										<PopoverContent className="p-2">
 											<Command>
 												<CommandInput
 													placeholder={t("Dialogs.Add.searchUser")}
@@ -511,8 +475,8 @@ export function TodoAdd({
 						<div className="w-full gap-2 flex flex-row justify-end">
 							<Button
 								variant="outline"
-								onClick={() => sendRequest()}
-								disabled={data.loading}
+								onClick={() => send()}
+								disabled={status.loading}
 							>
 								<ListPlus className="mr-2 h-4 w-4" />
 								{t("Dialogs.Add.create")}

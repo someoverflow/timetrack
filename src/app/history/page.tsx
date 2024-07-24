@@ -1,22 +1,18 @@
-// UI
+//#region Imports
+import type { Prisma } from "@prisma/client";
+
 import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
+import { TimerAddServer } from "./timer-add";
 
-// Database
-import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-// Navigation
 import { redirect } from "next/navigation";
-
-// React
-import type { Metadata } from "next";
-
-// Utils
-import { getTotalTime, months } from "@/lib/utils";
-import { TimerAddServer } from "./timer-add";
+import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+//#endregion
 
 type Timer = Prisma.TimeGetPayload<{
 	include: { project: true };
@@ -63,6 +59,15 @@ export default async function History({
 
 	const t = await getTranslations("History");
 
+	const cookieStore = cookies();
+
+	const invoicedCookie = cookieStore.get("invoiced")?.value;
+	const invoiced = [undefined, "true", "false"].includes(invoicedCookie)
+		? invoicedCookie
+			? invoicedCookie === "true"
+			: undefined
+		: undefined;
+
 	const [history, projects] = await prisma.$transaction([
 		prisma.time.findMany({
 			orderBy: {
@@ -70,6 +75,7 @@ export default async function History({
 			},
 			where: {
 				userId: user.id,
+				invoiced: invoiced,
 			},
 			include: {
 				project: true,
@@ -78,25 +84,17 @@ export default async function History({
 		prisma.project.findMany(),
 	]);
 
-	function dataFound(): boolean {
-		if (history.length === 0) return false;
-		return !(history.length === 1 && history[0].end == null);
-	}
-
 	const historyData = formatHistory(history);
 
 	let yearMonth = searchParams?.ym;
 	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
 		yearMonth = Object.keys(historyData)[0];
 
-	const timeStrings = (historyData[yearMonth] || [])
-		.map((data) => data.time)
-		.filter(Boolean); // Remove all undefined or null
-
+	const timeStrings = (historyData[yearMonth] ?? [])
+		.filter((data) => data.time !== null)
+		.map((e) => e.time);
 	const totalTime =
-		timeStrings.length === 0
-			? "00:00:00"
-			: getTotalTime(timeStrings as string[]);
+		timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
 
 	return (
 		<Navigation>
@@ -105,16 +103,23 @@ export default async function History({
 					<p className="text-2xl font-mono">{t("PageTitle")}</p>
 				</div>
 
-				{dataFound() ? (
+				{history.length !== 0 ? (
 					<TimerSection
 						history={historyData}
 						projects={projects}
 						totalTime={totalTime}
 						yearMonth={yearMonth}
+						invoicedFilter={invoiced}
 						user={user.id ?? ""}
 					/>
 				) : (
-					<TimerAddServer user={user.id ?? ""} projects={projects} />
+					<TimerAddServer
+						user={user.id ?? ""}
+						projects={projects}
+						resetFilter={
+							historyData.toString() === {}.toString() && invoiced !== undefined
+						}
+					/>
 				)}
 			</section>
 		</Navigation>

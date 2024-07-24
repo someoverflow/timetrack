@@ -1,14 +1,13 @@
-// UI
+//#region Imports
 import Navigation from "@/components/navigation";
+
 import ProfileSection from "./profile-section";
 
-// Auth
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-
-// Translations
 import { getTranslations } from "next-intl/server";
+//#endregion
 
 export async function generateMetadata() {
 	const t = await getTranslations({ namespace: "Profile.Metadata" });

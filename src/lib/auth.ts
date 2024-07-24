@@ -20,7 +20,7 @@ declare module "next-auth" {
 export const { auth, handlers, signIn, signOut } = NextAuth({
 	pages: {
 		signIn: "/signin",
-		signOut: "/signout"
+		signOut: "/signout",
 	},
 	session: { strategy: "jwt" },
 
@@ -48,7 +48,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 				session?.validJwtId
 			) {
 				token.name = session.name;
-				token.email = session.email
+				token.email = session.email;
 				token.username = session.username;
 				token.validJwtId = session.validJwtId;
 			}

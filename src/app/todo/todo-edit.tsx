@@ -1,13 +1,31 @@
+//#region Imports
+import type { todoUpdateApiValidationType } from "@/lib/zod";
+import type { Prisma, Todo, TodoPriority, TodoStatus } from "@prisma/client";
+
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Command,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+} from "@/components/ui/command";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Prisma, Todo, TodoPriority, TodoStatus } from "@prisma/client";
 import { Step, Stepper, type StepItem } from "@/components/ui/stepper";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import {
 	Check,
 	ChevronDown,
@@ -20,27 +38,17 @@ import {
 	CircleDotDashed,
 	SaveAll,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Command,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-} from "@/components/ui/command";
-import Link from "next/link";
-import type { todoUpdateApiValidationType } from "@/lib/zod";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
+
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import useRequest from "@/lib/hooks/useRequest";
+//#endregion
 
 const steps = [
 	{ id: "todo", label: "Todo", icon: CircleDot },
@@ -78,8 +86,6 @@ type TodoType = Prisma.TodoGetPayload<{
 }>;
 
 interface todoInfoState {
-	loading: boolean;
-
 	task: string;
 	description: string;
 
@@ -106,10 +112,12 @@ export function TodoTableEdit({
 	projects: ProjectsType;
 	users: UsersType;
 }) {
+	const router = useRouter();
+	const t = useTranslations("Todo");
+
+	const [visible, setVisible] = useState(false);
 	const getDefaultReducerState = (): todoInfoState => {
 		return {
-			loading: false,
-
 			task: todo.task,
 			description: todo.description ?? "",
 
@@ -127,7 +135,6 @@ export function TodoTableEdit({
 			priority: todo.priority,
 		};
 	};
-
 	const [state, setState] = useReducer(
 		(prev: todoInfoState, next: Partial<todoInfoState>) => ({
 			...prev,
@@ -135,19 +142,9 @@ export function TodoTableEdit({
 		}),
 		getDefaultReducerState(),
 	);
-	const [visible, setVisible] = useState(false);
-
-	const t = useTranslations("Todo");
 
 	const searchParams = useSearchParams();
 	const linkedTodo = searchParams.get("link");
-
-	const router = useRouter();
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-	useEffect(() => {
-		setVisible(linkedTodo === todo.id);
-		setState(getDefaultReducerState());
-	}, [linkedTodo, todo]);
 
 	const updateLink = () => {
 		const current = new URLSearchParams(window.location.search);
@@ -157,196 +154,116 @@ export function TodoTableEdit({
 		router.replace(`/todo${query}`);
 	};
 
-	async function sendRequest() {
-		setState({
-			loading: true,
-		});
+	const { status, send } = useRequest(
+		useCallback(() => {
+			const assigneesToAdd = [];
+			const assigneesToRemove = [];
+			for (const assignee of todo.assignees)
+				if (!state.assignees.includes(assignee.username))
+					assigneesToRemove.push(assignee.username);
+			for (const username of state.assignees)
+				if (todo.assignees.find((a) => a.username === username) === undefined)
+					assigneesToAdd.push(username);
 
-		const assigneesToAdd = [];
-		const assigneesToRemove = [];
+			const projectsToAdd = [];
+			const projectsToRemove = [];
+			for (const project of todo.relatedProjects)
+				if (!state.projects.includes(project.name))
+					projectsToRemove.push(project.name);
+			for (const name of state.projects)
+				if (todo.relatedProjects.find((p) => p.name === name) === undefined)
+					projectsToAdd.push(name);
 
-		for (const assignee of todo.assignees)
-			if (!state.assignees.includes(assignee.username))
-				assigneesToRemove.push(assignee.username);
-		for (const username of state.assignees)
-			if (todo.assignees.find((a) => a.username === username) === undefined)
-				assigneesToAdd.push(username);
+			const request: todoUpdateApiValidationType = {
+				id: todo.id,
 
-		const projectsToAdd = [];
-		const projectsToRemove = [];
-
-		for (const project of todo.relatedProjects)
-			if (!state.projects.includes(project.name))
-				projectsToRemove.push(project.name);
-		for (const name of state.projects)
-			if (todo.relatedProjects.find((p) => p.name === name) === undefined)
-				projectsToAdd.push(name);
-
-		const request: todoUpdateApiValidationType = {
-			id: todo.id,
-
-			task: todo.task !== state.task ? state.task : undefined,
-			description:
-				todo.description ?? "" !== state.description
-					? state.description
-					: undefined,
-
-			deadline:
-				(todo.deadline ? todo.deadline.toISOString().split("T")[0] : null) !==
-				(state.deadlineEnabled ? state.deadline : null)
-					? state.deadlineEnabled
-						? state.deadline
-						: null
-					: undefined,
-
-			assignees: {
-				add:
-					assigneesToAdd.length !== 0
-						? (assigneesToAdd as [string, ...string[]])
+				task: todo.task !== state.task ? state.task : undefined,
+				description:
+					todo.description ?? "" !== state.description
+						? state.description
 						: undefined,
-				remove:
-					assigneesToRemove.length !== 0
-						? (assigneesToRemove as [string, ...string[]])
+
+				deadline:
+					(todo.deadline ? todo.deadline.toISOString().split("T")[0] : null) !==
+					(state.deadlineEnabled ? state.deadline : null)
+						? state.deadlineEnabled
+							? state.deadline
+							: null
 						: undefined,
-			},
 
-			projects: {
-				add:
-					projectsToAdd.length !== 0
-						? (projectsToAdd as [string, ...string[]])
-						: undefined,
-				remove:
-					projectsToRemove.length !== 0
-						? (projectsToRemove as [string, ...string[]])
-						: undefined,
-			},
+				assignees: {
+					add:
+						assigneesToAdd.length !== 0
+							? (assigneesToAdd as [string, ...string[]])
+							: undefined,
+					remove:
+						assigneesToRemove.length !== 0
+							? (assigneesToRemove as [string, ...string[]])
+							: undefined,
+				},
 
-			priority: todo.priority !== state.priority ? state.priority : undefined,
-		};
+				projects: {
+					add:
+						projectsToAdd.length !== 0
+							? (projectsToAdd as [string, ...string[]])
+							: undefined,
+					remove:
+						projectsToRemove.length !== 0
+							? (projectsToRemove as [string, ...string[]])
+							: undefined,
+				},
 
-		const result = await fetch("/api/todo", {
-			method: "PUT",
-			body: JSON.stringify(request),
-		});
+				priority: todo.priority !== state.priority ? state.priority : undefined,
+			};
 
-		setState({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
+			return fetch("/api/todo", {
+				method: "PUT",
+				body: JSON.stringify(request),
 			});
-			return;
-		});
-
-		if (resultData.success) {
-			toast.success("Successfully updated entry", {
-				duration: 3000,
+		}, [state, todo]),
+		(_result) => {
+			toast.success(t("Miscellaneous.updated"), {
+				duration: 3_000,
 			});
 			router.refresh();
-			return;
-		}
+		},
+	);
 
-		switch (resultData.type) {
-			case "error-message":
-				toast.warning("An error occurred", {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-
-	async function stepChange(step: number, setStep: (step: number) => void) {
-		const request: Partial<Todo> = {
-			id: todo.id,
-		};
-
-		if (step === 0) request.status = "TODO";
-		if (step === 1) request.status = "IN_PROGRESS";
-		if (step === 2) request.status = "DONE";
-
-		if (todo.status === request.status || state.loading) return;
-
-		setState({
-			loading: true,
-			statusState: "loading",
-		});
-
-		const result = await fetch("/api/todo", {
-			method: "PUT",
-			body: JSON.stringify(request),
-		});
-
-		setState({
-			loading: false,
-			statusState: undefined,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			setState({ statusState: "error" });
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
+	const { status: stepStatus, send: sendStep } = useRequest(
+		(
+			passed:
+				| {
+						step: number;
+						setStep: (step: number) => void;
+				  }
+				| undefined,
+		) => {
+			if (passed) passed.setStep(passed.step);
+			return fetch("/api/todo", {
+				method: "PUT",
+				body: JSON.stringify({
+					id: todo.id,
+					status: ["TODO", "IN_PROGRESS", "DONE"][passed?.step ?? 0],
+				}),
 			});
-			return;
-		});
-
-		if (resultData.success) {
+		},
+		(_result) => {
 			updateLink();
-			setStep(step);
 
-			toast.success("Successfully changed", {
-				duration: 3000,
+			toast.success(t("Miscellaneous.changed"), {
+				duration: 3_000,
 			});
 			router.refresh();
-			return;
-		}
+		},
+	);
 
-		setState({ statusState: "error" });
-		switch (resultData.type) {
-			case "error-message":
-				toast.warning("An error occurred", {
-					description: resultData.result.message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+	const loading = stepStatus.loading || status.loading;
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: _
+	useEffect(() => {
+		setVisible(linkedTodo === todo.id);
+		setState(getDefaultReducerState());
+	}, [linkedTodo, stepStatus.loading]);
 
 	return (
 		<>
@@ -369,6 +286,9 @@ export function TodoTableEdit({
 				open={visible}
 				onOpenChange={(e) => setVisible(e)}
 			>
+				<VisuallyHidden>
+					<DialogTitle>Edit Todo</DialogTitle>
+				</VisuallyHidden>
 				<DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
 					<div className="flex flex-row gap-1 absolute top-2 left-2">
 						{todo.archived && (
@@ -393,9 +313,14 @@ export function TodoTableEdit({
 								}
 								steps={steps}
 								onClickStep={
-									todo.archived
+									todo.archived || loading
 										? undefined
-										: (step, setStep) => stepChange(step, setStep)
+										: (step, setStep) => {
+												sendStep({
+													step: step,
+													setStep: setStep,
+												});
+											}
 								}
 								state={state.statusState}
 								variant="circle-alt"
@@ -650,7 +575,7 @@ export function TodoTableEdit({
 														<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 													</Button>
 												</PopoverTrigger>
-												<PopoverContent className="p-2 max-h-60">
+												<PopoverContent className="p-2">
 													<Command>
 														<CommandInput
 															placeholder={t("Dialogs.Edit.searchUser")}
@@ -754,7 +679,7 @@ export function TodoTableEdit({
 														<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 													</Button>
 												</PopoverTrigger>
-												<PopoverContent className="p-2 max-h-60">
+												<PopoverContent className="p-2">
 													<Command>
 														<CommandInput
 															placeholder={t("Dialogs.Edit.searchProject")}
@@ -764,7 +689,7 @@ export function TodoTableEdit({
 															<div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
 																<p>{t("Dialogs.Edit.noProjectsFound")}</p>
 																<Link
-																	href="/settings?page=projects"
+																	href="/projects"
 																	prefetch={false}
 																	className={buttonVariants({
 																		variant: "link",
@@ -904,8 +829,8 @@ export function TodoTableEdit({
 						<div className="w-full gap-2 flex flex-row justify-end">
 							<Button
 								variant="outline"
-								onClick={() => sendRequest()}
-								disabled={state.loading}
+								onClick={() => send()}
+								disabled={loading}
 							>
 								<SaveAll className="mr-2 h-4 w-4" />
 								{t("Dialogs.Edit.save")}

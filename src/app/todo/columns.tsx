@@ -1,22 +1,8 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	ArrowDownAZ,
-	ArrowDownZA,
-	ChevronDown,
-	ChevronUp,
-	ChevronsUp,
-	CircleCheckBig,
-	CircleDot,
-	CircleDotDashed,
-	ListFilter,
-	MoreHorizontal,
-	MousePointerClick,
-	Settings2,
-} from "lucide-react";
+//#region Imports
+import type { Prisma, Todo } from "@prisma/client";
+
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -26,19 +12,36 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent } from "@/components/ui/hover-card";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import type { Prisma, Todo } from "@prisma/client";
+import {
+	ChevronDown,
+	ChevronUp,
+	ChevronsUp,
+	CircleCheckBig,
+	CircleDot,
+	CircleDotDashed,
+	MoreHorizontal,
+	MousePointerClick,
+	Settings2,
+} from "lucide-react";
+import { toast } from "sonner";
+
 import { TodoTableEdit } from "./todo-edit";
+
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import useRequest from "@/lib/hooks/useRequest";
+//#endregion
 
 export const columns: ColumnDef<
 	Prisma.TodoGetPayload<{
@@ -70,7 +73,7 @@ export const columns: ColumnDef<
 		accessorKey: "task",
 		enableHiding: false,
 		sortingFn: "alphanumericCaseSensitive",
-		header: ({ column }) => {
+		header: ({ column: _column }) => {
 			const t = useTranslations("Todo.Miscellaneous");
 			return (
 				<div className="flex items-center space-x-2">
@@ -85,6 +88,7 @@ export const columns: ColumnDef<
 						className="-ml-3 h-8 data-[state=open]:bg-accent w-full"
 					>
 						<span>{t("task")}</span>
+						{/* 
 						{column.getIsSorted() === "desc" ? (
 							<ArrowDownZA className="ml-2 h-4 w-4" />
 						) : column.getIsSorted() === "asc" ? (
@@ -92,6 +96,7 @@ export const columns: ColumnDef<
 						) : (
 							<ListFilter className="ml-2 h-4 w-4" />
 						)}
+						 */}
 					</Button>
 				</div>
 			);
@@ -101,75 +106,46 @@ export const columns: ColumnDef<
 			const router = useRouter();
 			const todo = row.original;
 
-			async function stepChange() {
-				const request: Partial<Todo> = {
-					id: todo.id,
-				};
+			const { status, send } = useRequest(
+				() => {
+					const request: Partial<Todo> = {
+						id: todo.id,
+					};
 
-				switch (todo.status) {
-					case "TODO":
-						request.status = "IN_PROGRESS";
-						break;
-					case "IN_PROGRESS":
-						request.status = "DONE";
-						break;
-					case "DONE":
-						request.status = "TODO";
-						break;
-				}
+					switch (todo.status) {
+						case "TODO":
+							request.status = "IN_PROGRESS";
+							break;
+						case "IN_PROGRESS":
+							request.status = "DONE";
+							break;
+						case "DONE":
+							request.status = "TODO";
+							break;
+					}
 
-				const result = await fetch("/api/todo", {
-					method: "PUT",
-					body: JSON.stringify(request),
-				});
-
-				const resultData: APIResult = await result.json().catch(() => {
-					toast.error("An error occurred", {
-						description: "Result could not be proccessed",
-						important: true,
-						duration: 8000,
+					return fetch("/api/todo", {
+						method: "PUT",
+						body: JSON.stringify(request),
 					});
-					return;
-				});
-
-				if (resultData.success) {
-					toast.success("Successfully changed", {
-						duration: 3000,
+				},
+				(_result) => {
+					toast.success(t("changed"), {
+						duration: 3_000,
 					});
 					router.refresh();
-					return;
-				}
-
-				switch (resultData.type) {
-					case "error-message":
-						toast.warning("An error occurred", {
-							description: resultData.result.message,
-							important: true,
-							duration: 5000,
-						});
-						break;
-					case "validation":
-						toast.warning(`An error occurred (${resultData.result[0].code})`, {
-							description: resultData.result[0].message,
-							important: true,
-							duration: 5000,
-						});
-						break;
-					default:
-						toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-							description: "Error could not be identified. You can try again.",
-							important: true,
-							duration: 8000,
-						});
-						break;
-				}
-			}
+				},
+			);
 
 			return (
 				<div className="flex flex-row items-center gap-2">
 					<div className="flex flex-col justify-between gap-1 h-10">
 						<Tooltip>
-							<TooltipTrigger onClick={stepChange}>
+							<TooltipTrigger
+								onClick={() => {
+									if (!status.loading) send();
+								}}
+							>
 								{todo.status === "TODO" && (
 									<CircleDot className="h-4 w-4 text-blue-500" />
 								)}
@@ -362,100 +338,33 @@ export const columns: ColumnDef<
 			const router = useRouter();
 			const todo = row.original;
 
-			async function archive() {
-				const result = await fetch("/api/todo?type=ARCHIVE", {
-					method: "PUT",
-					body: JSON.stringify({ id: todo.id }),
-				});
-
-				const resultData: APIResult = await result.json().catch(() => {
-					toast.error("An error occurred", {
-						description: "Result could not be proccessed",
-						important: true,
-						duration: 8000,
-					});
-					return;
-				});
-
-				if (resultData.success) {
-					toast.success("Successfully archived", {
-						duration: 3000,
+			const { status: archiveStatus, send: sendArchive } = useRequest(
+				() =>
+					fetch("/api/todo?type=ARCHIVE", {
+						method: "PUT",
+						body: JSON.stringify({ id: todo.id }),
+					}),
+				(_result) => {
+					toast.success(t("changed"), {
+						duration: 3_000,
 					});
 					router.refresh();
-					return;
-				}
+				},
+			);
 
-				switch (resultData.type) {
-					case "error-message":
-						toast.warning("An error occurred", {
-							description: resultData.result.message,
-							important: true,
-							duration: 5000,
-						});
-						break;
-					case "validation":
-						toast.warning(`An error occurred (${resultData.result[0].code})`, {
-							description: resultData.result[0].message,
-							important: true,
-							duration: 5000,
-						});
-						break;
-					default:
-						toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-							description: "Error could not be identified. You can try again.",
-							important: true,
-							duration: 8000,
-						});
-						break;
-				}
-			}
-			async function visibiltyToggle() {
-				const result = await fetch("/api/todo?type=VISIBILITY", {
-					method: "PUT",
-					body: JSON.stringify({ id: todo.id }),
-				});
-
-				const resultData: APIResult = await result.json().catch(() => {
-					toast.error("An error occurred", {
-						description: "Result could not be proccessed",
-						important: true,
-						duration: 8000,
-					});
-					return;
-				});
-
-				if (resultData.success) {
-					toast.success("Successfully changed visibility", {
-						duration: 3000,
+			const { status: visibilityStatus, send: sendVisibility } = useRequest(
+				() =>
+					fetch("/api/todo?type=VISIBILITY", {
+						method: "PUT",
+						body: JSON.stringify({ id: todo.id }),
+					}),
+				(_result) => {
+					toast.success(t("changed"), {
+						duration: 3_000,
 					});
 					router.refresh();
-					return;
-				}
-
-				switch (resultData.type) {
-					case "error-message":
-						toast.warning("An error occurred", {
-							description: resultData.result.message,
-							important: true,
-							duration: 5000,
-						});
-						break;
-					case "validation":
-						toast.warning(`An error occurred (${resultData.result[0].code})`, {
-							description: resultData.result[0].message,
-							important: true,
-							duration: 5000,
-						});
-						break;
-					default:
-						toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-							description: "Error could not be identified. You can try again.",
-							important: true,
-							duration: 8000,
-						});
-						break;
-				}
-			}
+				},
+			);
 
 			return (
 				<DropdownMenu>
@@ -477,19 +386,21 @@ export const columns: ColumnDef<
 							{t("copyLink")}
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem disabled={todo.archived} onClick={archive}>
+						<DropdownMenuItem
+							disabled={todo.archived}
+							onClick={() => {
+								if (!archiveStatus.loading) sendArchive();
+							}}
+						>
 							{t("archive")}
 						</DropdownMenuItem>
-						{!todo.hidden && (
-							<DropdownMenuItem onClick={() => visibiltyToggle()}>
-								{t("hide")}
-							</DropdownMenuItem>
-						)}
-						{todo.hidden && (
-							<DropdownMenuItem onClick={() => visibiltyToggle()}>
-								{t("show")}
-							</DropdownMenuItem>
-						)}
+						<DropdownMenuItem
+							onClick={() => {
+								if (!visibilityStatus.loading) sendVisibility();
+							}}
+						>
+							{t(todo.hidden ? "show" : "hide")}
+						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			);

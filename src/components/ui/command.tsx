@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "./scroll-area";
 
 const Command = React.forwardRef<
 	React.ElementRef<typeof CommandPrimitive>,
@@ -62,7 +63,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<CommandPrimitive.List
 		ref={ref}
-		className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+		className={cn("overflow-y-auto overflow-x-hidden", className)}
 		{...props}
 	/>
 ));
@@ -90,6 +91,7 @@ const CommandGroup = React.forwardRef<
 		ref={ref}
 		className={cn(
 			"overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
+			"max-h-64 overflow-y-auto",
 			className,
 		)}
 		{...props}

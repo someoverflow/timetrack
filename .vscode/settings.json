@@ -15,5 +15,12 @@
     },
     "[shellscript]": {
         "editor.defaultFormatter": "shakram02.bash-beautify"
+    },
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "[dockerfile]": {
+        "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }

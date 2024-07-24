@@ -17,7 +17,14 @@
 			"start": "Start",
 			"stop": "Stop",
 			"startWithWebsite": "Starte jetzt durch die Website",
-			"startedWith": "Gestartet mit {startType}"
+			"startedWith": "Gestartet mit {startType}",
+
+			"projects": {
+				"none": "Kein Projekt",
+				"search": "Suchen...",
+				"noneFound": "Keine Projekte gefunden",
+				"noneFoundDescription": "Klicke um Projekte zu verwalten"
+			}
 		}
 	},
 	"History": {
@@ -54,7 +61,7 @@
 
 				"delete": "Löschen",
 				"save": "Speichern",
-				"saveDetails": "Details Speichern"
+				"saveDetails": "Speichern + Stoppen"
 			},
 			"Create": {
 				"title": "Eintrag hinzufügen",
@@ -119,6 +126,17 @@
 			"newEntry": "Neuen Eintrag hinzufügen",
 			"nothingFound": "Nichts gefunden.",
 			"userNotFound": "Benutzer nicht gefunden.",
+
+			"created": "Neuen Eintrag erfolgreich erstellt",
+			"updated": "Eintrag erfolgreich aktualisiert",
+			"deleted": "Eintrag erfolgreich gelöscht",
+
+			"undo": "Zurücksetzen",
+
+			"invoicedSingular": "Berechnet",
+			"invoiced": "Berechnete Zeiten",
+			"invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
+			"invoicedExportDescription": "werden {invoiced, select, true {nur exportiert} false {nicht exportiert} other {exportiert}}",
 
 			"Months": {
 				"January": "Januar",
@@ -227,6 +245,10 @@
 			"hide": "Verstecken",
 			"show": "Anzeigen",
 
+			"changed": "Erfolgreich geändert.",
+			"updated": "Todo erfolgreich aktualisiert",
+			"created": "Todo erfolgreich erstellt",
+
 			"steps": {
 				"todo": "Todo",
 				"inProgress": "In Arbeit",
@@ -267,6 +289,11 @@
 		"password": "Neues Passwort",
 		"passwordPlaceholder": "",
 
+		"updated": "Profil erfolgreich aktualisiert",
+		"sessionUpdate": "Die Sitzung wird aktualisiert.",
+		"languageUpdate": "Sprache geändert.",
+		"passwordUpdate": "Passwort geändert. Bitte erneut anmelden.",
+
 		"buttonContent": "Speichern",
 		"buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort"
 	},
@@ -286,6 +313,10 @@
 
 		"times": "Zeiten: {times}",
 		"todos": "Todos: {todos}",
+
+		"saved": "Erfolgreich gespeichert.",
+		"created": "Projekt erfolgreich erstellt.",
+		"deleted": "Projekt erfolgreich gelöscht.",
 
 		"Dialogs": {
 			"Edit": {
@@ -320,6 +351,17 @@
 
 			"rowsPerPage": "Zeilen pro Seite",
 			"currentPage": "Seite {page} von {pages}",
+
+			"created": "Benutzer erfolgreich erstellt",
+			"updated": "Benutzer erfolgreich aktualisiert",
+			"deleted": "Benutzer erfolgreich gelöscht",
+
+			"addDuplicate": "Benutzer existiert bereits.",
+			"updateNotFound": "Benutzer nicht gefunden.",
+			"updateDuplicate": "Benutzer mit diesem username existiert bereits.",
+
+			"chipRemoved": "Chip erfolgreich entfernt",
+			"chipAdded": "Chip erfolgreich verknüpft",
 
 			"Dialogs": {
 				"Add": {
@@ -410,5 +452,18 @@
 		"projects": "Projekte",
 		"users": "Benutzer",
 		"signOut": "Abmelden"
+	},
+	"Error": {
+		"message": "Ein Fehler ist aufgetreten",
+		"resultProcessing": "Antwort konnte nicht verarbeitet werden",
+
+		"unknown": {
+			"message": "Ein unbekannter Fehler ist aufgetreten {type}",
+			"description": "Ein neuer Versuch schadet nicht."
+		},
+		"validation": {
+			"message": "{message}",
+			"description": "{code}"
+		}
 	}
 }

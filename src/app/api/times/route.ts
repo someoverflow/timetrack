@@ -2,11 +2,11 @@ import prisma from "@/lib/prisma";
 import { getTimePassed } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import {
-	FORBIDDEN,
 	NO_AUTH_RESPONSE,
 	defaultResult,
 	parseJsonBody,
 	badRequestResponse,
+	FORBIDDEN_RESPONSE,
 } from "@/lib/server-utils";
 import { auth } from "@/lib/auth";
 import type { Prisma } from "@prisma/client";
@@ -157,6 +157,8 @@ export const POST = auth(async (request) => {
 
 		traveledDistance: json.traveledDistance,
 
+		invoiced: json.invoiced,
+
 		start: json.start,
 		end: json.end,
 
@@ -170,10 +172,7 @@ export const POST = auth(async (request) => {
 	// Check if user is given
 	if (data.userId) {
 		if (data.userId !== session.user.id && session.user.role !== "ADMIN")
-			return NextResponse.json(FORBIDDEN, {
-				status: FORBIDDEN.status,
-				statusText: FORBIDDEN.result,
-			});
+			return FORBIDDEN_RESPONSE;
 	}
 
 	// Check if user is included in project when given
@@ -204,14 +203,19 @@ export const POST = auth(async (request) => {
 		const databaseResult = await prisma.time.create({
 			data: {
 				userId: data.userId ?? session.user.id,
-				projectName: data.project,
-				notes: data.notes,
-				traveledDistance: data.traveledDistance ?? null,
+
 				start: data.start,
 				end: data.end,
 				startType: data.startType ?? "API",
 				endType: data.endType ?? "API",
+
 				time: timePassed,
+
+				notes: data.notes,
+
+				projectName: data.project,
+				traveledDistance: data.traveledDistance ?? null,
+				invoiced: data.invoiced,
 			},
 		});
 
@@ -252,6 +256,8 @@ export const PUT = auth(async (request) => {
 
 		traveledDistance: json.traveledDistance,
 
+		invoiced: json.invoiced,
+
 		start: json.start,
 		end: json.end,
 
@@ -261,6 +267,21 @@ export const PUT = auth(async (request) => {
 	if (!validationResult.success)
 		return badRequestResponse(validationResult.error.issues, "validation");
 	const data = validationResult.data;
+
+	if (
+		!(
+			data.notes ||
+			data.notes === "" ||
+			data.invoiced !== undefined ||
+			data.project ||
+			data.start ||
+			data.end ||
+			data.startType ||
+			data.endType ||
+			data.traveledDistance
+		)
+	)
+		return NextResponse.json(result, { status: result.status });
 
 	// Check the time entry
 	let dbStarted: Date | undefined = undefined;
@@ -314,6 +335,7 @@ export const PUT = auth(async (request) => {
 		projectName: data.project,
 		notes: data.notes,
 		traveledDistance: data.traveledDistance,
+		invoiced: data.invoiced,
 	};
 
 	if (data.start && !data.end) {
@@ -403,10 +425,7 @@ export const DELETE = auth(async (request) => {
 			databaseResult.userId !== session.user.id &&
 			session.user.role !== "ADMIN"
 		)
-			return NextResponse.json(FORBIDDEN, {
-				status: FORBIDDEN.status,
-				statusText: FORBIDDEN.result,
-			});
+			return FORBIDDEN_RESPONSE;
 	} catch (e) {
 		result.success = false;
 		result.status = 500;

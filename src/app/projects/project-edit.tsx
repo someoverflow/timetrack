@@ -1,28 +1,34 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CommandItem } from "@/components/ui/command";
+"use client";
+
+//#region Imports
+import type { Role } from "@prisma/client";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CommandItem } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import type { Role } from "@prisma/client";
 import { Ellipsis, Trash } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useReducer, useState } from "react";
 import { toast } from "sonner";
 
-interface projectEditState {
-	loading: boolean;
+import { useTranslations } from "next-intl";
+import { useReducer, useState } from "react";
+import { useRouter } from "next/navigation";
+import useRequest from "@/lib/hooks/useRequest";
 
+import { cn } from "@/lib/utils";
+//#endregion
+
+interface projectEditState {
 	name: string;
 	description: string;
 }
@@ -52,121 +58,50 @@ export function ProjectEdit({
 			...next,
 		}),
 		{
-			loading: false,
-
 			name: project.name,
 			description: project.description ?? "",
 		},
 	);
 
-	async function deleteProject(id: string) {
-		setData({
-			loading: true,
-		});
-
-		const result = await fetch("/api/project", {
-			method: "DELETE",
-			body: JSON.stringify({
-				id: id,
-			}),
-		});
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
+	const { status: updateStatus, send: sendUpdate } = useRequest(
+		(
+			passed:
+				| { name?: true | undefined; description?: true | undefined }
+				| undefined,
+		) => {
+			const trimmedDescription = data.description.trim();
+			return fetch("/api/project", {
+				method: "PUT",
+				body: JSON.stringify({
+					name: project.name,
+					newName: passed?.name ? data.name : undefined,
+					description: passed?.description
+						? trimmedDescription.length !== 0
+							? trimmedDescription
+							: null
+						: undefined,
+				}),
 			});
-			return;
-		});
-
-		if (resultData.success) {
-			toast.success("Successfully deleted project.");
+		},
+		(_result) => {
+			toast.success(t("saved"));
 			router.refresh();
-			return;
-		}
+		},
+	);
 
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
-
-	async function change(name: boolean) {
-		setData({
-			loading: true,
-		});
-
-		const trimmedDescription = data.description.trim();
-
-		const result = await fetch("/api/project", {
-			method: "PUT",
-			body: JSON.stringify({
-				name: project.name,
-				newName: name ? data.name : undefined,
-				description: !name
-					? trimmedDescription.length !== 0
-						? trimmedDescription
-						: null
-					: undefined,
+	const { status: deleteStatus, send: sendDelete } = useRequest(
+		() =>
+			fetch("/api/project", {
+				method: "DELETE",
+				body: JSON.stringify({
+					id: project.name,
+				}),
 			}),
-		});
-
-		if (name) setData({ name: data.name });
-		if (!name) setData({ name: data.name });
-
-		setData({
-			loading: false,
-		});
-
-		const resultData: APIResult = await result.json().catch(() => {
-			toast.error("An error occurred", {
-				description: "Result could not be proccessed",
-				important: true,
-				duration: 8000,
-			});
-			return;
-		});
-
-		if (resultData.success) {
-			toast.success("Successfully saved.");
+		(_result) => {
+			toast.success(t("deleted"));
 			router.refresh();
-			return;
-		}
-
-		switch (resultData.type) {
-			case "validation":
-				toast.warning(`An error occurred (${resultData.result[0].code})`, {
-					description: resultData.result[0].message,
-					important: true,
-					duration: 5000,
-				});
-				break;
-			default:
-				toast.error(`An error occurred (${resultData.type ?? "unknown"})`, {
-					description: "Error could not be identified. You can try again.",
-					important: true,
-					duration: 8000,
-				});
-				break;
-		}
-	}
+		},
+	);
 
 	return (
 		<>
@@ -202,8 +137,8 @@ export function ProjectEdit({
 								size="icon"
 								variant="destructive"
 								className="transition-all duration-150 opacity-0 group-hover:opacity-100"
-								disabled={data.loading}
-								onClick={() => deleteProject(project.name)}
+								disabled={updateStatus.loading || deleteStatus.loading}
+								onClick={() => sendDelete()}
 							>
 								<Trash className="w-4 h-4" />
 							</Button>
@@ -214,7 +149,7 @@ export function ProjectEdit({
 							size="icon"
 							variant="outline"
 							className="transition-all duration-150 opacity-0 group-hover:opacity-100"
-							disabled={data.loading}
+							disabled={updateStatus.loading || deleteStatus.loading}
 							onClick={() => setVisible(!visible)}
 						>
 							<Ellipsis className="w-4 h-4" />
@@ -268,7 +203,8 @@ export function ProjectEdit({
 											value={data.name ?? ""}
 											onChange={(e) => setData({ name: e.target.value })}
 											onBlur={() => {
-												if (data.name !== project.name) change(true);
+												if (data.name !== project.name)
+													sendUpdate({ name: true });
 											}}
 										/>
 									</div>
@@ -293,7 +229,7 @@ export function ProjectEdit({
 											onChange={(e) => setData({ description: e.target.value })}
 											onBlur={() => {
 												if (data.description !== (project.description ?? ""))
-													change(false);
+													sendUpdate({ description: true });
 											}}
 										/>
 									</div>

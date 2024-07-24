@@ -1,5 +1,4 @@
-// UI
-import { Button } from "@/components/ui/button";
+//#region Imports
 import {
 	Card,
 	CardContent,
@@ -7,12 +6,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-// Auth
 import { signOut } from "@/lib/auth";
-
-// Utils
 import { getTranslations } from "next-intl/server";
+//#endregion
 
 export async function generateMetadata() {
 	const t = await getTranslations({ namespace: "SignOut.Metadata" });

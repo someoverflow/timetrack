@@ -1,20 +1,24 @@
-import type { NextAuthConfig } from "next-auth";
+import { AuthError, type NextAuthConfig } from "next-auth";
 
 import CredentialsProvider from "next-auth/providers/credentials";
 
 import prisma from "@/lib/prisma";
 import { compare } from "bcryptjs";
 
+class CustomAuthError extends AuthError {
+	constructor(message: string) {
+		super();
+		this.message = message;
+	}
+}
+
 export default {
 	providers: [
 		CredentialsProvider({
 			name: "Credentials",
 			credentials: {
-				username: {
-					label: "Username",
-					type: "text",
-				},
-				password: { label: "Password", type: "password" },
+				username: {},
+				password: {},
 			},
 			authorize: async (credentials) => {
 				if (!credentials.username || !credentials.password) return null;
@@ -26,11 +30,11 @@ export default {
 						username: data.username,
 					},
 				});
-				if (!user) return null;
+				if (!user) throw new CustomAuthError("Username not found");
 
 				// Check the password
 				const isPasswordValid = await compare(data.password, user.password);
-				if (!isPasswordValid) return null;
+				if (!isPasswordValid) throw new CustomAuthError("Password is invalid");
 
 				return {
 					id: user.id,

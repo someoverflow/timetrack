@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export DATABASE_URL="mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DB}"
+
 echo ""
 echo " * db init * "
 echo ""
@@ -7,7 +9,6 @@ echo ""
 [ -f .env ] && echo ".env exists" || {
     echo "create .env";
     
-    export DATABASE_URL="mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DB}"
     echo "DATABASE_URL=\"{DATABASE_URL}\"" >> ./.env;
     
     if [ -z "$AUTH_SECRET" ]; then

@@ -1,4 +1,4 @@
-FROM node:current-alpine AS base
+FROM node:lts-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
@@ -23,7 +23,7 @@ RUN apk add --no-cache openssl mysql-client mariadb-connector-c
 
 RUN npm install -g npm@latest
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -42,19 +42,19 @@ RUN mkdir /backups && chown nextjs:nodejs /backups
 
 USER nextjs
 
-ENV AUTH_TRUST_HOST true
+ENV AUTH_TRUST_HOST=true
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-ENV BACKUP false
-ENV BACKUP_DELAY 86400
+ENV BACKUP=false
+ENV BACKUP_DELAY=86400
 
-ENV DATABASE_HOST localhost
-ENV DATABASE_USER timetrack
-ENV DATABASE_PASSWORD timetrack
-ENV DATABASE_PORT 3306
-ENV DATABASE_DB timetrack
+ENV DATABASE_HOST=localhost
+ENV DATABASE_USER=timetrack
+ENV DATABASE_PASSWORD=timetrack
+ENV DATABASE_PORT=3306
+ENV DATABASE_DB=timetrack
 
 EXPOSE 3000
 VOLUME ["/backups"]
