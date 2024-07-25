@@ -1,11 +1,11 @@
 import { getRequestConfig } from "next-intl/server";
-import { auth } from "./lib/auth";
 import prisma from "./lib/prisma";
 
 export default getRequestConfig(async () => {
-	let locale = "en";
+  let locale = "en";
 
-	const session = await auth();
+  /**
+	 * const session = await auth();
 	if (session) {
 		const user = await prisma.user.findUnique({
 			where: { id: session.user.id },
@@ -13,9 +13,10 @@ export default getRequestConfig(async () => {
 		});
 		if (user) locale = user.language;
 	}
+	 */
 
-	return {
-		locale,
-		messages: (await import(`../messages/${locale}.json`)).default,
-	};
+  return {
+    locale,
+    messages: (await import(`../messages/${locale}.json`)).default,
+  };
 });
