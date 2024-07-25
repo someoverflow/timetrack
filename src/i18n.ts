@@ -1,19 +1,29 @@
 import { getRequestConfig } from "next-intl/server";
-import prisma from "./lib/prisma";
+import { authCheck } from "./lib/auth";
+import { headers as nextHeaders } from "next/headers";
+import Negotiator from "negotiator";
 
 export default getRequestConfig(async () => {
   let locale = "en";
 
-  /**
-	 * const session = await auth();
-	if (session) {
-		const user = await prisma.user.findUnique({
-			where: { id: session.user.id },
-			select: { language: true },
-		});
-		if (user) locale = user.language;
-	}
-	 */
+  const auth = await authCheck();
+  if (auth.user) locale = auth.user.language;
+  else {
+    let languages = new Negotiator({
+      headers: {
+        "accept-language": nextHeaders().get("accept-language") ?? undefined,
+      },
+    }).languages();
+
+    if (languages.length !== 0) {
+      for (const lang of languages) {
+        if (["de", "en"].includes(lang.toLowerCase())) {
+          locale = lang;
+          break;
+        }
+      }
+    }
+  }
 
   return {
     locale,
