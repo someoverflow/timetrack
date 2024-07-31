@@ -9,152 +9,152 @@ import TimerSection from "../timer-section";
 
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { authCheck } from "@/lib/auth";
 import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 //#endregion
 
 type Timer = Prisma.TimeGetPayload<{
-	include: { project: true };
+  include: { project: true };
 }>;
 
 function formatHistory(data: Timer[]) {
-	const result: { [yearMonth: string]: Timer[] } = {};
+  const result: Record<string, Timer[]> = {};
 
-	for (const item of data) {
-		const date = new Date(item.start);
-		const year = date.getFullYear();
-		const month = months[date.getMonth()];
+  for (const item of data) {
+    const date = new Date(item.start);
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
 
-		if (!result[`${year} ${month}`]) result[`${year} ${month}`] = [];
-		result[`${year} ${month}`].push(item);
-	}
+    const str = `${year} ${month}`;
+    if (!result[str]) result[str] = [];
+    result[str].push(item);
+  }
 
-	return result;
+  return result;
 }
 
 export async function generateMetadata() {
-	const t = await getTranslations({ namespace: "History.Metadata" });
+  const t = await getTranslations({ namespace: "History.Metadata" });
 
-	return {
-		title: t("title"),
-		description: t("description"),
-	};
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
 }
 
 export default async function History({
-	searchParams,
-	params,
+  searchParams,
+  params,
 }: {
-	searchParams?: {
-		query?: string;
-		ym?: string;
-		user: string;
-	};
-	params: { user: string };
+  searchParams?: {
+    query?: string;
+    ym?: string;
+    user: string;
+  };
+  params: { user: string };
 }) {
-	const session = await auth();
-	if (!session || !session.user) return redirect("/signin");
-	if (session.user.role !== "ADMIN") redirect("/history");
+  const auth = await authCheck();
+  if (!auth.user || !auth.data) return redirect("/login");
+  if (auth.user.role !== "ADMIN") redirect("/history");
 
-	const t = await getTranslations("History");
+  const t = await getTranslations("History");
 
-	const cookieStore = cookies();
+  const cookieStore = cookies();
 
-	const invoicedCookie = cookieStore.get("invoiced")?.value;
-	const invoiced = [undefined, "true", "false"].includes(invoicedCookie)
-		? invoicedCookie
-			? invoicedCookie === "true"
-			: undefined
-		: undefined;
+  const invoicedCookie = cookieStore.get("invoiced")?.value;
+  const invoiced = [undefined, "true", "false"].includes(invoicedCookie)
+    ? invoicedCookie
+      ? invoicedCookie === "true"
+      : undefined
+    : undefined;
 
-	const target = await prisma.user
-		.findUnique({
-			where: {
-				username: params.user,
-			},
-			select: {
-				id: true,
-				username: true,
-				name: true,
-			},
-		})
-		.catch(() => null);
+  const target = await prisma.user
+    .findUnique({
+      where: {
+        username: params.user,
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+      },
+    })
+    .catch(() => null);
 
-	const [history, projects] = await prisma.$transaction([
-		prisma.time.findMany({
-			orderBy: {
-				start: "desc",
-			},
-			where: {
-				userId: target?.id,
-				invoiced: invoiced,
-			},
-			include: {
-				project: true,
-			},
-		}),
-		prisma.project.findMany(),
-	]);
+  const [history, projects] = await prisma.$transaction([
+    prisma.time.findMany({
+      orderBy: {
+        start: "desc",
+      },
+      where: {
+        userId: target?.id,
+        invoiced: invoiced,
+      },
+      include: {
+        project: true,
+      },
+    }),
+    prisma.project.findMany(),
+  ]);
 
-	const historyData = history ? formatHistory(history) : {};
+  const historyData = history ? formatHistory(history) : {};
 
-	let yearMonth = searchParams?.ym;
-	if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
-		yearMonth = Object.keys(historyData)[0];
+  let yearMonth = searchParams?.ym;
+  if (yearMonth == undefined || !Object.keys(historyData).includes(yearMonth))
+    yearMonth = Object.keys(historyData)[0] ?? "";
 
-	const timeStrings = (historyData[yearMonth] ?? [])
-		.filter((data) => data.time !== null)
-		.map((e) => e.time);
-	const totalTime =
-		timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
+  const timeStrings = (historyData[yearMonth] ?? [])
+    .filter((data) => data.time !== null)
+    .map((e) => e.time);
+  const totalTime =
+    timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
 
-	return (
-		<Navigation>
-			<section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
-				<div className="w-full font-mono text-center pt-2">
-					<p className="text-2xl font-mono">
-						{t("PageTitle")}
-						<span
-							className={badgeVariants({
-								variant: "secondary",
-								className: "absolute",
-							})}
-						>
-							{target?.name ? target.name : params.user}
-						</span>
-					</p>
-				</div>
+  return (
+    <Navigation>
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
+        <div className="w-full font-mono text-center pt-2">
+          <p className="text-2xl font-mono">
+            {t("PageTitle")}
+            <span
+              className={badgeVariants({
+                variant: "secondary",
+                className: "absolute",
+              })}
+            >
+              {target?.name ? target.name : params.user}
+            </span>
+          </p>
+        </div>
 
-				{target ? (
-					<>
-						{history.length !== 0 && historyData != null ? (
-							<TimerSection
-								history={historyData}
-								projects={projects}
-								totalTime={totalTime}
-								yearMonth={yearMonth}
-								invoicedFilter={invoiced}
-								user={target.id}
-							/>
-						) : (
-							<TimerAddServer
-								user={target.id}
-								projects={projects}
-								resetFilter={
-									historyData.toString() === {}.toString() &&
-									invoiced !== undefined
-								}
-							/>
-						)}
-					</>
-				) : (
-					<p className="font-mono font-bold text-xl">
-						{t("Miscellaneous.userNotFound")}
-					</p>
-				)}
-			</section>
-		</Navigation>
-	);
+        {target ? (
+          <>
+            {history.length !== 0 && historyData != null ? (
+              <TimerSection
+                history={historyData}
+                projects={projects}
+                totalTime={totalTime}
+                yearMonth={yearMonth}
+                invoicedFilter={invoiced}
+                user={target.id}
+              />
+            ) : (
+              <TimerAddServer
+                user={target.id}
+                projects={projects}
+                resetFilter={
+                  JSON.stringify(historyData) == "{}" && invoiced !== undefined
+                }
+              />
+            )}
+          </>
+        ) : (
+          <p className="font-mono font-bold text-xl">
+            {t("Miscellaneous.userNotFound")}
+          </p>
+        )}
+      </section>
+    </Navigation>
+  );
 }

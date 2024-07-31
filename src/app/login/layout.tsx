@@ -1,4 +1,6 @@
+import { validateRequest } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata() {
   const t = await getTranslations({ namespace: "Login.Metadata" });
@@ -14,5 +16,8 @@ export default async function SignInLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const auth = await validateRequest();
+  if (auth.session !== null) redirect("/");
+
   return <>{children}</>;
 }
