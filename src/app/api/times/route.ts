@@ -78,7 +78,7 @@ export const GET = api(
     }
 
     // Return all times
-    if (data.all || !data.period) {
+    if (!!data.all || !data.period) {
       try {
         const databaseResult = await prisma.time.findMany({
           orderBy: {
@@ -258,15 +258,15 @@ export const PUT = api(async (_request, user, json) => {
 
   if (
     !(
-      data.notes ||
+      !!data.notes ||
       data.notes === "" ||
       data.invoiced !== undefined ||
-      data.project ||
-      data.start ||
-      data.end ||
-      data.startType ||
-      data.endType ||
-      data.traveledDistance
+      !!data.project ||
+      !!data.start ||
+      !!data.end ||
+      !!data.startType ||
+      !!data.endType ||
+      !!data.traveledDistance
     )
   )
     return NextResponse.json(result, { status: result.status });

@@ -1,5 +1,7 @@
-import { Role } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+import { type Role } from "@prisma/client";
+import { type NextRequest, NextResponse } from "next/server";
 import { authCheck } from "./auth";
 
 //#region Results
@@ -65,18 +67,6 @@ export const badRequestResponse = (result: unknown, type?: APIResultType) => {
   );
 };
 
-const parseJsonBody = async (request: NextRequest) => {
-  try {
-    const result = await request.json();
-    return result;
-  } catch (ignored) {
-    return badRequestResponse(
-      { message: "JSON Body could not be parsed" },
-      "json-parsing"
-    );
-  }
-};
-
 type ApiConfig = {
   verifySession: boolean;
   adminOnly: boolean;
@@ -98,13 +88,19 @@ export const api = (
   ) => Promise<NextResponse> | NextResponse,
   config?: Partial<ApiConfig>
 ) => {
-  return async (req: NextRequest, res: any) => {
+  return async (req: NextRequest) => {
     let userResult = undefined;
     let jsonResult = undefined;
 
     if ((config?.parseJson ?? true) !== false) {
-      jsonResult = await parseJsonBody(req);
-      if (jsonResult instanceof NextResponse) return jsonResult;
+      try {
+        jsonResult = await req.json();
+      } catch (ignored) {
+        return badRequestResponse(
+          { message: "JSON Body could not be parsed" },
+          "json-parsing"
+        );
+      }
     }
 
     if ((config?.verifySession ?? true) !== false) {

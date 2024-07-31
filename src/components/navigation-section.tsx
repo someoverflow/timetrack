@@ -27,8 +27,6 @@ import {
 	Users,
 } from "lucide-react";
 
-import type clsx from "clsx";
-
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";

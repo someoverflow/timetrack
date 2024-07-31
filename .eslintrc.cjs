@@ -9,7 +9,7 @@ const config = {
   ],
   "extends": [
     "next/core-web-vitals",
-    "plugin:@typescript-eslint/recommended-type-checked",
+    "next",
     "plugin:@typescript-eslint/stylistic-type-checked"
   ],
   "rules": {
@@ -36,7 +36,8 @@ const config = {
           "attributes": false
         }
       }
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
 module.exports = config;

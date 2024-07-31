@@ -203,9 +203,9 @@ export default function useLiveTimer() {
     [state.running, state.loading, timer?.id, debouncedLoading, fetchLatest]
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
   useEffect(() => {
     fetchLatest();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculation Interval

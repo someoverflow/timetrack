@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
-import { Role, User as PrismaUser } from "@prisma/client";
-import { Lucia, Session, User as LuciaUser } from "lucia";
+import type { Role } from "@prisma/client";
+import { Lucia, type Session, type User as LuciaUser } from "lucia";
 import { cookies } from "next/headers";
 import { cache } from "react";
 
@@ -37,7 +37,7 @@ export const validateRequest = cache(
     const result = await lucia.validateSession(sessionId);
     // next.js throws when you attempt to set cookie when rendering page
     try {
-      if (result.session && result.session.fresh) {
+      if (!!result.session && result.session.fresh) {
         const sessionCookie = lucia.createSessionCookie(result.session.id);
         cookies().set(
           sessionCookie.name,

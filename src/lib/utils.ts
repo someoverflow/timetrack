@@ -50,6 +50,7 @@ export function getTimePassed(start: Date, end: Date): string {
 export function sumTimes(times: string[]): string {
 	const totalSeconds = times.reduce((total, timeString) => {
 		const [hours, minutes, seconds] = timeString.split(":").map(Number);
+		if (!hours || !minutes || !seconds) return 0
 		return total + hours * 3600 + minutes * 60 + seconds;
 	}, 0);
 

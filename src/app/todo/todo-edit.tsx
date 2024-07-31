@@ -1,6 +1,6 @@
 //#region Imports
 import type { todoUpdateApiValidationType } from "@/lib/zod";
-import type { Prisma, Todo, TodoPriority, TodoStatus } from "@prisma/client";
+import type { Prisma, TodoPriority, TodoStatus } from "@prisma/client";
 
 import {
 	Popover,
@@ -14,7 +14,7 @@ import {
 	CommandItem,
 } from "@/components/ui/command";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +121,7 @@ export function TodoTableEdit({
 			task: todo.task,
 			description: todo.description ?? "",
 
-			deadline: (todo.deadline ?? new Date()).toISOString().split("T")[0],
+			deadline: (todo.deadline ?? new Date()).toISOString().split("T")[0] ?? "",
 			deadlineEnabled: todo.deadline !== null,
 
 			projectsSelectionOpen: false,
@@ -259,10 +259,10 @@ export function TodoTableEdit({
 
 	const loading = stepStatus.loading || status.loading;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: _
 	useEffect(() => {
 		setVisible(linkedTodo === todo.id);
 		setState(getDefaultReducerState());
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [linkedTodo, stepStatus.loading]);
 
 	return (
@@ -346,27 +346,27 @@ export function TodoTableEdit({
 								}}
 							>
 								<Step
-									key={steps[0].id}
-									id={steps[0].id}
+									key={steps[0]?.id}
+									id={steps[0]?.id}
 									label={t("Miscellaneous.steps.todo")}
-									icon={steps[0].icon}
-									checkIcon={steps[0].icon}
+									icon={steps[0]?.icon}
+									checkIcon={steps[0]?.icon}
 									className="!text-blue-500"
 								/>
 								<Step
-									key={steps[1].id}
-									id={steps[1].id}
+									key={steps[1]?.id}
+									id={steps[1]?.id}
 									label={t("Miscellaneous.steps.inProgress")}
-									icon={steps[1].icon}
-									checkIcon={steps[1].icon}
+									icon={steps[1]?.icon}
+									checkIcon={steps[1]?.icon}
 									className="!text-amber-500"
 								/>
 								<Step
-									key={steps[2].id}
-									id={steps[2].id}
+									key={steps[2]?.id}
+									id={steps[2]?.id}
 									label={t("Miscellaneous.steps.done")}
-									icon={steps[2].icon}
-									checkIcon={steps[2].icon}
+									icon={steps[2]?.icon}
+									checkIcon={steps[2]?.icon}
 									className="!text-green-500"
 								/>
 							</Stepper>

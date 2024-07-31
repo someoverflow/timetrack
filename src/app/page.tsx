@@ -4,7 +4,7 @@ import TimerSection from "./timer-section";
 
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { authCheck, lucia, validateRequest } from "@/lib/auth";
+import { authCheck } from "@/lib/auth";
 //#endregion
 
 export default async function Home() {

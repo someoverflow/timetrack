@@ -73,6 +73,7 @@ interface DataTableProps<TData, TValue> {
 }
 
 declare module "@tanstack/table-core" {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	interface TableMeta<TData extends RowData> {
 		todo: {
 			projects: ProjectsType;

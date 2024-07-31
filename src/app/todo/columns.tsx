@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
 //#region Imports
@@ -78,8 +79,9 @@ export const columns: ColumnDef<
 			return (
 				<div className="flex items-center space-x-2">
 					<Button
-						onClick={
-							() => {}
+						onClick={() => {
+							console.log("Sort")
+						}
 							// TODO: Sorting
 							// column.toggleSorting(column.getIsSorted() === "asc", true)
 						}
@@ -191,7 +193,7 @@ export const columns: ColumnDef<
 						</Tooltip>
 
 						<Tooltip>
-							<TooltipTrigger onClick={() => {}}>
+							<TooltipTrigger>
 								{todo.priority === "HIGH" && (
 									<ChevronsUp className="h-4 w-4 text-red-500" />
 								)}

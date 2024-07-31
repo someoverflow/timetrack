@@ -9,7 +9,7 @@ export default getRequestConfig(async () => {
   const auth = await authCheck();
   if (auth.user) locale = auth.user.language;
   else {
-    let languages = new Negotiator({
+    const languages = new Negotiator({
       headers: {
         "accept-language": nextHeaders().get("accept-language") ?? undefined,
       },

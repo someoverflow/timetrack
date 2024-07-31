@@ -1,7 +1,6 @@
 import prisma from "@/lib/prisma";
 import {
   defaultResult,
-  NO_AUTH_RESPONSE,
   badRequestResponse,
   api,
 } from "@/lib/server-utils";

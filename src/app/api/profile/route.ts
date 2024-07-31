@@ -2,7 +2,6 @@ import prisma from "@/lib/prisma";
 import { defaultResult, badRequestResponse, api } from "@/lib/server-utils";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
-import { randomUUID } from "node:crypto";
 import { profileApiValidation } from "@/lib/zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
