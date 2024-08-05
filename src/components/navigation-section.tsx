@@ -23,7 +23,6 @@ import {
   Sun,
   SwatchBook,
   Timer,
-  User,
   UserIcon,
   Users,
 } from "lucide-react";

@@ -77,7 +77,7 @@ export async function login(
 
   const session = await lucia.createSession(user.id, {
     user_agent: head.get("user-agent"),
-    ip: head.get("x-real-ip") || head.get("x-forwarded-for"),
+    ip: head.get("x-real-ip") ?? head.get("x-forwarded-for") ?? "?",
   });
   const sessionCookie = lucia.createSessionCookie(session.id);
   cookies().set(
