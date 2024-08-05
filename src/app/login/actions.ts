@@ -1,5 +1,5 @@
 "use server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { lucia } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
@@ -7,11 +7,13 @@ import { compare } from "bcryptjs";
 
 export async function login(
   _: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{
   error: string;
   update: Date;
 }> {
+  const head = headers();
+
   const username = formData.get("username");
   if (
     typeof username !== "string" ||
@@ -73,12 +75,15 @@ export async function login(
     };
   }
 
-  const session = await lucia.createSession(user.id, {});
+  const session = await lucia.createSession(user.id, {
+    user_agent: head.get("user-agent"),
+    ip: head.get("x-real-ip") || head.get("x-forwarded-for"),
+  });
   const sessionCookie = lucia.createSessionCookie(session.id);
   cookies().set(
     sessionCookie.name,
     sessionCookie.value,
-    sessionCookie.attributes
+    sessionCookie.attributes,
   );
   return redirect("/");
 }

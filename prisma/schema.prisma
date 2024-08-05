@@ -47,6 +47,9 @@ model Session {
   userId    String   @map("user_id")
   expiresAt DateTime @map("expires_at")
 
+  ip         String
+  user_agent String
+
   user User @relation(references: [id], fields: [userId], onDelete: Cascade)
 }
 

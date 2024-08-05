@@ -15,6 +15,12 @@ export const lucia = new Lucia(adapter, {
       secure: true,
     },
   },
+  getSessionAttributes: (attributes: any) => {
+    return {
+      ip: attributes.ip,
+      userAgent: attributes.user_agent,
+    };
+  },
   getUserAttributes: (attributes) => {
     return {
       username: attributes.username,
@@ -42,7 +48,7 @@ export const validateRequest = cache(
         cookies().set(
           sessionCookie.name,
           sessionCookie.value,
-          sessionCookie.attributes
+          sessionCookie.attributes,
         );
       }
       if (!result.session) {
@@ -50,13 +56,13 @@ export const validateRequest = cache(
         cookies().set(
           sessionCookie.name,
           sessionCookie.value,
-          sessionCookie.attributes
+          sessionCookie.attributes,
         );
       }
     } catch {}
 
     return result;
-  }
+  },
 );
 export async function userData(session: Session) {
   return await prisma.user.findUnique({
@@ -85,6 +91,10 @@ declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: DatabaseUserAttributes;
+  }
+  interface DatabaseSessionAttributes {
+    ip: string;
+    user_agent: string;
   }
 }
 
