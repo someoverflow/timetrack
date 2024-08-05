@@ -24,7 +24,7 @@ model User {
   password String
   role     Role   @default(USER)
 
-  language String @default("en")
+  language String @default("de")
 
   email String?
 

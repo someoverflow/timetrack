@@ -4,7 +4,7 @@ import { headers as nextHeaders } from "next/headers";
 import Negotiator from "negotiator";
 
 export default getRequestConfig(async () => {
-  let locale = "en";
+  let locale = process.env.DEFAULT_LANG ?? "de";
 
   const auth = await authCheck();
   if (auth.user) locale = auth.user.language;
