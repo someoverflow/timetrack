@@ -450,9 +450,15 @@
       "light": "Hell",
       "system": "System"
     },
+
+    "home": "Timer",
+    "history": "Verlauf",
+    "todo": "Todo",
+
     "profile": "Profil",
     "projects": "Projekte",
     "users": "Benutzer",
+
     "signOut": "Abmelden"
   },
   "Error": {

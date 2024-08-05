@@ -450,9 +450,15 @@
       "light": "Light",
       "system": "System"
     },
+
+    "home": "Timer",
+    "history": "History",
+    "todo": "Todo",
+
     "profile": "Profile",
     "projects": "Projects",
     "users": "Users",
+
     "signOut": "Sign Out"
   },
   "Error": {
