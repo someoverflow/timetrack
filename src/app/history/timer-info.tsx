@@ -5,6 +5,7 @@ import type { Prisma, Time } from "@prisma/client";
 import type { timesPutApiValidation } from "@/lib/zod";
 
 import {
+  LeadingActions,
   SwipeableListItem,
   SwipeAction,
   TrailingActions,
@@ -37,7 +38,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, ChevronsUpDown, SaveAll, Trash, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  MailCheck,
+  MailMinus,
+  SaveAll,
+  Trash,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
@@ -287,10 +296,43 @@ export default function TimerInfo({
           setTimeout(() => setBlockVisible(false), 500);
         }}
         onSwipeProgress={(progress) => setDragProgress(progress)}
+        leadingActions={
+          <LeadingActions>
+            <SwipeAction
+              onClick={() =>
+                setTimeout(() => {
+                  sendInvoiced({ invoiced: !data.invoiced });
+                }, 500)
+              }
+            >
+              <div className="flex flex-row items-center justify-between w-full h-full p-2">
+                {data.invoiced ? (
+                  <MailMinus
+                    className={cn(
+                      "text-destructive h-1/2 w-1/2 transition-all duration-200",
+                      dragProgress > 50
+                        ? "text-blue-800"
+                        : "text-indigo-500 scale-50",
+                    )}
+                  />
+                ) : (
+                  <MailCheck
+                    className={cn(
+                      "text-destructive h-1/2 w-1/2 transition-all duration-200",
+                      dragProgress > 50
+                        ? "text-blue-800"
+                        : "text-indigo-500 scale-50",
+                    )}
+                  />
+                )}
+              </div>
+            </SwipeAction>
+          </LeadingActions>
+        }
         trailingActions={
           <TrailingActions>
             <SwipeAction
-              destructive={true}
+              destructive
               onClick={() =>
                 setTimeout(() => {
                   sendDelete();
@@ -299,9 +341,12 @@ export default function TimerInfo({
             >
               <div className="flex flex-row items-center justify-between w-full h-full p-2">
                 <Trash2
-                  className={`text-destructive h-1/2 w-1/2 transition-all duration-200 ${
-                    dragProgress > 50 ? "text-error" : "text-warning scale-50"
-                  }`}
+                  className={cn(
+                    "text-destructive h-1/2 w-1/2 transition-all duration-200",
+                    dragProgress > 50
+                      ? "text-red-800"
+                      : "text-red-500 scale-50",
+                  )}
                 />
               </div>
             </SwipeAction>
