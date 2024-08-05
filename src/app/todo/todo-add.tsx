@@ -36,7 +36,6 @@ import { Switch } from "@/components/ui/switch";
 import {
   Check,
   ChevronDown,
-  ChevronUp,
   ChevronsUp,
   ChevronsUpDown,
   ListPlus,
@@ -99,7 +98,7 @@ export function TodoAdd({
       projects: [],
       projectsSelectionOpen: false,
     },
-    undefined
+    undefined,
   );
 
   const { status, send } = useRequest(
@@ -172,8 +171,15 @@ export function TodoAdd({
               type="always"
             >
               <div className="grid gap-4 p-1 w-full">
+                <Label
+                  htmlFor="priority"
+                  className="pl-2 text-muted-foreground"
+                >
+                  {t("Miscellaneous.priority")}
+                </Label>
                 <RadioGroup
-                  className="flex flex-row items-center justify-between pt-1"
+                  id="priority"
+                  className="flex flex-row items-center justify-evenly pt-1"
                   value={data.priority}
                   onValueChange={(state) =>
                     setData({ priority: state as TodoPriority })
@@ -181,22 +187,30 @@ export function TodoAdd({
                 >
                   <div className="flex flex-col items-center gap-2">
                     <RadioGroupItem value="HIGH" id="r1" />
-                    <Label htmlFor="r1">
-                      <ChevronsUp className="h-5 w-5 text-red-500 inline-block" />{" "}
+                    <Label
+                      htmlFor="r1"
+                      className="h-5 flex flex-row items-center"
+                    >
+                      <ChevronsUp className="h-5 w-5 text-red-500" />{" "}
                       {t("Miscellaneous.priorities.high")}
                     </Label>
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <RadioGroupItem value="MEDIUM" id="r2" />
-                    <Label htmlFor="r2">
-                      <ChevronUp className="h-5 w-5 text-emerald-500 inline-block" />{" "}
+                    <Label
+                      htmlFor="r2"
+                      className="h-5 flex flex-row items-center"
+                    >
                       {t("Miscellaneous.priorities.medium")}
                     </Label>
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <RadioGroupItem value="LOW" id="r3" />
-                    <Label htmlFor="r3">
-                      <ChevronDown className="h-5 w-5 text-blue-500 inline-block" />{" "}
+                    <Label
+                      htmlFor="r3"
+                      className="h-5 flex flex-row items-center"
+                    >
+                      <ChevronDown className="h-5 w-5 text-blue-500" />{" "}
                       {t("Miscellaneous.priorities.low")}
                     </Label>
                   </div>

@@ -259,10 +259,12 @@
         "inProgress": "Fertigstellen",
         "done": "Rücksetzen"
       },
+
+      "priority": "Priorität",
       "priorities": {
-        "high": "Hohe Priorität",
-        "medium": "Mittlere Priorität",
-        "low": "Nidrige Priorität"
+        "high": "Hoch",
+        "medium": "Normal",
+        "low": "Nidrig"
       }
     }
   },

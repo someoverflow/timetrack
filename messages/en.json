@@ -259,10 +259,12 @@
         "inProgress": "Finish",
         "done": "Reset"
       },
+
+      "priority": "Priority",
       "priorities": {
-        "high": "High Priority",
-        "medium": "Medium Priority",
-        "low": "Low Priority"
+        "high": "High",
+        "medium": "Normal",
+        "low": "Low"
       }
     }
   },
