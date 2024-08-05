@@ -77,7 +77,7 @@ export default async function RootLayout({
 
               {instance && (
                 <div
-                  className="[writing-mode:vertical-rl] hidden fixed bottom-3 right-3 cursor-vertical-text p-0 m-0 text-muted-foreground/35 md:block"
+                  className="[writing-mode:vertical-rl] fixed bottom-3 right-3 cursor-vertical-text p-0 m-0 text-muted-foreground/35 md:block text-xs"
                   style={{ transform: "rotate(180deg)" }}
                 >
                   {instance}

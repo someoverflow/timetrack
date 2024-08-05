@@ -15,7 +15,7 @@ const stateReducer = (
   state: stateReducerType,
   action:
     | { type: "error"; toast?: string | undefined }
-    | { type: "loading" | "running"; value: boolean }
+    | { type: "loading" | "running"; value: boolean },
 ): stateReducerType => {
   switch (action.type) {
     case "error":
@@ -104,7 +104,16 @@ export default function useLiveTimer() {
         time: getTimePassed(start, end),
       });
       setProject(result.projectName);
-    } else setTimer(undefined);
+
+      if (result.projectName)
+        localStorage.setItem("lastProject", result.projectName);
+      else localStorage.removeItem("lastProject");
+    } else {
+      setTimer(undefined);
+
+      const lastProject = localStorage.getItem("lastProject");
+      if (lastProject) setProject(lastProject);
+    }
 
     dispatch({ type: "running", value: result && !result.end });
     dispatch({ type: "loading", value: false });
@@ -142,7 +151,7 @@ export default function useLiveTimer() {
         `/api/times/toggle?type=Website&fixTime=${tempTimer.start.toISOString()}${projectString}`,
         {
           method: "PUT",
-        }
+        },
       )
         .then((result) => result.json())
         .catch((e) => {
@@ -161,7 +170,7 @@ export default function useLiveTimer() {
       dispatch({ type: "loading", value: false });
       fetchLatest();
     },
-    [debouncedLoading, project, fetchLatest]
+    [debouncedLoading, project, fetchLatest],
   );
 
   const changeProject = useCallback(
@@ -198,14 +207,18 @@ export default function useLiveTimer() {
         fetchLatest();
       }
 
+      // TODO: Load on page load
+      if (project) localStorage.setItem("lastProject", project);
+      else localStorage.removeItem("lastProject");
+
       setProject(project);
     },
-    [state.running, state.loading, timer?.id, debouncedLoading, fetchLatest]
+    [state.running, state.loading, timer?.id, debouncedLoading, fetchLatest],
   );
 
   useEffect(() => {
     fetchLatest();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculation Interval
