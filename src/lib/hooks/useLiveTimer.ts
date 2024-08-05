@@ -21,6 +21,7 @@ const stateReducer = (
     case "error":
       toast.error(action.toast ?? "An error occurred while updating", {
         description: "Reloading the page could solve the problem",
+        duration: Infinity,
       });
       return {
         ...state,
@@ -207,7 +208,6 @@ export default function useLiveTimer() {
         fetchLatest();
       }
 
-      // TODO: Load on page load
       if (project) localStorage.setItem("lastProject", project);
       else localStorage.removeItem("lastProject");
 

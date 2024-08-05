@@ -71,7 +71,7 @@ export default function TimerInfo({
   edit,
 }: {
   data: Timer;
-  projects: Prisma.ProjectGetPayload<Record<string,never>>[];
+  projects: Prisma.ProjectGetPayload<Record<string, never>>[];
   edit: boolean;
 }) {
   const t = useTranslations("History");
@@ -109,7 +109,7 @@ export default function TimerInfo({
   useEffect(() => {
     // Reset everything when opening/closing
     if (visible) setState(generateReducer());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   useEffect(() => {
@@ -206,8 +206,12 @@ export default function TimerInfo({
 
       const undoTime: Time = result.result;
 
+      const start = new Date(undoTime.start);
+      const end = undoTime.end ? new Date(undoTime.end) : undefined;
+
       toast.success(t("Miscellaneous.deleted"), {
-        duration: 10_000,
+        description: `${start.toLocaleDateString()} • ${start.toLocaleTimeString()} → ${end ? end.toLocaleTimeString() : "--:--:--"}`,
+        duration: 30_000,
         action: undoTime.end
           ? {
               label: t("Miscellaneous.undo"),
@@ -287,7 +291,11 @@ export default function TimerInfo({
           <TrailingActions>
             <SwipeAction
               destructive={true}
-              onClick={() => setTimeout(() => { sendDelete() }, 500)}
+              onClick={() =>
+                setTimeout(() => {
+                  sendDelete();
+                }, 500)
+              }
             >
               <div className="flex flex-row items-center justify-between w-full h-full p-2">
                 <Trash2
