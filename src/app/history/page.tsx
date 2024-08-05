@@ -116,7 +116,6 @@ export default async function History({
             user={user.id ?? ""}
             projects={projects}
             resetFilter={
-              // TODO: Test
               JSON.stringify(historyData) == "{}" && invoiced !== undefined
             }
           />

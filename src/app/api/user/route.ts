@@ -45,7 +45,7 @@ export const PUT = api(
           username: data.username,
           message: "User with the username exists.",
         },
-        "duplicate-found"
+        "duplicate-found",
       );
     }
 
@@ -79,7 +79,7 @@ export const PUT = api(
       return NextResponse.json(result, { status: result.status });
     }
   },
-  { adminOnly: true }
+  { adminOnly: true },
 );
 
 // Update
@@ -115,7 +115,7 @@ export const POST = api(
           id: data.id,
           message: "User does not exist.",
         },
-        "not-found"
+        "not-found",
       );
     }
     // Check if new username exists when given
@@ -132,7 +132,7 @@ export const POST = api(
             username: data.username,
             message: "User with the new username exists.",
           },
-          "duplicate-found"
+          "duplicate-found",
         );
       }
     }
@@ -141,7 +141,7 @@ export const POST = api(
       if (data.username !== "admin" || data.role !== "ADMIN")
         return badRequestResponse(
           "Tag of admin cannot be changed",
-          "error-message"
+          "error-message",
         );
     }
 
@@ -194,7 +194,7 @@ export const POST = api(
       return NextResponse.json(result, { status: result.status });
     }
   },
-  { adminOnly: true }
+  { adminOnly: true },
 );
 
 // Delete
@@ -233,19 +233,17 @@ export const DELETE = api(
           id: id,
           message: "User does not exist.",
         },
-        "not-found"
+        "not-found",
       );
     }
     if (databaseUser.username === "admin")
       return badRequestResponse(
         "Admin account cannot be deleted.",
-        "error-message"
+        "error-message",
       );
 
     // Delete the chip
     try {
-      // TODO: Delete Todo or change creator to assigned
-
       const databaseResult = await prisma.user.delete({
         where: {
           id: id,
@@ -265,5 +263,5 @@ export const DELETE = api(
       return NextResponse.json(result, { status: result.status });
     }
   },
-  { adminOnly: true }
+  { adminOnly: true },
 );

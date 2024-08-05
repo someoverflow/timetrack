@@ -44,7 +44,7 @@ const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 type Timer = Prisma.TimeGetPayload<{
   include: { project: true };
 }>;
-type Data = Record<string, Timer[]>
+type Data = Record<string, Timer[]>;
 
 export default function TimerSection({
   user,
@@ -56,7 +56,7 @@ export default function TimerSection({
 }: {
   user: string;
   history: Data;
-  projects: Prisma.ProjectGetPayload<Record<string,never>>[];
+  projects: Prisma.ProjectGetPayload<Record<string, never>>[];
   yearMonth: string;
   totalTime: string;
   invoicedFilter: boolean | undefined;
@@ -204,6 +204,7 @@ export default function TimerSection({
                       ] as CheckedState
                     }
                     onCheckedChange={() => {
+                      // TODO: Don't allow when theres no invoiced
                       switch (invoicedFilter) {
                         case undefined:
                           updateFilter(true);
