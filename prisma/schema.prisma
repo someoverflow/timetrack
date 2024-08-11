@@ -24,12 +24,9 @@ model User {
   password String
   role     Role   @default(USER)
 
-  language String @default("en")
+  language String @default("de")
 
-  email         String?
-  emailVerified DateTime? @map("email_verified")
-
-  validJwtId String @default(uuid()) @map("valid_jwt_id")
+  email String?
 
   times Time[]
   chips Chip[]
@@ -37,10 +34,23 @@ model User {
   assignedTodos Todo[] @relation("assignee_to_todo")
   createdTodos  Todo[] @relation("creator")
 
+  sessions Session[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+
+  ip         String
+  user_agent String
+
+  user User @relation(references: [id], fields: [userId], onDelete: Cascade)
 }
 
 model Chip {

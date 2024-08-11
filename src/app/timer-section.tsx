@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 import { useTranslations } from "next-intl";
-import { MouseEventHandler, useState } from "react";
+import { useState } from "react";
 import useLiveTimer from "@/lib/hooks/useLiveTimer";
 
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ export default function TimerSection({
 }) {
   const { timer, state, project, changeProject, toggle } = useLiveTimer();
 
-  const onClick = (e: any) => {
+  const onClick = () => {
     if (!state.loading && !state.error && !state.running)
       toggle(!state.running);
   };
@@ -63,7 +63,7 @@ export default function TimerSection({
               className={cn(
                 "w-full rounded-lg bg-secondary/5 shadow-md hover:shadow-lg border border-border/50 hover:border-border transition-all duration-300 cursor-pointer pt-2 mt-6 pb-6 mb-4",
                 state.error && "blur-sm",
-                state.loading && "!cursor-wait"
+                state.loading && "!cursor-wait",
               )}
               onClick={onClick}
               onKeyUp={onClick}
@@ -250,7 +250,7 @@ const ProjectSelection = ({
                   value={proj.name}
                   onSelect={() => {
                     changeProject(
-                      project !== proj.name ? proj.name : undefined
+                      project !== proj.name ? proj.name : undefined,
                     );
                     setOpen(false);
                   }}
@@ -258,7 +258,7 @@ const ProjectSelection = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      project === proj.name ? "opacity-100" : "opacity-0"
+                      project === proj.name ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {proj.name}

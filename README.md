@@ -23,7 +23,7 @@ Built for [EBERT-Automation](https://ebert-automation.de/)
 
 [![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 
-**Authentication:** [AuthJS](https://authjs.dev/)
+**Authentication:** [Lucia](https://lucia-auth.com/)
 
 **Database:** [Prisma](https://www.prisma.io/)
 

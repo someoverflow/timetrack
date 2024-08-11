@@ -60,7 +60,7 @@ export default function TimerAdd({
 	setVisible,
 }: {
 	user: string;
-	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
+	projects: Prisma.ProjectGetPayload<Record<string,never>>[];
 	visible: boolean;
 	setVisible: (visible: boolean) => void;
 }) {
@@ -350,18 +350,18 @@ export function TimerAddServer({
 	resetFilter,
 }: {
 	user: string;
-	projects: Prisma.ProjectGetPayload<{ [k: string]: never }>[];
+	projects: Prisma.ProjectGetPayload<Record<string, never>>[];
 	resetFilter: boolean;
 }) {
 	const router = useRouter();
 	const t = useTranslations("History");
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Only run once
 	useEffect(() => {
 		if (resetFilter) {
 			document.cookie = "invoiced=undefined;max-age=0;path=/";
 			router.refresh();
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const [visible, setVisible] = useState(false);

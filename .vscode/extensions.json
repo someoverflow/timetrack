@@ -6,7 +6,6 @@
 		"yoavbls.pretty-ts-errors",
 		"prisma.prisma",
 		"formulahendry.auto-rename-tag",
-		"biomejs.biome",
 		"bradlc.vscode-tailwindcss",
 		"meganrogge.template-string-converter"
 	]
