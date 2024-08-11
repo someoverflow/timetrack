@@ -50,7 +50,8 @@ export default function TimerSection({
   const { timer, state, project, changeProject, toggle } = useLiveTimer();
 
   const onClick = () => {
-    if (!state.loading && !state.error) toggle(!state.running);
+    if (!state.loading && !state.error && !state.running)
+      toggle(!state.running);
   };
 
   return (
@@ -62,7 +63,7 @@ export default function TimerSection({
               className={cn(
                 "w-full rounded-lg bg-secondary/5 shadow-md hover:shadow-lg border border-border/50 hover:border-border transition-all duration-300 cursor-pointer pt-2 mt-6 pb-6 mb-4",
                 state.error && "blur-sm",
-                state.loading && "!cursor-wait"
+                state.loading && "!cursor-wait",
               )}
               onClick={onClick}
               onKeyUp={onClick}
@@ -73,6 +74,7 @@ export default function TimerSection({
                     running={state.running}
                     loading={state.loading}
                     startType={timer?.startType ?? "loading..."}
+                    toggle={toggle}
                   />
                 </div>
               </CardHeader>
@@ -102,10 +104,12 @@ const ToggleSection = ({
   loading,
   running,
   startType,
+  toggle,
 }: {
   loading: boolean;
   running: boolean;
   startType: string | null | undefined;
+  toggle: (start: boolean) => Promise<void>;
 }) => {
   const t = useTranslations("Timer.Miscellaneous");
 
@@ -122,7 +126,14 @@ const ToggleSection = ({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="destructive" className="font-mono">
+          <Button
+            variant="destructive"
+            className="font-mono"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle(true);
+            }}
+          >
             <StopCircle className="mr-2 h-4 w-4" />
             <p>{t("stop")}</p>
           </Button>
@@ -239,7 +250,7 @@ const ProjectSelection = ({
                   value={proj.name}
                   onSelect={() => {
                     changeProject(
-                      project !== proj.name ? proj.name : undefined
+                      project !== proj.name ? proj.name : undefined,
                     );
                     setOpen(false);
                   }}
@@ -247,7 +258,7 @@ const ProjectSelection = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      project === proj.name ? "opacity-100" : "opacity-0"
+                      project === proj.name ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {proj.name}
