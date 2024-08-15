@@ -115,7 +115,8 @@ export function TodoTableEdit({
   const t = useTranslations("Todo");
 
   const [visible, setVisible] = useState(false);
-  const getDefaultReducerState = (): todoInfoState => {
+
+  const getDefaultReducerState = useCallback((): todoInfoState => {
     return {
       task: todo.task,
       description: todo.description ?? "",
@@ -133,7 +134,8 @@ export function TodoTableEdit({
       statusState: undefined,
       priority: todo.priority,
     };
-  };
+  }, [todo]);
+
   const [state, setState] = useReducer(
     (prev: todoInfoState, next: Partial<todoInfoState>) => ({
       ...prev,
@@ -258,6 +260,10 @@ export function TodoTableEdit({
   );
 
   const loading = stepStatus.loading || status.loading;
+
+  useEffect(() => {
+    if (visible) setState(getDefaultReducerState());
+  }, [todo, visible, getDefaultReducerState]);
 
   useEffect(() => {
     setVisible(linkedTodo === todo.id);
