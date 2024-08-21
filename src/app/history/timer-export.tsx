@@ -74,7 +74,6 @@ interface exportFilterState {
 interface visualisationState {
   showProject: boolean;
   showDateColumn: boolean;
-  structurizeDateTree: boolean;
 }
 
 export default function TimerExportDialog({
@@ -113,7 +112,6 @@ export default function TimerExportDialog({
     {
       showProject: true,
       showDateColumn: true,
-      structurizeDateTree: true,
     },
   );
   const [visible, setVisible] = useState(false);
@@ -125,14 +123,10 @@ export default function TimerExportDialog({
     const localShowDateColumn = localStorage.getItem(
       "export-visualisation-showDateColumn",
     );
-    const localStructurizeDateTree = localStorage.getItem(
-      "export-visualisation-structurizeDateTree",
-    );
 
     setVisualisation({
       showProject: (localShowProject ?? "true") === "true",
       showDateColumn: (localShowDateColumn ?? "false") === "true",
-      structurizeDateTree: (localStructurizeDateTree ?? "true") === "true",
     });
   }, []);
 
@@ -161,58 +155,26 @@ export default function TimerExportDialog({
     if (visualisation.showProject) result = `${result}Project;`;
     result = `${result}Notes`;
 
-    if (visualisation.structurizeDateTree) {
-      const structurized: Data = {};
+    for (const time of exportData.reverse()) {
+      if (!time.end) continue;
 
-      for (const item of exportData.reverse()) {
-        const date = new Date(item.start);
-
-        const str = date.toLocaleDateString();
-        if (!structurized[str]) structurized[str] = [];
-        structurized[str].push(item);
-      }
-
-      for (const date of Object.keys(structurized)) {
-        result = `${result}\n${date}`;
-        for (const time of structurized[date] ?? []) {
-          if (!time.end) continue;
-          result = `${result}\n`;
-
-          result = `${result};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
-            time.time
-          }`;
-          if (visualisation.showProject)
-            result = `${result};${time.project?.name ?? ""}`;
-          if (time.notes)
-            result = `${result};"${
-              time.notes.startsWith("-")
-                ? time.notes.replace("-", " -")
-                : time.notes
-            }"`;
-        }
-      }
-    } else {
-      for (const time of exportData.reverse()) {
-        if (!time.end) continue;
-
-        result = `${result}\n`;
-        if (visualisation.showDateColumn)
-          result = `${result}${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
-            time.time
-          }`;
-        else
-          result = `${result}${time.start.toLocaleString()};${time.end?.toLocaleString()};${
-            time.time
-          }`;
-        if (visualisation.showProject)
-          result = `${result};${time.project?.name ?? ""}`;
-        if (time.notes)
-          result = `${result};"${
-            time.notes.startsWith("-")
-              ? time.notes.replace("-", " -")
-              : time.notes
-          }"`;
-      }
+      result = `${result}\n`;
+      if (visualisation.showDateColumn)
+        result = `${result}${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
+          time.time
+        }`;
+      else
+        result = `${result}${time.start.toLocaleString()};${time.end?.toLocaleString()};${
+          time.time
+        }`;
+      if (visualisation.showProject)
+        result = `${result};${time.project?.name ?? ""}`;
+      if (time.notes)
+        result = `${result};"${
+          time.notes.startsWith("-")
+            ? time.notes.replace("-", " -")
+            : time.notes
+        }"`;
     }
 
     result = `${result}\n\n`;
@@ -498,13 +460,7 @@ export default function TimerExportDialog({
                   onCheckedChange={(value) => {
                     setVisualisation({
                       showDateColumn: value,
-                      structurizeDateTree: false,
                     });
-
-                    localStorage.setItem(
-                      "export-visualisation-structurizeDateTree",
-                      `${false}`,
-                    );
                     localStorage.setItem(
                       "export-visualisation-showDateColumn",
                       `${value}`,
@@ -516,33 +472,6 @@ export default function TimerExportDialog({
                   className="pl-2 text-muted-foreground"
                 >
                   {t("Dialogs.Export.visualisation.dateSpecificColumn")}
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="date-tree-toggle"
-                  checked={visualisation.structurizeDateTree}
-                  onCheckedChange={(value) => {
-                    setVisualisation({
-                      structurizeDateTree: value,
-                      showDateColumn: true,
-                    });
-
-                    localStorage.setItem(
-                      "export-visualisation-showDateColumn",
-                      `${true}`,
-                    );
-                    localStorage.setItem(
-                      "export-visualisation-structurizeDateTree",
-                      `${value}`,
-                    );
-                  }}
-                />
-                <Label
-                  htmlFor="date-tree-toggle"
-                  className="pl-2 text-muted-foreground"
-                >
-                  {t("Dialogs.Export.visualisation.structureByDateTree")}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">

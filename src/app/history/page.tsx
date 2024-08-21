@@ -3,7 +3,6 @@ import type { Prisma } from "@prisma/client";
 
 import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
-import { TimerAddServer } from "./timer-add";
 
 import prisma from "@/lib/prisma";
 import { authCheck } from "@/lib/auth";
@@ -61,11 +60,9 @@ export default async function History({
   const cookieStore = cookies();
 
   const invoicedCookie = cookieStore.get("invoiced")?.value;
-  const invoiced = [undefined, "true", "false"].includes(invoicedCookie)
-    ? invoicedCookie
-      ? invoicedCookie === "true"
-      : undefined
-    : undefined;
+
+  let invoiced: boolean | undefined = invoicedCookie === "true";
+  if (invoicedCookie === undefined) invoiced = undefined;
 
   const [history, projects] = await prisma.$transaction([
     prisma.time.findMany({
@@ -85,9 +82,12 @@ export default async function History({
 
   const historyData = formatHistory(history);
 
+  const currentYearMonth =
+    new Date().getFullYear() + " " + months[new Date().getMonth()];
+
   let yearMonth = searchParams?.ym;
   if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
-    yearMonth = Object.keys(historyData)[0] ?? "";
+    yearMonth = Object.keys(historyData)[0] ?? currentYearMonth;
 
   const timeStrings = (historyData[yearMonth] ?? [])
     .filter((data) => data.time !== null)
@@ -97,29 +97,19 @@ export default async function History({
 
   return (
     <Navigation>
-      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-1 p-4">
         <div className="w-full font-mono text-center pt-2">
           <p className="text-2xl font-mono">{t("PageTitle")}</p>
         </div>
 
-        {history.length !== 0 ? (
-          <TimerSection
-            history={historyData}
-            projects={projects}
-            totalTime={totalTime}
-            yearMonth={yearMonth}
-            invoicedFilter={invoiced}
-            user={user.id ?? ""}
-          />
-        ) : (
-          <TimerAddServer
-            user={user.id ?? ""}
-            projects={projects}
-            resetFilter={
-              JSON.stringify(historyData) == "{}" && invoiced !== undefined
-            }
-          />
-        )}
+        <TimerSection
+          history={historyData}
+          projects={projects}
+          totalTime={totalTime}
+          yearMonth={yearMonth}
+          invoicedFilter={invoiced}
+          user={user.id}
+        />
       </section>
     </Navigation>
   );
