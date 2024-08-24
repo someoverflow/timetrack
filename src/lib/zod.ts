@@ -29,6 +29,8 @@ export const passwordValidation = z
   .min(8, "Password is too short. (min. 8)")
   .max(30, "Password is too long. (max. 30)")
   .regex(passwordRegex, invalidPassword);
+
+export const userArrayValidation = z.array(nameValidation).min(1);
 //#endregion
 
 //#region User API
@@ -203,7 +205,7 @@ export const profileApiValidation = z
     {
       message: "One of the fields must be given (name, mail, password)",
       path: ["name", "mail", "password"],
-    }
+    },
   );
 //#endregion
 

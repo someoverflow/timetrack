@@ -2,7 +2,6 @@
 
 //#region Imports
 import type { Prisma } from "@prisma/client";
-import type { CheckedState } from "@radix-ui/react-checkbox";
 
 import {
   Dialog,
@@ -10,34 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Check, ChevronsUpDown, Download, FileDown } from "lucide-react";
+import { Download, FileDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
-import { cn, sumTimes } from "@/lib/utils";
+import { sumTimes } from "@/lib/utils";
 //#endregion
 
 const umlautMap: Record<string, string> = {
@@ -67,10 +48,6 @@ type Timer = Prisma.TimeGetPayload<{
 }>;
 type Data = Record<string, Timer[]>;
 
-interface exportFilterState {
-  project: string | null | undefined;
-  yearMonth: string;
-}
 interface visualisationState {
   showProject: boolean;
   showDateColumn: boolean;
@@ -79,31 +56,12 @@ interface visualisationState {
 export default function TimerExportDialog({
   history,
   yearMonth,
-  invoicedFilter,
-  projects,
 }: {
   history: Data;
   yearMonth: string;
-  invoicedFilter: boolean | undefined;
-  projects: Prisma.ProjectGetPayload<Record<string, never>>[];
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const editTime = searchParams.get("edit");
-
   const t = useTranslations("History");
 
-  const [filters, setFilters] = useReducer(
-    (prev: exportFilterState, next: Partial<exportFilterState>) => ({
-      ...prev,
-      ...next,
-    }),
-    {
-      project: undefined,
-      yearMonth: yearMonth,
-    },
-  );
   const [visualisation, setVisualisation] = useReducer(
     (prev: visualisationState, next: Partial<visualisationState>) => ({
       ...prev,
@@ -130,17 +88,9 @@ export default function TimerExportDialog({
     });
   }, []);
 
-  const exportData = useMemo(() => {
-    // Prepare data for export
-    let data = history[filters.yearMonth] ?? [];
-
-    if (filters.project !== undefined)
-      data = data.filter((entry) => entry.projectName === filters.project);
-
-    return data;
-  }, [history, filters]);
-
   const downloadCSV = () => {
+    const exportData = history[yearMonth] ?? [];
+
     // Prepare Data
     const timeStrings = (exportData || [])
       .map((data) => data.time)
@@ -190,253 +140,28 @@ export default function TimerExportDialog({
       type: "text/plain",
     });
     element.href = URL.createObjectURL(file);
-    element.download = `Time ${filters.yearMonth}.csv`;
+    element.download = `Time ${yearMonth}.csv`;
     document.body.appendChild(element);
     element.click();
   };
 
-  const updateFilter = (invoiced?: undefined | CheckedState) => {
-    if (typeof document !== "undefined") {
-      if (invoiced === "indeterminate" || invoiced === undefined)
-        document.cookie = "invoiced=undefined;max-age=0;path=/";
-      else document.cookie = `invoiced=${invoiced};max-age=31536000;path=/`;
-    }
-
-    if (editTime) {
-      const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete("edit");
-      const search = current.toString();
-      const query = search ? `?${search}` : "";
-      router.replace(`${pathname}${query}`);
-    }
-
-    router.refresh();
-  };
-
-  const parseYearMonth = (yearMonth: string) => {
-    return `${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`;
-  };
-
   return (
-    <>
-      <Tooltip delayDuration={500}>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setVisible(true)}
-          >
-            <FileDown className="h-5 w-5" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p
-            className="text-center"
-            dangerouslySetInnerHTML={{
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              __html: t.raw("Dialogs.Export.buttonContent"),
-            }}
-          />
-        </TooltipContent>
-      </Tooltip>
+    <div className="w-max">
+      <Button variant="outline" size="icon" onClick={() => setVisible(true)}>
+        <FileDown className="h-5 w-5" />
+      </Button>
 
       <Dialog
         key={"exportModal"}
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
+        <DialogContent className="w-[95vw] top-[25%] max-w-md rounded-lg flex flex-col justify-between">
           <DialogHeader>
             <DialogTitle>
               <div>{t("Dialogs.Export.title")}</div>
             </DialogTitle>
           </DialogHeader>
-
-          <div className="rounded-md border p-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {t("Dialogs.Export.filter.title")}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t("Dialogs.Export.filter.description")}
-                </p>
-              </div>
-            </div>
-
-            <Separator className="my-5" orientation="horizontal" />
-
-            <div className="w-full flex flex-col sm:flex-row items-center justify-evenly gap-4">
-              <div className="w-full flex flex-col gap-2">
-                <Popover>
-                  <Label
-                    htmlFor="yearMonth-button"
-                    className="pl-2 text-muted-foreground"
-                  >
-                    {t("Dialogs.Export.filter.yearMonth")}
-                  </Label>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="yearMonth-button"
-                      variant="outline"
-                      role="combobox"
-                    >
-                      {parseYearMonth(filters.yearMonth)}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-2">
-                    <Command>
-                      <CommandInput
-                        placeholder={t("Dialogs.Export.filter.search")}
-                        className="h-8"
-                      />
-                      <CommandGroup>
-                        {Object.keys(history).map((yearMonth) => (
-                          <CommandItem
-                            key={`yearMonth-filter-${yearMonth}`}
-                            value={yearMonth}
-                            onSelect={() => {
-                              setFilters({
-                                yearMonth: yearMonth,
-                              });
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                filters.yearMonth === yearMonth
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            {parseYearMonth(yearMonth)}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <Separator
-                className="h-10 hidden sm:block"
-                orientation="vertical"
-              />
-              <div className="w-full flex flex-col gap-2">
-                <Popover>
-                  <Label
-                    htmlFor="project-button"
-                    className="pl-2 text-muted-foreground"
-                  >
-                    {t("Dialogs.Export.filter.project")}
-                  </Label>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="project-button"
-                      variant="outline"
-                      role="combobox"
-                    >
-                      {filters.project !== undefined
-                        ? (filters.project ??
-                          t("Dialogs.Export.filter.withoutProject"))
-                        : t("Dialogs.Export.filter.allProjects")}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-2">
-                    <Command>
-                      <CommandInput
-                        placeholder={t("Dialogs.Export.filter.search")}
-                        className="h-8"
-                      />
-                      <CommandGroup>
-                        <CommandItem
-                          key={"project-filter-none"}
-                          onSelect={() => {
-                            setFilters({
-                              project:
-                                filters.project !== null ? null : undefined,
-                            });
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              filters.project === null
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          {t("Dialogs.Export.filter.withoutProject")}
-                        </CommandItem>
-                      </CommandGroup>
-                      <CommandGroup heading="Projects">
-                        {projects.map((project) => (
-                          <CommandItem
-                            key={`project-filter-${project.name}`}
-                            value={project.name}
-                            onSelect={() => {
-                              setFilters({
-                                project:
-                                  filters.project !== project.name
-                                    ? project.name
-                                    : undefined,
-                              });
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                filters.project === project.name
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            {project.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div className="flex flex-row items-center gap-2 mt-6 ml-2">
-              <Checkbox
-                id="invoicedFilter"
-                checked={
-                  { true: true, false: "indeterminate", undefined: false }[
-                    `${invoicedFilter}`
-                  ] as CheckedState
-                }
-                onCheckedChange={() => {
-                  switch (invoicedFilter) {
-                    case undefined:
-                      updateFilter(true);
-                      break;
-                    case true:
-                      updateFilter(false);
-                      break;
-                    case false:
-                      updateFilter(undefined);
-                      break;
-                  }
-                }}
-              />
-              <Label
-                htmlFor="invoicedFilter"
-                className="flex flex-col text-nowrap"
-              >
-                {t("Miscellaneous.invoiced")}
-                <span className="text-muted-foreground">
-                  {t("Miscellaneous.invoicedExportDescription", {
-                    invoiced: invoicedFilter,
-                  })}
-                </span>
-              </Label>
-            </div>
-          </div>
 
           <div className="rounded-md border p-4">
             <div className="flex items-center space-x-4">
@@ -505,6 +230,6 @@ export default function TimerExportDialog({
           </Button>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

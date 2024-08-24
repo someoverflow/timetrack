@@ -1,157 +1,157 @@
 {
-  "Timer": {
-    "Metadata": {
-      "title": "Time Track",
-      "description": "Erfasse deine Zeiten"
+  "Admin": {
+    "Users": {
+      "actions": "Aktionen",
+      "addDuplicate": "Benutzer existiert bereits.",
+      "chipAdded": "Chip erfolgreich verknüpft",
+      "chipRemoved": "Chip erfolgreich entfernt",
+      "created": "Benutzer erfolgreich erstellt",
+      "currentPage": "Seite {page} von {pages}",
+      "deleted": "Benutzer erfolgreich gelöscht",
+      "Dialogs": {
+        "Add": {
+          "buttonToolTip": "Erstelle einen Benutzer",
+          "create": "Hinzufügen",
+          "mail": "Mail",
+          "mailPlaceholder": "max@example.com",
+          "name": "Name",
+          "namePlaceholder": "Max Mustermann",
+          "password": "Passwort",
+          "passwordPlaceholder": "",
+          "role": "Rolle",
+          "roles": {
+            "admin": "Admin",
+            "user": "Benutzer"
+          },
+          "title": "Benutzer hinzufügen",
+          "username": "Benutzer",
+          "usernamePlaceholder": "maxmust"
+        },
+        "Edit": {
+          "addChip": "Chip Hinzufügen",
+          "chips": "Chips",
+          "created": "Erstellt",
+          "delete": "Löschen",
+          "details": "Details",
+          "mail": "Mail",
+          "name": "Name",
+          "password": "Passwort",
+          "passwordPlaceholder": "Neues Passwort",
+          "preferences": "Einstellungen",
+          "role": "Rolle",
+          "roles": {
+            "admin": "Admin",
+            "user": "Benutzer"
+          },
+          "save": "Speichern",
+          "title": "Benutzer bearbeiten",
+          "updated": "Aktuallisiert",
+          "username": "Benutzer"
+        }
+      },
+      "edit": "Bearbeiten",
+      "Metadata": {
+        "description": "Track your Time",
+        "title": "Time Track - Benutzer"
+      },
+      "name": "Name",
+      "noResults": "Keine Ergebnisse",
+      "rowsPerPage": "Zeilen pro Seite",
+      "searchName": "Suche nach Namen...",
+      "title": "Benutzer",
+      "updated": "Benutzer erfolgreich aktualisiert",
+      "updateDuplicate": "Benutzer mit diesem username existiert bereits.",
+      "updateNotFound": "Benutzer nicht gefunden.",
+      "username": "Benutzername",
+      "viewHistory": "Verlauf anzeigen"
+    }
+  },
+  "Error": {
+    "message": "Ein Fehler ist aufgetreten",
+    "resultProcessing": "Antwort konnte nicht verarbeitet werden",
+    "unknown": {
+      "description": "Ein neuer Versuch schadet nicht.",
+      "message": "Ein unbekannter Fehler ist aufgetreten {type}"
     },
-    "Dialogs": {
-      "Stopped": {
-        "title": "Zeiten und Notizen bearbeiten?",
-        "description": "Möchtest du deinen gestoppten Eintrag sofort bearbeiten?",
-        "edit": "Sofort",
-        "cancel": "Später"
-      }
-    },
-    "Miscellaneous": {
-      "updating": "Aktuallisiere",
-      "start": "Start",
-      "stop": "Stop",
-      "startWithWebsite": "Starte jetzt durch die Website",
-      "startedWith": "Gestartet mit {startType}",
-
-      "projects": {
-        "none": "Kein Projekt",
-        "search": "Suchen...",
-        "noneFound": "Keine Projekte gefunden",
-        "noneFoundDescription": "Klicke um Projekte zu verwalten"
-      }
+    "validation": {
+      "description": "{code}",
+      "message": "{message}"
     }
   },
   "History": {
-    "PageTitle": "Verlauf",
-
-    "Metadata": {
-      "title": "Time Track - Verlauf",
-      "description": "Erfasse deine Zeiten"
-    },
-
     "Dialogs": {
-      "Edit": {
-        "title": "Eintrag bearbeiten",
-
-        "details": "Details",
-        "time": "Zeit",
+      "Create": {
         "breaks": "Pausen",
-
+        "create": "Hinzufügen",
+        "details": "Details",
+        "distance": "Zurückgelegte Entfernung (km)",
+        "end": "Ende",
+        "first": {
+          "description": "<p>Wir haben keine Daten gefunden.</p><p>Du kannst hier einen Eintrag Manuell erstellen</p><p>oder einfach einen Timer starten.</p>",
+          "title": "Erstelle einen ersten Eintrag"
+        },
+        "notes": "Notizen",
         "project": {
-          "project": "Projekt",
-          "search": "Projekt Suchen...",
           "noProjects": "Keine Projekte gefunden.",
           "noProjectsDescription": "Klicke um eins zu erstellen",
-          "noRelated": "Kein zugehöriges Projekt"
+          "noRelated": "Kein zugehöriges Projekt",
+          "project": "Projekt",
+          "search": "Projekt Suchen..."
         },
-
-        "notes": "Notizen",
-        "distance": "Zurückgelegte Entfernung (km)",
-
         "start": "Start",
+        "time": "Zeit",
+        "title": "Eintrag hinzufügen"
+      },
+      "Edit": {
+        "breaks": "Pausen",
+        "delete": "Löschen",
+        "details": "Details",
+        "distance": "Zurückgelegte Entfernung (km)",
         "end": "Ende",
+        "notes": "Notizen",
+        "project": {
+          "noProjects": "Keine Projekte gefunden.",
+          "noProjectsDescription": "Klicke um eins zu erstellen",
+          "noRelated": "Kein zugehöriges Projekt",
+          "project": "Projekt",
+          "search": "Projekt Suchen..."
+        },
+        "save": "Speichern",
+        "saveDetails": "Speichern + Stoppen",
+        "start": "Start",
         "startedWith": "Gestartet mit",
         "stoppedWith": "Gestoppt mit",
-
-        "delete": "Löschen",
-        "save": "Speichern",
-        "saveDetails": "Speichern + Stoppen"
-      },
-      "Create": {
-        "title": "Eintrag hinzufügen",
-
-        "first": {
-          "title": "Erstelle einen ersten Eintrag",
-          "description": "<p>Wir haben keine Daten gefunden.</p><p>Du kannst hier einen Eintrag Manuell erstellen</p><p>oder einfach einen Timer starten.</p>"
-        },
-
-        "details": "Details",
         "time": "Zeit",
-        "breaks": "Pausen",
-
-        "project": {
-          "project": "Projekt",
-          "search": "Projekt Suchen...",
-          "noProjects": "Keine Projekte gefunden.",
-          "noProjectsDescription": "Klicke um eins zu erstellen",
-          "noRelated": "Kein zugehöriges Projekt"
-        },
-
-        "notes": "Notizen",
-        "distance": "Zurückgelegte Entfernung (km)",
-
-        "start": "Start",
-        "end": "Ende",
-
-        "create": "Hinzufügen"
+        "title": "Eintrag bearbeiten"
       },
       "Export": {
-        "title": "Verlauf Exportieren",
-
         "buttonContent": "Lade eine <code>.csv</code> herunter<br /> mit deinem Verlauf.",
-
+        "download": "Herunterladen",
         "filter": {
-          "title": "Filter",
-          "description": "Filter die herunterzuladenden Daten.",
-
-          "search": "Suchen...",
-
-          "yearMonth": "Jahr / Monat",
-
-          "project": "Projekt",
           "allProjects": "Alle Projekte",
-          "withoutProject": "Ohne Projekt"
+          "description": "Filter die herunterzuladenden Daten.",
+          "project": "Projekt",
+          "search": "Suchen...",
+          "title": "Filter",
+          "withoutProject": "Ohne Projekt",
+          "yearMonth": "Jahr / Monat"
         },
+        "title": "Verlauf Exportieren",
         "visualisation": {
-          "title": "Visualisierung",
+          "dateSpecificColumn": "Datum in separate Spalte, nicht mit der Uhrzeit.",
           "description": "Passe die zu exportierende Tabelle an.",
-
-          "dateSpecificColumn": "Anzeige des Datums in einer bestimmten Spalte",
+          "projectSpecificColumn": "Spalte mit Projekt",
           "structureByDateTree": "Struktur nach Datum im Baum",
-          "projectSpecificColumn": "Anzeige des Projekts in einer bestimmten Spalte"
-        },
-
-        "download": "Herunterladen"
+          "title": "Visualisierung"
+        }
       }
     },
-
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Verlauf"
+    },
     "Miscellaneous": {
-      "searchYearMonth": "Suche Jahr/Monat...",
-      "newEntry": "Neuen Eintrag hinzufügen",
-      "nothingFound": "Nichts gefunden.",
-      "userNotFound": "Benutzer nicht gefunden.",
-
       "created": "Neuen Eintrag erfolgreich erstellt",
-      "updated": "Eintrag erfolgreich aktualisiert",
-      "deleted": "Eintrag erfolgreich gelöscht",
-
-      "undo": "Zurücksetzen",
-
-      "invoicedSingular": "Berechnet",
-      "invoiced": "Berechnete Zeiten",
-      "invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
-      "invoicedExportDescription": "werden {invoiced, select, true {nur exportiert} false {nicht exportiert} other {exportiert}}",
-
-      "Months": {
-        "January": "Januar",
-        "February": "Februar",
-        "March": "März",
-        "April": "April",
-        "May": "Mai",
-        "June": "Juni",
-        "July": "Juli",
-        "August": "August",
-        "September": "September",
-        "October": "Oktober",
-        "November": "November",
-        "December": "Dezember"
-      },
       "Days": {
         "0": "Sonntag",
         "1": "Montag",
@@ -160,318 +160,227 @@
         "4": "Donnerstag",
         "5": "Freitag",
         "6": "Samstag"
+      },
+      "deleted": "Eintrag erfolgreich gelöscht",
+      "invoiced": "Berechnete Zeiten",
+      "invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
+      "invoicedExportDescription": "werden {invoiced, select, true {nur exportiert} false {nicht exportiert} other {exportiert}}",
+      "invoicedSingular": "Berechnet",
+      "Months": {
+        "April": "April",
+        "August": "August",
+        "December": "Dezember",
+        "February": "Februar",
+        "January": "Januar",
+        "July": "Juli",
+        "June": "Juni",
+        "March": "März",
+        "May": "Mai",
+        "November": "November",
+        "October": "Oktober",
+        "September": "September"
+      },
+      "newEntry": "Neuen Eintrag hinzufügen",
+      "noFilter": "Kein Filter",
+      "nothingFound": "Nichts gefunden.",
+      "projects": "Projekte",
+      "projectsEmpty": "Ohne Projekt",
+      "reset": "Zurücksetzen",
+      "search": "Suchen...",
+      "searchYearMonth": "Suche Jahr/Monat...",
+      "undo": "Zurücksetzen",
+      "updated": "Eintrag erfolgreich aktualisiert",
+      "userNotFound": "Benutzer nicht gefunden.",
+      "users": "Benutzer"
+    },
+    "PageTitle": "Verlauf"
+  },
+  "Login": {
+    "buttonText": "Anmelden",
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Anmelden"
+    },
+    "password": "Passwort",
+    "passwordPlaceholder": "Passwort",
+    "title": "Anmelden",
+    "username": "Benutzer",
+    "usernamePlaceholder": "Benutzer"
+  },
+  "Navigation": {
+    "history": "Verlauf",
+    "home": "Timer",
+    "profile": "Profil",
+    "projects": "Projekte",
+    "signOut": "Abmelden",
+    "Theme": {
+      "dark": "Dunkel",
+      "light": "Hell",
+      "system": "System",
+      "title": "Theme"
+    },
+    "todo": "Todo",
+    "users": "Benutzer"
+  },
+  "Profile": {
+    "buttonContent": "Speichern",
+    "buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort",
+    "description": "Nehme Änderungen am Profil vor.",
+    "language": "Sprache",
+    "languages": {
+      "de": "Deutsch",
+      "en": "English"
+    },
+    "languageUpdate": "Sprache geändert.",
+    "mail": "Mail",
+    "mailPlaceholder": "max@example.com",
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Profil"
+    },
+    "name": "Name",
+    "namePlaceholder": "Max Mustermann",
+    "password": "Neues Passwort",
+    "passwordPlaceholder": "",
+    "passwordUpdate": "Passwort geändert. Bitte erneut anmelden.",
+    "sessionUpdate": "Die Sitzung wird aktualisiert.",
+    "title": "Profil",
+    "updated": "Profil erfolgreich aktualisiert"
+  },
+  "Projects": {
+    "created": "Projekt erfolgreich erstellt.",
+    "deleted": "Projekt erfolgreich gelöscht.",
+    "Dialogs": {
+      "Edit": {
+        "description": "Beschreibung",
+        "details": "Details",
+        "name": "Name",
+        "title": "Projekt bearbeiten"
       }
+    },
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Projekte"
+    },
+    "noProjects": "Keine Projekte gefunden.",
+    "projects": "Projekte ({projects})",
+    "saved": "Erfolgreich gespeichert.",
+    "searchPlaceholder": "Suche oder erstelle ein Projekt",
+    "times": "Zeiten: {times}",
+    "title": "Projekte",
+    "todos": "Todos: {todos}"
+  },
+  "SignOut": {
+    "buttonText": "Abmelden",
+    "description": "Sicher dass du dich abmelden willst?",
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Abmelden"
+    },
+    "title": "Abmelden"
+  },
+  "Timer": {
+    "Dialogs": {
+      "Stopped": {
+        "cancel": "Später",
+        "description": "Möchtest du deinen gestoppten Eintrag sofort bearbeiten?",
+        "edit": "Sofort",
+        "title": "Zeiten und Notizen bearbeiten?"
+      }
+    },
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track"
+    },
+    "Miscellaneous": {
+      "projects": {
+        "none": "Kein Projekt",
+        "noneFound": "Keine Projekte gefunden",
+        "noneFoundDescription": "Klicke um Projekte zu verwalten",
+        "search": "Suchen..."
+      },
+      "start": "Start",
+      "startedWith": "Gestartet mit {startType}",
+      "startWithWebsite": "Starte jetzt durch die Website",
+      "stop": "Stop",
+      "updating": "Aktuallisiere"
     }
   },
   "Todo": {
-    "Metadata": {
-      "title": "Time Track - Aufgaben",
-      "description": "Track your Time"
-    },
-
-    "title": "Aufgaben",
-
-    "searchTasks": "Suche nach Aufgaben...",
-    "filter": "Filter",
-
-    "noResults": "Keine Ergebnisse",
-
-    "rowsPerPage": "Zeilen pro Seite",
     "currentPage": "Seite {page} von {pages}",
-
     "Dialogs": {
       "Add": {
-        "title": "Eintrag hinzufügen",
         "buttonToolTip": "Erstelle eine Aufgabe",
-
-        "projects": "Projekte",
-        "noRelatedProjects": "Keine zugehörige Projekte",
-
-        "noProjectsFound": "Keine Projekte gefunden",
-        "projectsManage": "Klicke um Projekte zu verwalten",
-
-        "searchUser": "Nach Benutzer suchen...",
-        "searchProject": "Nach Projekt suchen...",
-
+        "create": "Hinzufügen",
         "noAssignees": "Keine Beauftragten",
-
-        "create": "Hinzufügen"
+        "noProjectsFound": "Keine Projekte gefunden",
+        "noRelatedProjects": "Keine zugehörige Projekte",
+        "projects": "Projekte",
+        "projectsManage": "Klicke um Projekte zu verwalten",
+        "searchProject": "Nach Projekt suchen...",
+        "searchUser": "Nach Benutzer suchen...",
+        "title": "Eintrag hinzufügen"
       },
       "Edit": {
-        "noAssignees": "Keine Beauftragten",
-
-        "searchUser": "Nach Benutzer suchen...",
-        "searchProject": "Nach Projekt suchen...",
-
-        "noProjectsFound": "Keine Projekte gefunden",
-        "projectsManage": "Klicke um Projekte zu verwalten",
-
-        "creator": "Ersteller",
-        "updated": "Aktuallisiert",
         "created": "Erstellt",
-
-        "save": "Speichern",
-
-        "projects": "Projekte",
+        "creator": "Ersteller",
+        "details": "Details",
+        "noAssignees": "Keine Beauftragten",
+        "noProjectsFound": "Keine Projekte gefunden",
         "noRelatedProjects": "Keine zugehörige Projekte",
-
+        "projects": "Projekte",
+        "projectsManage": "Klicke um Projekte zu verwalten",
+        "save": "Speichern",
+        "searchProject": "Nach Projekt suchen...",
+        "searchUser": "Nach Benutzer suchen...",
         "status": "Status",
-        "details": "Details"
+        "updated": "Aktuallisiert"
       }
     },
-
+    "filter": "Filter",
+    "Metadata": {
+      "description": "Track your Time",
+      "title": "Time Track - Aufgaben"
+    },
     "Miscellaneous": {
-      "task": "Auftrag",
-      "description": "Beschreibung",
-
-      "deadline": "Deadline",
-
-      "assignees": "Beauftragte",
-
-      "creator": "Ersteller",
-      "createdAt": "Erstellt",
-
-      "archived": "Archiviert",
-
-      "visibleColumns": "Sichtbare Spalten",
-
-      "none": "Keine",
-
-      "hoverInfo": "Klicke um die Aufgabe zu bearbeiten.",
-
       "actions": "Aktionen",
-      "copyLink": "Link Kopieren",
       "archive": "Archivieren",
-      "hide": "Verstecken",
-      "show": "Anzeigen",
-
+      "archived": "Archiviert",
+      "assignees": "Beauftragte",
       "changed": "Erfolgreich geändert.",
-      "updated": "Todo erfolgreich aktualisiert",
+      "copyLink": "Link Kopieren",
       "created": "Todo erfolgreich erstellt",
-
-      "steps": {
-        "todo": "Todo",
-        "inProgress": "In Arbeit",
-        "done": "Fertig"
-      },
-      "stepsNext": {
-        "todo": "Anfangen",
-        "inProgress": "Fertigstellen",
-        "done": "Rücksetzen"
-      },
-
-      "priority": "Priorität",
+      "createdAt": "Erstellt",
+      "creator": "Ersteller",
+      "deadline": "Deadline",
+      "description": "Beschreibung",
+      "hide": "Verstecken",
+      "hoverInfo": "Klicke um die Aufgabe zu bearbeiten.",
+      "none": "Keine",
       "priorities": {
         "high": "Hoch",
-        "medium": "Normal",
-        "low": "Nidrig"
-      }
-    }
-  },
-  "Profile": {
-    "Metadata": {
-      "title": "Time Track - Profil",
-      "description": "Erfasse deine Zeiten"
-    },
-
-    "title": "Profil",
-    "description": "Nehme Änderungen am Profil vor.",
-
-    "name": "Name",
-    "namePlaceholder": "Max Mustermann",
-    "mail": "Mail",
-    "mailPlaceholder": "max@example.com",
-
-    "language": "Sprache",
-    "languages": {
-      "en": "English",
-      "de": "Deutsch"
-    },
-
-    "password": "Neues Passwort",
-    "passwordPlaceholder": "",
-
-    "updated": "Profil erfolgreich aktualisiert",
-    "sessionUpdate": "Die Sitzung wird aktualisiert.",
-    "languageUpdate": "Sprache geändert.",
-    "passwordUpdate": "Passwort geändert. Bitte erneut anmelden.",
-
-    "buttonContent": "Speichern",
-    "buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort"
-  },
-  "Projects": {
-    "Metadata": {
-      "title": "Time Track - Projekte",
-      "description": "Erfasse deine Zeiten"
-    },
-
-    "title": "Projekte",
-
-    "searchPlaceholder": "Suche oder erstelle ein Projekt",
-
-    "noProjects": "Keine Projekte gefunden.",
-
-    "projects": "Projekte ({projects})",
-
-    "times": "Zeiten: {times}",
-    "todos": "Todos: {todos}",
-
-    "saved": "Erfolgreich gespeichert.",
-    "created": "Projekt erfolgreich erstellt.",
-    "deleted": "Projekt erfolgreich gelöscht.",
-
-    "Dialogs": {
-      "Edit": {
-        "title": "Projekt bearbeiten",
-
-        "details": "Details",
-
-        "name": "Name",
-        "description": "Beschreibung"
-      }
-    }
-  },
-  "Admin": {
-    "Users": {
-      "Metadata": {
-        "title": "Time Track - Benutzer",
-        "description": "Track your Time"
+        "low": "Nidrig",
+        "medium": "Normal"
       },
-
-      "title": "Benutzer",
-
-      "username": "Benutzername",
-      "name": "Name",
-      "actions": "Aktionen",
-
-			"viewHistory": "Verlauf anzeigen",
-			"edit": "Bearbeiten",
-
-      "searchName": "Suche nach Namen...",
-
-      "noResults": "Keine Ergebnisse",
-
-      "rowsPerPage": "Zeilen pro Seite",
-      "currentPage": "Seite {page} von {pages}",
-
-      "created": "Benutzer erfolgreich erstellt",
-      "updated": "Benutzer erfolgreich aktualisiert",
-      "deleted": "Benutzer erfolgreich gelöscht",
-
-      "addDuplicate": "Benutzer existiert bereits.",
-      "updateNotFound": "Benutzer nicht gefunden.",
-      "updateDuplicate": "Benutzer mit diesem username existiert bereits.",
-
-      "chipRemoved": "Chip erfolgreich entfernt",
-      "chipAdded": "Chip erfolgreich verknüpft",
-
-      "Dialogs": {
-        "Add": {
-          "title": "Benutzer hinzufügen",
-          "buttonToolTip": "Erstelle einen Benutzer",
-
-          "username": "Benutzer",
-          "usernamePlaceholder": "maxmust",
-          "name": "Name",
-          "namePlaceholder": "Max Mustermann",
-          "role": "Rolle",
-          "mail": "Mail",
-          "mailPlaceholder": "max@example.com",
-          "password": "Passwort",
-          "passwordPlaceholder": "",
-
-          "create": "Hinzufügen",
-
-          "roles": {
-            "admin": "Admin",
-            "user": "Benutzer"
-          }
-        },
-        "Edit": {
-          "title": "Benutzer bearbeiten",
-
-          "preferences": "Einstellungen",
-          "details": "Details",
-          "chips": "Chips",
-
-          "username": "Benutzer",
-          "name": "Name",
-          "mail": "Mail",
-          "role": "Rolle",
-          "password": "Passwort",
-          "passwordPlaceholder": "Neues Passwort",
-
-          "updated": "Aktuallisiert",
-          "created": "Erstellt",
-
-          "addChip": "Chip Hinzufügen",
-
-          "delete": "Löschen",
-          "save": "Speichern",
-
-          "roles": {
-            "admin": "Admin",
-            "user": "Benutzer"
-          }
-        }
-      }
-    }
-  },
-  "SignOut": {
-    "Metadata": {
-      "title": "Time Track - Abmelden",
-      "description": "Erfasse deine Zeiten"
+      "priority": "Priorität",
+      "show": "Anzeigen",
+      "steps": {
+        "done": "Fertig",
+        "inProgress": "In Arbeit",
+        "todo": "Todo"
+      },
+      "stepsNext": {
+        "done": "Rücksetzen",
+        "inProgress": "Fertigstellen",
+        "todo": "Anfangen"
+      },
+      "task": "Auftrag",
+      "updated": "Todo erfolgreich aktualisiert",
+      "visibleColumns": "Sichtbare Spalten"
     },
-
-    "title": "Abmelden",
-    "description": "Sicher dass du dich abmelden willst?",
-
-    "buttonText": "Abmelden"
-  },
-  "Login": {
-    "Metadata": {
-      "title": "Time Track - Anmelden",
-      "description": "Erfasse deine Zeiten"
-    },
-
-    "title": "Anmelden",
-
-    "username": "Benutzer",
-    "usernamePlaceholder": "Benutzer",
-    "password": "Passwort",
-    "passwordPlaceholder": "Passwort",
-
-    "buttonText": "Anmelden"
-  },
-  "Navigation": {
-    "Theme": {
-      "title": "Theme",
-      "dark": "Dunkel",
-      "light": "Hell",
-      "system": "System"
-    },
-
-    "home": "Timer",
-    "history": "Verlauf",
-    "todo": "Todo",
-
-    "profile": "Profil",
-    "projects": "Projekte",
-    "users": "Benutzer",
-
-    "signOut": "Abmelden"
-  },
-  "Error": {
-    "message": "Ein Fehler ist aufgetreten",
-    "resultProcessing": "Antwort konnte nicht verarbeitet werden",
-
-    "unknown": {
-      "message": "Ein unbekannter Fehler ist aufgetreten {type}",
-      "description": "Ein neuer Versuch schadet nicht."
-    },
-    "validation": {
-      "message": "{message}",
-      "description": "{code}"
-    }
+    "noResults": "Keine Ergebnisse",
+    "rowsPerPage": "Zeilen pro Seite",
+    "searchTasks": "Suche nach Aufgaben...",
+    "title": "Aufgaben"
   }
 }

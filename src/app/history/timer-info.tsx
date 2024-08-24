@@ -78,10 +78,12 @@ export default function TimerInfo({
   data,
   projects,
   edit,
+  user,
 }: {
   data: Timer;
   projects: Prisma.ProjectGetPayload<Record<string, never>>[];
   edit: boolean;
+  user: string | undefined;
 }) {
   const t = useTranslations("History");
   const router = useRouter();
@@ -255,7 +257,8 @@ export default function TimerInfo({
   const preventClosing = useCallback(() => {
     let prevent = false;
 
-    if (deleteStatus.loading || updateStatus.loading) prevent = true;
+    if (deleteStatus.loading || updateStatus.loading || invoicedStatus.loading)
+      prevent = true;
 
     if (state.notes !== (data.notes ?? "")) prevent = true;
 
@@ -274,7 +277,7 @@ export default function TimerInfo({
       prevent = true;
 
     return prevent;
-  }, [data, state, updateStatus, deleteStatus]);
+  }, [data, state, updateStatus, deleteStatus, invoicedStatus]);
 
   const changeVisibility = () => {
     if (!blockVisible) setVisible(true);
@@ -372,7 +375,8 @@ export default function TimerInfo({
               <div className="pb-4" />
             )}
 
-            <div
+            {user && <Badge variant="outline">{user}</Badge>}
+            {/* <div
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
@@ -383,7 +387,7 @@ export default function TimerInfo({
                 }
                 disabled={invoicedStatus.loading}
               />
-            </div>
+            </div> */}
           </div>
 
           <div className="flex flex-row justify-evenly items-center text-lg">
@@ -736,8 +740,9 @@ export default function TimerInfo({
                   {t("Dialogs.Edit.delete")}
                 </Button>
               )}
+
               <Button
-                variant="outline"
+                variant={data.end ? "outline" : "secondary"}
                 onClick={() => sendUpdate({ stop: true })}
                 disabled={updateStatus.loading || deleteStatus.loading}
               >
@@ -748,7 +753,7 @@ export default function TimerInfo({
               </Button>
               {!data.end && (
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   onClick={() => sendUpdate({ stop: false })}
                   disabled={updateStatus.loading || deleteStatus.loading}
                 >

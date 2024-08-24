@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
+import { userArrayValidation } from "@/lib/zod";
 //#endregion
 
 type Timer = Prisma.TimeGetPayload<{
@@ -54,15 +55,40 @@ export default async function History({
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
   const user = auth.user;
+  const userIsAdmin = user.role == "ADMIN";
 
   const t = await getTranslations("History");
 
   const cookieStore = cookies();
 
-  const invoicedCookie = cookieStore.get("invoiced")?.value;
+  const filterCookies = {
+    invoiced: cookieStore.get("history-filter-invoiced")?.value,
+    projects: cookieStore.get("history-filter-projects")?.value,
+    users: userIsAdmin
+      ? cookieStore.get("history-filter-users")?.value
+      : undefined,
+  };
 
-  let invoiced: boolean | undefined = invoicedCookie === "true";
-  if (invoicedCookie === undefined) invoiced = undefined;
+  let invoiced: boolean | undefined = filterCookies.invoiced === "true";
+  if (filterCookies.invoiced === undefined) invoiced = undefined;
+
+  let projectsFilter: string[] | undefined = undefined;
+  let userFilter: string[] | undefined = [user.username];
+
+  try {
+    if (filterCookies.projects)
+      projectsFilter = userArrayValidation.safeParse(
+        JSON.parse(filterCookies.projects),
+      ).data;
+
+    if (filterCookies.users)
+      userFilter = userArrayValidation.safeParse(
+        JSON.parse(filterCookies.users),
+      ).data;
+  } catch (e) {
+    cookieStore.delete("history-filter-projects");
+    cookieStore.delete("history-filter-users");
+  }
 
   const [history, projects] = await prisma.$transaction([
     prisma.time.findMany({
@@ -70,8 +96,19 @@ export default async function History({
         start: "desc",
       },
       where: {
-        userId: user.id,
         invoiced: invoiced,
+        user: {
+          username: {
+            in: userFilter,
+          },
+        },
+        project: projectsFilter
+          ? {
+              name: {
+                in: projectsFilter,
+              },
+            }
+          : undefined,
       },
       include: {
         project: true,
@@ -79,6 +116,12 @@ export default async function History({
     }),
     prisma.project.findMany(),
   ]);
+
+  const users = userIsAdmin
+    ? await prisma.user.findMany({
+        select: { id: true, name: true, username: true },
+      })
+    : undefined;
 
   const historyData = formatHistory(history);
 
@@ -95,6 +138,11 @@ export default async function History({
   const totalTime =
     timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
 
+  let activeFilters = 0;
+  if (filterCookies.invoiced !== undefined) activeFilters++;
+  if (filterCookies.projects !== undefined) activeFilters++;
+  if (filterCookies.users !== undefined) activeFilters++;
+
   return (
     <Navigation>
       <section className="w-full max-h-[95svh] flex flex-col items-center gap-1 p-4">
@@ -103,12 +151,18 @@ export default async function History({
         </div>
 
         <TimerSection
+          user={user}
+          users={users}
           history={historyData}
           projects={projects}
           totalTime={totalTime}
           yearMonth={yearMonth}
-          invoicedFilter={invoiced}
-          user={user.id}
+          filters={{
+            active: activeFilters,
+            projects: projectsFilter,
+            users: filterCookies.users ? userFilter : undefined,
+            invoiced,
+          }}
         />
       </section>
     </Navigation>

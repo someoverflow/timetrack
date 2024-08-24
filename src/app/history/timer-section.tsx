@@ -23,12 +23,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Check, ChevronDown, Filter, ListPlus } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronsUpDown,
+  FilterX,
+  Plus,
+} from "lucide-react";
 
 import TimerAdd from "./timer-add";
 import TimerExportDialog from "./timer-export";
 
-import type { Prisma } from "@prisma/client";
+import type { $Enums, Prisma } from "@prisma/client";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 
 import React, { useEffect, useState, useTransition } from "react";
@@ -37,6 +43,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { Separator } from "@/components/ui/separator";
 //#endregion
 
 const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
@@ -48,18 +55,29 @@ type Data = Record<string, Timer[]>;
 
 export default function TimerSection({
   user,
+  users,
   history,
   projects,
   yearMonth,
   totalTime,
-  invoicedFilter,
+  filters,
 }: {
-  user: string;
+  user: {
+    id: string;
+    username: string;
+    role: $Enums.Role;
+  };
+  users: { id: string; username: string; name: string | null }[] | undefined;
   history: Data;
   projects: Prisma.ProjectGetPayload<Record<string, never>>[];
   yearMonth: string;
   totalTime: string;
-  invoicedFilter: boolean | undefined;
+  filters: {
+    active: number;
+    projects: string[] | undefined;
+    users: string[] | undefined;
+    invoiced: boolean | undefined;
+  };
 }) {
   const t = useTranslations("History");
 
@@ -89,15 +107,61 @@ export default function TimerSection({
       router.refresh();
     });
   };
-  const updateFilter = () => {
+  const updateFilter = (data: {
+    usersFilter?: string[];
+    projectsFilter?: string[];
+    invoiced?: boolean;
+
+    reset?: boolean;
+  }) => {
     if (typeof document !== "undefined") {
       let cookie = "undefined";
+      let maxAge = "31536000";
 
-      if (invoicedFilter === undefined) cookie = "true";
-      if (invoicedFilter === true) cookie = "false";
-      if (invoicedFilter === false) cookie = "undefined";
+      // Invoiced
+      if (data.invoiced === true) {
+        cookie = "undefined";
+        maxAge = "31536000";
 
-      document.cookie = `invoiced=${cookie};max-age=${cookie == "undefined" ? "0" : "31536000"};path=/`;
+        if (filters.invoiced === undefined) cookie = "true";
+        if (filters.invoiced === true) cookie = "false";
+        if (filters.invoiced === false) cookie = "undefined";
+
+        if (cookie == "undefined") maxAge = "0";
+        document.cookie = `history-filter-invoiced=${cookie};max-age=${maxAge};path=/`;
+      }
+
+      // Projects
+      if (data.projectsFilter) {
+        cookie = "undefined";
+        maxAge = "31536000";
+
+        if (data.projectsFilter.length !== 0)
+          cookie = JSON.stringify(data.projectsFilter);
+
+        if (cookie == "undefined") maxAge = "0";
+        document.cookie = `history-filter-projects=${cookie};max-age=${maxAge};path=/`;
+      }
+
+      // Users
+      if (data.usersFilter) {
+        cookie = "undefined";
+        maxAge = "31536000";
+
+        if (user.role == "ADMIN" && data.usersFilter.length !== 0)
+          cookie = JSON.stringify(data.usersFilter);
+
+        if (cookie == "undefined") maxAge = "0";
+        document.cookie = `history-filter-users=${cookie};max-age=${maxAge};path=/`;
+      }
+
+      if (data.reset === true) {
+        cookie = "undefined";
+        maxAge = "0";
+        document.cookie = `history-filter-users=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `history-filter-projects=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `history-filter-invoiced=${cookie};max-age=${maxAge};path=/`;
+      }
     }
 
     if (editTime) {
@@ -123,6 +187,9 @@ export default function TimerSection({
         ) === index,
     );
 
+  const usersFilter = filters.users ?? [];
+  const projectsFilter = filters.projects ?? [];
+
   const yearMonthString = `${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`;
   const timeString =
     ((history[yearMonth] ?? []).find((e) => e.end === null) ? "~" : "") +
@@ -132,7 +199,7 @@ export default function TimerSection({
     <>
       <div
         className={cn(
-          "w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
+          "animate-pulse w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
           isPending && "opacity-100",
         )}
       />
@@ -141,119 +208,300 @@ export default function TimerSection({
         className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start"
         key={yearMonth}
       >
-        <div className="p-2 w-full flex flex-row items-center justify-stretch gap-2">
-          <div className="font-bold w-full">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between"
-                >
-                  <div className="flex flex-row items-center justify-start gap-2">
-                    {yearMonthString}
-                    <p className="font-mono text-muted-foreground">
-                      ({timeString})
-                    </p>
-                  </div>
-                  <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-2">
-                <Command>
-                  <CommandInput
-                    placeholder={t("Miscellaneous.searchYearMonth")}
-                    className="h-8"
-                  />
-                  <CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
-                  <CommandGroup>
-                    {historyKeys.map((key) => (
-                      <CommandItem
-                        key={`history-${key}`}
-                        onSelect={() => changeYearMonth(key)}
-                        value={key}
-                        className="font-mono"
-                      >
-                        {`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
-                        <Check
-                          className={cn(
-                            "ml-auto h-4 w-4",
-                            yearMonth === key ? "opacity-100" : "opacity-0",
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* <div
-      className={cn(
-        "grid place-items-center overflow-hidden h-5 w-0 transition-all",
-        isPending && "w-10",
-      )}
-    >
-      <Loader className="w-5 h-5 animate-spin" />
-    </div> */}
-
-          <div className="w-max">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full">
-                <div className="grid gap-2 p-2">
-                  <div className="flex flex-row items-center gap-4">
-                    <Checkbox
-                      id="invoicedFilter"
-                      checked={
-                        {
-                          true: true,
-                          false: "indeterminate",
-                          undefined: false,
-                        }[`${invoicedFilter}`] as CheckedState
-                      }
-                      onCheckedChange={updateFilter}
-                      disabled={isPending}
-                    />
-                    <Label
-                      htmlFor="invoicedFilter"
-                      className="flex flex-col text-nowrap"
-                    >
-                      {t("Miscellaneous.invoiced")}
-                      <span className="text-muted-foreground">
-                        {t("Miscellaneous.invoicedDescription", {
-                          invoiced: invoicedFilter,
-                        })}
-                      </span>
-                    </Label>
-                  </div>
+        <div className="p-2 px-4 font-bold w-full flex flex-row items-center justify-stretch gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-full justify-between relative"
+              >
+                <div className="flex flex-row items-center justify-start gap-2">
+                  {yearMonthString}
+                  <p className="font-mono text-muted-foreground">
+                    ({timeString})
+                  </p>
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
 
-          <div className="w-max">
-            <TimerExportDialog
-              history={history}
-              invoicedFilter={invoicedFilter}
-              yearMonth={yearMonth}
-              projects={projects}
-            />
-          </div>
-          <div className="w-max">
+                {filters.active !== 0 && (
+                  <span className="absolute text-xs -top-2 right-0 font-mono">
+                    {filters.active}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="grid grid-flow-col gap-2 p-2 w-[95vw] max-w-lg border-2">
+              <Command className="w-full col-span-5">
+                <CommandInput
+                  placeholder={t("Miscellaneous.searchYearMonth")}
+                  className="h-8 w-max"
+                />
+                <CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
+                <CommandGroup>
+                  {historyKeys.map((key) => (
+                    <CommandItem
+                      key={`history-${key}`}
+                      onSelect={() => changeYearMonth(key)}
+                      value={key}
+                      className="font-mono"
+                    >
+                      {`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          yearMonth === key ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+
+              <div className="grid gap-2 p-1 w-full ">
+                <div className="grid p-1 gap-1.5">
+                  <Popover>
+                    <Label
+                      htmlFor="projects-button"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      {t("Miscellaneous.projects")}
+                    </Label>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="projects-button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                      >
+                        <div className="flex flex-row gap-1">
+                          {filters.projects === undefined &&
+                            t("Miscellaneous.noFilter")}
+                          {filters.projects?.length === 0 &&
+                            t("Miscellaneous.projectsEmpty")}
+                          {filters.projects?.length !== 0 &&
+                            projectsFilter.map((value, index) => {
+                              if (index !== 0) return undefined;
+                              return (
+                                <Badge
+                                  key={`project-${value}`}
+                                  variant="outline"
+                                >
+                                  {value}
+                                </Badge>
+                              );
+                            })}
+
+                          {projectsFilter.length > 1 && (
+                            <Badge variant="secondary">
+                              +{projectsFilter.length - 1}
+                            </Badge>
+                          )}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-2">
+                      <Command>
+                        <CommandInput
+                          placeholder={t("Miscellaneous.search")}
+                          className="h-8"
+                        />
+                        {projects.length !== 0 && (
+                          <CommandGroup>
+                            {projects.map((project) => (
+                              <CommandItem
+                                key={`project-${project.name}`}
+                                value={project.name}
+                                onSelect={() => {
+                                  const value = project.name;
+
+                                  const tempProjectsFilter = projectsFilter;
+
+                                  if (tempProjectsFilter.includes(value))
+                                    tempProjectsFilter.splice(
+                                      tempProjectsFilter.indexOf(value),
+                                      1,
+                                    );
+                                  else tempProjectsFilter.push(value);
+
+                                  updateFilter({
+                                    projectsFilter: tempProjectsFilter,
+                                  });
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    projectsFilter.includes(project.name)
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                {project.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        )}
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                {user.role === "ADMIN" && users && (
+                  <div className="h-full w-full grid p-1 gap-1.5">
+                    <Popover>
+                      <Label
+                        htmlFor="userFilter-button"
+                        className="pl-2 text-muted-foreground"
+                      >
+                        {t("Miscellaneous.users")}
+                      </Label>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="userFilter-button"
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                        >
+                          <div className="flex flex-row gap-1">
+                            {filters.users === undefined &&
+                              t("Miscellaneous.noFilter")}
+
+                            {usersFilter?.map((value, index) => {
+                              if (index !== 0) return undefined;
+                              return (
+                                <Badge
+                                  key={`userFiltered-${value}`}
+                                  variant="outline"
+                                >
+                                  {
+                                    users.find(
+                                      (user) => user.username === value,
+                                    )?.name
+                                  }
+                                </Badge>
+                              );
+                            })}
+                            {usersFilter.length > 1 && (
+                              <Badge variant="secondary">
+                                +{usersFilter.length - 1}
+                              </Badge>
+                            )}
+                          </div>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-2">
+                        <Command>
+                          <CommandInput
+                            placeholder={t("Miscellaneous.search")}
+                            className="h-8"
+                          />
+                          <CommandGroup>
+                            {users.map((user) => (
+                              <CommandItem
+                                key={`user-${user.username}`}
+                                className="text-nowrap"
+                                value={user.username}
+                                onSelect={() => {
+                                  const value = user.username;
+
+                                  const tempUsersFilter = usersFilter;
+
+                                  if (tempUsersFilter.includes(value))
+                                    tempUsersFilter.splice(
+                                      tempUsersFilter.indexOf(value),
+                                      1,
+                                    );
+                                  else tempUsersFilter.push(value);
+
+                                  updateFilter({
+                                    usersFilter: tempUsersFilter,
+                                  });
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    usersFilter.includes(user.username)
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                <div className="w-full flex flex-row items-center">
+                                  <p>{user.name}</p>
+                                  <Badge variant="default" className="scale-75">
+                                    @{user.username}
+                                  </Badge>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
+                <Separator />
+
+                <div className="flex flex-row items-center gap-4">
+                  <Checkbox
+                    id="invoicedFilter"
+                    checked={
+                      {
+                        true: true,
+                        false: "indeterminate",
+                        undefined: false,
+                      }[`${filters.invoiced}`] as CheckedState
+                    }
+                    onCheckedChange={() => updateFilter({ invoiced: true })}
+                  />
+                  <Label
+                    htmlFor="invoicedFilter"
+                    className="flex flex-col text-nowrap"
+                  >
+                    {t("Miscellaneous.invoiced")}
+                    <span className="text-muted-foreground">
+                      {t("Miscellaneous.invoicedDescription", {
+                        invoiced: filters.invoiced,
+                      })}
+                    </span>
+                  </Label>
+                </div>
+
+                <Separator />
+
+                <div className="flex flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => updateFilter({ reset: true })}
+                    className="w-full"
+                  >
+                    <FilterX className="size-4 mr-4" />
+                    {t("Miscellaneous.reset")}
+                  </Button>
+
+                  <TimerExportDialog history={history} yearMonth={yearMonth} />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        <ScrollArea
+          className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border-2 p-1.5 overflow-hidden"
+          type="scroll"
+        >
+          <div className="w-full grid place-items-center mt-4 mb-6">
             <Tooltip delayDuration={500}>
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setAddVisible(true)}
+                  className="rounded-full"
                 >
-                  <ListPlus className="h-5 w-5" />
+                  <Plus className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -261,18 +509,15 @@ export default function TimerSection({
               </TooltipContent>
             </Tooltip>
             <TimerAdd
-              user={user}
+              user={user.id}
               projects={projects}
               visible={addVisible}
               setVisible={setAddVisible}
             />
           </div>
-        </div>
-        <ScrollArea
-          className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border-2 p-1.5 overflow-hidden"
-          type="scroll"
-        >
           {historyDays.map((day, index) => {
+            if (!history[yearMonth]) return <></>;
+
             return (
               <section
                 key={`day-${day}`}
@@ -293,7 +538,7 @@ export default function TimerSection({
                   <div className="w-1/2" />
                 </div>
 
-                {(history[yearMonth] ?? [])
+                {history[yearMonth]
                   .filter((v) => v.start.toDateString() === day.toDateString())
                   .reverse()
                   .map((time) => (
@@ -302,6 +547,12 @@ export default function TimerSection({
                       edit={editTime === time.id}
                       projects={projects}
                       data={time}
+                      user={
+                        filters.users && user.id !== time.userId
+                          ? (users?.find((u) => u.id == time.userId)?.name ??
+                            "?")
+                          : undefined
+                      }
                     />
                   ))}
               </section>
