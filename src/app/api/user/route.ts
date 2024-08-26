@@ -2,7 +2,6 @@ import prisma from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { api, badRequestResponse, defaultResult } from "@/lib/server-utils";
-import { randomUUID } from "node:crypto";
 import {
   nanoIdValidation,
   userCreateApiValidation,
@@ -147,15 +146,12 @@ export const POST = api(
 
     // Prepare data
     const updateData: Partial<{
-      validJwtId: string;
-
       username: string;
       name: string | undefined;
       email: string | undefined;
       role: "ADMIN" | "USER";
       password: string | undefined;
     }> = {
-      validJwtId: randomUUID(), // Invalidate session
       username: data.username,
       name: data.name,
       email: data.email,
