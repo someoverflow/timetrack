@@ -4,6 +4,7 @@ import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { profileApiValidation } from "@/lib/zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { lucia } from "@/lib/auth";
 
 // Update profile
 export const PUT = api(async (_request, user, json) => {
@@ -34,11 +35,12 @@ export const PUT = api(async (_request, user, json) => {
     if (!["de", "en"].includes(data.language.toLowerCase()))
       return badRequestResponse(
         { message: "Language not found" },
-        "error-message"
+        "error-message",
       );
   }
 
-  // TODO: Session Management
+  // Invalidate all sessions when changing the password
+  if (password) lucia.invalidateUserSessions(user.id);
 
   // Update the user
   try {
@@ -47,7 +49,6 @@ export const PUT = api(async (_request, user, json) => {
         id: user.id,
       },
       data: {
-        // Invalidate all sessions
         name: data.name ?? undefined,
         language: data.language ? data.language.toLowerCase() : undefined,
         email: data.mail ?? undefined,

@@ -75,9 +75,12 @@ export async function login(
     };
   }
 
+  let ip = head.get("x-real-ip") ?? head.get("x-forwarded-for") ?? "?";
+  if (ip.substr(0, 7) == "::ffff:") ip = ip.substr(7);
+
   const session = await lucia.createSession(user.id, {
     user_agent: head.get("user-agent"),
-    ip: head.get("x-real-ip") ?? head.get("x-forwarded-for") ?? "?",
+    ip: ip,
   });
   const sessionCookie = lucia.createSessionCookie(session.id);
   cookies().set(

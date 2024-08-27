@@ -16,11 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -68,7 +63,7 @@ export default function ProfileSection({
       name: userData.name ?? "",
       mail: userData.email ?? "",
       password: "",
-    }
+    },
   );
 
   const { status: updateStatus, send: sendUpdate } = useRequest(
@@ -85,7 +80,7 @@ export default function ProfileSection({
             password: data.password !== "" ? data.password : undefined,
           }),
         }),
-      [data, userData]
+      [data, userData],
     ),
     async (_result) => {
       if (data.password !== "") {
@@ -102,7 +97,7 @@ export default function ProfileSection({
       });
 
       router.refresh();
-    }
+    },
   );
   const { status: languageStatus, send: sendLanguage } = useRequest(
     (passed: { language: string } | undefined) =>
@@ -119,7 +114,7 @@ export default function ProfileSection({
       });
 
       router.refresh();
-    }
+    },
   );
 
   return (
@@ -167,7 +162,7 @@ export default function ProfileSection({
               htmlFor="input-name"
               className={cn(
                 "transition-colors",
-                data.name !== userData.name ? "text-blue-500" : ""
+                data.name !== userData.name ? "text-blue-500" : "",
               )}
             >
               {t("name")}
@@ -189,7 +184,7 @@ export default function ProfileSection({
                 "transition-colors",
                 (data.mail ?? "") !== (userData.email ?? "")
                   ? "text-blue-500"
-                  : ""
+                  : "",
               )}
             >
               {t("mail")}
@@ -209,7 +204,7 @@ export default function ProfileSection({
               htmlFor="input-password"
               className={cn(
                 "transition-colors",
-                data.password !== "" ? "text-blue-500" : ""
+                data.password !== "" ? "text-blue-500" : "",
               )}
             >
               {t("password")}
@@ -226,25 +221,14 @@ export default function ProfileSection({
           </div>
         </div>
         <div className="h-4" />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              disabled={languageStatus.loading || updateStatus.loading}
-              variant="secondary"
-              className="w-full"
-              onClick={() => sendUpdate()}
-            >
-              <SaveAll className="mr-2 w-4 h-4" /> {t("buttonContent")}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="text-xs text-destructive-foreground font-mono text-center">
-            <p
-              dangerouslySetInnerHTML={{
-                __html: t.raw("buttonToolTip"),
-              }}
-            />
-          </TooltipContent>
-        </Tooltip>
+        <Button
+          disabled={languageStatus.loading || updateStatus.loading}
+          variant="secondary"
+          className="w-full"
+          onClick={() => sendUpdate()}
+        >
+          <SaveAll className="mr-2 w-4 h-4" /> {t("buttonContent")}
+        </Button>
       </CardContent>
     </Card>
   );

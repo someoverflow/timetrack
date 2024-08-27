@@ -19,6 +19,7 @@ export const lucia = new Lucia(adapter, {
     return {
       ip: attributes.ip,
       userAgent: attributes.user_agent,
+      createdAt: attributes.createdAt,
     };
   },
   getUserAttributes: (attributes) => {
@@ -95,6 +96,7 @@ declare module "lucia" {
   interface DatabaseSessionAttributes {
     ip: string;
     user_agent: string;
+    createdAt: Date;
   }
 }
 
