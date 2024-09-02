@@ -9,14 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -118,118 +110,106 @@ export default function ProfileSection({
   );
 
   return (
-    <Card className="w-full rounded-md">
-      <div className="flex flex-row">
-        <CardHeader className="w-full">
-          <CardTitle>{t("title")}</CardTitle>
-          <CardDescription>
-            <span>{t("description")}</span>
-          </CardDescription>
-        </CardHeader>
-        <div className="flex flex-col space-y-1.5 p-6 text-right">
-          <Badge variant="default">{userData.username}</Badge>
-        </div>
-      </div>
-
-      <Separator className="w-full" />
-
-      <CardContent className="py-6">
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="select-language">{t("language")}</Label>
-          <Select
-            value={language}
-            onValueChange={(e) => sendLanguage({ language: e })}
-          >
-            <SelectTrigger id="select-language">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="de">{t("languages.de")}</SelectItem>
-                <SelectItem value="en">{t("languages.en")}</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent>
-
-      <Separator className="w-full" />
-
-      <CardContent className="py-6">
-        <div className="flex flex-col gap-4 py-2">
-          <div className="grid w-full items-center gap-1.5">
-            <Label
-              htmlFor="input-name"
-              className={cn(
-                "transition-colors",
-                data.name !== userData.name ? "text-blue-500" : "",
-              )}
+    <>
+      <section className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start">
+        <div className="w-full grid place-items-center mt-4 mb-6">
+          <div className="p-6 grid w-full items-center gap-1.5">
+            <Label htmlFor="select-language">{t("language")}</Label>
+            <Select
+              value={language}
+              onValueChange={(e) => sendLanguage({ language: e })}
             >
-              {t("name")}
-            </Label>
-            <Input
-              type="text"
-              name="Name"
-              id="input-name"
-              placeholder={t("namePlaceholder")}
-              autoComplete="name"
-              value={data.name}
-              onChange={(e) => setData({ name: e.target.value })}
-            />
+              <SelectTrigger id="select-language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="de">{t("languages.de")}</SelectItem>
+                  <SelectItem value="en">{t("languages.en")}</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="grid w-full items-center gap-1.5">
-            <Label
-              htmlFor="input-mail"
-              className={cn(
-                "transition-colors",
-                (data.mail ?? "") !== (userData.email ?? "")
-                  ? "text-blue-500"
-                  : "",
-              )}
+
+          <Separator className="w-full" />
+
+          <div className="p-6 grid w-full items-center gap-1.5">
+            <div className="grid w-full items-center gap-1.5">
+              <Label
+                htmlFor="input-name"
+                className={cn(
+                  "transition-colors",
+                  data.name !== userData.name ? "text-blue-500" : "",
+                )}
+              >
+                {t("name")}
+              </Label>
+              <Input
+                type="text"
+                name="Name"
+                id="input-name"
+                placeholder={t("namePlaceholder")}
+                autoComplete="name"
+                value={data.name}
+                onChange={(e) => setData({ name: e.target.value })}
+              />
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label
+                htmlFor="input-mail"
+                className={cn(
+                  "transition-colors",
+                  (data.mail ?? "") !== (userData.email ?? "")
+                    ? "text-blue-500"
+                    : "",
+                )}
+              >
+                {t("mail")}
+              </Label>
+              <Input
+                type="email"
+                name="Mail"
+                id="input-mail"
+                autoComplete="email"
+                placeholder={t("mailPlaceholder")}
+                value={data.mail}
+                onChange={(e) => setData({ mail: e.target.value })}
+              />
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label
+                htmlFor="input-password"
+                className={cn(
+                  "transition-colors",
+                  data.password !== "" ? "text-blue-500" : "",
+                )}
+              >
+                {t("password")}
+              </Label>
+              <Input
+                type="password"
+                name="Password"
+                id="input-password"
+                placeholder={t("passwordPlaceholder")}
+                maxLength={30}
+                value={data.password}
+                onChange={(e) => setData({ password: e.target.value })}
+              />
+            </div>
+
+            <div className="h-4"></div>
+
+            <Button
+              disabled={languageStatus.loading || updateStatus.loading}
+              variant="secondary"
+              className="w-full"
+              onClick={() => sendUpdate()}
             >
-              {t("mail")}
-            </Label>
-            <Input
-              type="email"
-              name="Mail"
-              id="input-mail"
-              autoComplete="email"
-              placeholder={t("mailPlaceholder")}
-              value={data.mail}
-              onChange={(e) => setData({ mail: e.target.value })}
-            />
-          </div>
-          <div className="grid w-full items-center gap-1.5">
-            <Label
-              htmlFor="input-password"
-              className={cn(
-                "transition-colors",
-                data.password !== "" ? "text-blue-500" : "",
-              )}
-            >
-              {t("password")}
-            </Label>
-            <Input
-              type="password"
-              name="Password"
-              id="input-password"
-              placeholder={t("passwordPlaceholder")}
-              maxLength={30}
-              value={data.password}
-              onChange={(e) => setData({ password: e.target.value })}
-            />
+              <SaveAll className="mr-2 w-4 h-4" /> {t("buttonContent")}
+            </Button>
           </div>
         </div>
-        <div className="h-4" />
-        <Button
-          disabled={languageStatus.loading || updateStatus.loading}
-          variant="secondary"
-          className="w-full"
-          onClick={() => sendUpdate()}
-        >
-          <SaveAll className="mr-2 w-4 h-4" /> {t("buttonContent")}
-        </Button>
-      </CardContent>
-    </Card>
+      </section>
+    </>
   );
 }

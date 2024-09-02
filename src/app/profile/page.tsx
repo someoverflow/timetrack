@@ -20,6 +20,7 @@ import {
   Watch,
 } from "lucide-react";
 import { invalidateSession } from "./actions";
+import { Badge } from "@/components/ui/badge";
 //#endregion
 
 export async function generateMetadata() {
@@ -36,6 +37,8 @@ export default async function Profile() {
   if (!auth.user || !auth.data) return redirect("/login");
   const user = auth.user;
 
+  const t = await getTranslations("Profile");
+
   const userData = await prisma.user.findUnique({
     where: { id: user.id },
     select: { language: true },
@@ -45,11 +48,23 @@ export default async function Profile() {
 
   return (
     <Navigation>
-      <section className="w-full max-h-[95svh] flex flex-col items-center gap-4 p-4">
-        <section className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col md:mt-20 items-start animate__animated animate__fadeIn">
-          <ProfileSection userData={user} language={userData?.language} />
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-1 p-4">
+        <div className=" font-mono text-center pt-2 ">
+          <div className="text-2xl font-mono relative">
+            {t("title")}
+            <Badge
+              variant="default"
+              className="absolute top-0 -right-1/2 translate-x-1/2"
+            >
+              {user.username}
+            </Badge>
+          </div>
+        </div>
 
-          <div className="flex flex-row w-full overflow-scroll gap-2">
+        <ProfileSection userData={user} language={userData?.language} />
+
+        <section className="max-w-md w-[95vw] overflow-hidden flex flex-col items-start">
+          <div className="rounded-md grid grid-flow-col grid-rows-1 sm:grid-rows-2 w-full overflow-scroll gap-4">
             {sessions.map((session) => (
               <SessionInfo
                 key={session.id}
@@ -112,12 +127,12 @@ const SessionInfo = ({
   }
 
   return (
-    <form action={invalidateSession}>
+    <form action={invalidateSession} className="h-fit">
       <input type="hidden" value={session.id} name="session" />
       <button
         type="submit"
         className={cn(
-          "min-w-52 p-4 my-4 rounded-md bg-secondary text-nowrap",
+          "min-w-52 p-4 rounded-md bg-secondary text-nowrap",
           isSession && "bg-primary-foreground border-border border",
           session.expiresAt <= new Date() && "border-destructive",
         )}

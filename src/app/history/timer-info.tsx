@@ -634,7 +634,7 @@ export default function TimerInfo({
                         {t("Dialogs.Edit.start")}
                       </Label>
                       <Input
-                        className="w-full font-mono border-2"
+                        className="w-full font-mono border-2 appearance-none"
                         type="datetime-local"
                         name="Start"
                         id="start"
@@ -661,7 +661,7 @@ export default function TimerInfo({
                         {t("Dialogs.Edit.end")}
                       </Label>
                       <Input
-                        className="w-full font-mono border-2"
+                        className="w-full font-mono border-2 appearance-none"
                         type="datetime-local"
                         name="End"
                         id="end"
