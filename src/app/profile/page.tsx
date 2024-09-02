@@ -64,7 +64,7 @@ export default async function Profile() {
         <ProfileSection userData={user} language={userData?.language} />
 
         <section className="max-w-md w-[95vw] overflow-hidden flex flex-col items-start">
-          <div className="rounded-md grid grid-flow-col grid-rows-1 sm:grid-rows-2 w-full overflow-scroll gap-4">
+          <div className="rounded-md grid grid-flow-col grid-rows-1 sm:grid-rows-2 w-full overflow-x-auto gap-4">
             {sessions.map((session) => (
               <SessionInfo
                 key={session.id}
