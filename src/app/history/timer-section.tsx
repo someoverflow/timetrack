@@ -205,7 +205,7 @@ export default function TimerSection({
       />
 
       <section
-        className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start"
+        className="w-full max-w-md max-h-[90svh] flex flex-col items-start"
         key={yearMonth}
       >
         <div className="p-2 px-4 font-bold w-full flex flex-row items-center justify-stretch gap-2">

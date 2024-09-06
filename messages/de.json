@@ -138,9 +138,9 @@
         },
         "title": "Verlauf Exportieren",
         "visualisation": {
-          "dateSpecificColumn": "Datum in separate Spalte, nicht mit der Uhrzeit.",
+          "dateSpecificColumn": "Datum Spalte",
           "description": "Passe die zu exportierende Tabelle an.",
-          "projectSpecificColumn": "Spalte mit Projekt",
+          "projectSpecificColumn": "Projekt Spalte",
           "structureByDateTree": "Struktur nach Datum im Baum",
           "title": "Visualisierung"
         }

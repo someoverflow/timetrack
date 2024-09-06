@@ -100,10 +100,10 @@ export default function TimerExportDialog({
 
     // Prepare CSV
     let result = "";
-    if (visualisation.showDateColumn) result = `${result}Date;`;
-    result = `${result}Start;End;Duration;`;
-    if (visualisation.showProject) result = `${result}Project;`;
-    result = `${result}Notes`;
+    if (visualisation.showDateColumn) result = `${result}Datum;`;
+    result = `${result}Beginn;Ende;Dauer;`;
+    if (visualisation.showProject) result = `${result}Projekt;`;
+    result = `${result}Notizen`;
 
     for (const time of exportData.reverse()) {
       if (!time.end) continue;
