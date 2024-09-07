@@ -15,7 +15,7 @@ export default function Page() {
   const t = useTranslations("Login");
 
   useEffect(() => {
-    if (state.error) toast(state.error, { description: "---" });
+    if (state.error) toast(state.error/*, { description: "---" }*/);
   }, [state]);
 
   return (
