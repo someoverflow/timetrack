@@ -28,4 +28,4 @@ echo ""
 
 echo " * Starting Server * "
 
-(trap 'kill 0' SIGINT; (while $BACKUP; do /usr/bin/mysqldump --opt -h $DATABASE_HOST -u $DATABASE_DB -p$DATABASE_PASSWORD $DATABASE_USER >> /backups/$(date +"%Y-%m-%d_%H-%M-%S")_timetrack.sql & sleep $BACKUP_DELAY; done) & node server.js)
+(trap 'kill 0' SIGINT; (while $BACKUP; do /usr/bin/mysqldump --opt -h $DATABASE_HOST -u $DATABASE_USER -p$DATABASE_PASSWORD $DATABASE_DB >> /backups/$(date +"%Y-%m-%d_%H-%M-%S")_timetrack.sql & sleep $BACKUP_DELAY; done) & node server.js)
