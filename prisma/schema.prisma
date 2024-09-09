@@ -53,6 +53,8 @@ model Session {
   user_agent String
 
   user User @relation(references: [id], fields: [userId], onDelete: Cascade)
+  
+  @@map("sessions")
 }
 
 model Chip {
