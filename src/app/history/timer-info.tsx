@@ -270,7 +270,7 @@ export default function TimerInfo({
     )
       prevent = true;
 
-    if (state.traveledDistance !== data.traveledDistance ?? null)
+    if (state.traveledDistance !== (data.traveledDistance ?? null))
       prevent = true;
 
     if (state.projectName !== data.projectName || state.projectSelectionOpen)
