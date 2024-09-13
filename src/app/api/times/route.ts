@@ -261,7 +261,7 @@ export const PUT = api(async (_request, user, json) => {
       !!data.notes ||
       data.notes === "" ||
       data.invoiced !== undefined ||
-      !!data.project ||
+      data.project !== undefined ||
       !!data.start ||
       !!data.end ||
       !!data.startType ||

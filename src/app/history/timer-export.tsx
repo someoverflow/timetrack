@@ -51,14 +51,17 @@ type Data = Record<string, Timer[]>;
 interface visualisationState {
   showProject: boolean;
   showDateColumn: boolean;
+  showPerson: boolean;
 }
 
 export default function TimerExportDialog({
   history,
   yearMonth,
+  users,
 }: {
   history: Data;
   yearMonth: string;
+  users: { id: string; username: string; name: string | null }[] | undefined;
 }) {
   const t = useTranslations("History");
 
@@ -70,6 +73,7 @@ export default function TimerExportDialog({
     {
       showProject: true,
       showDateColumn: true,
+      showPerson: false,
     },
   );
   const [visible, setVisible] = useState(false);
@@ -81,10 +85,15 @@ export default function TimerExportDialog({
     const localShowDateColumn = localStorage.getItem(
       "export-visualisation-showDateColumn",
     );
+    const localShowPersonColumn = localStorage.getItem(
+      "export-visualisation-showPersonColumn",
+    );
 
     setVisualisation({
       showProject: (localShowProject ?? "true") === "true",
       showDateColumn: (localShowDateColumn ?? "false") === "true",
+
+      showPerson: (localShowPersonColumn ?? "false") === "true",
     });
   }, []);
 
@@ -102,6 +111,7 @@ export default function TimerExportDialog({
     let result = "";
     if (visualisation.showDateColumn) result = `${result}Datum;`;
     result = `${result}Beginn;Ende;Dauer;`;
+    if (visualisation.showPerson) result = `${result}Person;`;
     if (visualisation.showProject) result = `${result}Projekt;`;
     result = `${result}Notizen`;
 
@@ -117,6 +127,8 @@ export default function TimerExportDialog({
         result = `${result}${time.start.toLocaleString()};${time.end?.toLocaleString()};${
           time.time
         }`;
+      if (visualisation.showPerson)
+        result = `${result};${users?.find((u) => u.id == time.userId)?.name ?? time.userId}`;
       if (visualisation.showProject)
         result = `${result};${time.project?.name ?? ""}`;
       if (time.notes)
@@ -219,6 +231,28 @@ export default function TimerExportDialog({
                   className="pl-2 text-muted-foreground"
                 >
                   {t("Dialogs.Export.visualisation.projectSpecificColumn")}
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="person-toggle"
+                  checked={visualisation.showPerson}
+                  onCheckedChange={(value) => {
+                    setVisualisation({
+                      showPerson: value,
+                    });
+
+                    localStorage.setItem(
+                      "export-visualisation-showPersonColumn",
+                      `${value}`,
+                    );
+                  }}
+                />
+                <Label
+                  htmlFor="person-toggle"
+                  className="pl-2 text-muted-foreground"
+                >
+                  {t("Dialogs.Export.visualisation.personSpecificColumn")}
                 </Label>
               </div>
             </div>

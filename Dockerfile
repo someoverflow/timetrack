@@ -40,7 +40,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/
 
 RUN mkdir /backups && chown nextjs:nodejs /backups
 
-USER nextjs
+USER root
 
 ENV AUTH_TRUST_HOST=true
 

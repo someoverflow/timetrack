@@ -139,6 +139,7 @@
         "title": "Verlauf Exportieren",
         "visualisation": {
           "dateSpecificColumn": "Datum Spalte",
+          "personSpecificColumn": "Personen Spalte",
           "description": "Passe die zu exportierende Tabelle an.",
           "projectSpecificColumn": "Projekt Spalte",
           "structureByDateTree": "Struktur nach Datum im Baum",

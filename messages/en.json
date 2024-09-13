@@ -138,9 +138,10 @@
         },
         "title": "Export History",
         "visualisation": {
-          "dateSpecificColumn": "Date in a separate column, not with the time.",
+          "dateSpecificColumn": "Date column",
+          "personSpecificColumn": "Person column",
           "description": "Customize the table to export.",
-          "projectSpecificColumn": "Seperate column for the Project",
+          "projectSpecificColumn": "Project column",
           "title": "Visualisation"
         }
       }
