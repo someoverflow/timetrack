@@ -5,7 +5,7 @@ import ProfileSection from "./profile-section";
 
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { authCheck, lucia } from "@/lib/auth";
 import { userAgentFromString } from "next/server";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ export default async function Profile() {
   const user = auth.user;
 
   const t = await getTranslations("Profile");
+  const locale = await getLocale();
 
   const userData = await prisma.user.findUnique({
     where: { id: user.id },
@@ -64,12 +65,14 @@ export default async function Profile() {
         <ProfileSection userData={user} language={userData?.language} />
 
         <section className="max-w-md w-[95vw] overflow-hidden flex flex-col items-start">
-          <div className="rounded-md grid grid-flow-col grid-rows-1 sm:grid-rows-2 w-full overflow-x-auto gap-4">
+          <h1 className="text-sm text-muted-foreground">{t("sessions")}</h1>
+          <div className="rounded-md grid grid-flow-col grid-rows-1 sm:grid-rows-2 w-full overflow-x-auto gap-2 p-2">
             {sessions.map((session) => (
               <SessionInfo
                 key={session.id}
                 session={session}
                 userSession={auth.data.session}
+                locale={locale}
               />
             ))}
           </div>
@@ -82,16 +85,15 @@ export default async function Profile() {
 const SessionInfo = ({
   session,
   userSession,
+  locale,
 }: {
   session: Session;
   userSession: Session;
+  locale: string;
 }) => {
   const agent = userAgentFromString(session.userAgent);
 
   const isSession = session.id === userSession.id;
-
-  if (agent.device.vendor === "Apple") {
-  }
 
   let Icon = <CircleHelp className="size-5" />;
 
@@ -141,12 +143,15 @@ const SessionInfo = ({
           {Icon}
           <h1>{agent.os.name}</h1>
         </div>
-        <p>
-          {agent.device.model}: {agent.browser.name}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {new Date(session.createdAt + "").toLocaleDateString()}
-        </p>
+        <p>{agent.browser.name}</p>
+        <div className="my-2">
+          <p className="text-sm text-muted-foreground">
+            {`${new Date(session.createdAt + "").toLocaleDateString(locale)} - ${session.expiresAt.toLocaleDateString(locale)}`}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {session.expiresAt.toLocaleTimeString(locale)}
+          </p>
+        </div>
         <p className="text-xs text-muted-foreground">{session.ip}</p>
       </button>
     </form>

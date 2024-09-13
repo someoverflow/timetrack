@@ -224,6 +224,7 @@
     "users": "Benutzer"
   },
   "Profile": {
+    "sessions": "Angemeldete Geräte",
     "buttonContent": "Speichern",
     "buttonToolTip": "Jedes Gerät wird<br/> <u>abgemeldet</u> nach dem ändern von: <br />Name, Mail & Passwort",
     "description": "Nehme Änderungen am Profil vor.",

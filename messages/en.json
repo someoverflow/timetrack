@@ -223,6 +223,7 @@
     "users": "Users"
   },
   "Profile": {
+    "sessions": "Devices",
     "buttonContent": "Save",
     "buttonToolTip": "Every device will be<br/> <u>signed out</u> after changing: <br />Name, Mail & Password",
     "description": "Make changes to your profile here.",
