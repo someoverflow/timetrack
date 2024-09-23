@@ -13,8 +13,8 @@ import { authCheck } from "@/lib/auth";
 //#endregion
 
 const statusOrder = {
-  [TicketStatus.TODO]: 1,
-  [TicketStatus.IN_PROGRESS]: 2,
+  [TicketStatus.TODO]: 2,
+  [TicketStatus.IN_PROGRESS]: 1,
   [TicketStatus.DONE]: 3,
 };
 const priorityOrder = {

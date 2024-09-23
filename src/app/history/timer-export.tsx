@@ -18,30 +18,9 @@ import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
 import { useEffect, useReducer, useState } from "react";
 
-import { sumTimes } from "@/lib/utils";
+import * as ExcelJS from "ExcelJS";
+import * as FileSaver from "file-saver";
 //#endregion
-
-const umlautMap: Record<string, string> = {
-  "\u00dc": "UE",
-  "\u00c4": "AE",
-  "\u00d6": "OE",
-  "\u00fc": "ue",
-  "\u00e4": "ae",
-  "\u00f6": "oe",
-  "\u00df": "ss",
-};
-
-function replaceUmlaute(str: string) {
-  return str
-    .replace(/[\u00dc|\u00c4|\u00d6][a-z]/g, (a) => {
-      const big = umlautMap[a.slice(0, 1)] ?? "?";
-      return big.charAt(0) + big.charAt(1).toLowerCase() + a.slice(1);
-    })
-    .replace(
-      new RegExp(`[${Object.keys(umlautMap).join("|")}]`, "g"),
-      (a) => umlautMap[a] ?? "?",
-    );
-}
 
 type Timer = Prisma.TimeGetPayload<{
   include: { project: true };
@@ -50,11 +29,8 @@ type Data = Record<string, Timer[]>;
 
 interface visualisationState {
   showProject: boolean;
-  showDateColumn: boolean;
   showPerson: boolean;
 }
-
-// TODO: Export customer when filter active
 
 export default function TimerExportDialog({
   history,
@@ -74,7 +50,6 @@ export default function TimerExportDialog({
     }),
     {
       showProject: true,
-      showDateColumn: true,
       showPerson: false,
     },
   );
@@ -84,79 +59,170 @@ export default function TimerExportDialog({
     const localShowProject = localStorage.getItem(
       "export-visualisation-showProject",
     );
-    const localShowDateColumn = localStorage.getItem(
-      "export-visualisation-showDateColumn",
-    );
     const localShowPersonColumn = localStorage.getItem(
       "export-visualisation-showPersonColumn",
     );
 
     setVisualisation({
       showProject: (localShowProject ?? "true") === "true",
-      showDateColumn: (localShowDateColumn ?? "false") === "true",
-
       showPerson: (localShowPersonColumn ?? "false") === "true",
     });
   }, []);
 
-  const downloadCSV = () => {
-    const exportData = history[yearMonth] ?? [];
+  const downloadCSV = async () => {
+    const filteredData = (history[yearMonth] ?? [])
+      .filter((e) => e.end != null)
+      .sort((a, b) => {
+        const aName = users?.find((u) => u.id == a.userId)?.name ?? "";
+        const bName = users?.find((u) => u.id == b.userId)?.name ?? "";
+        return aName.localeCompare(bName);
+      });
+    const groupedData = Object.groupBy(filteredData, (i) => i.userId ?? "");
 
-    // Prepare Data
-    const timeStrings = (exportData || [])
-      .map((data) => data.time)
-      .filter(Boolean); // Remove all undefined or null
-    const totalTime =
-      timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(yearMonth);
 
-    // Prepare CSV
-    let result = "";
-    if (visualisation.showDateColumn) result = `${result}Datum;`;
-    result = `${result}Beginn;Ende;Dauer;`;
-    if (visualisation.showPerson) result = `${result}Person;`;
-    if (visualisation.showProject) result = `${result}Projekt;`;
-    result = `${result}Notizen`;
+    workbook.creator = "TimeTrack";
+    workbook.created = new Date();
+    workbook.modified = new Date();
+    workbook.calcProperties.fullCalcOnLoad = true;
 
-    for (const time of exportData.reverse()) {
-      if (!time.end) continue;
+    sheet.columns = [];
 
-      result = `${result}\n`;
-      if (visualisation.showDateColumn)
-        result = `${result}${time.start.toLocaleDateString()};${time.start.toLocaleTimeString()};${time.end?.toLocaleTimeString()};${
-          time.time
-        }`;
-      else
-        result = `${result}${time.start.toLocaleString()};${time.end?.toLocaleString()};${
-          time.time
-        }`;
-      if (visualisation.showPerson)
-        result = `${result};${users?.find((u) => u.id == time.userId)?.name ?? time.userId}`;
-      if (visualisation.showProject)
-        result = `${result};${time.project?.name ?? ""}`;
-      if (time.notes)
-        result = `${result};"${
-          time.notes.startsWith("-")
-            ? time.notes.replace("-", " -")
-            : time.notes
-        }"`;
-    }
+    if (visualisation.showProject)
+      sheet.columns = [
+        ...sheet.columns,
+        { header: "Projekt", key: "project", width: 20 },
+      ];
+    if (visualisation.showPerson)
+      sheet.columns = [
+        ...sheet.columns,
+        { header: "Person", key: "person", width: 30 },
+      ];
 
-    result = `${result}\n\n`;
-    if (visualisation.showDateColumn) result = `${result};`;
-    result = `${result};;${totalTime};`;
-    if (visualisation.showProject) result = `${result};`;
+    sheet.columns = [
+      ...sheet.columns,
+      { header: "Datum", key: "date", width: 12 },
+      { header: "Start", key: "start", width: 12 },
+      { header: "Ende", key: "end", width: 12 },
+      { header: "Dauer", key: "duration", width: 12 },
+      { header: "Notizen", key: "notes", width: 32 },
+      { header: "Distanz", key: "distance", width: 10 },
+    ];
 
-    result = replaceUmlaute(result);
+    // Center Header Row
+    const row = sheet.getRow(1);
+    row.font = { bold: true };
+    row.alignment = { horizontal: "center", vertical: "middle" };
 
-    // Download CSV
-    const element = document.createElement("a");
-    const file = new Blob([result], {
-      type: "text/plain",
+    let rowIndex = 2;
+    const durationCells: string[] = [];
+
+    Object.keys(groupedData).forEach((user) => {
+      const times = groupedData[user];
+      if (!times) throw new Error();
+
+      const sortedTimes = times.sort(
+        (a, b) => a.start.getTime() - b.start.getTime(),
+      );
+
+      for (const time of sortedTimes) {
+        if (time.time && time.end) {
+          const row = sheet.getRow(rowIndex);
+
+          // Project (when enabled)
+          if (visualisation.showProject) {
+            row.getCell("project").value = time.project?.name;
+            row.getCell("project").alignment = { vertical: "middle" };
+          }
+
+          // Person (when enabled)
+          if (visualisation.showPerson) {
+            row.getCell("person").value = users?.find(
+              (u) => u.id == time.userId,
+            )?.name;
+            row.getCell("person").alignment = { vertical: "middle" };
+          }
+
+          // Date
+          const dateCell = row.getCell("date");
+          dateCell.value = time.start.toLocaleDateString();
+          dateCell.alignment = { horizontal: "center", vertical: "middle" };
+
+          // Start
+          const startCell = row.getCell("start");
+          startCell.numFmt = "hh:mm:ss";
+          startCell.alignment = { vertical: "middle" };
+          startCell.value = time.start;
+
+          // End
+          const endCell = row.getCell("end");
+          endCell.numFmt = "hh:mm:ss";
+          endCell.alignment = { vertical: "middle" };
+          endCell.value = time.end;
+
+          // Duration
+          const durationCell = row.getCell("duration");
+          durationCell.numFmt = 'hh"h" mm"min"';
+          durationCell.value = {
+            formula: `${endCell.address}-${startCell.address}`,
+          };
+          durationCell.alignment = { vertical: "middle" };
+
+          // Notes
+          const notesCell = row.getCell("notes");
+          notesCell.value = time.notes;
+          notesCell.alignment = { wrapText: true };
+
+          // Distance
+          if (time.traveledDistance && time.traveledDistance !== 0)
+            row.getCell("distance").value = time.traveledDistance;
+
+          rowIndex++;
+        }
+      }
+
+      // User Duration
+      const row = sheet.getRow(rowIndex);
+      const userDurationCell = row.getCell("duration");
+      userDurationCell.numFmt = 'hh"h" mm"min"';
+      durationCells.push(userDurationCell.address);
+
+      const durationRow = userDurationCell.address.replace(/\d.*$/, "");
+
+      userDurationCell.value = {
+        formula: `SUM(${durationRow}${rowIndex - sortedTimes.length}:${durationRow}${rowIndex - 1})`,
+      };
+
+      const userDistanceCell = row.getCell("distance");
+      userDistanceCell.numFmt = '0 "km"';
+      const distanceRow = userDistanceCell.address.replace(/\d.*$/, "");
+
+      userDistanceCell.value = {
+        formula: `SUM(${distanceRow}${rowIndex - sortedTimes.length}:${distanceRow}${rowIndex - 1})`,
+      };
+
+      rowIndex += 2;
     });
-    element.href = URL.createObjectURL(file);
-    element.download = `Time ${yearMonth}.csv`;
-    document.body.appendChild(element);
-    element.click();
+
+    // Final Duration
+    const lastRow = sheet.getRow(rowIndex);
+    const lastDuration = lastRow.getCell("duration");
+    lastDuration.numFmt = 'hh"h" mm"min"';
+
+    lastDuration.value = {
+      formula: durationCells.join("+"),
+    };
+    lastDuration.border = {
+      bottom: { style: "double" },
+    };
+
+    workbook.xlsx
+      .writeBuffer()
+      .then((buffer) =>
+        FileSaver.saveAs(new Blob([buffer]), `Zeiten Export ${yearMonth}.xlsx`),
+      )
+      .catch((err) => console.log("Error writing excel export", err));
   };
 
   return (
@@ -192,27 +258,6 @@ export default function TimerExportDialog({
             <Separator className="my-5" orientation="horizontal" />
 
             <div className="flex flex-col gap-2">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="date-toggle"
-                  checked={visualisation.showDateColumn}
-                  onCheckedChange={(value) => {
-                    setVisualisation({
-                      showDateColumn: value,
-                    });
-                    localStorage.setItem(
-                      "export-visualisation-showDateColumn",
-                      `${value}`,
-                    );
-                  }}
-                />
-                <Label
-                  htmlFor="date-toggle"
-                  className="pl-2 text-muted-foreground"
-                >
-                  {t("Dialogs.Export.visualisation.dateSpecificColumn")}
-                </Label>
-              </div>
               <div className="flex items-center space-x-2">
                 <Switch
                   id="project-toggle"

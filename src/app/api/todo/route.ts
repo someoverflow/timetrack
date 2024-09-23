@@ -5,8 +5,6 @@ import type { Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { NextResponse } from "next/server";
 
-// TODO: Customer request check
-
 // Create a todo (task, description?, deadline?, assignees?)
 /*{
 	"task": 			<task>
@@ -36,6 +34,57 @@ export const POST = api(
     if (!validationResult.success)
       return badRequestResponse(validationResult.error.issues, "validation");
     const data = validationResult.data;
+
+    // Check if user can see ALL given projects
+    if (data.projects && user.role === "CUSTOMER") {
+      const projectsCheck = await prisma.project.count({
+        where: {
+          name: {
+            in: data.projects,
+          },
+          customer: {
+            users: {
+              some: {
+                id: user.id,
+              },
+            },
+          },
+        },
+      });
+
+      if (projectsCheck != data.projects.length)
+        return badRequestResponse("Project not found.", "error-message");
+    }
+
+    // Check if user can see ALL given users
+    if (data.assignees && user.role === "CUSTOMER") {
+      const usersCheck = await prisma.user.count({
+        where: {
+          username: {
+            in: data.assignees,
+          },
+          OR: [
+            {
+              NOT: {
+                role: "CUSTOMER",
+              },
+            },
+            {
+              customer: {
+                users: {
+                  some: {
+                    id: user.id,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+
+      if (usersCheck != data.assignees.length)
+        return badRequestResponse("User not found.", "error-message");
+    }
 
     const createData: Prisma.Without<
       Prisma.TicketCreateInput,
@@ -147,8 +196,28 @@ export const PUT = api(
       .findUnique({
         where: {
           id: data.id,
+          projects:
+            user.role == "CUSTOMER"
+              ? {
+                  some: {
+                    customer: {
+                      users: {
+                        some: {
+                          id: user.id,
+                        },
+                      },
+                    },
+                  },
+                }
+              : undefined,
         },
         include: {
+          projects: {
+            select: {
+              customer: true,
+              name: true,
+            },
+          },
           assignees: {
             select: {
               id: true,
@@ -187,19 +256,6 @@ export const PUT = api(
 
     // Prepare data
     const isByCreator = todo.creatorId === user.id;
-    const isByAssignee = !!todo.assignees.find(
-      (assignee) => assignee.id === user.id,
-    );
-
-    // Data can only be changed by creator and assignee
-    if (!(isByCreator || isByAssignee))
-      return badRequestResponse(
-        {
-          id: data.id,
-          message: "Todos can only be updated by the creator or assignees.",
-        },
-        "error-message",
-      );
 
     const updateData: Prisma.Without<
       Prisma.TicketUpdateInput,

@@ -37,9 +37,9 @@ Built for [EBERT-Automation](https://ebert-automation.de/)
 
 ## Deployment
 
-Mainly built and maintained for Docker. However, the possibility of vercel is also there because of nextjs but has not been tested.
+Built to work smoothly with Docker.
 
-A MySQL database is required for data storage. Other databases are currently not supported.
+Requires a MySQL database for storing data.
 
 **Get the Docker Image:**
 
@@ -47,19 +47,22 @@ A MySQL database is required for data storage. Other databases are currently not
 docker pull someoverflow/timetrack
 ```
 
-_DIY Image_
-
-```bash
+<details>
+<summary><i>DIY Docker Image</i></summary>
+<br>
+<pre>
 docker buildx create --name somebuilder
 docker buildx use somebuilder
 docker buildx inspect --bootstrap
 docker buildx build --platform linux/amd64,linux/arm64 -t someoverflow/timetrack:dev .
-```
+</pre>
+</details>
+<br>
 
 **Run the Docker Image**
 
 ```bash
-docker run --name timetrack -p 8080:3000 \
+docker run --name timetrack -p 3000:3000 \
 --env=DATABASE_HOST=<DatabaseHost> \
 --env=DATABASE_USER=<DatabaseUser> \
 --env=DATABASE_PASSWORD=<DatabasePassword> \
@@ -69,20 +72,22 @@ docker run --name timetrack -p 8080:3000 \
 
 ## Environment Variables
 
-| Variable              | Description                                         | Default       |
-| --------------------- | --------------------------------------------------- | ------------- |
-| `INSTANCE_NAME`       | Shows a watermark at the bottom right corner if set | _(empty)_     |
-| `PORT`                | The port number on which the application listens    | `3000`        |
-| `HOSTNAME`            | The hostname or IP address the server binds to      | `"0.0.0.0"`   |
-| `BACKUP`              | Enables MySQL dumps to a mountable Docker volume    | `false`       |
-| `BACKUP_DELAY`        | Interval in seconds between backup executions       | `86400` (24h) |
-| `DATABASE_HOST`       | Hostname or IP of the MySQL database                | `localhost`   |
-| `DATABASE_PORT`       | Port number of the MySQL database                   | `3306`        |
-| `DATABASE_USER`       | Username for connecting to the MySQL database       | `timetrack`   |
-| `DATABASE_PASSWORD`   | Password for the MySQL database user                | `timetrack`   |
-| `DATABASE_DB`         | Name of the MySQL database                          | `timetrack`   |
-| `AUTH_SECRET`         | Secret key for encrypting Auth.js JWT               | _Generated_   |
-| `NEXT_PUBLIC_API_URL` | The primary API URL used by the application         | _(empty)_     |
+| Variable                  | Description                                         | Default       |
+| ------------------------- | --------------------------------------------------- | ------------- |
+| `INSTANCE_NAME`           | Shows a watermark at the bottom right corner if set | _(empty)_     |
+| `PORT`                    | The port number on which the application listens    | `3000`        |
+| `HOSTNAME`                | The hostname or IP address the server binds to      | `"0.0.0.0"`   |
+| `BACKUP`                  | Enables MySQL dumps to a mountable Docker volume    | `false`       |
+| `BACKUP_DELAY`            | Interval in seconds between backup executions       | `86400` (24h) |
+| `DATABASE_HOST`           | Hostname or IP of the MySQL database                | `localhost`   |
+| `DATABASE_PORT`           | Port number of the MySQL database                   | `3306`        |
+| `DATABASE_USER`           | Username for connecting to the MySQL database       | `timetrack`   |
+| `DATABASE_PASSWORD`       | Password for the MySQL database user                | `timetrack`   |
+| `DATABASE_DB`             | Name of the MySQL database                          | `timetrack`   |
+| `AUTH_SECRET`             | Secret key for encrypting Auth.js JWT               | _Generated_   |
+| `NEXT_PUBLIC_API_URL`     | The primary API URL used by the application         | _(empty)_     |
+| `NEXT_PUBLIC_LOGIN_IMAGE` | URL to an image which is shown on the login screen  | _(empty)_     |
+| `NEXT_PUBLIC_COMPANY`     | Company name                                        | _(empty)_     |
 
 **Docker Volumes**
 | Name | Path |

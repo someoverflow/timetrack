@@ -168,7 +168,7 @@ export default async function History({
           },
         },
       })
-    : undefined;
+    : [{ id: user.id, name: user.name, username: user.username }];
 
   // TODO: Use Object.groupBy
   const historyData = formatHistory(history);

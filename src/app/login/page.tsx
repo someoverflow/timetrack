@@ -1,4 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
+//#region Imports
 import { login } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -8,6 +10,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useFormState } from "react-dom";
+//#endregion
 
 export default function Page() {
   const [state, action, isPending] = useFormState<any, any>(login, {});
@@ -18,10 +21,18 @@ export default function Page() {
     if (state.error) toast(state.error /*, { description: "---" }*/);
   }, [state]);
 
+  const image = process.env.NEXT_PUBLIC_LOGIN_IMAGE;
+
   return (
     <main className="min-h-[90svh] flex flex-col items-center justify-center">
+      {image && (
+        <div className="bg-white p-4 rounded-md border w-[90vw] sm:w-[50vw] absolute top-10">
+          <img src={image} alt="Logo" />
+        </div>
+      )}
+
       <Card className="w-[350px]">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center gap-4">
           <CardTitle>{t("title")}</CardTitle>
         </CardHeader>
         <CardContent>
