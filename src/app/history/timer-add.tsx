@@ -1,32 +1,17 @@
-"use client";
-
 //#region Imports
-import type { Prisma } from "@prisma/client";
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, ChevronsUpDown, SaveAll } from "lucide-react";
+import { SaveAll } from "lucide-react";
 import { toast } from "sonner";
 
 import { useReducer } from "react";
@@ -35,8 +20,7 @@ import { useTranslations } from "next-intl";
 
 import useRequest from "@/lib/hooks/useRequest";
 
-import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { ProjectSelection } from "@/components/project-select";
 //#endregion
 
 interface timerAddState {
@@ -44,7 +28,6 @@ interface timerAddState {
   end: string;
   notes: string;
   traveledDistance: number | null;
-  projectSelectionOpen: boolean;
   project: string | null;
 }
 
@@ -55,7 +38,7 @@ export default function TimerAdd({
   setVisible,
 }: {
   user: string;
-  projects: Prisma.ProjectGetPayload<Record<string, never>>[];
+  projects: Projects;
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }) {
@@ -74,7 +57,6 @@ export default function TimerAdd({
         .replace(" ", "T"),
       traveledDistance: null,
       notes: "",
-      projectSelectionOpen: false,
       project: null,
     },
   );
@@ -141,85 +123,17 @@ export default function TimerAdd({
                 type="always"
               >
                 <div className="h-full w-full grid p-1 gap-1.5">
-                  <Popover
-                    open={data.projectSelectionOpen}
-                    onOpenChange={(open) =>
-                      setData({ projectSelectionOpen: open })
-                    }
+                  <Label
+                    htmlFor="projects-button"
+                    className="pl-2 text-muted-foreground"
                   >
-                    <Label
-                      htmlFor="project-button"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      {t("Dialogs.Create.project.project")}
-                    </Label>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="project-button"
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={data.projectSelectionOpen}
-                        className="w-full justify-between border-2 transition duration-300"
-                      >
-                        {data.project ?? t("Dialogs.Create.project.noRelated")}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-2">
-                      <Command>
-                        <CommandInput
-                          placeholder={t("Dialogs.Create.project.search")}
-                          className="h-8"
-                        />
-                        {projects.length === 0 ? (
-                          <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-                            <p>{t("Dialogs.Create.project.noProjects")}</p>
-                            <Link
-                              href="/projects"
-                              className={buttonVariants({
-                                variant: "link",
-                                className: "flex-col items-start",
-                              })}
-                            >
-                              <p>
-                                {t(
-                                  "Dialogs.Create.project.noProjectsDescription",
-                                )}
-                              </p>
-                            </Link>
-                          </div>
-                        ) : (
-                          <CommandGroup>
-                            {projects.map((project) => (
-                              <CommandItem
-                                key={`project-selection-add-${project.name}`}
-                                value={`${project.name}`}
-                                onSelect={() => {
-                                  setData({
-                                    project:
-                                      data.project !== project.name
-                                        ? project.name
-                                        : null,
-                                    projectSelectionOpen: false,
-                                  });
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    data.project === project.name
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                {project.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        )}
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                    {t("Dialogs.Edit.project")}
+                  </Label>
+                  <ProjectSelection
+                    project={data.project ?? undefined}
+                    changeProject={(e) => setData({ project: e ?? null })}
+                    projects={projects}
+                  />
                 </div>
 
                 <div id="divider" className="h-4" />

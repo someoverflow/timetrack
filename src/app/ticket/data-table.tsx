@@ -2,21 +2,17 @@
 
 //#region Imports
 import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getFilteredRowModel,
-  type RowData,
-  type ColumnDef,
-} from "@tanstack/react-table";
-
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -25,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,49 +31,57 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Filter,
 } from "lucide-react";
-import UserAdd from "./user-add";
 
 import React, { useTransition } from "react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
+import {
+  useReactTable,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  type ColumnDef,
+} from "@tanstack/react-table";
+import { TicketAdd } from "./ticket-add";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import type { Ticket } from "@prisma/client";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  columns: ColumnDef<TData, TValue>[];
 
-  customers: string[];
+  projects: Projects;
+  users: TicketUsers;
 
   paginationData: {
     pages: number;
     page: number;
     pageSize: number;
   };
-}
 
-declare module "@tanstack/table-core" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface TableMeta<TData extends RowData> {
-    data: {
-      projects?: Projects;
-      users?: { name: string | null; username: string }[];
-      customers?: string[];
-    };
-  }
+  filters: {
+    archived: boolean;
+  };
 }
 
 export function DataTable<TData, TValue>({
-  columns,
   data,
-  customers,
+  columns,
+  projects,
+  users,
   paginationData,
+  filters,
 }: DataTableProps<TData, TValue>) {
+  //#region Hooks
   const router = useRouter();
-  const t = useTranslations("Admin.Users");
+  const t = useTranslations("Tickets");
 
   const [isPending, startTransition] = useTransition();
 
@@ -84,18 +90,24 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    isMultiSortEvent: () => true,
     meta: {
       data: {
-        customers,
+        projects,
+        users,
       },
     },
     initialState: {
-      pagination: {
-        pageSize: paginationData.pageSize,
-      },
+      pagination: paginationData,
+      columnVisibility: ["createdAt", "creator", "archived", "hidden"].reduce(
+        (acc: Record<string, boolean>, item) => {
+          acc[item] = false;
+          return acc;
+        },
+        {},
+      ),
     },
   });
+  //#endregion
 
   const changePage = async (page: number) => {
     if (page > paginationData.pages) return;
@@ -107,9 +119,37 @@ export function DataTable<TData, TValue>({
     const query = search ? `?${search}` : "";
 
     startTransition(() => {
-      router.replace(`/admin/user${query}`);
+      router.replace(`/ticket${query}`);
     });
   };
+
+  const updateFilter = (data: {
+    archived?: boolean;
+
+    reset?: boolean;
+  }) => {
+    if (typeof document !== "undefined") {
+      let cookie = "undefined";
+      let maxAge = "31536000";
+
+      // Archived
+      if (data.archived === true) {
+        maxAge = "31536000";
+        document.cookie = `ticket-filter-archived=${!filters.archived};max-age=${maxAge};path=/`;
+      }
+
+      if (data.reset === true) {
+        cookie = "undefined";
+        maxAge = "0";
+        document.cookie = `ticket-filter-archived=${cookie};max-age=${maxAge};path=/`;
+      }
+    }
+
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
   const updateSearch = useDebouncedCallback((value: string) => {
     const current = new URLSearchParams(window.location.search);
 
@@ -120,7 +160,7 @@ export function DataTable<TData, TValue>({
     const query = search ? `?${search}` : "";
 
     startTransition(() => {
-      router.replace(`/admin/user${query}`);
+      router.replace(`/ticket${query}`);
     });
   }, 300);
 
@@ -137,8 +177,8 @@ export function DataTable<TData, TValue>({
         <div className="w-full flex flex-row items-center justify-between gap-2 p-2">
           <div className="w-full">
             <Input
-              id="searchInput"
-              placeholder={t("searchName")}
+              id="searchTaskInput"
+              placeholder={t("search")}
               onChange={(e) => updateSearch(e.target.value)}
               defaultValue={
                 typeof window !== "undefined"
@@ -150,20 +190,56 @@ export function DataTable<TData, TValue>({
             />
           </div>
           <div className="flex flex-row gap-2">
-            <UserAdd customers={customers} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 w-10 sm:w-fit sm:px-3"
+                >
+                  <Filter className="sm:mr-2 h-4 w-4" />
+                  <span className="hidden sm:block">{t("filter")}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full">
+                <div className="grid gap-2 p-2">
+                  <div className="flex flex-row items-center gap-4">
+                    <Checkbox
+                      id="archivedSwitch"
+                      checked={filters.archived}
+                      onCheckedChange={() => updateFilter({ archived: true })}
+                      disabled={isPending}
+                    />
+                    <Label htmlFor="archivedSwitch" className="text-nowrap">
+                      {t("archived")}
+                    </Label>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <TicketAdd users={users} projects={projects} />
           </div>
         </div>
         <ScrollArea
           className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"
           type="always"
         >
-          <Table className="table-auto w-full">
+          <Table>
             <TableHeader className="sticky top-0 bg-secondary/40 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead
+                        key={header.id}
+                        style={{
+                          minWidth:
+                            header.getSize() === 150
+                              ? "auto"
+                              : `${header.getSize()}px`,
+                        }}
+                        className="w-full"
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -179,33 +255,61 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => {
-                  let borderColor;
-                  switch ((row.original as any).role) {
-                    case "USER":
-                      borderColor = "!border-l-green-500";
-                      break;
-                    case "ADMIN":
-                      borderColor = "!border-l-red-500";
-                      break;
-                    case "CUSTOMER":
-                      borderColor = "!border-l-blue-500";
-                      break;
-                  }
+                  const ticket = row.original as Ticket;
+
                   return (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className={cn("!border-l-2", borderColor)}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell className="relative" key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
+                    <Popover key={row.id}>
+                      <PopoverTrigger asChild>
+                        <TableRow
+                          data-state={row.getIsSelected() && "selected"}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell className="relative" key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="bottom"
+                        className="text-muted-foreground w-96 max-w-[95vw]"
+                      >
+                        {ticket.archived && (
+                          <div className="flex flex-row gap-2 pb-2">
+                            {ticket.archived && (
+                              <Badge variant="destructive">
+                                {t("archived")}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex flex-row items-center gap-2">
+                          <Label className="flex flex-row">
+                            {t("deadline")}:
+                          </Label>
+                          <p className="text-foreground">
+                            {ticket.deadline
+                              ? new Intl.DateTimeFormat().format(
+                                  ticket.deadline,
+                                )
+                              : t("none")}
+                          </p>
+                        </div>
+                        <>
+                          <Separator className="w-full my-2" />
+                          <div className="flex flex-col">
+                            <Label className="pr-2">{t("description")}:</Label>
+                            <p className="text-foreground whitespace-pre-line">
+                              {ticket.description ?? t("none")}
+                            </p>
+                          </div>
+                        </>
+                      </PopoverContent>
+                    </Popover>
                   );
                 })
               ) : (
@@ -228,7 +332,8 @@ export function DataTable<TData, TValue>({
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
                 table.setPageSize(Number(value));
-                document.cookie = `pageSize=${value};max-age=31536000;path=/`;
+                if (typeof document !== "undefined")
+                  document.cookie = `pageSize=${value};max-age=31536000;path=/`;
                 router.refresh();
               }}
             >
@@ -260,8 +365,8 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon"
                 className="w-9 h-9"
-                onClick={async () => {
-                  await changePage(1);
+                onClick={() => {
+                  changePage(1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
@@ -271,8 +376,8 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon"
                 className="w-9 h-9"
-                onClick={async () => {
-                  await changePage(paginationData.page - 1);
+                onClick={() => {
+                  changePage(paginationData.page - 1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
@@ -282,8 +387,8 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon"
                 className="w-9 h-9"
-                onClick={async () => {
-                  await changePage(paginationData.page + 1);
+                onClick={() => {
+                  changePage(paginationData.page + 1);
                 }}
                 disabled={
                   paginationData.page >= paginationData.pages || isPending
@@ -295,8 +400,8 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon"
                 className="w-9 h-9"
-                onClick={async () => {
-                  await changePage(paginationData.pages);
+                onClick={() => {
+                  changePage(paginationData.pages);
                 }}
                 disabled={
                   paginationData.page >= paginationData.pages || isPending

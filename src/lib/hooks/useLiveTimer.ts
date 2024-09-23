@@ -64,7 +64,7 @@ const generateTimer = (project: string | undefined): Time => {
   };
 };
 
-export default function useLiveTimer() {
+export default function useLiveTimer({ projects }: { projects: Projects }) {
   const [timer, setTimer] = useState<Time | undefined>(undefined);
   const [project, setProject] = useState<string | undefined>(undefined);
   const [state, dispatch] = useReducer(stateReducer, {
@@ -113,12 +113,17 @@ export default function useLiveTimer() {
       setTimer(undefined);
 
       const lastProject = localStorage.getItem("lastProject");
-      if (lastProject) setProject(lastProject);
+      if (
+        projects.single.find((project) => project?.name === lastProject) !==
+          undefined &&
+        lastProject
+      )
+        setProject(lastProject);
     }
 
     dispatch({ type: "running", value: result && !result.end });
     dispatch({ type: "loading", value: false });
-  }, [state.error]);
+  }, [projects.single, state.error]);
 
   const calculate = useCallback(() => {
     if (!timer || !state.running || state.error) return;

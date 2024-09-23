@@ -1,0 +1,254 @@
+//#region Imports
+import Navigation from "@/components/navigation";
+
+import { DataTable } from "./data-table";
+import { columns } from "./columns";
+
+import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { TicketPriority, TicketStatus } from "@prisma/client";
+import prisma from "@/lib/prisma";
+import { authCheck } from "@/lib/auth";
+//#endregion
+
+const statusOrder = {
+  [TicketStatus.TODO]: 1,
+  [TicketStatus.IN_PROGRESS]: 2,
+  [TicketStatus.DONE]: 3,
+};
+const priorityOrder = {
+  [TicketPriority.HIGH]: 1,
+  [TicketPriority.MEDIUM]: 2,
+  [TicketPriority.LOW]: 3,
+};
+
+export async function generateMetadata() {
+  const t = await getTranslations({ namespace: "Tickets.Metadata" });
+
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
+
+export default async function Tickets({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: string;
+    search?: string;
+    link?: string;
+    archived?: string;
+  };
+}) {
+  // AUTH
+  const auth = await authCheck();
+  if (!auth.user || !auth.data) return redirect("/login");
+  const user = auth.user;
+
+  // TRANSLATION
+  const t = await getTranslations("Tickets");
+
+  //#region Filter
+  const cookieStore = cookies();
+  const filterCookies = {
+    archived: cookieStore.get("ticket-filter-archived")?.value,
+  };
+
+  const archived = filterCookies.archived === "true";
+
+  /*
+  let projectsFilter: string[] | undefined = undefined;
+
+  try {
+    if (filterCookies.projects)
+      projectsFilter = userArrayValidation.safeParse(
+        JSON.parse(filterCookies.projects),
+      ).data;
+  } catch (e) {
+    console.warn(e);
+    cookieStore.delete("ticket-filter-archived");
+  }
+ */
+
+  const customerFilter =
+    user.role === "CUSTOMER"
+      ? {
+          users: {
+            some: {
+              id: user.id,
+            },
+          },
+        }
+      : undefined;
+  //#endregion
+
+  //#region Pagination
+  const ticketsCount = await prisma.ticket.count({
+    where: {
+      task: {
+        contains: searchParams?.search,
+      },
+      hidden: false,
+
+      archived: archived,
+      projects:
+        user.role === "CUSTOMER"
+          ? {
+              some: {
+                customer: customerFilter,
+              },
+            }
+          : undefined,
+    },
+  });
+
+  let pageSize = Number(cookieStore.get("pageSize")?.value);
+  pageSize = !Number.isNaN(pageSize) ? pageSize : 15;
+
+  const pages = Math.ceil(ticketsCount / pageSize);
+
+  let page = Number(searchParams?.page);
+  page = !Number.isNaN(page) ? page : 1;
+  if (page < 1 || page > pages) page = 1;
+  //#endregion
+
+  // DATA
+  const [dbTickets, dbProjects, users] = await prisma.$transaction([
+    prisma.ticket.findMany({
+      where: {
+        task: {
+          contains: searchParams?.search,
+        },
+        hidden: false,
+
+        archived: archived,
+        projects:
+          user.role === "CUSTOMER"
+            ? {
+                some: {
+                  customer: customerFilter,
+                },
+              }
+            : undefined,
+      },
+
+      include: {
+        assignees: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+          },
+        },
+        projects: {
+          where: {
+            customer: user.role === "CUSTOMER" ? customerFilter : undefined,
+          },
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
+    prisma.project.findMany({
+      select: {
+        customerName: true,
+        name: true,
+      },
+      where: {
+        customer: customerFilter,
+      },
+    }),
+    prisma.user.findMany({
+      where: {
+        OR:
+          user.role === "CUSTOMER"
+            ? [
+                {
+                  NOT: { role: "CUSTOMER" },
+                },
+                {
+                  customer: {
+                    users: {
+                      some: {
+                        id: user.id,
+                      },
+                    },
+                  },
+                },
+              ]
+            : undefined,
+      },
+      select: { username: true, name: true },
+    }),
+  ]);
+
+  const projects = {
+    single: dbProjects,
+    grouped: JSON.parse(
+      JSON.stringify(
+        Object.groupBy(dbProjects, (project) => project.customerName ?? ""),
+      ),
+    ),
+  };
+
+  //#region Prepare Data
+  const tickets = dbTickets
+    .sort((a, b) => {
+      const status =
+        statusOrder[a.status as TicketStatus] -
+        statusOrder[b.status as TicketStatus];
+      const priority =
+        priorityOrder[a.priority as TicketPriority] -
+        priorityOrder[b.priority as TicketPriority];
+
+      const task = a.task.localeCompare(b.task, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+
+      return status * 1_000_000 + priority * 1_000 + task * 1;
+    })
+    .slice((page - 1) * pageSize, page * pageSize);
+
+  const linkedTask = searchParams?.link
+    ? dbTickets.find((e) => e.id === searchParams?.link)
+    : undefined;
+  if (
+    linkedTask &&
+    tickets.find((e) => e.id === searchParams?.link) === undefined
+  )
+    tickets.unshift(linkedTask);
+  //#endregion
+
+  return (
+    <Navigation>
+      <section className="w-full max-h-[95svh] flex flex-col items-center gap-2 p-4">
+        <div className="w-full font-mono text-center pt-2">
+          <p className="text-2xl font-mono">{t("title")}</p>
+        </div>
+
+        <DataTable
+          data={tickets}
+          columns={columns}
+          paginationData={{ page: page, pages: pages, pageSize: pageSize }}
+          projects={projects}
+          users={users}
+          filters={{
+            archived: archived,
+          }}
+        />
+      </section>
+    </Navigation>
+  );
+}

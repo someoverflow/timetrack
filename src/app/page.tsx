@@ -10,10 +10,21 @@ import { authCheck } from "@/lib/auth";
 export default async function Home() {
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
+  if (auth.user.role == "CUSTOMER") return redirect("/ticket");
 
-  const projects = await prisma.project.findMany({
-    select: { name: true },
+  const projectsResult = await prisma.project.findMany({
+    select: {
+      customerName: true,
+      name: true,
+    },
   });
+  const projects = {
+    single: projectsResult,
+    grouped: Object.groupBy(
+      projectsResult,
+      (project) => project.customerName ?? "",
+    ),
+  };
 
   return (
     <Navigation>
@@ -21,7 +32,7 @@ export default async function Home() {
         {auth.user.name && (
           <h1 className="text-2xl font-mono text-content3">{auth.user.name}</h1>
         )}
-        <TimerSection projects={projects} />
+        <TimerSection projects={JSON.parse(JSON.stringify(projects))} />
       </section>
     </Navigation>
   );

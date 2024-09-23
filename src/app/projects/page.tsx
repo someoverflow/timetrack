@@ -20,11 +20,24 @@ export async function generateMetadata() {
 export default async function Profile() {
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
+  if (auth.user.role == "CUSTOMER") return redirect("/ticket");
   const user = auth.user;
 
   const t = await getTranslations("Projects");
 
+  const customers = await prisma.customer.findMany({
+    include: {
+      projects: {
+        include: {
+          _count: true,
+        },
+      },
+    },
+  });
   const projects = await prisma.project.findMany({
+    where: {
+      customer: null,
+    },
     include: {
       _count: true,
     },
@@ -38,7 +51,11 @@ export default async function Profile() {
         </div>
 
         <section className="w-full max-w-md max-h-[90svh] overflow-hidden flex flex-col items-start animate__animated animate__fadeIn">
-          <ProjectSection projects={projects} userData={user} />
+          <ProjectSection
+            customers={customers}
+            projects={projects}
+            userData={user}
+          />
         </section>
       </section>
     </Navigation>

@@ -15,7 +15,7 @@ export default function Page() {
   const t = useTranslations("Login");
 
   useEffect(() => {
-    if (state.error) toast(state.error/*, { description: "---" }*/);
+    if (state.error) toast(state.error /*, { description: "---" }*/);
   }, [state]);
 
   return (
@@ -32,6 +32,7 @@ export default function Page() {
                 <Input
                   id="username"
                   name="username"
+                  autoComplete="username"
                   placeholder={t("usernamePlaceholder")}
                 />
               </div>
@@ -40,8 +41,9 @@ export default function Page() {
                 <Input
                   id="password"
                   name="password"
-                  placeholder={t("passwordPlaceholder")}
+                  autoComplete="current-password"
                   type="password"
+                  placeholder={t("passwordPlaceholder")}
                 />
               </div>
               <Button type="submit" variant="outline" disabled={isPending}>

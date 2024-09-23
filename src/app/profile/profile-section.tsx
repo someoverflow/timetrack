@@ -190,6 +190,7 @@ export default function ProfileSection({
                 type="password"
                 name="Password"
                 id="input-password"
+                autoComplete="new-password"
                 placeholder={t("passwordPlaceholder")}
                 maxLength={30}
                 value={data.password}

@@ -1,7 +1,7 @@
 "use client";
 
 //#region Imports
-import type { TodoPriority } from "@prisma/client";
+import type { TicketPriority } from "@prisma/client";
 
 import {
   Popover,
@@ -25,7 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,12 +47,12 @@ import { useCallback, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
 import useRequest from "@/lib/hooks/useRequest";
 
-import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ProjectSelection } from "@/components/project-select";
 //#endregion
 
-interface todoAddState {
-  priority: TodoPriority;
+interface ticketAddState {
+  priority: TicketPriority;
 
   task: string;
   description: string;
@@ -61,27 +61,22 @@ interface todoAddState {
   deadlineEnabled: boolean;
 
   assignees: string[];
-  assigneesSelectionOpen: boolean;
-
   projects: string[];
-  projectsSelectionOpen: boolean;
 }
-export function TodoAdd({
+
+export function TicketAdd({
   users,
   projects,
 }: {
-  users: { name: string | null; username: string }[];
-  projects: {
-    name: string;
-    description: string | null;
-  }[];
+  users: TicketUsers;
+  projects: Projects;
 }) {
   const router = useRouter();
-  const t = useTranslations("Todo");
+  const t = useTranslations("Tickets");
 
   const [visible, setVisible] = useState(false);
   const [data, setData] = useReducer(
-    (prev: todoAddState, next: Partial<todoAddState>) => ({
+    (prev: ticketAddState, next: Partial<ticketAddState>) => ({
       ...prev,
       ...next,
     }),
@@ -94,9 +89,7 @@ export function TodoAdd({
       deadlineEnabled: false,
 
       assignees: [],
-      assigneesSelectionOpen: false,
       projects: [],
-      projectsSelectionOpen: false,
     },
     undefined,
   );
@@ -121,15 +114,22 @@ export function TodoAdd({
       [data],
     ),
     (_result) => {
-      toast.success(t("Miscellaneous.created"), {
+      toast.success(t("created"), {
         duration: 3000,
       });
 
       setVisible(false);
 
       setData({
+        priority: "MEDIUM",
+
         task: "",
         description: "",
+        deadline: new Date().toISOString().split("T")[0] ?? "",
+        deadlineEnabled: false,
+
+        assignees: [],
+        projects: [],
       });
 
       router.refresh();
@@ -158,7 +158,11 @@ export function TodoAdd({
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
+        <DialogContent
+          className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>
               <div>{t("Dialogs.Add.title")}</div>
@@ -171,18 +175,15 @@ export function TodoAdd({
               type="always"
             >
               <div className="grid gap-4 p-1 w-full">
-                <Label
-                  htmlFor="priority"
-                  className="pl-2 text-muted-foreground"
-                >
-                  {t("Miscellaneous.priority")}
+                <Label asChild className="pl-2 text-muted-foreground">
+                  <legend>{t("priority")}</legend>
                 </Label>
                 <RadioGroup
-                  id="priority"
+                  id="priority-radio"
                   className="flex flex-row items-center justify-evenly pt-1"
                   value={data.priority}
                   onValueChange={(state) =>
-                    setData({ priority: state as TodoPriority })
+                    setData({ priority: state as TicketPriority })
                   }
                 >
                   <div className="flex flex-col items-center gap-2">
@@ -192,7 +193,7 @@ export function TodoAdd({
                       className="h-5 flex flex-row items-center"
                     >
                       <ChevronsUp className="h-5 w-5 text-red-500" />{" "}
-                      {t("Miscellaneous.priorities.high")}
+                      {t("priorities.high")}
                     </Label>
                   </div>
                   <div className="flex flex-col items-center gap-2">
@@ -201,7 +202,7 @@ export function TodoAdd({
                       htmlFor="r2"
                       className="h-5 flex flex-row items-center"
                     >
-                      {t("Miscellaneous.priorities.medium")}
+                      {t("priorities.medium")}
                     </Label>
                   </div>
                   <div className="flex flex-col items-center gap-2">
@@ -211,7 +212,7 @@ export function TodoAdd({
                       className="h-5 flex flex-row items-center"
                     >
                       <ChevronDown className="h-5 w-5 text-blue-500" />{" "}
-                      {t("Miscellaneous.priorities.low")}
+                      {t("priorities.low")}
                     </Label>
                   </div>
                 </RadioGroup>
@@ -220,7 +221,7 @@ export function TodoAdd({
 
                 <div className="grid w-full items-center gap-1.5">
                   <Label htmlFor="task" className="pl-2 text-muted-foreground">
-                    {t("Miscellaneous.task")}
+                    {t("task")}
                   </Label>
                   <Input
                     className="!w-full border-2"
@@ -228,6 +229,7 @@ export function TodoAdd({
                     spellCheck
                     name="Task"
                     id="task"
+                    autoComplete="off"
                     maxLength={100}
                     value={data.task}
                     onChange={(e) => setData({ task: e.target.value })}
@@ -241,12 +243,13 @@ export function TodoAdd({
                     htmlFor="description"
                     className="pl-2 text-muted-foreground"
                   >
-                    {t("Miscellaneous.description")}
+                    {t("description")}
                   </Label>
                   <Textarea
                     className="!w-full border-2"
                     name="Name"
                     id="description"
+                    autoComplete="off"
                     maxLength={800}
                     value={data.description}
                     onChange={(e) => setData({ description: e.target.value })}
@@ -256,25 +259,22 @@ export function TodoAdd({
                 <div id="divider" className="h-1" />
 
                 <div className="h-full w-full grid p-1 gap-1.5">
-                  <Popover
-                    open={data.projectsSelectionOpen}
-                    onOpenChange={(open) =>
-                      setData({ projectsSelectionOpen: open })
-                    }
+                  <Label
+                    htmlFor="projects-button"
+                    className="pl-2 text-muted-foreground"
                   >
-                    <Label
-                      htmlFor="projects-button"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      {t("Dialogs.Add.projects")}
-                    </Label>
-                    <PopoverTrigger asChild>
+                    {t("Dialogs.Add.projects")}
+                  </Label>
+                  <ProjectSelection
+                    multiSelect
+                    project={data.projects}
+                    projects={projects}
+                    button={
                       <Button
                         id="projects-button"
                         variant="outline"
                         role="combobox"
-                        aria-expanded={data.projectsSelectionOpen}
-                        className="w-full justify-between border-2 transition duration-300"
+                        className="w-full justify-between border-2 transition duration-300 overflow-hidden"
                       >
                         <div className="flex flex-row gap-1">
                           {data.projects.length === 0
@@ -284,7 +284,19 @@ export function TodoAdd({
                                   <Badge
                                     key={`projects-select-show-${value}`}
                                     variant="outline"
+                                    className="gap-1"
                                   >
+                                    {projects.single.find(
+                                      (p) => p.name == value,
+                                    )?.customerName && (
+                                      <span className="text-muted-foreground">
+                                        {
+                                          projects.single.find(
+                                            (p) => p.name == value,
+                                          )?.customerName
+                                        }
+                                      </span>
+                                    )}
                                     {value}
                                   </Badge>
                                 ),
@@ -297,85 +309,41 @@ export function TodoAdd({
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-2">
-                      <Command>
-                        <CommandInput
-                          placeholder={t("Dialogs.Add.searchProject")}
-                          className="h-8"
-                        />
-                        {projects.length === 0 ? (
-                          <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-                            <p>{t("Dialogs.Add.noProjectsFound")}</p>
-                            <Link
-                              href="/projects"
-                              prefetch={false}
-                              className={buttonVariants({
-                                variant: "link",
-                                className: "flex-col items-start",
-                              })}
-                            >
-                              <p>{t("Dialogs.Add.projectsManage")}</p>
-                            </Link>
-                          </div>
-                        ) : (
-                          <CommandGroup>
-                            {projects.map((project) => (
-                              <CommandItem
-                                key={`project-selection-add-${project.name}`}
-                                value={project.name}
-                                onSelect={() => {
-                                  const value = project.name;
-                                  const currentProjects = data.projects;
-                                  if (currentProjects.includes(value))
-                                    currentProjects.splice(
-                                      currentProjects.indexOf(value),
-                                      1,
-                                    );
-                                  else currentProjects.push(value);
-
-                                  setData({
-                                    projects: currentProjects,
-                                  });
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    data.projects.includes(project.name)
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                {project.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        )}
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="h-full w-full grid p-1 gap-1.5">
-                  <Popover
-                    open={data.assigneesSelectionOpen}
-                    onOpenChange={(open) =>
-                      setData({ assigneesSelectionOpen: open })
                     }
-                  >
+                    changeProject={(project) => {
+                      if (!project)
+                        throw new Error("Project is undefined in selection");
+
+                      const currentProjects = data.projects;
+                      if (currentProjects.includes(project))
+                        currentProjects.splice(
+                          currentProjects.indexOf(project),
+                          1,
+                        );
+                      else currentProjects.push(project);
+
+                      setData({
+                        projects: currentProjects,
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className="h-full w-full grid p-1 gap-1.5">
+                  {/* TODO: Update */}
+                  <Popover modal>
                     <Label
                       htmlFor="assignees-button"
                       className="pl-2 text-muted-foreground"
                     >
-                      {t("Miscellaneous.assignees")}
+                      {t("assignees")}
                     </Label>
                     <PopoverTrigger asChild>
                       <Button
                         id="assignees-button"
                         variant="outline"
                         role="combobox"
-                        aria-expanded={data.assigneesSelectionOpen}
-                        className="w-full justify-between border-2 transition duration-300"
+                        className="w-full justify-between border-2 transition duration-300 overflow-hidden"
                       >
                         <div className="flex flex-row gap-1">
                           {data.assignees.length === 0
@@ -394,11 +362,14 @@ export function TodoAdd({
                                   </Badge>
                                 ),
                               )}
-                          {data.assignees.length > 3 && (
-                            <Badge variant="secondary">
-                              +{data.assignees.length - 3}
-                            </Badge>
-                          )}
+                          {
+                            // TODO: Amount based on width
+                            data.assignees.length > 3 && (
+                              <Badge variant="secondary">
+                                +{data.assignees.length - 3}
+                              </Badge>
+                            )
+                          }
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -409,6 +380,7 @@ export function TodoAdd({
                           placeholder={t("Dialogs.Add.searchUser")}
                           className="h-8"
                         />
+                        {/* TODO: Group by customer */}
                         <CommandGroup>
                           {users.map((user) => (
                             <CommandItem
@@ -457,10 +429,10 @@ export function TodoAdd({
                 <div className="grid w-full items-center gap-1.5">
                   <div className="flex flex-row items-center justify-between">
                     <Label
-                      htmlFor="todo-add-deadline"
+                      htmlFor="deadline"
                       className="pl-2 text-muted-foreground"
                     >
-                      {t("Miscellaneous.deadline")}
+                      {t("deadline")}
                     </Label>
                     <Switch
                       checked={data.deadlineEnabled}
@@ -475,7 +447,7 @@ export function TodoAdd({
                     }`}
                     disabled={!data.deadlineEnabled}
                     name="Name"
-                    id="todo-add-deadline"
+                    id="deadline"
                     type="date"
                     value={data.deadline}
                     onChange={(e) =>

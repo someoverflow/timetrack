@@ -27,54 +27,36 @@ export default async function AdminUserPage({
     query?: string;
     page?: string;
     search?: string;
-    link?: string;
-    archived?: string;
   };
 }) {
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
   if (auth.user.role !== "ADMIN") redirect("/");
-  const user = auth.user;
-
+  
   const t = await getTranslations("Admin.Users");
 
   const cookieStore = cookies();
 
-  const archived = (searchParams?.archived ?? "false") === "true";
-
-  const todoCount = await prisma.todo.count({
+  const usersCount = await prisma.user.count({
     where: {
-      task: {
+      name: {
         contains: searchParams?.search,
       },
-      hidden: false,
-      archived: archived,
-      OR: [
-        {
-          creatorId: user.id,
-        },
-        {
-          assignees: {
-            some: {
-              id: user.id,
-            },
-          },
-        },
-      ],
     },
   });
 
-  const defaultPageSize = 15;
+  //#region Pagination
   let pageSize = Number(cookieStore.get("pageSize")?.value);
-  pageSize = !Number.isNaN(pageSize) ? pageSize : defaultPageSize;
+  pageSize = !Number.isNaN(pageSize) ? pageSize : 15;
 
-  const pages = Math.ceil(todoCount / pageSize);
+  const pages = Math.ceil(usersCount / pageSize);
 
   let page = Number(searchParams?.page);
   page = !Number.isNaN(page) ? page : 1;
   if (page < 1 || page > pages) page = 1;
+  //#endregion
 
-  const [todos, users, projects] = await prisma.$transaction([
+  const [dbUsers, dbCustomers] = await prisma.$transaction([
     prisma.user.findMany({
       where: {
         name: {
@@ -88,29 +70,25 @@ export default async function AdminUserPage({
         email: true,
         role: true,
 
+        customerName: true,
+
         createdAt: true,
         updatedAt: true,
 
         chips: true,
       },
     }),
-    prisma.user.findMany({ select: { username: true, name: true } }),
-    prisma.project.findMany(),
+    prisma.customer.findMany({ select: { name: true } }),
   ]);
-  const processedTodos = todos
+
+  const users = dbUsers
     .sort((a, b) =>
       a.username.localeCompare(b.username, undefined, {
         numeric: true,
         sensitivity: "base",
-      })
+      }),
     )
     .slice((page - 1) * pageSize, page * pageSize);
-  if (searchParams?.link) {
-    if (processedTodos.find((e) => e.id === searchParams.link) === undefined) {
-      const linkedTodo = todos.find((e) => e.id === searchParams.link);
-      if (linkedTodo) processedTodos.unshift(linkedTodo);
-    }
-  }
 
   return (
     <Navigation>
@@ -120,11 +98,10 @@ export default async function AdminUserPage({
         </div>
 
         <DataTable
-          paginationData={{ page: page, pages: pages, pageSize: pageSize }}
           columns={columns}
-          data={processedTodos}
-          projects={projects}
-          users={users}
+          data={users}
+          customers={dbCustomers.map((customer) => customer.name)}
+          paginationData={{ page: page, pages: pages, pageSize: pageSize }}
         />
       </section>
     </Navigation>

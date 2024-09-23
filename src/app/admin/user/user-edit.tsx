@@ -26,6 +26,8 @@ import {
   Trash,
   RefreshCw,
   MoreHorizontal,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +38,18 @@ import { useTranslations } from "next-intl";
 import type { Prisma, Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import useRequest from "@/lib/hooks/useRequest";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Command } from "cmdk";
+import {
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 //#endregion
 
 type User = Prisma.UserGetPayload<{
@@ -45,6 +59,8 @@ type User = Prisma.UserGetPayload<{
     name: true;
     email: true;
     role: true;
+
+    customerName: true;
 
     createdAt: true;
     updatedAt: true;
@@ -56,13 +72,20 @@ type User = Prisma.UserGetPayload<{
 interface userEditState {
   chipIndicator: string;
   username: string;
+  customer: string | null;
   name: string | null;
   mail: string | null;
   role: Role;
   password: string;
   chipAdd: string;
 }
-export default function UserEdit({ user }: { user: User }) {
+export default function UserEdit({
+  user,
+  customers,
+}: {
+  user: User;
+  customers: string[];
+}) {
   const [data, setData] = useReducer(
     (prev: userEditState, next: Partial<userEditState>) => ({
       ...prev,
@@ -71,6 +94,7 @@ export default function UserEdit({ user }: { user: User }) {
     {
       chipIndicator: "",
       username: user.username,
+      customer: user.customerName,
       name: user.name ?? "",
       mail: user.email,
       role: user.role,
@@ -92,6 +116,7 @@ export default function UserEdit({ user }: { user: User }) {
           body: JSON.stringify({
             id: user.id,
             username: data.username,
+            customer: data.customer ?? undefined,
             name: data.name,
             mail: data.mail ?? undefined,
             role: data.role,
@@ -202,6 +227,317 @@ export default function UserEdit({ user }: { user: User }) {
     chipCreateStatus.loading ||
     chipDeleteStatus.loading;
 
+  //#region Customer
+
+  if (user.role === "CUSTOMER") {
+    return (
+      <>
+        <Button
+          onClick={() => {
+            setVisible(!visible);
+
+            setData({
+              username: user.username,
+              name: user.name !== "?" ? user.name : "",
+              mail: user.email,
+              role: user.role,
+              password: "",
+            });
+          }}
+          variant="ghost"
+          className="h-8 w-8 p-0"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+
+        <Dialog
+          key={`userModal-${user.id}`}
+          open={visible}
+          onOpenChange={(e) => setVisible(e)}
+        >
+          <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
+            <DialogHeader>
+              <DialogTitle>
+                <div>{t("Dialogs.Edit.title")}</div>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="w-full flex flex-col gap-2">
+              <Tabs defaultValue="preferences">
+                <TabsList className="w-full">
+                  <TabsTrigger value="preferences" className="w-full">
+                    {t("Dialogs.Edit.preferences")}
+                  </TabsTrigger>
+                  <TabsTrigger value="details" className="w-full">
+                    {t("Dialogs.Edit.details")}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="preferences">
+                  <ScrollArea
+                    className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                    type="always"
+                  >
+                    <div className="grid gap-4 p-1 w-full">
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="customers-button"
+                          className={cn(
+                            "pl-2 text-muted-foreground transition-colors",
+                            user.customerName !== data.customer
+                              ? "text-blue-500"
+                              : "",
+                          )}
+                        >
+                          {t("Dialogs.Add.customer")}
+                        </Label>
+                        <Popover modal>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id="customers-button"
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              {data.customer}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-2">
+                            <Command className="max-h-[calc(32px+25svh)]">
+                              <CommandInput
+                                placeholder={t("search")}
+                                className="h-8"
+                              />
+                              <CommandList>
+                                <CommandGroup className="max-h-none">
+                                  {customers.map((customer) => (
+                                    <CommandItem
+                                      key={`customer-select-${customer}`}
+                                      value={customer}
+                                      onSelect={() =>
+                                        setData({ customer: customer })
+                                      }
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          customer == data.customer
+                                            ? "opacity-100"
+                                            : "opacity-0",
+                                        )}
+                                      />
+                                      {customer}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div id="divider" className="h-1" />
+
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="name"
+                          className={cn(
+                            "pl-2 text-muted-foreground transition-colors",
+                            user.name !== (data.name ?? "")
+                              ? "text-blue-500"
+                              : "",
+                          )}
+                        >
+                          {t("Dialogs.Edit.name")}
+                        </Label>
+                        <Input
+                          className="w-full border-2"
+                          type="text"
+                          autoComplete="name"
+                          name="Name"
+                          id="name"
+                          value={data.name ?? ""}
+                          onChange={(e) => setData({ name: e.target.value })}
+                        />
+                      </div>
+
+                      <div id="divider" className="h-1" />
+
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="username"
+                          className={cn(
+                            "pl-2 text-muted-foreground transition-colors",
+                            user.username !== (data.username ?? "")
+                              ? "text-blue-500"
+                              : "",
+                          )}
+                        >
+                          {t("Dialogs.Edit.username")}
+                        </Label>
+                        <Input
+                          className="w-full border-2"
+                          disabled={data.username === "admin"}
+                          type="text"
+                          autoComplete="username"
+                          name="Username"
+                          id="username"
+                          value={data.username}
+                          onChange={(e) =>
+                            setData({ username: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="password"
+                          className={cn(
+                            "pl-2 text-muted-foreground transition-colors",
+                            data.password !== "" ? "text-blue-500" : "",
+                          )}
+                        >
+                          {t("Dialogs.Edit.password")}
+                        </Label>
+                        <Input
+                          className="w-full border-2"
+                          type="password"
+                          name="Password"
+                          autoComplete="new-password"
+                          id="password"
+                          placeholder={t("Dialogs.Edit.passwordPlaceholder")}
+                          value={data.password}
+                          onChange={(e) =>
+                            setData({ password: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <div id="divider" className="h-1" />
+
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="mail"
+                          className={cn(
+                            "pl-2 text-muted-foreground transition-colors",
+                            (user.email ?? "") !== (data.mail ?? "")
+                              ? "text-blue-500"
+                              : "",
+                          )}
+                        >
+                          {t("Dialogs.Edit.mail")}
+                        </Label>
+                        <Input
+                          className="w-full border-2"
+                          type="email"
+                          name="Mail"
+                          autoComplete="email"
+                          id="mail"
+                          value={data.mail ?? ""}
+                          onChange={(e) => setData({ mail: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                <TabsContent value="details">
+                  <ScrollArea
+                    className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                    type="always"
+                  >
+                    <div className="grid gap-4 p-1 w-full">
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="updatedAt"
+                          className="pl-2 text-muted-foreground"
+                        >
+                          {t("Dialogs.Edit.updated")}
+                        </Label>
+                        <Input
+                          disabled
+                          className="w-full font-mono"
+                          type="datetime-local"
+                          name="Updated At"
+                          id="updatedAt"
+                          value={user.updatedAt
+                            .toLocaleString("sv")
+                            .replace(" ", "T")}
+                        />
+                      </div>
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="createdAt"
+                          className="pl-2 text-muted-foreground"
+                        >
+                          {t("Dialogs.Edit.created")}
+                        </Label>
+                        <Input
+                          disabled
+                          className="w-full font-mono"
+                          type="datetime-local"
+                          name="Created At"
+                          id="createdAt"
+                          value={user.createdAt
+                            .toLocaleString("sv")
+                            .replace(" ", "T")}
+                        />
+                      </div>
+                      <div id="divider" className="h-1" />
+                      <div className="grid w-full items-center gap-1.5">
+                        <Label
+                          htmlFor="id"
+                          className="pl-2 text-muted-foreground"
+                        >
+                          ID
+                        </Label>
+                        <Input
+                          disabled
+                          className="w-full border-2 font-mono"
+                          type="text"
+                          name="Id"
+                          id="id"
+                          value={user.id}
+                        />
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+
+              <div className="w-full gap-2 flex flex-row justify-end">
+                <Button
+                  variant="destructive"
+                  onClick={() => sendDelete()}
+                  disabled={loading || user.username === "admin"}
+                >
+                  {loading ? (
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash className="mr-2 h-4 w-4" />
+                  )}
+                  {t("Dialogs.Edit.delete")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => send()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <SaveAll className="mr-2 h-4 w-4" />
+                  )}
+                  {t("Dialogs.Edit.save")}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+  //#endregion
+
   return (
     <>
       <Button
@@ -255,74 +591,6 @@ export default function UserEdit({ user }: { user: User }) {
                   <div className="grid gap-4 p-1 w-full">
                     <div className="grid w-full items-center gap-1.5">
                       <Label
-                        htmlFor="username"
-                        className={cn(
-                          "pl-2 text-muted-foreground transition-colors",
-                          user.username !== (data.username ?? "")
-                            ? "text-blue-500"
-                            : "",
-                        )}
-                      >
-                        {t("Dialogs.Edit.username")}
-                      </Label>
-                      <Input
-                        className="w-full border-2"
-                        disabled={data.username === "admin"}
-                        type="text"
-                        name="Username"
-                        id="username"
-                        value={data.username}
-                        onChange={(e) => setData({ username: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                      <Label
-                        htmlFor="name"
-                        className={cn(
-                          "pl-2 text-muted-foreground transition-colors",
-                          user.name !== (data.name ?? "")
-                            ? "text-blue-500"
-                            : "",
-                        )}
-                      >
-                        {t("Dialogs.Edit.name")}
-                      </Label>
-                      <Input
-                        className="w-full border-2"
-                        type="text"
-                        name="Name"
-                        id="name"
-                        value={data.name ?? ""}
-                        onChange={(e) => setData({ name: e.target.value })}
-                      />
-                    </div>
-
-                    <div id="divider" className="h-1" />
-
-                    <div className="grid w-full items-center gap-1.5">
-                      <Label
-                        htmlFor="mail"
-                        className={cn(
-                          "pl-2 text-muted-foreground transition-colors",
-                          (user.email ?? "") !== (data.mail ?? "")
-                            ? "text-blue-500"
-                            : "",
-                        )}
-                      >
-                        {t("Dialogs.Edit.mail")}
-                      </Label>
-                      <Input
-                        className="w-full border-2"
-                        type="email"
-                        name="Mail"
-                        id="mail"
-                        value={data.mail ?? ""}
-                        onChange={(e) => setData({ mail: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="grid w-full items-center gap-1.5">
-                      <Label
                         htmlFor="role"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
@@ -362,6 +630,55 @@ export default function UserEdit({ user }: { user: User }) {
 
                     <div className="grid w-full items-center gap-1.5">
                       <Label
+                        htmlFor="name"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          user.name !== (data.name ?? "")
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.name")}
+                      </Label>
+                      <Input
+                        className="w-full border-2"
+                        type="text"
+                        autoComplete="name"
+                        name="Name"
+                        id="name"
+                        value={data.name ?? ""}
+                        onChange={(e) => setData({ name: e.target.value })}
+                      />
+                    </div>
+
+                    <div id="divider" className="h-1" />
+
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="username"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          user.username !== (data.username ?? "")
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.username")}
+                      </Label>
+                      <Input
+                        className="w-full border-2"
+                        disabled={data.username === "admin"}
+                        autoComplete="username"
+                        type="text"
+                        name="Username"
+                        id="username"
+                        value={data.username}
+                        onChange={(e) => setData({ username: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
                         htmlFor="password"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
@@ -373,11 +690,37 @@ export default function UserEdit({ user }: { user: User }) {
                       <Input
                         className="w-full border-2"
                         type="password"
+                        autoComplete="new-password"
                         name="Password"
                         id="password"
                         placeholder={t("Dialogs.Edit.passwordPlaceholder")}
                         value={data.password}
                         onChange={(e) => setData({ password: e.target.value })}
+                      />
+                    </div>
+
+                    <div id="divider" className="h-1" />
+
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label
+                        htmlFor="mail"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          (user.email ?? "") !== (data.mail ?? "")
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.mail")}
+                      </Label>
+                      <Input
+                        className="w-full border-2"
+                        type="email"
+                        autoComplete="email"
+                        name="Mail"
+                        id="mail"
+                        value={data.mail ?? ""}
+                        onChange={(e) => setData({ mail: e.target.value })}
                       />
                     </div>
                   </div>

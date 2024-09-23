@@ -36,5 +36,4 @@ next-env.d.ts
 
 .env
 /prisma/migrations
-.vscode/settings.json
 certificates

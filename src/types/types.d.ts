@@ -14,6 +14,48 @@ interface Timer {
   state: string | null;
 }
 
+type TicketUsers = { name: string | null; username: string }[];
+
+type TicketPagePayload = {
+  include: {
+    assignees: {
+      select: {
+        id: true;
+        username: true;
+        name: true;
+      };
+    };
+    creator: {
+      select: {
+        id: true;
+        username: true;
+        name: true;
+      };
+    };
+    projects: {
+      select: {
+        name: true;
+      };
+    };
+  };
+};
+
+type Projects = {
+  single: {
+    name: string;
+    customerName: string | null;
+  }[];
+  grouped: Partial<
+    Record<
+      string,
+      {
+        name: string;
+        customerName: string | null;
+      }[]
+    >
+  >;
+};
+
 type APIResultType =
   | "unknown"
   // No Success

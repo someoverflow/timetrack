@@ -1,6 +1,6 @@
 //#region Imports
 import type { todoUpdateApiValidationType } from "@/lib/zod";
-import type { Prisma, TodoPriority, TodoStatus } from "@prisma/client";
+import type { Prisma, TicketPriority, TicketStatus } from "@prisma/client";
 
 import {
   Popover,
@@ -13,9 +13,8 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -29,7 +28,6 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import {
   Check,
   ChevronDown,
-  ChevronRight,
   ChevronsUp,
   ChevronsUpDown,
   CircleCheckBig,
@@ -44,9 +42,9 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import useRequest from "@/lib/hooks/useRequest";
+import { ProjectSelection } from "@/components/project-select";
 //#endregion
 
 const steps = [
@@ -55,36 +53,7 @@ const steps = [
   { id: "done", label: "Done", icon: CircleCheckBig },
 ] satisfies StepItem[];
 
-type UsersType = { name: string | null; username: string }[];
-type ProjectsType = {
-  name: string;
-  description: string | null;
-}[];
-type TodoType = Prisma.TodoGetPayload<{
-  include: {
-    assignees: {
-      select: {
-        id: true;
-        username: true;
-        name: true;
-      };
-    };
-    creator: {
-      select: {
-        id: true;
-        username: true;
-        name: true;
-      };
-    };
-    relatedProjects: {
-      select: {
-        name: true;
-      };
-    };
-  };
-}>;
-
-interface todoInfoState {
+interface ticketInfoState {
   task: string;
   description: string;
 
@@ -92,52 +61,49 @@ interface todoInfoState {
   deadlineEnabled: boolean;
 
   assignees: string[];
-  assigneesSelectionOpen: boolean;
-
   projects: string[];
-  projectsSelectionOpen: boolean;
 
-  status: TodoStatus;
+  status: TicketStatus;
   statusState: undefined | "error" | "loading";
-  priority: TodoPriority;
+  priority: TicketPriority;
 }
 
-export function TodoTableEdit({
-  todo,
+export function TicketTableEdit({
+  ticket,
   projects,
   users,
+  children,
 }: {
-  todo: TodoType;
-  projects: ProjectsType;
-  users: UsersType;
+  ticket: Prisma.TicketGetPayload<TicketPagePayload>;
+  projects: Projects;
+  users: TicketUsers;
+  children: JSX.Element;
 }) {
   const router = useRouter();
-  const t = useTranslations("Todo");
+  const t = useTranslations("Tickets");
 
   const [visible, setVisible] = useState(false);
 
-  const getDefaultReducerState = useCallback((): todoInfoState => {
+  const getDefaultReducerState = useCallback((): ticketInfoState => {
     return {
-      task: todo.task,
-      description: todo.description ?? "",
+      task: ticket.task,
+      description: ticket.description ?? "",
 
-      deadline: (todo.deadline ?? new Date()).toISOString().split("T")[0] ?? "",
-      deadlineEnabled: todo.deadline !== null,
+      deadline:
+        (ticket.deadline ?? new Date()).toISOString().split("T")[0] ?? "",
+      deadlineEnabled: ticket.deadline !== null,
 
-      projectsSelectionOpen: false,
-      assigneesSelectionOpen: false,
+      projects: ticket.projects.map((project) => project.name),
+      assignees: ticket.assignees.map((assignee) => assignee.username),
 
-      projects: todo.relatedProjects.map((project) => project.name),
-      assignees: todo.assignees.map((assignee) => assignee.username),
-
-      status: todo.status,
+      status: ticket.status,
       statusState: undefined,
-      priority: todo.priority,
+      priority: ticket.priority,
     };
-  }, [todo]);
+  }, [ticket]);
 
   const [state, setState] = useReducer(
-    (prev: todoInfoState, next: Partial<todoInfoState>) => ({
+    (prev: ticketInfoState, next: Partial<ticketInfoState>) => ({
       ...prev,
       ...next,
     }),
@@ -147,46 +113,57 @@ export function TodoTableEdit({
   const searchParams = useSearchParams();
   const linkedTodo = searchParams.get("link");
 
-  const updateLink = () => {
-    const current = new URLSearchParams(window.location.search);
-    current.set("link", todo.id);
-    const search = current.toString();
-    const query = search ? `?${search}` : "";
-    router.replace(`/todo${query}`);
-  };
+  const updateLink = useCallback(
+    (t?: boolean) => {
+      const current = new URLSearchParams(window.location.search);
+      if (t) current.delete("link");
+      else current.set("link", ticket.id);
+      const search = current.toString();
+      const query = search ? `?${search}` : "";
+      router.replace(`/ticket${query}`);
+    },
+    [router, ticket.id],
+  );
+
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      if (e.code == "Escape") updateLink(true);
+    };
+    document.addEventListener("keydown", keyDownHandler);
+    return () => {
+      document.removeEventListener("keydown", keyDownHandler);
+    };
+  }, [updateLink]);
 
   const { status, send } = useRequest(
     useCallback(() => {
-      const assigneesToAdd = [];
-      const assigneesToRemove = [];
-      for (const assignee of todo.assignees)
-        if (!state.assignees.includes(assignee.username))
-          assigneesToRemove.push(assignee.username);
-      for (const username of state.assignees)
-        if (todo.assignees.find((a) => a.username === username) === undefined)
-          assigneesToAdd.push(username);
+      const assigneesToRemove = ticket.assignees
+        .filter((assignee) => !state.assignees.includes(assignee.username))
+        .map((assignee) => assignee.username);
+      const assigneesToAdd = state.assignees.filter(
+        (username) => !ticket.assignees.some((a) => a.username === username),
+      );
 
-      const projectsToAdd = [];
-      const projectsToRemove = [];
-      for (const project of todo.relatedProjects)
-        if (!state.projects.includes(project.name))
-          projectsToRemove.push(project.name);
-      for (const name of state.projects)
-        if (todo.relatedProjects.find((p) => p.name === name) === undefined)
-          projectsToAdd.push(name);
+      const projectsToRemove = ticket.projects
+        .filter((project) => !state.projects.includes(project.name))
+        .map((project) => project.name);
+      const projectsToAdd = state.projects.filter(
+        (name) => !ticket.projects.some((p) => p.name === name),
+      );
 
-      const request: todoUpdateApiValidationType = {
-        id: todo.id,
+      const request = {
+        id: ticket.id,
 
-        task: todo.task !== state.task ? state.task : undefined,
+        task: ticket.task !== state.task ? state.task : undefined,
         description:
-          (todo.description ?? "" !== state.description)
+          (ticket.description ?? "" !== state.description)
             ? state.description
             : undefined,
 
         deadline:
-          (todo.deadline ? todo.deadline.toISOString().split("T")[0] : null) !==
-          (state.deadlineEnabled ? state.deadline : null)
+          (ticket.deadline
+            ? ticket.deadline.toISOString().split("T")[0]
+            : null) !== (state.deadlineEnabled ? state.deadline : null)
             ? state.deadlineEnabled
               ? state.deadline
               : null
@@ -194,36 +171,32 @@ export function TodoTableEdit({
 
         assignees: {
           add:
-            assigneesToAdd.length !== 0
-              ? (assigneesToAdd as [string, ...string[]])
-              : undefined,
+            assigneesToAdd.length !== 0 ? (assigneesToAdd as any) : undefined,
           remove:
             assigneesToRemove.length !== 0
-              ? (assigneesToRemove as [string, ...string[]])
+              ? (assigneesToRemove as any)
               : undefined,
         },
 
         projects: {
-          add:
-            projectsToAdd.length !== 0
-              ? (projectsToAdd as [string, ...string[]])
-              : undefined,
+          add: projectsToAdd.length !== 0 ? (projectsToAdd as any) : undefined,
           remove:
             projectsToRemove.length !== 0
-              ? (projectsToRemove as [string, ...string[]])
+              ? (projectsToRemove as any)
               : undefined,
         },
 
-        priority: todo.priority !== state.priority ? state.priority : undefined,
-      };
+        priority:
+          ticket.priority !== state.priority ? state.priority : undefined,
+      } satisfies todoUpdateApiValidationType;
 
       return fetch("/api/todo", {
         method: "PUT",
         body: JSON.stringify(request),
       });
-    }, [state, todo]),
+    }, [state, ticket]),
     (_result) => {
-      toast.success(t("Miscellaneous.updated"), {
+      toast.success(t("updated"), {
         duration: 3_000,
       });
       setVisible(false);
@@ -244,15 +217,15 @@ export function TodoTableEdit({
       return fetch("/api/todo", {
         method: "PUT",
         body: JSON.stringify({
-          id: todo.id,
+          id: ticket.id,
           status: ["TODO", "IN_PROGRESS", "DONE"][passed?.step ?? 0],
         }),
       });
     },
     (_result) => {
-      updateLink();
+      updateLink(true);
 
-      toast.success(t("Miscellaneous.changed"), {
+      toast.success(t("changed"), {
         duration: 3_000,
       });
       router.refresh();
@@ -263,45 +236,40 @@ export function TodoTableEdit({
 
   useEffect(() => {
     if (visible) setState(getDefaultReducerState());
-  }, [todo, visible, getDefaultReducerState]);
+  }, [ticket, visible, getDefaultReducerState]);
 
   useEffect(() => {
-    setVisible(linkedTodo === todo.id);
+    setVisible(linkedTodo === ticket.id);
     setState(getDefaultReducerState());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedTodo, stepStatus.loading]);
 
   return (
     <>
-      <HoverCardTrigger onClick={() => setVisible(true)}>
-        <p className="flex flex-col justify-center text-xs text-muted-foreground/80 space-x-2 w-full bg-background/25 rounded-sm p-2">
-          {todo.relatedProjects.map(
-            (project, index) =>
-              project.name +
-              (index !== todo.relatedProjects.length - 1 ? " • " : ""),
-          )}
-          <span className="text-primary text-base">
-            <ChevronRight className="inline-block size-3 text-muted-foreground" />
-            {todo.task}
-          </span>
-        </p>
-      </HoverCardTrigger>
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          setVisible(true);
+        }}
+      >
+        {children}
+      </div>
 
       <Dialog
-        key={`todoModal-${todo.id}`}
+        key={`todoModal-${ticket.id}`}
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
         <VisuallyHidden>
-          <DialogTitle>Edit Todo</DialogTitle>
+          <DialogTitle>Title</DialogTitle>
         </VisuallyHidden>
-        <DialogContent className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between">
+        <DialogContent
+          className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex flex-row gap-1 absolute top-2 left-2">
-            {todo.archived && (
-              <Badge variant="destructive">{t("Miscellaneous.archived")}</Badge>
-            )}
-            {todo.hidden && (
-              <Badge variant="secondary">{t("Miscellaneous.hidden")}</Badge>
+            {ticket.archived && (
+              <Badge variant="destructive">{t("archived")}</Badge>
             )}
           </div>
 
@@ -309,17 +277,17 @@ export function TodoTableEdit({
             <div className="flex w-full flex-col gap-4 pb-4 pt-6">
               <Stepper
                 initialStep={
-                  todo.archived
+                  ticket.archived
                     ? 3
-                    : todo.status === "TODO"
+                    : ticket.status === "TODO"
                       ? 0
-                      : todo.status === "IN_PROGRESS"
+                      : ticket.status === "IN_PROGRESS"
                         ? 1
                         : 2
                 }
                 steps={steps}
                 onClickStep={
-                  todo.archived || loading
+                  ticket.archived || loading
                     ? undefined
                     : (step, setStep) => {
                         sendStep({
@@ -337,13 +305,13 @@ export function TodoTableEdit({
                     "transition-all duration-300",
                     "data-[active=true]:bg-muted data-[active=true]:border-primary dark:data-[active=true]:text-primary-foreground",
                     "data-[current=true]:bg-muted data-[current=true]:border-primary data-[current=true]:text-primary-foreground",
-                    todo.status === "TODO"
+                    ticket.status === "TODO"
                       ? "data-[current=true]:border-blue-500"
                       : "",
-                    todo.status === "IN_PROGRESS"
+                    ticket.status === "IN_PROGRESS"
                       ? "data-[current=true]:border-amber-500"
                       : "",
-                    todo.status === "DONE"
+                    ticket.status === "DONE"
                       ? "data-[current=true]:border-green-500"
                       : "",
                   ),
@@ -354,7 +322,7 @@ export function TodoTableEdit({
                 <Step
                   key={steps[0]?.id}
                   id={steps[0]?.id}
-                  label={t("Miscellaneous.steps.todo")}
+                  label={t("steps.todo")}
                   icon={steps[0]?.icon}
                   checkIcon={steps[0]?.icon}
                   className="!text-blue-500"
@@ -362,7 +330,7 @@ export function TodoTableEdit({
                 <Step
                   key={steps[1]?.id}
                   id={steps[1]?.id}
-                  label={t("Miscellaneous.steps.inProgress")}
+                  label={t("steps.inProgress")}
                   icon={steps[1]?.icon}
                   checkIcon={steps[1]?.icon}
                   className="!text-amber-500"
@@ -370,7 +338,7 @@ export function TodoTableEdit({
                 <Step
                   key={steps[2]?.id}
                   id={steps[2]?.id}
-                  label={t("Miscellaneous.steps.done")}
+                  label={t("steps.done")}
                   icon={steps[2]?.icon}
                   checkIcon={steps[2]?.icon}
                   className="!text-green-500"
@@ -393,24 +361,21 @@ export function TodoTableEdit({
                   type="always"
                 >
                   <div className="grid gap-2 p-1 w-full">
-                    <Label
-                      htmlFor="priority"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      {t("Miscellaneous.priority")}
+                    <Label className="pl-2 text-muted-foreground" asChild>
+                      <legend>{t("priority")}</legend>
                     </Label>
                     <RadioGroup
                       id="priority"
                       className={cn(
                         "flex flex-row items-center justify-evenly pt-1 px-2 transition-all border-l-2",
-                        todo.priority !== state.priority
+                        ticket.priority !== state.priority
                           ? "border-blue-500"
                           : "",
                       )}
                       value={state.priority}
                       onValueChange={(state) =>
                         setState({
-                          priority: state as TodoPriority,
+                          priority: state as TicketPriority,
                         })
                       }
                     >
@@ -421,7 +386,7 @@ export function TodoTableEdit({
                           className="h-5 flex flex-row items-center"
                         >
                           <ChevronsUp className="h-5 w-5 text-red-500" />{" "}
-                          {t("Miscellaneous.priorities.high")}
+                          {t("priorities.high")}
                         </Label>
                       </div>
                       <div className="flex flex-col items-center gap-2">
@@ -430,7 +395,7 @@ export function TodoTableEdit({
                           htmlFor="r2"
                           className="h-5 flex flex-row items-center"
                         >
-                          {t("Miscellaneous.priorities.medium")}
+                          {t("priorities.medium")}
                         </Label>
                       </div>
                       <div className="flex flex-col items-center gap-2">
@@ -440,7 +405,7 @@ export function TodoTableEdit({
                           className="h-5 flex flex-row items-center"
                         >
                           <ChevronDown className="h-5 w-5 text-blue-500" />{" "}
-                          {t("Miscellaneous.priorities.low")}
+                          {t("priorities.low")}
                         </Label>
                       </div>
                     </RadioGroup>
@@ -451,15 +416,16 @@ export function TodoTableEdit({
                         htmlFor="task"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
-                          todo.task !== state.task ? "text-blue-500" : "",
+                          ticket.task !== state.task ? "text-blue-500" : "",
                         )}
                       >
-                        {t("Miscellaneous.task")}
+                        {t("task")}
                       </Label>
                       <Input
                         className="!w-full border-2"
                         type="text"
                         spellCheck
+                        autoComplete="off"
                         name="Task"
                         id="task"
                         maxLength={100}
@@ -475,17 +441,19 @@ export function TodoTableEdit({
                         htmlFor="description"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
-                          (todo.description ?? "") !== state.description
+                          (ticket.description ?? "") !== state.description
                             ? "text-blue-500"
                             : "",
                         )}
                       >
-                        {t("Miscellaneous.description")}
+                        {t("description")}
                       </Label>
                       <Textarea
                         className="!w-full border-2 min-h-32"
                         name="Description"
                         id="description"
+                        autoComplete="off"
+                        spellCheck
                         maxLength={800}
                         value={state.description}
                         onChange={(e) =>
@@ -497,33 +465,49 @@ export function TodoTableEdit({
                     <div id="divider" className="h-1" />
 
                     <div className="h-full w-full grid p-1 gap-1.5">
-                      <Popover
-                        open={state.projectsSelectionOpen}
-                        onOpenChange={(open) =>
-                          setState({ projectsSelectionOpen: open })
-                        }
+                      <Label
+                        htmlFor="projects-button"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          state.projects.sort().toString() !==
+                            ticket.projects
+                              .map((project) => project.name)
+                              .sort()
+                              .toString()
+                            ? "text-blue-500"
+                            : "",
+                        )}
                       >
-                        <Label
-                          htmlFor="projects-button"
-                          className={cn(
-                            "pl-2 text-muted-foreground transition-colors",
-                            state.projects.sort().toString() !==
-                              todo.relatedProjects
-                                .map((project) => project.name)
-                                .sort()
-                                .toString()
-                              ? "text-blue-500"
-                              : "",
-                          )}
-                        >
-                          {t("Dialogs.Edit.projects")}
-                        </Label>
-                        <PopoverTrigger asChild>
+                        {t("Dialogs.Edit.projects")}
+                      </Label>
+                      <ProjectSelection
+                        multiSelect
+                        project={state.projects}
+                        projects={projects}
+                        changeProject={(project) => {
+                          if (!project)
+                            throw new Error(
+                              "Project is undefined in selection",
+                            );
+
+                          const stateProjects = state.projects;
+
+                          if (stateProjects.includes(project))
+                            stateProjects.splice(
+                              stateProjects.indexOf(project),
+                              1,
+                            );
+                          else stateProjects.push(project);
+
+                          setState({
+                            projects: stateProjects,
+                          });
+                        }}
+                        button={
                           <Button
                             id="projects-button"
                             variant="outline"
                             role="combobox"
-                            aria-expanded={state.projectsSelectionOpen}
                             className="w-full justify-between border-2 transition duration-300"
                           >
                             <div className="flex flex-row gap-1">
@@ -534,7 +518,19 @@ export function TodoTableEdit({
                                       <Badge
                                         key={`project-${value}`}
                                         variant="outline"
+                                        className="gap-1"
                                       >
+                                        {projects.single.find(
+                                          (p) => p.name == value,
+                                        )?.customerName && (
+                                          <span className="text-muted-foreground">
+                                            {
+                                              projects.single.find(
+                                                (p) => p.name == value,
+                                              )?.customerName
+                                            }
+                                          </span>
+                                        )}
                                         {value}
                                       </Badge>
                                     ),
@@ -547,79 +543,17 @@ export function TodoTableEdit({
                             </div>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-2">
-                          <Command>
-                            <CommandInput
-                              placeholder={t("Dialogs.Edit.searchProject")}
-                              className="h-8"
-                            />
-                            {projects.length === 0 ? (
-                              <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-                                <p>{t("Dialogs.Edit.noProjectsFound")}</p>
-                                <Link
-                                  href="/projects"
-                                  prefetch={false}
-                                  className={buttonVariants({
-                                    variant: "link",
-                                    className: "flex-col items-start",
-                                  })}
-                                >
-                                  <p>{t("Dialogs.Edit.projectsManage")}</p>
-                                </Link>
-                              </div>
-                            ) : (
-                              <CommandGroup>
-                                {projects.map((project) => (
-                                  <CommandItem
-                                    key={`project-${project.name}`}
-                                    value={project.name}
-                                    onSelect={() => {
-                                      const value = project.name;
-                                      const stateProjects = state.projects;
-
-                                      if (stateProjects.includes(value))
-                                        stateProjects.splice(
-                                          stateProjects.indexOf(value),
-                                          1,
-                                        );
-                                      else stateProjects.push(value);
-
-                                      setState({
-                                        projects: stateProjects,
-                                      });
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        state.projects.includes(project.name)
-                                          ? "opacity-100"
-                                          : "opacity-0",
-                                      )}
-                                    />
-                                    {project.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            )}
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                        }
+                      />
                     </div>
                     <div className="h-full w-full grid p-1 gap-1.5">
-                      <Popover
-                        open={state.assigneesSelectionOpen}
-                        onOpenChange={(open) =>
-                          setState({ assigneesSelectionOpen: open })
-                        }
-                      >
+                      <Popover modal>
                         <Label
                           htmlFor="assignees-button"
                           className={cn(
                             "pl-2 text-muted-foreground transition-colors",
                             state.assignees.sort().toString() !==
-                              todo.assignees
+                              ticket.assignees
                                 .map((assignee) => assignee.username)
                                 .sort()
                                 .toString()
@@ -627,14 +561,13 @@ export function TodoTableEdit({
                               : "",
                           )}
                         >
-                          {t("Miscellaneous.assignees")}
+                          {t("assignees")}
                         </Label>
                         <PopoverTrigger asChild>
                           <Button
                             id="assignees-button"
                             variant="outline"
                             role="combobox"
-                            aria-expanded={state.assigneesSelectionOpen}
                             className="w-full justify-between border-2 transition duration-300"
                           >
                             <div className="flex flex-row gap-1">
@@ -666,7 +599,7 @@ export function TodoTableEdit({
                         <PopoverContent className="p-2">
                           <Command>
                             <CommandInput
-                              placeholder={t("Dialogs.Edit.searchUser")}
+                              placeholder={t("search")}
                               className="h-8"
                             />
                             <CommandGroup>
@@ -724,15 +657,15 @@ export function TodoTableEdit({
                           htmlFor="deadline"
                           className={cn(
                             "pl-2 text-muted-foreground",
-                            (todo.deadline
-                              ? todo.deadline.toISOString().split("T")[0]
+                            (ticket.deadline
+                              ? ticket.deadline.toISOString().split("T")[0]
                               : null) !==
                               (state.deadlineEnabled ? state.deadline : null)
                               ? "text-blue-500"
                               : "",
                           )}
                         >
-                          {t("Miscellaneous.deadline")}
+                          {t("deadline")}
                         </Label>
                         <Switch
                           id="deadline"
@@ -781,7 +714,7 @@ export function TodoTableEdit({
                         type="text"
                         name="creator"
                         id="creator"
-                        value={todo.creator.name ?? todo.creator.username}
+                        value={ticket.creator.name ?? ticket.creator.username}
                       />
                     </div>
 
@@ -800,7 +733,7 @@ export function TodoTableEdit({
                         type="datetime-local"
                         name="Updated At"
                         id="updatedAt"
-                        value={todo.updatedAt
+                        value={ticket.updatedAt
                           .toLocaleString("sv")
                           .replace(" ", "T")}
                       />
@@ -818,7 +751,7 @@ export function TodoTableEdit({
                         type="datetime-local"
                         name="Created At"
                         id="createdAt"
-                        value={todo.createdAt
+                        value={ticket.createdAt
                           .toLocaleString("sv")
                           .replace(" ", "T")}
                       />
@@ -839,7 +772,7 @@ export function TodoTableEdit({
                         type="text"
                         name="Id"
                         id="id"
-                        value={todo.id}
+                        value={ticket.id}
                       />
                     </div>
                   </div>

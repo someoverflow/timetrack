@@ -54,6 +54,8 @@ interface visualisationState {
   showPerson: boolean;
 }
 
+// TODO: Export customer when filter active
+
 export default function TimerExportDialog({
   history,
   yearMonth,

@@ -1,13 +1,13 @@
 {
   "Admin": {
     "Users": {
-      "actions": "Actions",
       "addDuplicate": "User with the username exists.",
       "chipAdded": "Successfully linked chip",
       "chipRemoved": "Successfully removed chip",
       "created": "Successfully created user",
       "currentPage": "Page {page} of {pages}",
       "deleted": "Successfully deleted entry",
+      "search": "Search...",
       "Dialogs": {
         "Add": {
           "buttonToolTip": "Create a new user",
@@ -17,7 +17,7 @@
           "name": "Name",
           "namePlaceholder": "Max Mustermann",
           "password": "Password",
-          "passwordPlaceholder": "",
+          "customer": "Customer",
           "role": "Role",
           "roles": {
             "admin": "Admin",
@@ -25,7 +25,9 @@
           },
           "title": "Create user",
           "username": "Username",
-          "usernamePlaceholder": "maxmust"
+          "usernamePlaceholder": "maxmust",
+          "noCustomers": "No customers found",
+          "noCustomersDescription": "Manage Customers"
         },
         "Edit": {
           "addChip": "Add new Chip",
@@ -49,28 +51,23 @@
           "username": "Login Name"
         }
       },
-      "edit": "Edit",
       "Metadata": {
         "description": "Track your Time",
         "title": "Time Track - Users"
       },
-      "name": "Name",
       "noResults": "No Results",
       "rowsPerPage": "Rows per Page",
       "searchName": "Search for name...",
       "title": "Users",
       "updated": "Successfully updated user",
       "updateDuplicate": "User with the new username exists.",
-      "updateNotFound": "User not found.",
-      "username": "Username",
-      "viewHistory": "View History"
+      "updateNotFound": "User not found."
     }
   },
   "Error": {
     "message": "An error occurred",
     "resultProcessing": "Result could not be proccessed",
     "unknown": {
-      "description": "You can try again.",
       "message": "An unknown error occurred {type}"
     },
     "validation": {
@@ -81,43 +78,23 @@
   "History": {
     "Dialogs": {
       "Create": {
-        "breaks": "Breaks",
         "create": "Create",
         "details": "Details",
         "distance": "Distance traveled (km)",
         "end": "End",
-        "first": {
-          "description": "<p>We have not found any data.</p><p>You can create a new entry here</p><p>manually or start the timer.</p>",
-          "title": "Add the first entry"
-        },
         "notes": "Notes",
-        "project": {
-          "noProjects": "No projects found.",
-          "noProjectsDescription": "Click to create one now",
-          "noRelated": "No related project",
-          "project": "Project",
-          "search": "Search Project"
-        },
         "start": "Start",
         "time": "Time",
         "title": "Create entry"
       },
       "Edit": {
-        "breaks": "Breaks",
         "delete": "Delete",
         "details": "Details",
         "distance": "Distance traveled (km)",
         "end": "End",
         "notes": "Notes",
-        "project": {
-          "noProjects": "No projects found.",
-          "noProjectsDescription": "Click to create one now",
-          "noRelated": "No related project",
-          "project": "Project",
-          "search": "Search Project"
-        },
         "save": "Save",
-        "saveDetails": "Save + Stop",
+        "project": "Project",
         "start": "Start",
         "startedWith": "Started with",
         "stoppedWith": "Stopped with",
@@ -125,17 +102,7 @@
         "title": "Edit entry"
       },
       "Export": {
-        "buttonContent": "Download a <code>.csv</code> containing all<br /> the current visible entries",
         "download": "Download",
-        "filter": {
-          "allProjects": "All Projects",
-          "description": "Filter the data to download.",
-          "project": "Project",
-          "search": "Search...",
-          "title": "Filters",
-          "withoutProject": "Without a Project",
-          "yearMonth": "Year / Month"
-        },
         "title": "Export History",
         "visualisation": {
           "dateSpecificColumn": "Date column",
@@ -152,34 +119,10 @@
     },
     "Miscellaneous": {
       "created": "Successfully created new entry",
-      "Days": {
-        "0": "Sunday",
-        "1": "Monday",
-        "2": "Tuesday",
-        "3": "Wednesday",
-        "4": "Thursday",
-        "5": "Friday",
-        "6": "Saturday"
-      },
       "deleted": "Successfully deleted entry",
       "invoiced": "Invoiced Times",
       "invoicedDescription": "are {invoiced, select, true {only visible} false {hidden} other {visible}}",
-      "invoicedExportDescription": "will {invoiced, select, true {only be} false {not be} other {be}} exported",
       "invoicedSingular": "Invoiced",
-      "Months": {
-        "April": "April",
-        "August": "August",
-        "December": "December",
-        "February": "February",
-        "January": "January",
-        "July": "July",
-        "June": "June",
-        "March": "March",
-        "May": "May",
-        "November": "November",
-        "October": "October",
-        "September": "September"
-      },
       "newEntry": "Add a new entry",
       "noFilter": "No Filter",
       "nothingFound": "Nothing found.",
@@ -190,7 +133,6 @@
       "searchYearMonth": "Search year/month...",
       "undo": "Undo",
       "updated": "Successfully updated entry",
-      "userNotFound": "User not found.",
       "users": "Users"
     },
     "PageTitle": "History"
@@ -213,20 +155,19 @@
     "profile": "Profile",
     "projects": "Projects",
     "signOut": "Sign Out",
+    "customers": "Customers",
     "Theme": {
       "dark": "Dark",
       "light": "Light",
       "system": "System",
       "title": "Theme"
     },
-    "todo": "Todo",
+    "ticket": "Tickets",
     "users": "Users"
   },
   "Profile": {
     "sessions": "Devices",
     "buttonContent": "Save",
-    "buttonToolTip": "Every device will be<br/> <u>signed out</u> after changing: <br />Name, Mail & Password",
-    "description": "Make changes to your profile here.",
     "language": "Language",
     "languages": {
       "de": "Deutsch",
@@ -242,15 +183,29 @@
     "name": "Name",
     "namePlaceholder": "Max Mustermann",
     "password": "New Password",
-    "passwordPlaceholder": "",
     "passwordUpdate": "Password changed. Please sign in again.",
     "sessionUpdate": "Session is getting updated.",
     "title": "Profile",
     "updated": "Successfully updated your profile"
   },
   "Projects": {
+    "Metadata": {
+      "description": "Track your Time",
+      "title": "Time Track - Projects"
+    },
+    "customer": "Customer",
+    "noCustomer": "No Customer",
+    "noCustomerFound": "No customer found.",
+    "withoutCustomer": "Project without a customer",
     "created": "Successfully created project.",
     "deleted": "Successfully deleted project.",
+    "noProjects": "No projects found.",
+    "saved": "Successfully saved.",
+    "searchPlaceholder": "Search or add",
+    "search": "Search...",
+    "times": "Times: {times}",
+    "title": "Projects",
+    "todos": "Todos: {todos}",
     "Dialogs": {
       "Edit": {
         "description": "Description",
@@ -258,18 +213,19 @@
         "name": "Name",
         "title": "Edit project"
       }
-    },
+    }
+  },
+  "Customers": {
     "Metadata": {
       "description": "Track your Time",
-      "title": "Time Track - Projects"
+      "title": "Time Track - Customers"
     },
-    "noProjects": "No projects found.",
-    "projects": "Projects ({projects})",
-    "saved": "Successfully saved.",
-    "searchPlaceholder": "Search or add input",
-    "times": "Times: {times}",
-    "title": "Projects",
-    "todos": "Todos: {todos}"
+    "title": "Customers",
+    "created": "Successfully created new customer",
+    "deleted": "Successfully deleted customer",
+    "searchPlaceholder": "Search or add",
+    "customerProjects": "Projects: {amount}",
+    "customerAccounts": "Accounts: {amount}"
   },
   "SignOut": {
     "buttonText": "Sign Out",
@@ -281,14 +237,6 @@
     "title": "Sign Out"
   },
   "Timer": {
-    "Dialogs": {
-      "Stopped": {
-        "cancel": "Later",
-        "description": "Do you want to edit your stopped timer now or later?",
-        "edit": "Now",
-        "title": "Edit time and notes"
-      }
-    },
     "Metadata": {
       "description": "Track your Time",
       "title": "Time Track"
@@ -300,6 +248,7 @@
         "noneFoundDescription": "Click to manage projects",
         "search": "Search..."
       },
+      "withoutCustomer": "Without a customer",
       "start": "Start",
       "startedWith": "Started with {startType}",
       "startWithWebsite": "Start now with Website",
@@ -307,81 +256,70 @@
       "updating": "Updating"
     }
   },
-  "Todo": {
+  "Tickets": {
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Tickets"
+    },
+    "title": "Tickets",
+    "search": "Search...",
+    "filter": "Filter",
+    "archived": "Archived",
+    "noResults": "No Tickets found",
+    "rowsPerPage": "Rows per Page",
     "currentPage": "Page {page} of {pages}",
+    "task": "Task",
+    "changed": "Successfully changed",
+    "priorities": {
+      "high": "High",
+      "low": "Low",
+      "medium": "Normal"
+    },
+    "priority": "Priority",
+    "steps": {
+      "done": "Done",
+      "inProgress": "In Progress",
+      "todo": "Todo"
+    },
+    "stepsNext": {
+      "done": "Reset",
+      "inProgress": "Finish",
+      "todo": "Start Progressing"
+    },
+    "none": "None",
+    "deadline": "Deadline",
+    "description": "Description",
+    "assignees": "Assignees",
+    "creator": "Creator",
+    "createdAt": "Created at",
+    "actions": "Actions",
+    "copyLink": "Copy Link",
+    "archive": "Archive",
+    "created": "Successfully created new entry",
+    "updated": "Successfully updated entry",
+
     "Dialogs": {
       "Add": {
-        "buttonToolTip": "Create a new todo",
+        "buttonToolTip": "Create a new ticket",
+        "title": "Create Ticket",
+
         "create": "Create",
         "noAssignees": "No Assignees",
-        "noProjectsFound": "No Projects found",
         "noRelatedProjects": "No related projects",
         "projects": "Projects",
-        "projectsManage": "Click to manage projects",
-        "searchProject": "Search for a Project...",
-        "searchUser": "Search for a User...",
-        "title": "Create Todo"
+        "searchUser": "Search for a User..."
       },
       "Edit": {
         "created": "Created",
         "creator": "Creator",
         "details": "Details",
         "noAssignees": "No Assignees",
-        "noProjectsFound": "No Projects found",
         "noRelatedProjects": "No related projects",
         "projects": "Projects",
-        "projectsManage": "Click to manage projects",
         "save": "Save",
-        "searchProject": "Search for a Project...",
-        "searchUser": "Search for a User...",
         "status": "Status",
         "updated": "Updated"
       }
-    },
-    "filter": "Filter",
-    "Metadata": {
-      "description": "Track your Time",
-      "title": "Time Track - Todos"
-    },
-    "Miscellaneous": {
-      "actions": "Actions",
-      "archive": "Archive",
-      "archived": "Archived",
-      "assignees": "Assignees",
-      "changed": "Successfully changed",
-      "copyLink": "Copy Link",
-      "created": "Successfully created todo",
-      "createdAt": "Created at",
-      "creator": "Creator",
-      "deadline": "Deadline",
-      "description": "Description",
-      "hide": "Hide",
-      "hoverInfo": "Click to edit the current todo.",
-      "none": "None",
-      "priorities": {
-        "high": "High",
-        "low": "Low",
-        "medium": "Normal"
-      },
-      "priority": "Priority",
-      "show": "Show",
-      "steps": {
-        "done": "Done",
-        "inProgress": "In Progress",
-        "todo": "Todo"
-      },
-      "stepsNext": {
-        "done": "Reset",
-        "inProgress": "Finish",
-        "todo": "Start Progressing"
-      },
-      "task": "Task",
-      "updated": "Successfully updated todo",
-      "visibleColumns": "Visible Columns"
-    },
-    "noResults": "No Results",
-    "rowsPerPage": "Rows per Page",
-    "searchTasks": "Search for tasks...",
-    "title": "Todos"
+    }
   }
 }

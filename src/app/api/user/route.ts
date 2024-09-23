@@ -8,6 +8,7 @@ import {
   userUpdateApiValidation,
 } from "@/lib/zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import type { Prisma } from "@prisma/client";
 
 // Create
 export const PUT = api(
@@ -18,6 +19,7 @@ export const PUT = api(
     // Validate request
     const validationResult = userCreateApiValidation.safeParse({
       name: json.name,
+      customer: json.customer,
       username: json.username,
       password: json.password,
       email: json.email,
@@ -29,8 +31,15 @@ export const PUT = api(
     }
     const data = validationResult.data;
 
-    const role =
-      data.role === "ADMIN" || data.role === "USER" ? data.role : "USER";
+    const role = data.role ?? "USER";
+
+    if (data.role === "CUSTOMER" && data.customer == undefined)
+      return badRequestResponse(
+        {
+          message: "Customer missing",
+        },
+        "error-message",
+      );
 
     // Check if new username exists when given
     const databaseUser = await prisma.user
@@ -56,6 +65,7 @@ export const PUT = api(
           name: data.name,
           email: data.email,
           password: await hash(data.password, 12),
+          customerName: role === "CUSTOMER" ? data.customer : undefined,
           role: role,
         },
         select: {
@@ -91,6 +101,7 @@ export const POST = api(
     const validationResult = userUpdateApiValidation.safeParse({
       id: json.id,
       name: json.name,
+      customer: json.customer,
       username: json.username,
       password: json.password,
       email: json.email,
@@ -144,27 +155,25 @@ export const POST = api(
         );
     }
 
+    const role =
+      data.role === "ADMIN" || data.role === "USER" ? data.role : undefined;
+
     // Prepare data
-    const updateData: Partial<{
-      username: string;
-      name: string | undefined;
-      email: string | undefined;
-      role: "ADMIN" | "USER";
-      password: string | undefined;
-    }> = {
+    const updateData = {
       username: data.username,
       name: data.name,
       email: data.email,
-      role:
-        data.role === "ADMIN" || data.role === "USER" ? data.role : undefined,
+      role: role,
+      customerName: data.customer,
       password: data.password ? await hash(data.password, 12) : undefined,
-    };
+    } satisfies Prisma.UserUpdateArgs | Prisma.UserUncheckedUpdateInput;
 
     // Update the user
     try {
       const databaseResult = await prisma.user.update({
         where: {
           id: data.id,
+          role: data.customer ? "CUSTOMER" : undefined,
         },
         data: updateData,
         select: {
@@ -212,7 +221,7 @@ export const DELETE = api(
         where: { id: id },
         select: {
           username: true,
-          createdTodos: {
+          createdTasks: {
             select: {
               id: true,
               assignees: {

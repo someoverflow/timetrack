@@ -3,7 +3,7 @@
 //#region Imports
 import type { Time } from "@prisma/client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -12,42 +12,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
 
-import {
-  Check,
-  ChevronsUpDown,
-  PlayCircle,
-  RefreshCw,
-  StopCircle,
-} from "lucide-react";
+import { ProjectSelection } from "@/components/project-select";
+
+import { PlayCircle, RefreshCw, StopCircle } from "lucide-react";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import useLiveTimer from "@/lib/hooks/useLiveTimer";
 
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 //#endregion
 
-export default function TimerSection({
-  projects,
-}: {
-  projects: {
-    name: string;
-  }[];
-}) {
-  const { timer, state, project, changeProject, toggle } = useLiveTimer();
+export default function TimerSection({ projects }: { projects: Projects }) {
+  const { timer, state, project, changeProject, toggle } = useLiveTimer({
+    projects: projects,
+  });
 
   const onClick = () => {
     if (!state.loading && !state.error && !state.running)
@@ -87,11 +66,10 @@ export default function TimerSection({
             </div>
 
             <ProjectSelection
-              error={state.error}
-              loading={state.loading}
-              projects={projects}
               project={project}
               changeProject={changeProject}
+              projects={projects}
+              buttonDisabled={state.error || state.loading}
             />
           </CardContent>
         </Card>
@@ -187,87 +165,5 @@ const TimeSection = ({
       <Separator orientation="horizontal" className="w-5" />
       <Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
     </div>
-  );
-};
-
-const ProjectSelection = ({
-  loading,
-  error,
-  projects,
-  project,
-  changeProject,
-}: {
-  loading: boolean;
-  error: boolean;
-  projects: {
-    name: string;
-  }[];
-  project: string | undefined;
-  changeProject: (project: string | undefined) => void;
-}) => {
-  const t = useTranslations("Timer.Miscellaneous");
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Popover open={open} onOpenChange={(open) => setOpen(open)}>
-      <PopoverTrigger asChild>
-        <Button
-          id="projects-button"
-          variant="ghost"
-          role="combobox"
-          aria-expanded={open}
-          disabled={error || loading}
-          className="shadow-xl w-full justify-between transition duration-300 border border-border/50 hover:border-border hover:bg-background"
-        >
-          <div className="flex flex-row gap-1">
-            {!project ? t("projects.none") : project}
-          </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="p-2">
-        <Command>
-          <CommandInput placeholder={t("projects.search")} className="h-8" />
-          {projects.length === 0 ? (
-            <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-              <p>{t("projects.noneFound")}</p>
-              <Link
-                href="/projects"
-                prefetch={false}
-                className={buttonVariants({
-                  variant: "link",
-                  className: "flex-col items-start",
-                })}
-              >
-                <p>{t("projects.noneFoundDescription")}</p>
-              </Link>
-            </div>
-          ) : (
-            <CommandGroup>
-              {projects.map((proj) => (
-                <CommandItem
-                  key={`project-select-${proj.name}`}
-                  value={proj.name}
-                  onSelect={() => {
-                    changeProject(
-                      project !== proj.name ? proj.name : undefined,
-                    );
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      project === proj.name ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  {proj.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </Command>
-      </PopoverContent>
-    </Popover>
   );
 };

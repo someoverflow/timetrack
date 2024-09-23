@@ -1,4 +1,4 @@
-import { Role, TodoPriority, TodoStatus } from "@prisma/client";
+import { Role, TicketPriority, TicketStatus } from "@prisma/client";
 import { z } from "zod";
 
 //#region Utils
@@ -40,6 +40,7 @@ export const userCreateApiValidation = z.object({
   email: mailValidation.optional(),
   password: passwordValidation,
   role: z.nativeEnum(Role).optional(),
+  customer: nameValidation.optional(),
 });
 export const userUpdateApiValidation = z
   .object({
@@ -49,6 +50,7 @@ export const userUpdateApiValidation = z
     email: mailValidation,
     password: passwordValidation,
     role: z.nativeEnum(Role),
+    customer: nameValidation.optional(),
   })
   .partial()
   .required({ id: true });
@@ -153,7 +155,7 @@ export const todoCreateApiValidation = z
     deadline: z.string().date(),
     assignees: z.array(nameValidation).nonempty(),
     projects: z.array(nameValidation).nonempty(),
-    priority: z.nativeEnum(TodoPriority),
+    priority: z.nativeEnum(TicketPriority),
   })
   .partial()
   .required({ task: true });
@@ -162,8 +164,8 @@ export const todoUpdateApiValidation = z
   .object({
     id: nanoIdValidation,
     task: todoTaskValidation,
-    status: z.nativeEnum(TodoStatus),
-    priority: z.nativeEnum(TodoPriority),
+    status: z.nativeEnum(TicketStatus),
+    priority: z.nativeEnum(TicketPriority),
     description: todoDescriptionValidation.nullable(),
     deadline: z.string().date().nullable(),
     assignees: z
@@ -220,11 +222,13 @@ const projectDescriptionValidation = z
 
 export const projectCreateApiValidation = z.object({
   name: nameValidation,
+  type: z.enum(["CUSTOMER", "PROJECT"]),
   description: projectDescriptionValidation,
 });
 
 export const projectUpdateApiValidation = z.object({
   name: nameValidation,
+  customer: nameValidation.optional().nullable(),
   newName: nameValidation.optional(),
   description: projectDescriptionValidation.optional(),
 });

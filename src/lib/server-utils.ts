@@ -48,7 +48,7 @@ export const FORBIDDEN_RESPONSE = NextResponse.json(FORBIDDEN, {
 
 export const defaultResult = (
   type?: APIResultType,
-  status?: number
+  status?: number,
 ): APIResult => {
   return {
     success: true,
@@ -63,15 +63,23 @@ export const badRequestResponse = (result: unknown, type?: APIResultType) => {
     {
       status: BAD_REQUEST.status,
       statusText: BAD_REQUEST.result,
-    }
+    },
   );
 };
 
 type ApiConfig = {
   verifySession: boolean;
+  allowCustomers: boolean;
   adminOnly: boolean;
   parseJson: boolean;
 };
+
+const defaultApiConfig = {
+  adminOnly: false,
+  allowCustomers: false,
+  parseJson: true,
+  verifySession: true,
+} satisfies ApiConfig;
 
 export const api = (
   fun: (
@@ -84,34 +92,48 @@ export const api = (
       language: string;
       email: string | null;
     },
-    json?: any
+    json?: any,
   ) => Promise<NextResponse> | NextResponse,
-  config?: Partial<ApiConfig>
+  c?: Partial<ApiConfig>,
 ) => {
   return async (req: NextRequest) => {
     let userResult = undefined;
     let jsonResult = undefined;
 
-    if ((config?.parseJson ?? true) !== false) {
+    const config = c ?? defaultApiConfig;
+
+    if (config.parseJson ?? defaultApiConfig.parseJson) {
       try {
         jsonResult = await req.json();
-      } catch (ignored) {
+      } catch (e) {
+        console.debug(e);
         return badRequestResponse(
           { message: "JSON Body could not be parsed" },
-          "json-parsing"
+          "json-parsing",
         );
       }
     }
 
-    if ((config?.verifySession ?? true) !== false) {
+    if (config.verifySession ?? defaultApiConfig.verifySession) {
       const auth = await authCheck();
 
       if (!auth.data.session || !auth.user) return NO_AUTH_RESPONSE;
-      if (config?.adminOnly && auth.user.role !== "ADMIN")
+
+      if (
+        (config.adminOnly ?? defaultApiConfig.adminOnly) &&
+        auth.user.role !== "ADMIN"
+      )
         return NOT_ADMIN_RESPONSE;
+
+      if (
+        !(config.allowCustomers ?? defaultApiConfig.allowCustomers) &&
+        auth.user.role === "CUSTOMER"
+      )
+        return FORBIDDEN_RESPONSE;
 
       userResult = auth.user;
     }
+
     return await fun(req, userResult, jsonResult);
   };
 };

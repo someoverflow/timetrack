@@ -28,11 +28,15 @@ import {
   ChevronDown,
   ChevronsUpDown,
   FilterX,
+  Folder,
+  Mail,
   Plus,
+  User,
 } from "lucide-react";
 
 import TimerAdd from "./timer-add";
 import TimerExportDialog from "./timer-export";
+import { ProjectSelection } from "@/components/project-select";
 
 import type { $Enums, Prisma } from "@prisma/client";
 import type { CheckedState } from "@radix-ui/react-checkbox";
@@ -57,6 +61,7 @@ export default function TimerSection({
   user,
   users,
   history,
+  currentHistory,
   projects,
   yearMonth,
   totalTime,
@@ -68,20 +73,25 @@ export default function TimerSection({
     role: $Enums.Role;
   };
   users: { id: string; username: string; name: string | null }[] | undefined;
+
   history: Data;
-  projects: Prisma.ProjectGetPayload<Record<string, never>>[];
-  yearMonth: string;
+  currentHistory: Timer[];
   totalTime: string;
+
+  yearMonth: {
+    current: string;
+    all: string[];
+  };
+
+  projects: Projects;
+
   filters: {
-    active: number;
     projects: string[] | undefined;
     users: string[] | undefined;
     invoiced: boolean | undefined;
   };
 }) {
   const t = useTranslations("History");
-
-  const historyKeys = Object.keys(history);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -177,7 +187,7 @@ export default function TimerSection({
     });
   };
 
-  const historyDays = (history[yearMonth] ?? [])
+  const historyDays = currentHistory
     .map((entry) => entry.start)
     .filter(
       (item, index, array) =>
@@ -190,10 +200,9 @@ export default function TimerSection({
   const usersFilter = filters.users ?? [];
   const projectsFilter = filters.projects ?? [];
 
-  const yearMonthString = `${yearMonth.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.replace(`${yearMonth.slice(0, 4)} `, "")}`)}`;
+  const yearMonthString = `${yearMonth.current.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.current.replace(`${yearMonth.current.slice(0, 4)} `, "")}`)}`;
   const timeString =
-    ((history[yearMonth] ?? []).find((e) => e.end === null) ? "~" : "") +
-    totalTime;
+    (currentHistory.find((e) => e.end === null) ? "~" : "") + totalTime;
 
   return (
     <>
@@ -206,7 +215,7 @@ export default function TimerSection({
 
       <section
         className="w-full max-w-xl max-h-[90svh] flex flex-col items-start"
-        key={yearMonth}
+        key={yearMonth.current}
       >
         <div className="p-2 px-4 font-bold w-full flex flex-row items-center justify-stretch gap-2">
           <Popover>
@@ -224,9 +233,17 @@ export default function TimerSection({
                 </div>
                 <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
 
-                {filters.active !== 0 && (
-                  <span className="absolute text-xs -top-2 right-0 font-mono">
-                    {filters.active}
+                {(filters.projects != undefined ||
+                  filters.users != undefined ||
+                  filters.invoiced != undefined) && (
+                  <span className="absolute text-xs -top-6 -right-2 flex flex-row gap-2 border bg-background p-2 rounded-sm">
+                    {filters.projects != undefined && (
+                      <Folder className="size-4" />
+                    )}
+                    {filters.users != undefined && <User className="size-4" />}
+                    {filters.invoiced != undefined && (
+                      <Mail className="size-4" />
+                    )}
                   </span>
                 )}
               </Button>
@@ -239,7 +256,7 @@ export default function TimerSection({
                 />
                 <CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
                 <CommandGroup>
-                  {historyKeys.map((key) => (
+                  {yearMonth.all.map((key) => (
                     <CommandItem
                       key={`history-${key}`}
                       onSelect={() => changeYearMonth(key)}
@@ -250,7 +267,9 @@ export default function TimerSection({
                       <Check
                         className={cn(
                           "ml-auto h-4 w-4",
-                          yearMonth === key ? "opacity-100" : "opacity-0",
+                          yearMonth.current === key
+                            ? "opacity-100"
+                            : "opacity-0",
                         )}
                       />
                     </CommandItem>
@@ -260,14 +279,33 @@ export default function TimerSection({
 
               <div className="grid gap-2 p-1 w-full ">
                 <div className="grid p-1 gap-1.5">
-                  <Popover>
-                    <Label
-                      htmlFor="projects-button"
-                      className="pl-2 text-muted-foreground"
-                    >
-                      {t("Miscellaneous.projects")}
-                    </Label>
-                    <PopoverTrigger asChild>
+                  <Label
+                    htmlFor="projects-button"
+                    className="pl-2 text-muted-foreground"
+                  >
+                    {t("Miscellaneous.projects")}
+                  </Label>
+                  <ProjectSelection
+                    project={projectsFilter}
+                    changeProject={(project) => {
+                      if (!project)
+                        throw new Error("Project is undefined in selection");
+                      const tempProjectsFilter = projectsFilter;
+
+                      if (tempProjectsFilter.includes(project))
+                        tempProjectsFilter.splice(
+                          tempProjectsFilter.indexOf(project),
+                          1,
+                        );
+                      else tempProjectsFilter.push(project);
+
+                      updateFilter({
+                        projectsFilter: tempProjectsFilter,
+                      });
+                    }}
+                    projects={projects}
+                    multiSelect
+                    button={
                       <Button
                         id="projects-button"
                         variant="outline"
@@ -300,52 +338,8 @@ export default function TimerSection({
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-2">
-                      <Command>
-                        <CommandInput
-                          placeholder={t("Miscellaneous.search")}
-                          className="h-8"
-                        />
-                        {projects.length !== 0 && (
-                          <CommandGroup>
-                            {projects.map((project) => (
-                              <CommandItem
-                                key={`project-${project.name}`}
-                                value={project.name}
-                                onSelect={() => {
-                                  const value = project.name;
-
-                                  const tempProjectsFilter = projectsFilter;
-
-                                  if (tempProjectsFilter.includes(value))
-                                    tempProjectsFilter.splice(
-                                      tempProjectsFilter.indexOf(value),
-                                      1,
-                                    );
-                                  else tempProjectsFilter.push(value);
-
-                                  updateFilter({
-                                    projectsFilter: tempProjectsFilter,
-                                  });
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    projectsFilter.includes(project.name)
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                {project.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        )}
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                    }
+                  />
                 </div>
                 {user.role === "ADMIN" && users && (
                   <div className="h-full w-full grid p-1 gap-1.5">
@@ -369,16 +363,17 @@ export default function TimerSection({
 
                             {usersFilter?.map((value, index) => {
                               if (index !== 0) return undefined;
+                              const user = users.find(
+                                (u) => u.username === value,
+                              );
+                              if (!user) return undefined;
+
                               return (
                                 <Badge
                                   key={`userFiltered-${value}`}
                                   variant="outline"
                                 >
-                                  {
-                                    users.find(
-                                      (user) => user.username === value,
-                                    )?.name
-                                  }
+                                  {user.name ?? user.username}
                                 </Badge>
                               );
                             })}
@@ -484,7 +479,7 @@ export default function TimerSection({
 
                   <TimerExportDialog
                     history={history}
-                    yearMonth={yearMonth}
+                    yearMonth={yearMonth.current}
                     users={users}
                   />
                 </div>
@@ -521,7 +516,7 @@ export default function TimerSection({
           </div>
 
           {historyDays.map((day, index) => {
-            if (!history[yearMonth]) return <></>;
+            if (currentHistory.length == 0) return <></>;
 
             return (
               <section
@@ -543,15 +538,14 @@ export default function TimerSection({
                   <div className="w-1/2" />
                 </div>
 
-                {history[yearMonth]
+                {currentHistory
                   .filter((v) => v.start.toDateString() === day.toDateString())
-                  .reverse()
                   .map((time) => (
                     <TimerInfo
                       key={`timerHistory-${yearMonth}-${time.id}`}
                       edit={editTime === time.id}
                       projects={projects}
-                      data={time}
+                      timer={time}
                       user={
                         filters.users && user.id !== time.userId
                           ? (users?.find((u) => u.id == time.userId)?.name ??

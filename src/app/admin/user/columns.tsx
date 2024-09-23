@@ -20,6 +20,8 @@ export const columns: ColumnDef<
       email: true;
       role: true;
 
+      customerName: true;
+
       createdAt: true;
       updatedAt: true;
 
@@ -53,9 +55,12 @@ export const columns: ColumnDef<
         </div>
       </div>
     ),
-    cell: ({ row }) => (
+    cell: ({ row, table }) => (
       <div className="grid place-items-end">
-        <UserEdit user={row.original} />
+        <UserEdit
+          user={row.original}
+          customers={table.options.meta?.data.customers ?? []}
+        />
       </div>
     ),
   },

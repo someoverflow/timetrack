@@ -1,4 +1,4 @@
-//#region Imports+
+//#region Imports
 import { redirect } from "next/navigation";
 //#endregion
 

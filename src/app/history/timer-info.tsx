@@ -18,18 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -38,25 +27,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Check,
-  ChevronsUpDown,
-  MailCheck,
-  MailMinus,
-  SaveAll,
-  Trash,
-  Trash2,
-} from "lucide-react";
+import { MailCheck, MailMinus, SaveAll, Trash, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import Link from "next/link";
-
 import { cn, getTimePassed } from "@/lib/utils";
 import useRequest from "@/lib/hooks/useRequest";
+import { ProjectSelection } from "@/components/project-select";
 //#endregion
 
 type Timer = Prisma.TimeGetPayload<{
@@ -75,13 +55,13 @@ interface timerInfoState {
   projectName: string | null;
 }
 export default function TimerInfo({
-  data,
+  timer,
   projects,
   edit,
   user,
 }: {
-  data: Timer;
-  projects: Prisma.ProjectGetPayload<Record<string, never>>[];
+  timer: Timer;
+  projects: Projects;
   edit: boolean;
   user: string | undefined;
 }) {
@@ -90,18 +70,18 @@ export default function TimerInfo({
 
   const generateReducer = (): timerInfoState => {
     return {
-      notes: data.notes ?? "",
-      start: data.start.toLocaleString("sv").replace(" ", "T"),
-      end: data.end
-        ? data.end.toLocaleString("sv").replace(" ", "T")
+      notes: timer.notes ?? "",
+      start: timer.start.toLocaleString("sv").replace(" ", "T"),
+      end: timer.end
+        ? timer.end.toLocaleString("sv").replace(" ", "T")
         : new Date().toLocaleString("sv").replace(" ", "T"),
 
-      invoiced: data.invoiced,
+      invoiced: timer.invoiced,
 
-      traveledDistance: data.traveledDistance ?? null,
+      traveledDistance: timer.traveledDistance ?? null,
 
       projectSelectionOpen: false,
-      projectName: data.projectName,
+      projectName: timer.projectName,
     };
   };
 
@@ -124,7 +104,7 @@ export default function TimerInfo({
   }, [visible]);
 
   useEffect(() => {
-    if (data.end === null && !visible) {
+    if (timer.end === null && !visible) {
       const interval = setInterval(
         () =>
           setState({ end: new Date().toLocaleString("sv").replace(" ", "T") }),
@@ -138,14 +118,14 @@ export default function TimerInfo({
     useCallback(
       (passed: { stop: boolean } | undefined) => {
         const request: timesPutApiValidation = {
-          id: data.id,
+          id: timer.id,
           notes: state.notes,
           invoiced:
-            data.invoiced !== state.invoiced ? state.invoiced : undefined,
+            timer.invoiced !== state.invoiced ? state.invoiced : undefined,
         };
 
         const startChanged =
-          state.start !== data.start.toLocaleString("sv").replace(" ", "T");
+          state.start !== timer.start.toLocaleString("sv").replace(" ", "T");
         if (startChanged) {
           request.startType = "Website";
           request.start = new Date(state.start).toISOString();
@@ -153,7 +133,7 @@ export default function TimerInfo({
 
         if (passed?.stop) {
           const endChanged =
-            state.end !== data.end?.toLocaleString("sv").replace(" ", "T");
+            state.end !== timer.end?.toLocaleString("sv").replace(" ", "T");
 
           if (endChanged) {
             request.endType = "Website";
@@ -161,10 +141,10 @@ export default function TimerInfo({
           }
         }
 
-        if (state.projectName !== data.projectName)
+        if (state.projectName !== timer.projectName)
           request.project = state.projectName;
 
-        if (state.traveledDistance !== data.traveledDistance)
+        if (state.traveledDistance !== timer.traveledDistance)
           request.traveledDistance = state.traveledDistance;
 
         return fetch("/api/times", {
@@ -172,7 +152,7 @@ export default function TimerInfo({
           body: JSON.stringify(request),
         });
       },
-      [data, state],
+      [timer, state],
     ),
     (_result) => {
       setVisible(false);
@@ -186,7 +166,7 @@ export default function TimerInfo({
   const { status: invoicedStatus, send: sendInvoiced } = useRequest(
     (passed: { invoiced: boolean } | undefined) => {
       const request: timesPutApiValidation = {
-        id: data.id,
+        id: timer.id,
         invoiced: passed?.invoiced,
       };
 
@@ -209,7 +189,7 @@ export default function TimerInfo({
       fetch("/api/times", {
         method: "DELETE",
         body: JSON.stringify({
-          id: data.id,
+          id: timer.id,
         }),
       }),
     (result) => {
@@ -230,7 +210,7 @@ export default function TimerInfo({
                 fetch("/api/times", {
                   method: "POST",
                   body: JSON.stringify({
-                    userId: data.userId,
+                    userId: timer.userId,
                     notes: undoTime.notes ?? "",
                     traveledDistance:
                       undoTime.traveledDistance !== 0
@@ -260,30 +240,30 @@ export default function TimerInfo({
     if (deleteStatus.loading || updateStatus.loading || invoicedStatus.loading)
       prevent = true;
 
-    if (state.notes !== (data.notes ?? "")) prevent = true;
+    if (state.notes !== (timer.notes ?? "")) prevent = true;
 
-    if (state.start !== data.start.toLocaleString("sv").replace(" ", "T"))
+    if (state.start !== timer.start.toLocaleString("sv").replace(" ", "T"))
       prevent = true;
     if (
-      data.end &&
-      state.end !== data.end.toLocaleString("sv").replace(" ", "T")
+      timer.end &&
+      state.end !== timer.end.toLocaleString("sv").replace(" ", "T")
     )
       prevent = true;
 
-    if (state.traveledDistance !== (data.traveledDistance ?? null))
+    if (state.traveledDistance !== (timer.traveledDistance ?? null))
       prevent = true;
 
-    if (state.projectName !== data.projectName || state.projectSelectionOpen)
+    if (state.projectName !== timer.projectName || state.projectSelectionOpen)
       prevent = true;
 
     return prevent;
-  }, [data, state, updateStatus, deleteStatus, invoicedStatus]);
+  }, [timer, state, updateStatus, deleteStatus, invoicedStatus]);
 
   const changeVisibility = () => {
     if (!blockVisible) setVisible(true);
   };
 
-  const notesSplit = data.notes?.split("\n")[0];
+  const notesSplit = timer.notes?.split("\n")[0];
   const notes = notesSplit
     ? notesSplit.startsWith("- ")
       ? `${notesSplit.replace("- ", "")} …`
@@ -304,12 +284,12 @@ export default function TimerInfo({
             <SwipeAction
               onClick={() =>
                 setTimeout(() => {
-                  sendInvoiced({ invoiced: !data.invoiced });
+                  sendInvoiced({ invoiced: !timer.invoiced });
                 }, 500)
               }
             >
               <div className="flex flex-row items-center justify-between w-full h-full p-2">
-                {data.invoiced ? (
+                {timer.invoiced ? (
                   <MailMinus
                     className={cn(
                       "text-destructive h-1/2 w-1/2 transition-all duration-200",
@@ -361,15 +341,20 @@ export default function TimerInfo({
         <div
           className={cn(
             "w-full font-mono p-2 select-none rounded-sm border-border border-2 hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft",
-            data.invoiced && "border-border/50",
+            timer.invoiced && "border-border/50",
           )}
           onClick={changeVisibility}
           onKeyDown={changeVisibility}
         >
           <div className="flex items-center justify-between pb-2">
-            {data.project ? (
-              <Badge variant="secondary" className="text-xs">
-                {data.project.name}
+            {timer.project ? (
+              <Badge variant="secondary" className="text-xs gap-2">
+                {timer.project.customerName && (
+                  <span className="text-muted-foreground">
+                    {timer.project.customerName}
+                  </span>
+                )}
+                {timer.project.name}
               </Badge>
             ) : (
               <div className="pb-4" />
@@ -391,14 +376,14 @@ export default function TimerInfo({
           </div>
 
           <div className="flex flex-row justify-evenly items-center text-lg">
-            <p>{data.start.toLocaleTimeString()}</p>
+            <p>{timer.start.toLocaleTimeString()}</p>
             <div className="relative flex flex-col items-center">
               <Separator orientation="horizontal" className="w-10" />
               <p className="text-xs text-muted-foreground/80 absolute -bottom-5">
-                {data.time ?? getTimePassed(data.start, new Date(state.end))}
+                {timer.time ?? getTimePassed(timer.start, new Date(state.end))}
               </p>
             </div>
-            <p className={data.end ? "" : "opacity-50"}>
+            <p className={timer.end ? "" : "opacity-50"}>
               {new Date(state.end).toLocaleTimeString()}
             </p>
           </div>
@@ -408,13 +393,13 @@ export default function TimerInfo({
               "text-xs text-muted-foreground/90 truncate max-w-52 text-start p-2 pt-4",
             )}
           >
-            {data.notes && notes}
+            {timer.notes && notes}
           </p>
         </div>
       </SwipeableListItem>
 
       <Dialog
-        key={`timer-modal-${data.id}`}
+        key={`timer-modal-${timer.id}`}
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
@@ -449,104 +434,34 @@ export default function TimerInfo({
                   type="always"
                 >
                   <div className="h-full w-full grid p-1 gap-1.5">
-                    <Popover
-                      open={state.projectSelectionOpen}
-                      onOpenChange={(open) =>
-                        setState({ projectSelectionOpen: open })
-                      }
+                    <Label
+                      htmlFor="projects-button"
+                      className={cn(
+                        "pl-2 text-muted-foreground transition-colors",
+                        state.projectName !== timer.projectName
+                          ? "text-blue-500"
+                          : "",
+                      )}
                     >
-                      <Label
-                        htmlFor="project-button"
-                        className={cn(
-                          "pl-2 text-muted-foreground transition-colors",
-                          state.projectName !== data.projectName
-                            ? "text-blue-500"
-                            : "",
-                        )}
-                      >
-                        {t("Dialogs.Edit.project.project")}
-                      </Label>
-                      <PopoverTrigger asChild>
-                        <Button
-                          id="project-button"
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={state.projectSelectionOpen}
-                          className="w-full justify-between border-2"
-                        >
-                          {state.projectName
-                            ? projects.find(
-                                (project) => project.name === state.projectName,
-                              )?.name
-                            : t("Dialogs.Edit.project.noRelated")}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-2">
-                        <Command>
-                          <CommandInput
-                            placeholder={t("Dialogs.Edit.project.search")}
-                            className="h-8"
-                          />
-                          {projects.length === 0 ? (
-                            <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-                              <p>{t("Dialogs.Edit.project.noProjects")}</p>
-                              <Link
-                                href="/projects"
-                                className={buttonVariants({
-                                  variant: "link",
-                                  className: "flex-col items-start",
-                                })}
-                              >
-                                <p>
-                                  {t(
-                                    "Dialogs.Edit.project.noProjectsDescription",
-                                  )}
-                                </p>
-                              </Link>
-                            </div>
-                          ) : (
-                            <CommandGroup>
-                              {projects.map((project) => (
-                                <CommandItem
-                                  key={`project-selection-${project.name}`}
-                                  value={`${project.name}`}
-                                  onSelect={() => {
-                                    setState({
-                                      projectName:
-                                        state.projectName !== project.name
-                                          ? project.name
-                                          : null,
-                                      projectSelectionOpen: false,
-                                    });
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      state.projectName === project.name
-                                        ? "opacity-100"
-                                        : "opacity-0",
-                                    )}
-                                  />
-                                  {project.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                      {t("Dialogs.Edit.project")}
+                    </Label>
+                    <ProjectSelection
+                      project={state.projectName ?? undefined}
+                      changeProject={(e) =>
+                        setState({ projectName: e ?? null })
+                      }
+                      projects={projects}
+                    />
                   </div>
 
                   <div id="divider" className="h-4" />
 
                   <div className="h-full w-full grid p-1 gap-1.5">
                     <Label
-                      htmlFor={`timerModal-notes-${data.id}`}
+                      htmlFor={`timerModal-notes-${timer.id}`}
                       className={cn(
                         "pl-2 text-muted-foreground transition-colors",
-                        state.notes !== (data.notes ?? "")
+                        state.notes !== (timer.notes ?? "")
                           ? "text-blue-500"
                           : "",
                       )}
@@ -554,7 +469,7 @@ export default function TimerInfo({
                       {t("Dialogs.Edit.notes")}
                     </Label>
                     <Textarea
-                      id={`timerModal-notes-${data.id}`}
+                      id={`timerModal-notes-${timer.id}`}
                       className="h-full min-h-[30svh] max-h-[50svh] border-2"
                       spellCheck={true}
                       value={state.notes}
@@ -567,7 +482,9 @@ export default function TimerInfo({
                   <div
                     className={cn(
                       "flex flex-row items-center gap-2 p-2 transition-all border-l-2",
-                      data.invoiced !== state.invoiced ? "border-blue-500" : "",
+                      timer.invoiced !== state.invoiced
+                        ? "border-blue-500"
+                        : "",
                     )}
                   >
                     <Checkbox
@@ -589,7 +506,7 @@ export default function TimerInfo({
                       htmlFor="distance-button"
                       className={cn(
                         "pl-2 text-muted-foreground transition-colors",
-                        state.traveledDistance !== data.traveledDistance
+                        state.traveledDistance !== timer.traveledDistance
                           ? "text-blue-500"
                           : "",
                       )}
@@ -626,7 +543,7 @@ export default function TimerInfo({
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
                           state.start !==
-                            data.start.toLocaleString("sv").replace(" ", "T")
+                            timer.start.toLocaleString("sv").replace(" ", "T")
                             ? "text-blue-500"
                             : "",
                         )}
@@ -649,8 +566,8 @@ export default function TimerInfo({
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
                           state.end !==
-                            (data.end
-                              ? data.end.toLocaleString("sv").replace(" ", "T")
+                            (timer.end
+                              ? timer.end.toLocaleString("sv").replace(" ", "T")
                               : new Date()
                                   .toLocaleString("sv")
                                   .replace(" ", "T"))
@@ -686,7 +603,7 @@ export default function TimerInfo({
                         type="text"
                         name="started-with"
                         id="start-w"
-                        value={`${data.startType}`}
+                        value={`${timer.startType}`}
                       />
                     </div>
                     <div className="grid w-full items-center gap-1.5">
@@ -702,7 +619,7 @@ export default function TimerInfo({
                         type="text"
                         name="stopped-with"
                         id="stopped-w"
-                        value={data.endType ?? "not stopped"}
+                        value={timer.endType ?? "not stopped"}
                       />
                     </div>
 
@@ -721,7 +638,7 @@ export default function TimerInfo({
                         type="text"
                         name="Id"
                         id="id"
-                        value={data.id}
+                        value={timer.id}
                       />
                     </div>
                   </div>
@@ -730,7 +647,7 @@ export default function TimerInfo({
             </Tabs>
 
             <div className="w-full gap-2 flex flex-row justify-end">
-              {data.end && (
+              {timer.end && (
                 <Button
                   variant="destructive"
                   onClick={() => sendDelete()}
@@ -742,16 +659,16 @@ export default function TimerInfo({
               )}
 
               <Button
-                variant={data.end ? "outline" : "secondary"}
+                variant={timer.end ? "outline" : "secondary"}
                 onClick={() => sendUpdate({ stop: true })}
                 disabled={updateStatus.loading || deleteStatus.loading}
               >
                 <SaveAll className="mr-2 h-4 w-4" />
                 {t(
-                  !data.end ? "Dialogs.Edit.saveDetails" : "Dialogs.Edit.save",
+                  !timer.end ? "Dialogs.Edit.saveDetails" : "Dialogs.Edit.save",
                 )}
               </Button>
-              {!data.end && (
+              {!timer.end && (
                 <Button
                   variant="outline"
                   onClick={() => sendUpdate({ stop: false })}

@@ -42,7 +42,7 @@ export const POST = api(
             check.user.id === json.userId ? "this user" : check.user.username
           }`,
         },
-        "duplicate-found"
+        "duplicate-found",
       );
     }
 
@@ -67,7 +67,7 @@ export const POST = api(
       return NextResponse.json(result, { status: result.status });
     }
   },
-  { adminOnly: true }
+  { adminOnly: true },
 );
 
 // Change the user of a chip
@@ -110,7 +110,7 @@ export const PUT = api(async (_request, _user, json) => {
               id: data.id,
               message: "Chip does not exist.",
             },
-            "not-found"
+            "not-found",
           );
       }
 
@@ -159,7 +159,7 @@ export const DELETE = api(async (_request, _user, json) => {
               id: id,
               message: "Chip does not exist.",
             },
-            "not-found"
+            "not-found",
           );
       }
 

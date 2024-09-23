@@ -52,15 +52,18 @@ export default async function History({
     ym?: string;
   };
 }) {
+  // AUTH
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
+  if (auth.user.role == "CUSTOMER") return redirect("/ticket");
   const user = auth.user;
   const userIsAdmin = user.role == "ADMIN";
 
+  // TRANSLATION
   const t = await getTranslations("History");
 
+  //#region Filter
   const cookieStore = cookies();
-
   const filterCookies = {
     invoiced: cookieStore.get("history-filter-invoiced")?.value,
     projects: cookieStore.get("history-filter-projects")?.value,
@@ -86,62 +89,97 @@ export default async function History({
         JSON.parse(filterCookies.users),
       ).data;
   } catch (e) {
+    console.warn(e);
     cookieStore.delete("history-filter-projects");
     cookieStore.delete("history-filter-users");
   }
+  //#endregion
 
-  const [history, projects] = await prisma.$transaction([
-    prisma.time.findMany({
-      orderBy: {
-        start: "desc",
-      },
-      where: {
-        invoiced: invoiced,
-        user: {
-          username: {
-            in: userFilter,
-          },
+  // HISTORY
+  const history = await prisma.time.findMany({
+    orderBy: {
+      start: "desc",
+    },
+    where: {
+      invoiced: invoiced,
+      user: {
+        username: {
+          in: userFilter,
         },
-        project: projectsFilter
-          ? {
-              name: {
-                in: projectsFilter,
-              },
-            }
-          : undefined,
       },
-      include: {
-        project: true,
-      },
-    }),
-    prisma.project.findMany(),
-  ]);
+      project: projectsFilter
+        ? {
+            name: {
+              in: projectsFilter,
+            },
+          }
+        : undefined,
+    },
+    include: {
+      project: true,
+    },
+  });
+
+  //#region Year / Month
+  const currentYearMonth =
+    new Date().getFullYear() + " " + months[new Date().getMonth()];
+
+  const startTimes = await prisma.time.groupBy({
+    by: ["start"],
+    where: { userId: userIsAdmin ? user.id : undefined },
+  });
+
+  let yearMonths = [
+    ...new Set(
+      startTimes.map(({ start }) => {
+        const year = start.getFullYear();
+        const month = months[start.getMonth()];
+        return `${year} ${month}`;
+      }),
+    ),
+  ];
+
+  if (yearMonths.length === 0) yearMonths = [currentYearMonth];
+  //#endregion
+
+  //#region Projects
+  const projectsResult = await prisma.project.findMany({
+    select: {
+      customerName: true,
+      name: true,
+    },
+  });
+  const projects = {
+    single: projectsResult,
+    grouped: JSON.parse(
+      JSON.stringify(
+        Object.groupBy(projectsResult, (project) => project.customerName ?? ""),
+      ),
+    ),
+  };
+  //#endregion
 
   const users = userIsAdmin
     ? await prisma.user.findMany({
         select: { id: true, name: true, username: true },
+        where: {
+          role: {
+            not: "CUSTOMER",
+          },
+        },
       })
     : undefined;
 
+  // TODO: Use Object.groupBy
   const historyData = formatHistory(history);
 
-  const currentYearMonth =
-    new Date().getFullYear() + " " + months[new Date().getMonth()];
-
   let yearMonth = searchParams?.ym;
-  if (!yearMonth || !Object.keys(historyData).includes(yearMonth))
-    yearMonth = Object.keys(historyData)[0] ?? currentYearMonth;
+  if (!yearMonth || !yearMonths.includes(yearMonth))
+    yearMonth = yearMonths[0] ?? currentYearMonth;
 
   const timeStrings = (historyData[yearMonth] ?? [])
     .filter((data) => data.time !== null)
-    .map((e) => e.time);
-  const totalTime =
-    timeStrings.length !== 0 ? sumTimes(timeStrings as string[]) : "00:00:00";
-
-  let activeFilters = 0;
-  if (filterCookies.invoiced !== undefined) activeFilters++;
-  if (filterCookies.projects !== undefined) activeFilters++;
-  if (filterCookies.users !== undefined) activeFilters++;
+    .map((e) => e.time ?? "");
 
   return (
     <Navigation>
@@ -154,11 +192,14 @@ export default async function History({
           user={user}
           users={users}
           history={historyData}
+          currentHistory={historyData[yearMonth] ?? []}
+          totalTime={sumTimes(timeStrings)}
           projects={projects}
-          totalTime={totalTime}
-          yearMonth={yearMonth}
+          yearMonth={{
+            current: yearMonth,
+            all: yearMonths,
+          }}
           filters={{
-            active: activeFilters,
             projects: projectsFilter,
             users: filterCookies.users ? userFilter : undefined,
             invoiced,

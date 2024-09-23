@@ -1,0 +1,129 @@
+import { Check, ChevronsUpDown } from "lucide-react";
+import { Button, buttonVariants } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "./ui/command";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+type PageType = (
+  | {
+      multiSelect?: false | undefined;
+      project: string | undefined;
+    }
+  | {
+      multiSelect?: true;
+      project: string[];
+    }
+) & {
+  button?: JSX.Element | undefined;
+  projects: Projects;
+  buttonDisabled?: boolean;
+
+  changeProject: (project: string | undefined) => void;
+};
+
+export const ProjectSelection = ({
+  projects,
+  button,
+  buttonDisabled,
+  multiSelect,
+  project,
+  changeProject,
+}: PageType) => {
+  const t = useTranslations("Timer.Miscellaneous");
+
+  return (
+    <Popover modal>
+      <PopoverTrigger asChild>
+        {button ?? (
+          <Button
+            id="projects-button"
+            variant="outline"
+            role="combobox"
+            disabled={buttonDisabled}
+            className="w-full justify-between"
+          >
+            <div className="flex flex-row items-center gap-1">
+              <span className="text-muted-foreground text-xs">
+                {
+                  projects.single.find((proj) => proj.name == project)
+                    ?.customerName
+                }
+              </span>
+              {project ?? t("projects.none")}
+            </div>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        )}
+      </PopoverTrigger>
+      <PopoverContent className="p-2">
+        <Command className="max-h-[calc(32px+25svh)]">
+          <CommandInput placeholder={t("projects.search")} className="h-8" />
+          {projects.single.length === 0 ? (
+            <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+              <p>{t("projects.noneFound")}</p>
+              <Link
+                href="/projects"
+                prefetch={false}
+                className={buttonVariants({
+                  variant: "link",
+                  className: "flex-col items-start",
+                })}
+              >
+                <p>{t("projects.noneFoundDescription")}</p>
+              </Link>
+            </div>
+          ) : (
+            <CommandList>
+              {Object.keys(projects.grouped).map((customer, index) => (
+                <CommandGroup
+                  heading={customer != "" ? customer : t("withoutCustomer")}
+                  key={index + customer}
+                  className="max-h-none"
+                >
+                  {projects.grouped[customer]?.map((proj) => (
+                    <CommandItem
+                      key={`project-select-${proj.name}`}
+                      value={proj.name}
+                      onSelect={() => {
+                        if (
+                          multiSelect === false ||
+                          multiSelect === undefined
+                        ) {
+                          changeProject(
+                            project !== proj.name ? proj.name : undefined,
+                          );
+                        } else changeProject(proj.name);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          (
+                            multiSelect === true
+                              ? project.includes(proj.name)
+                              : project === proj.name
+                          )
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      {proj.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
+            </CommandList>
+          )}
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
