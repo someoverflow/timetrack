@@ -184,7 +184,9 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
                 table.options.meta?.data.projects ??
                 ({ single: [], grouped: {} } satisfies Projects)
               }
-              users={table.options.meta?.data.users ?? []}
+              users={
+                table.options.meta?.data.users ?? { single: [], grouped: {} }
+              }
             >
               <p className="flex flex-col justify-center text-xs text-muted-foreground/80 space-x-2 w-full bg-background/25 rounded-sm p-2">
                 {ticket.projects.map(

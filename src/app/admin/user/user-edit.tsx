@@ -32,7 +32,7 @@ import {
 import { toast } from "sonner";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import type { Prisma, Role } from "@prisma/client";
@@ -220,6 +220,12 @@ export default function UserEdit({
       router.refresh();
     },
   );
+
+  useEffect(() => {
+    setData({
+      customer: user.customerName,
+    });
+  }, [router, user.customerName]);
 
   const loading =
     status.loading ||

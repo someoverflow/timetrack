@@ -203,6 +203,7 @@
     "languageUpdate": "Sprache geändert.",
     "mail": "Mail",
     "mailPlaceholder": "max@example.com",
+    "passwordPlaceholder": "",
     "Metadata": {
       "description": "Erfasse deine Zeiten",
       "title": "Time Track - Profil"
@@ -318,7 +319,7 @@
     "none": "Keine",
     "deadline": "Deadline",
     "description": "Beschreibung",
-    "assignees": "Beauftragte",
+    "assignees": "Ansprechpartner",
     "creator": "Ersteller",
     "createdAt": "Erstellt",
     "actions": "Aktionen",
@@ -333,7 +334,7 @@
         "title": "Ticket hinzufügen",
 
         "create": "Hinzufügen",
-        "noAssignees": "Keine Beauftragten",
+        "noAssignees": "Keine Ansprechpartner",
         "noRelatedProjects": "Keine zugehörige Projekte",
         "projects": "Projekte",
         "searchUser": "Nach Benutzer suchen..."
@@ -342,7 +343,7 @@
         "created": "Erstellt",
         "creator": "Ersteller",
         "details": "Details",
-        "noAssignees": "Keine Beauftragten",
+        "noAssignees": "Keine Ansprechpartner",
         "noRelatedProjects": "Keine zugehörige Projekte",
         "projects": "Projekte",
         "save": "Speichern",

@@ -15,6 +15,18 @@ interface Timer {
 }
 
 type TicketUsers = { name: string | null; username: string }[];
+type Users = {
+  single: { name: string | null; username: string }[];
+  grouped: Partial<
+    Record<
+      string,
+      {
+        name: string | null;
+        username: string;
+      }[]
+    >
+  >;
+};
 
 type TicketPagePayload = {
   include: {

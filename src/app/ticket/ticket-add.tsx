@@ -13,6 +13,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Dialog,
@@ -68,7 +69,7 @@ export function TicketAdd({
   users,
   projects,
 }: {
-  users: TicketUsers;
+  users: Users;
   projects: Projects;
 }) {
   const router = useRouter();
@@ -135,6 +136,8 @@ export function TicketAdd({
       router.refresh();
     },
   );
+
+  const company = process.env.NEXT_PUBLIC_COMPANY ?? "";
 
   return (
     <>
@@ -330,7 +333,6 @@ export function TicketAdd({
                 </div>
 
                 <div className="h-full w-full grid p-1 gap-1.5">
-                  {/* TODO: Update */}
                   <Popover modal>
                     <Label
                       htmlFor="assignees-button"
@@ -355,7 +357,7 @@ export function TicketAdd({
                                     variant="outline"
                                   >
                                     {
-                                      users.find(
+                                      users.single.find(
                                         (user) => user.username === value,
                                       )?.name
                                     }
@@ -375,50 +377,65 @@ export function TicketAdd({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="p-2">
-                      <Command>
+                      <Command className="max-h-[calc(32px+25svh)]">
                         <CommandInput
-                          placeholder={t("Dialogs.Add.searchUser")}
+                          placeholder={t("search")}
                           className="h-8"
                         />
-                        {/* TODO: Group by customer */}
-                        <CommandGroup>
-                          {users.map((user) => (
-                            <CommandItem
-                              key={`user-selection-add-${user.username}`}
-                              className="text-nowrap"
-                              value={user.username}
-                              onSelect={() => {
-                                const value = user.username;
-                                const currentAssignees = data.assignees;
-                                if (currentAssignees.includes(value))
-                                  currentAssignees.splice(
-                                    currentAssignees.indexOf(value),
-                                    1,
-                                  );
-                                else currentAssignees.push(value);
+                        <CommandList>
+                          {Object.keys(users.grouped).map((group) => {
+                            const customer = users.grouped[group];
+                            if (!customer)
+                              throw new Error("Customer is undefined?");
 
-                                setData({
-                                  assignees: currentAssignees,
-                                });
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  data.assignees.includes(user.username)
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <div className="w-full flex flex-row items-center">
-                                <p>{user.name}</p>
-                                <Badge variant="default" className="scale-75">
-                                  @{user.username}
-                                </Badge>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+                            return (
+                              <CommandGroup
+                                key={group}
+                                heading={group == "" ? company : group}
+                              >
+                                {customer.map((user) => (
+                                  <CommandItem
+                                    key={`user-selection-add-${user.username}`}
+                                    className="text-nowrap"
+                                    value={user.username}
+                                    onSelect={() => {
+                                      const value = user.username;
+                                      const currentAssignees = data.assignees;
+                                      if (currentAssignees.includes(value))
+                                        currentAssignees.splice(
+                                          currentAssignees.indexOf(value),
+                                          1,
+                                        );
+                                      else currentAssignees.push(value);
+
+                                      setData({
+                                        assignees: currentAssignees,
+                                      });
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        data.assignees.includes(user.username)
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    <div className="w-full flex flex-row items-center">
+                                      {user.name}
+                                      <Badge
+                                        variant="default"
+                                        className="scale-75"
+                                      >
+                                        @{user.username}
+                                      </Badge>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            );
+                          })}
+                        </CommandList>
                       </Command>
                     </PopoverContent>
                   </Popover>

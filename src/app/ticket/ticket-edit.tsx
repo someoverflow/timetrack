@@ -12,6 +12,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -76,7 +77,7 @@ export function TicketTableEdit({
 }: {
   ticket: Prisma.TicketGetPayload<TicketPagePayload>;
   projects: Projects;
-  users: TicketUsers;
+  users: Users;
   children: JSX.Element;
 }) {
   const router = useRouter();
@@ -243,6 +244,8 @@ export function TicketTableEdit({
     setState(getDefaultReducerState());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedTodo, stepStatus.loading]);
+
+  const company = process.env.NEXT_PUBLIC_COMPANY ?? "";
 
   return (
     <>
@@ -580,7 +583,7 @@ export function TicketTableEdit({
                                         variant="outline"
                                       >
                                         {
-                                          users.find(
+                                          users.single.find(
                                             (user) => user.username === value,
                                           )?.name
                                         }
@@ -597,53 +600,72 @@ export function TicketTableEdit({
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="p-2">
-                          <Command>
+                          <Command className="max-h-[calc(32px+25svh)]">
                             <CommandInput
                               placeholder={t("search")}
                               className="h-8"
                             />
-                            <CommandGroup>
-                              {users.map((user) => (
-                                <CommandItem
-                                  key={`user-${user.username}`}
-                                  className="text-nowrap"
-                                  value={user.username}
-                                  onSelect={() => {
-                                    const value = user.username;
-                                    const stateAssignees = state.assignees;
 
-                                    if (stateAssignees.includes(value))
-                                      stateAssignees.splice(
-                                        stateAssignees.indexOf(value),
-                                        1,
-                                      );
-                                    else stateAssignees.push(value);
+                            <CommandList>
+                              {Object.keys(users.grouped).map((group) => {
+                                const customer = users.grouped[group];
+                                if (!customer)
+                                  throw new Error("Customer is undefined?");
 
-                                    setState({
-                                      assignees: stateAssignees,
-                                    });
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      state.assignees.includes(user.username)
-                                        ? "opacity-100"
-                                        : "opacity-0",
-                                    )}
-                                  />
-                                  <div className="w-full flex flex-row items-center">
-                                    <p>{user.name}</p>
-                                    <Badge
-                                      variant="default"
-                                      className="scale-75"
-                                    >
-                                      @{user.username}
-                                    </Badge>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
+                                return (
+                                  <CommandGroup
+                                    key={group}
+                                    heading={
+                                      group == "" ? (company ?? "") : group
+                                    }
+                                  >
+                                    {customer.map((user) => (
+                                      <CommandItem
+                                        key={`user-selection-add-${user.username}`}
+                                        className="text-nowrap"
+                                        value={user.username}
+                                        onSelect={() => {
+                                          const value = user.username;
+                                          const stateAssignees =
+                                            state.assignees;
+
+                                          if (stateAssignees.includes(value))
+                                            stateAssignees.splice(
+                                              stateAssignees.indexOf(value),
+                                              1,
+                                            );
+                                          else stateAssignees.push(value);
+
+                                          setState({
+                                            assignees: stateAssignees,
+                                          });
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            state.assignees.includes(
+                                              user.username,
+                                            )
+                                              ? "opacity-100"
+                                              : "opacity-0",
+                                          )}
+                                        />
+                                        <div className="w-full flex flex-row items-center">
+                                          {user.name}
+                                          <Badge
+                                            variant="default"
+                                            className="scale-75"
+                                          >
+                                            @{user.username}
+                                          </Badge>
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                );
+                              })}
+                            </CommandList>
                           </Command>
                         </PopoverContent>
                       </Popover>

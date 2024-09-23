@@ -58,7 +58,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
 
   projects: Projects;
-  users: TicketUsers;
+  users: Users;
 
   paginationData: {
     pages: number;

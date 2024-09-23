@@ -62,7 +62,7 @@ declare module "@tanstack/table-core" {
   interface TableMeta<TData extends RowData> {
     data: {
       projects?: Projects;
-      users?: { name: string | null; username: string }[];
+      users?: Users;
       customers?: string[];
     };
   }

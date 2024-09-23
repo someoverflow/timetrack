@@ -116,7 +116,7 @@ export default async function Tickets({
   //#endregion
 
   // DATA
-  const [dbTickets, dbProjects, users] = await prisma.$transaction([
+  const [dbTickets, dbProjects, dbUsers] = await prisma.$transaction([
     prisma.ticket.findMany({
       where: {
         task: {
@@ -137,6 +137,18 @@ export default async function Tickets({
 
       include: {
         assignees: {
+          where: {
+            OR: [
+              {
+                customer: user.role === "CUSTOMER" ? customerFilter : undefined,
+              },
+              {
+                role: {
+                  notIn: ["CUSTOMER"],
+                },
+              },
+            ],
+          },
           select: {
             id: true,
             username: true,
@@ -189,9 +201,25 @@ export default async function Tickets({
               ]
             : undefined,
       },
-      select: { username: true, name: true },
+      select: { username: true, name: true, customerName: true },
     }),
   ]);
+
+  const reducedUsers = dbUsers.map(({ name, username }) => ({
+    name,
+    username,
+  }));
+  const users = {
+    single: reducedUsers,
+    grouped: JSON.parse(
+      JSON.stringify(
+        Object.groupBy(
+          reducedUsers,
+          (_user, index) => dbUsers.at(index)?.customerName ?? "",
+        ),
+      ),
+    ),
+  };
 
   const projects = {
     single: dbProjects,

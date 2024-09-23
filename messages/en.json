@@ -196,6 +196,7 @@
     "sessions": "Devices",
     "buttonContent": "Save",
     "language": "Language",
+    "passwordPlaceholder": "",
     "languages": {
       "de": "Deutsch",
       "en": "English"
@@ -316,7 +317,7 @@
     "none": "None",
     "deadline": "Deadline",
     "description": "Description",
-    "assignees": "Assignees",
+    "assignees": "Contact Persons",
     "creator": "Creator",
     "createdAt": "Created at",
     "actions": "Actions",
@@ -333,7 +334,7 @@
         "title": "Create Ticket",
 
         "create": "Create",
-        "noAssignees": "No Assignees",
+        "noAssignees": "No Contact Person",
         "noRelatedProjects": "No related projects",
         "projects": "Projects",
         "searchUser": "Search for a User..."
@@ -342,7 +343,7 @@
         "created": "Created",
         "creator": "Creator",
         "details": "Details",
-        "noAssignees": "No Assignees",
+        "noAssignees": "No Contact Person",
         "noRelatedProjects": "No related projects",
         "projects": "Projects",
         "save": "Save",
