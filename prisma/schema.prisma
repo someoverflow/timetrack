@@ -29,7 +29,7 @@ model User {
 
   email String?
 
-  customer     Customer? @relation(fields: [customerName], references: [name])
+  customer     Customer? @relation(fields: [customerName], references: [name], onDelete: Cascade)
   customerName String?
 
   times Time[]

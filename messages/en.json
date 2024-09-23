@@ -8,6 +8,8 @@
       "currentPage": "Page {page} of {pages}",
       "deleted": "Successfully deleted entry",
       "search": "Search...",
+      "username": "Username",
+      "name": "Name",
       "Dialogs": {
         "Add": {
           "buttonToolTip": "Create a new user",
@@ -17,6 +19,7 @@
           "name": "Name",
           "namePlaceholder": "Max Mustermann",
           "password": "Password",
+          "passwordPlaceholder": "",
           "customer": "Customer",
           "role": "Role",
           "roles": {
@@ -99,6 +102,7 @@
         "startedWith": "Started with",
         "stoppedWith": "Stopped with",
         "time": "Time",
+        "saveDetails": "Save + Stop",
         "title": "Edit entry"
       },
       "Export": {
@@ -133,7 +137,30 @@
       "searchYearMonth": "Search year/month...",
       "undo": "Undo",
       "updated": "Successfully updated entry",
-      "users": "Users"
+      "users": "Users",
+      "Days": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "Months": {
+        "April": "April",
+        "August": "August",
+        "December": "December",
+        "February": "February",
+        "January": "January",
+        "July": "July",
+        "June": "June",
+        "March": "March",
+        "May": "May",
+        "November": "November",
+        "October": "October",
+        "September": "September"
+      }
     },
     "PageTitle": "History"
   },
@@ -297,6 +324,8 @@
     "archive": "Archive",
     "created": "Successfully created new entry",
     "updated": "Successfully updated entry",
+    "hide": "Delete",
+    "visibleColumns": "Visible Columns",
 
     "Dialogs": {
       "Add": {

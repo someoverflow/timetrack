@@ -10,7 +10,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Trash } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { ProjectEdit } from "./project-edit";
@@ -54,7 +54,7 @@ export function ProjectSection({
 
   const [search, setSearch] = useState("");
 
-  const { status: createPStatus, send: sendCreate } = useRequest(
+  const { status: createStatus, send: sendCreate } = useRequest(
     useCallback(
       () =>
         fetch("/api/project", {
@@ -73,23 +73,7 @@ export function ProjectSection({
     },
   );
 
-  const { status: deleteStatus, send: sendDelete } = useRequest(
-    (passed?: { name: string }) =>
-      fetch("/api/project", {
-        method: "DELETE",
-        body: JSON.stringify({
-          id: passed?.name,
-          type: "CUSTOMER",
-        }),
-      }),
-
-    (_result) => {
-      toast.success(t("deleted"));
-      router.refresh();
-    },
-  );
-
-  const loading = createPStatus.loading || deleteStatus.loading;
+  const loading = createStatus.loading;
 
   return (
     <Command className="h-full">
@@ -148,19 +132,7 @@ export function ProjectSection({
             heading={
               <div className="border-y p-2 flex flex-row items-center justify-between group">
                 <p>{customer.name}</p>
-                {userData.role === "ADMIN" && (
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    className="transition-all duration-150 opacity-0 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      sendDelete({ name: customer.name });
-                    }}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                )}
+                <div className="min-h-10"></div>
               </div>
             }
             className="!max-h-none"

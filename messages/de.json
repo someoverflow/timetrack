@@ -8,6 +8,8 @@
       "currentPage": "Seite {page} von {pages}",
       "deleted": "Benutzer erfolgreich gelöscht",
       "search": "Suchen...",
+      "username": "Benutzername",
+      "name": "Name",
       "Dialogs": {
         "Add": {
           "buttonToolTip": "Erstelle einen Benutzer",
@@ -17,6 +19,7 @@
           "name": "Name",
           "namePlaceholder": "Max Mustermann",
           "password": "Passwort",
+          "passwordPlaceholder": "",
           "customer": "Kunde",
           "role": "Rolle",
           "roles": {
@@ -99,6 +102,7 @@
         "startedWith": "Gestartet mit",
         "stoppedWith": "Gestoppt mit",
         "time": "Zeit",
+        "saveDetails": "Speichern + Stoppen",
         "title": "Eintrag bearbeiten"
       },
       "Export": {
@@ -133,7 +137,30 @@
       "searchYearMonth": "Suche Jahr/Monat...",
       "undo": "Zurücksetzen",
       "updated": "Eintrag erfolgreich aktualisiert",
-      "users": "Benutzer"
+      "users": "Benutzer",
+      "Days": {
+        "0": "Sonntag",
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag"
+      },
+      "Months": {
+        "April": "April",
+        "August": "August",
+        "December": "Dezember",
+        "February": "Februar",
+        "January": "Januar",
+        "July": "Juli",
+        "June": "Juni",
+        "March": "März",
+        "May": "Mai",
+        "November": "November",
+        "October": "Oktober",
+        "September": "September"
+      }
     },
     "PageTitle": "Verlauf"
   },
@@ -270,6 +297,8 @@
     "currentPage": "Seite {page} von {pages}",
     "task": "Auftrag",
     "changed": "Erfolgreich geändert.",
+    "hide": "Löschen",
+    "visibleColumns": "Sichtbare Spalten",
     "priorities": {
       "high": "Hoch",
       "low": "Nidrig",
