@@ -491,14 +491,14 @@ export default function TimerSection({
           className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border-2 p-1.5 overflow-hidden"
           type="scroll"
         >
-          <div className="w-full grid place-items-center mt-4 mb-6">
+          <div className="sticky top-1 z-50 w-full grid place-items-center mt-4 mb-6">
             <Tooltip delayDuration={500}>
               <TooltipTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="icon"
                   onClick={() => setAddVisible(true)}
-                  className="rounded-full"
+                  className="rounded-full !border-2 border-white/20"
                 >
                   <Plus className="h-5 w-5" />
                 </Button>
