@@ -118,7 +118,7 @@ export default function UserEdit({
             username: data.username,
             customer: data.customer ?? undefined,
             name: data.name,
-            mail: data.mail ?? undefined,
+            email: data.mail ?? undefined,
             role: data.role,
             password:
               data.password.trim().length === 0 ? undefined : data.password,

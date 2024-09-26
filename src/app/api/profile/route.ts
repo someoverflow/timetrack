@@ -21,6 +21,8 @@ export const PUT = api(
       mail: json.mail,
       password: json.password,
       language: json.language,
+      ticketUpdateMail: json.ticketUpdateMail,
+      ticketCreationMail: json.ticketCreationMail,
     });
     if (!validationResult.success) {
       const validationError = validationResult.error;
@@ -54,6 +56,9 @@ export const PUT = api(
           language: data.language ? data.language.toLowerCase() : undefined,
           email: data.mail ?? undefined,
           password: password,
+          ticketUpdateMail: data.ticketUpdateMail,
+          ticketCreationMail: data.ticketCreationMail,
+          //historyExportMail: true,
         },
         select: {
           id: true,

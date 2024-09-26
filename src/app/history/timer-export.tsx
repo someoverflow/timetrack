@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
 import { useEffect, useReducer, useState } from "react";
 
-import * as ExcelJS from "ExcelJS";
+import * as ExcelJS from "exceljs";
 import * as FileSaver from "file-saver";
 //#endregion
 

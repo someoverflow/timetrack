@@ -214,7 +214,9 @@
     "passwordUpdate": "Passwort geändert. Bitte erneut anmelden.",
     "sessionUpdate": "Die Sitzung wird aktualisiert.",
     "title": "Profil",
-    "updated": "Profil erfolgreich aktualisiert"
+    "updated": "Profil erfolgreich aktualisiert",
+    "ticketCreationMail": "eMail bei neuem Ticket",
+    "ticketUpdateMail": "eMail bei Ticket Update"
   },
   "Projects": {
     "Metadata": {
@@ -307,14 +309,14 @@
     },
     "priority": "Priorität",
     "steps": {
-      "done": "Fertig",
+      "done": "Abgeschlossen",
       "inProgress": "In Arbeit",
-      "todo": "Todo"
+      "todo": "Offen"
     },
     "stepsNext": {
-      "done": "Rücksetzen",
-      "inProgress": "Fertigstellen",
-      "todo": "Anfangen"
+      "done": "Erneut öffnen",
+      "inProgress": "Abschließen",
+      "todo": "Starten"
     },
     "none": "Keine",
     "deadline": "Deadline",
@@ -350,6 +352,24 @@
         "status": "Status",
         "updated": "Aktuallisiert"
       }
+    }
+  },
+  "Mail": {
+    "newTicket": "Neues Ticket",
+    "important": "Wichtig",
+    "projects": "{count, plural, =0 {?} =1 {Projekt} other {Projekte}}",
+    "assignees": "{count, plural, =0 {?} =1 {Ansprechpartner} other {Ansprechpartner}}",
+    "link": "Ticket anzeigen",
+    "subject": "Neues Ticket erstellt von {name}{projectsCount, plural, =0 {} other { - {projects}}}",
+    "dailyUpdate": "Daily Ticket Update",
+    "newTickets": "Neue Tickets",
+    "updatedTickets": "Aktualisierte Tickets",
+    "open": "anzeigen",
+    "updateAssigneees": "Ansprechpartner: ",
+    "updateProjects": "Projekte: ",
+    "updateSubject": "Ticket Update",
+    "deactivate": {
+      "update": "Diese Mails deaktivieren"
     }
   }
 }

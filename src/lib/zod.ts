@@ -196,14 +196,25 @@ export const profileApiValidation = z
     language: z.coerce.string(),
     mail: mailValidation,
     password: passwordValidation,
+    ticketCreationMail: z.boolean(),
+    ticketUpdateMail: z.boolean(),
   })
   .partial()
   .refine(
-    ({ name, mail, password, language }) =>
+    ({
+      name,
+      mail,
+      password,
+      language,
+      ticketCreationMail,
+      ticketUpdateMail,
+    }) =>
       name == undefined ||
       mail == undefined ||
       password == undefined ||
-      language == undefined,
+      language == undefined ||
+      ticketCreationMail == undefined ||
+      ticketUpdateMail == undefined,
     {
       message: "One of the fields must be given (name, mail, password)",
       path: ["name", "mail", "password"],

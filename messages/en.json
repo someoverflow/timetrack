@@ -214,7 +214,9 @@
     "passwordUpdate": "Password changed. Please sign in again.",
     "sessionUpdate": "Session is getting updated.",
     "title": "Profile",
-    "updated": "Successfully updated your profile"
+    "updated": "Successfully updated your profile",
+    "ticketCreationMail": "Receive a mail when a ticket got created",
+    "ticketUpdateMail": "Receive a mail about changes every afternoon"
   },
   "Projects": {
     "Metadata": {
@@ -305,14 +307,14 @@
     },
     "priority": "Priority",
     "steps": {
-      "done": "Done",
+      "done": "Finished",
       "inProgress": "In Progress",
-      "todo": "Todo"
+      "todo": "Open"
     },
     "stepsNext": {
       "done": "Reset",
       "inProgress": "Finish",
-      "todo": "Start Progressing"
+      "todo": "Start"
     },
     "none": "None",
     "deadline": "Deadline",
@@ -350,6 +352,24 @@
         "status": "Status",
         "updated": "Updated"
       }
+    }
+  },
+  "Mail": {
+    "newTicket": "New Ticket",
+    "important": "Important",
+    "projects": "{count, plural, =0 {?} =1 {Project} other {Projects}}",
+    "assignees": "{count, plural, =0 {?} =1 {Contact Person} other {Contact Persons}}",
+    "link": "Open",
+    "subject": "New Ticket created by {name}{projectsCount, plural, =0 {} other { - {projects}}}",
+    "dailyUpdate": "Daily Ticket Update",
+    "newTickets": "New Tickets",
+    "updatedTickets": "Updated Tickets",
+    "open": "Open",
+    "updateAssigneees": "Contact Person: ",
+    "updateProjects": "Projects: ",
+    "updateSubject": "Ticket Update",
+    "deactivate": {
+      "update": "Disable mails like this"
     }
   }
 }

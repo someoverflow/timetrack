@@ -66,7 +66,7 @@ export default async function Profile() {
 
         <section className="max-w-md w-[95vw] overflow-hidden flex flex-col items-start">
           <h1 className="text-sm text-muted-foreground">{t("sessions")}</h1>
-          <div className="rounded-md grid grid-flow-col grid-rows-1 sm:grid-rows-2 w-full overflow-x-auto gap-2 p-2">
+          <div className="rounded-md grid grid-flow-col grid-rows-1 w-full overflow-x-auto gap-2 p-2">
             {sessions.map((session) => (
               <SessionInfo
                 key={session.id}

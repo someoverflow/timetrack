@@ -91,6 +91,7 @@ export const api = (
       role: Role;
       language: string;
       email: string | null;
+      ticketCreationMail: boolean;
     },
     json?: any,
   ) => Promise<NextResponse> | NextResponse,

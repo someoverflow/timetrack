@@ -75,6 +75,8 @@ export async function userData(session: Session) {
       language: true,
       role: true,
       email: true,
+      ticketCreationMail: true,
+      ticketUpdateMail: true,
     },
   });
 }
