@@ -9,12 +9,15 @@ echo ""
 [ -f .env ] && echo ".env exists" || {
     echo "create .env";
     
-    echo "DATABASE_URL=\"{DATABASE_URL}\"" >> ./.env;
+    echo "DATABASE_URL=\"${DATABASE_URL}\"" >> ./.env;
     
     if [ -z "$AUTH_SECRET" ]; then
-        AUTH_SECRET="$(openssl rand -base64 32)"
+        export AUTH_SECRET="$(openssl rand -base64 32)"
     fi
     echo "AUTH_SECRET=\"$AUTH_SECRET\"" >> ./.env
+
+    export SCHEDULER_SECRET="$(openssl rand -base64 32)"
+    echo "SCHEDULER_SECRET=\"$SCHEDULER_SECRET\"" >> ./.env
     
     echo "start prisma generation"
     
@@ -28,4 +31,4 @@ echo ""
 
 echo " * Starting Server * "
 
-(trap 'kill 0' SIGINT; (while $BACKUP; do /usr/bin/mysqldump --opt -h $DATABASE_HOST -u $DATABASE_USER -p$DATABASE_PASSWORD $DATABASE_DB >> /backups/$(date +"%Y-%m-%d_%H-%M-%S")_timetrack.sql & sleep $BACKUP_DELAY; done) & node server.js)
+(trap 'kill 0' SIGINT; sh scheduler.sh & node server.js)
