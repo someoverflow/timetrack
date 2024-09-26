@@ -27,7 +27,11 @@ model User {
 
   language String @default("de")
 
-  email String?
+  email              String?
+  emailVerified      Boolean @default(false) // TODO
+  ticketUpdateMail   Boolean @default(true) @map("ticket_update_mail")
+  ticketCreationMail Boolean @default(false) @map("ticket_creation_mail")
+  historyExportMail  Boolean @default(true) @map("history_export_mail")
 
   customer     Customer? @relation(fields: [customerName], references: [name], onDelete: Cascade)
   customerName String?

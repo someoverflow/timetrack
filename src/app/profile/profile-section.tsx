@@ -22,12 +22,15 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import useRequest from "@/lib/hooks/useRequest";
+import { Switch } from "@/components/ui/switch";
 //#endregion
 
 interface profileSectionState {
   name: string | undefined;
   mail: string | undefined;
   password: string;
+  ticketCreationMail: boolean;
+  ticketUpdateMail: boolean;
 }
 
 export default function ProfileSection({
@@ -40,6 +43,8 @@ export default function ProfileSection({
     role: string;
     name?: string | null | undefined;
     email?: string | null | undefined;
+    ticketUpdateMail: boolean;
+    ticketCreationMail: boolean;
   };
   language: string | undefined;
 }) {
@@ -55,6 +60,8 @@ export default function ProfileSection({
       name: userData.name ?? "",
       mail: userData.email ?? "",
       password: "",
+      ticketCreationMail: userData.ticketCreationMail,
+      ticketUpdateMail: userData.ticketUpdateMail,
     },
   );
 
@@ -70,6 +77,15 @@ export default function ProfileSection({
                 ? data.mail
                 : undefined,
             password: data.password !== "" ? data.password : undefined,
+
+            ticketUpdateMail:
+              userData.ticketUpdateMail == data.ticketUpdateMail
+                ? undefined
+                : data.ticketUpdateMail,
+            ticketCreationMail:
+              userData.ticketCreationMail == data.ticketCreationMail
+                ? undefined
+                : data.ticketCreationMail,
           }),
         }),
       [data, userData],
@@ -196,6 +212,50 @@ export default function ProfileSection({
                 value={data.password}
                 onChange={(e) => setData({ password: e.target.value })}
               />
+            </div>
+
+            <div className="w-full flex flex-row items-center my-2 gap-1.5">
+              <Switch
+                name="ticketCreationMail"
+                id="ticketCreationMail"
+                checked={data.ticketCreationMail}
+                onCheckedChange={() =>
+                  setData({ ticketCreationMail: !data.ticketCreationMail })
+                }
+              />
+              <Label
+                htmlFor="ticketCreationMail"
+                className={cn(
+                  "transition-colors",
+                  data.ticketCreationMail !== userData.ticketCreationMail
+                    ? "text-blue-500"
+                    : "",
+                )}
+              >
+                {t("ticketCreationMail")}
+              </Label>
+            </div>
+
+            <div className="w-full flex flex-row items-center my-2 gap-1.5">
+              <Switch
+                name="ticketUpdateMail"
+                id="ticketUpdateMail"
+                checked={data.ticketUpdateMail}
+                onCheckedChange={() =>
+                  setData({ ticketUpdateMail: !data.ticketUpdateMail })
+                }
+              />
+              <Label
+                htmlFor="ticketUpdateMail"
+                className={cn(
+                  "transition-colors",
+                  data.ticketUpdateMail !== userData.ticketUpdateMail
+                    ? "text-blue-500"
+                    : "",
+                )}
+              >
+                {t("ticketUpdateMail")}
+              </Label>
             </div>
 
             <div className="h-4"></div>

@@ -19,11 +19,15 @@ FROM base AS runner
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
-RUN apk add --no-cache openssl mysql-client mariadb-connector-c
+RUN apk add --no-cache openssl mysql-client mariadb-connector-c curl
 
 RUN npm install -g npm@latest
 
 ENV NODE_ENV=production
+
+ENV TZ=Europe/Berlin
+RUN apk add --no-cache tzdata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -35,6 +39,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 COPY --from=builder --chown=nextjs:nodejs /app/docker-start.sh ./
+COPY --from=builder --chown=nextjs:nodejs /app/scheduler.sh ./
+RUN chmod +x /app/scheduler.sh
+
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/
 

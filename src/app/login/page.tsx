@@ -26,8 +26,8 @@ export default function Page() {
   return (
     <main className="min-h-[90svh] flex flex-col items-center justify-center">
       {image && (
-        <div className="bg-white p-4 rounded-md border w-[90vw] sm:w-[50vw] absolute top-10">
-          <img src={image} alt="Logo" />
+        <div className="bg-white p-4 rounded-md border absolute top-10">
+          <img src={image} alt="Logo" className="w-[90vw] sm:w-[50vw] " />
         </div>
       )}
 

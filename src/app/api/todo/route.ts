@@ -1,8 +1,11 @@
+import { TicketCreated } from "@/emails/ticket-created";
+import { sendMail } from "@/lib/mail";
 import prisma from "@/lib/prisma";
 import { defaultResult, badRequestResponse, api } from "@/lib/server-utils";
 import { todoCreateApiValidation, todoUpdateApiValidation } from "@/lib/zod";
 import type { Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { getTranslations } from "next-intl/server";
 import { NextResponse } from "next/server";
 
 // Create a todo (task, description?, deadline?, assignees?)
@@ -36,7 +39,13 @@ export const POST = api(
     const data = validationResult.data;
 
     // Check if user can see ALL given projects
-    if (data.projects && user.role === "CUSTOMER") {
+    if (user.role === "CUSTOMER") {
+      if (!data.projects)
+        return badRequestResponse(
+          { message: "No Projects given." },
+          "error-message",
+        );
+
       const projectsCheck = await prisma.project.count({
         where: {
           name: {
@@ -53,7 +62,10 @@ export const POST = api(
       });
 
       if (projectsCheck != data.projects.length)
-        return badRequestResponse("Project not found.", "error-message");
+        return badRequestResponse(
+          { message: "Project not found." },
+          "error-message",
+        );
     }
 
     // Check if user can see ALL given users
@@ -118,9 +130,121 @@ export const POST = api(
     try {
       const databaseResult = await prisma.ticket.create({
         data: createData,
+        include: {
+          assignees: {
+            select: {
+              name: true,
+              username: true,
+              email: true,
+              role: true,
+              ticketCreationMail: true,
+            },
+          },
+          projects: {
+            select: {
+              name: true,
+              customer: {
+                select: {
+                  name: true,
+                  users: {
+                    select: {
+                      email: true,
+                      name: true,
+                      username: true,
+                      ticketCreationMail: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
-      result.result = databaseResult;
+      //#region Mail
+      const mailT = await getTranslations("Mail");
+      const receipents: any[] = [];
+
+      if (user.email && user.email !== "" && user.ticketCreationMail)
+        receipents.push({
+          address: user.email,
+          name: user.name ?? user.username,
+        });
+
+      const addedCustomers: string[] = [];
+
+      databaseResult.projects.forEach((p) => {
+        if (p.customer && !addedCustomers.includes(p.customer.name)) {
+          addedCustomers.push(p.customer.name);
+
+          p.customer.users.forEach((u) => {
+            if (u.email && u.email !== "" && u.ticketCreationMail) {
+              if (receipents.find((r) => r.address == u.email) == undefined)
+                receipents.push({
+                  address: u.email,
+                  name: u.name ?? u.username,
+                });
+            }
+          });
+        }
+      });
+
+      databaseResult.assignees.forEach((u) => {
+        if (
+          u.email &&
+          u.email !== "" &&
+          u.role !== "CUSTOMER" &&
+          u.ticketCreationMail
+        ) {
+          if (receipents.find((r) => r.address == u.email) == undefined)
+            receipents.push({
+              address: u.email,
+              name: u.name ?? u.username,
+            });
+        }
+      });
+
+      if (receipents.length !== 0) {
+        TicketCreated({
+          link: _request.nextUrl.origin + "/ticket?link=" + databaseResult.id,
+          priority: databaseResult.priority.toLowerCase(),
+          task: databaseResult.task,
+          description: databaseResult.description,
+          assignees:
+            databaseResult.assignees.length == 0
+              ? undefined
+              : databaseResult.assignees.map(
+                  (assignee) => assignee.name ?? assignee.username,
+                ),
+          projects:
+            databaseResult.projects.length == 0
+              ? undefined
+              : databaseResult.projects.map((project) => project.name),
+        })
+          .then(({ text, html }) => {
+            return sendMail({
+              receipents,
+              subject: mailT("subject", {
+                name: user.name ?? user.username,
+                projectsCount: data.projects?.length ?? 0,
+                projects: data.projects ? data.projects?.join(" / ") : "",
+              }),
+              priority: { HIGH: "high", MEDIUM: "normal", LOW: "low" }[
+                databaseResult.priority
+              ] as "high" | "normal" | "low",
+              text,
+              html,
+            });
+          })
+          .then((result) =>
+            console.log(
+              `MAIL Ticket-Created <${databaseResult.id}> ${result.pending ? "Pending" : ""}${result.accepted ? "Accepted" : ""}${result.rejected ? "Rejected" : ""}`,
+            ),
+          );
+      }
+      //#endregion
+
+      result.result = { id: databaseResult.id };
       return NextResponse.json(result, { status: result.status });
     } catch (e) {
       result.success = false;
