@@ -134,9 +134,9 @@ export default async function TicketCreatedMail({
                                 >
                                   {
                                     {
-                                      TODO: "Offen",
-                                      IN_PROGRESS: "In Arbeit",
-                                      DONE: "Abgeschlossen",
+                                      TODO: t("ticket.open"),
+                                      IN_PROGRESS: t("ticket.inProgress"),
+                                      DONE: t("ticket.done"),
                                     }[ticket.status]
                                   }
                                 </sup>

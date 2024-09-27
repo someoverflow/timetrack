@@ -162,86 +162,88 @@ export const POST = api(
       });
 
       //#region Mail
-      const mailT = await getTranslations("Mail");
-      const receipents: any[] = [];
+      if (process.env.SMTP_HOST) {
+        const mailT = await getTranslations("Mail");
+        const receipents: any[] = [];
 
-      if (user.email && user.email !== "" && user.ticketCreationMail)
-        receipents.push({
-          address: user.email,
-          name: user.name ?? user.username,
+        if (user.email && user.email !== "" && user.ticketCreationMail)
+          receipents.push({
+            address: user.email,
+            name: user.name ?? user.username,
+          });
+
+        const addedCustomers: string[] = [];
+
+        databaseResult.projects.forEach((p) => {
+          if (p.customer && !addedCustomers.includes(p.customer.name)) {
+            addedCustomers.push(p.customer.name);
+
+            p.customer.users.forEach((u) => {
+              if (u.email && u.email !== "" && u.ticketCreationMail) {
+                if (receipents.find((r) => r.address == u.email) == undefined)
+                  receipents.push({
+                    address: u.email,
+                    name: u.name ?? u.username,
+                  });
+              }
+            });
+          }
         });
 
-      const addedCustomers: string[] = [];
+        databaseResult.assignees.forEach((u) => {
+          if (
+            u.email &&
+            u.email !== "" &&
+            u.role !== "CUSTOMER" &&
+            u.ticketCreationMail
+          ) {
+            if (receipents.find((r) => r.address == u.email) == undefined)
+              receipents.push({
+                address: u.email,
+                name: u.name ?? u.username,
+              });
+          }
+        });
 
-      databaseResult.projects.forEach((p) => {
-        if (p.customer && !addedCustomers.includes(p.customer.name)) {
-          addedCustomers.push(p.customer.name);
-
-          p.customer.users.forEach((u) => {
-            if (u.email && u.email !== "" && u.ticketCreationMail) {
-              if (receipents.find((r) => r.address == u.email) == undefined)
-                receipents.push({
-                  address: u.email,
-                  name: u.name ?? u.username,
-                });
-            }
-          });
-        }
-      });
-
-      databaseResult.assignees.forEach((u) => {
-        if (
-          u.email &&
-          u.email !== "" &&
-          u.role !== "CUSTOMER" &&
-          u.ticketCreationMail
-        ) {
-          if (receipents.find((r) => r.address == u.email) == undefined)
-            receipents.push({
-              address: u.email,
-              name: u.name ?? u.username,
-            });
-        }
-      });
-
-      if (receipents.length !== 0) {
-        TicketCreated({
-          link: process.env.URL + "/ticket?link=" + databaseResult.id,
-          priority: databaseResult.priority.toLowerCase(),
-          task: databaseResult.task,
-          description: databaseResult.description,
-          assignees:
-            databaseResult.assignees.length == 0
-              ? undefined
-              : databaseResult.assignees.map(
-                  (assignee) => assignee.name ?? assignee.username,
-                ),
-          projects:
-            databaseResult.projects.length == 0
-              ? undefined
-              : databaseResult.projects.map((project) => project.name),
-        })
-          .then(({ text, html }) => {
-            return sendMail({
-              receipents,
-              subject: mailT("subject", {
-                name: user.name ?? user.username,
-                projectsCount: data.projects?.length ?? 0,
-                projects: data.projects ? data.projects?.join(" / ") : "",
-              }),
-              priority: { HIGH: "high", MEDIUM: "normal", LOW: "low" }[
-                databaseResult.priority
-              ] as "high" | "normal" | "low",
-              text,
-              html,
-            });
+        if (receipents.length !== 0) {
+          TicketCreated({
+            link: process.env.URL + "/ticket?link=" + databaseResult.id,
+            priority: databaseResult.priority.toLowerCase(),
+            task: databaseResult.task,
+            description: databaseResult.description,
+            assignees:
+              databaseResult.assignees.length == 0
+                ? undefined
+                : databaseResult.assignees.map(
+                    (assignee) => assignee.name ?? assignee.username,
+                  ),
+            projects:
+              databaseResult.projects.length == 0
+                ? undefined
+                : databaseResult.projects.map((project) => project.name),
           })
-          .then((result) =>
-            console.log(
-              `MAIL Ticket-Created <${databaseResult.id}> ${result.pending ? "Pending" : ""}${result.accepted ? "Accepted" : ""}${result.rejected ? "Rejected" : ""}`,
-            ),
-          );
-      }
+            .then(({ text, html }) => {
+              return sendMail({
+                receipents,
+                subject: mailT("subject", {
+                  name: user.name ?? user.username,
+                  projectsCount: data.projects?.length ?? 0,
+                  projects: data.projects ? data.projects?.join(" / ") : "",
+                }),
+                priority: { HIGH: "high", MEDIUM: "normal", LOW: "low" }[
+                  databaseResult.priority
+                ] as "high" | "normal" | "low",
+                text,
+                html,
+              });
+            })
+            .then((result) =>
+              console.log(
+                `MAIL Ticket-Created <${databaseResult.id}> ${result.pending ? "Pending" : ""}${result.accepted ? "Accepted" : ""}${result.rejected ? "Rejected" : ""}`,
+              ),
+            );
+        }
+      } else console.info("Mailing is not enabled.");
       //#endregion
 
       result.result = { id: databaseResult.id };

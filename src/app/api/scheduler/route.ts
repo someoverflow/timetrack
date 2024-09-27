@@ -38,6 +38,13 @@ export const GET = api(
 
     console.log("!!! Scheduler Called");
 
+    if (process.env.SMTP_HOST == undefined) {
+      console.info("Mailing is not enabled.");
+      return NextResponse.json("Mailing is not enabled", {
+        status: result.status,
+      });
+    }
+
     const today = new Date();
     today.setHours(0);
     today.setMinutes(0);

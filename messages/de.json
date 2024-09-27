@@ -370,6 +370,11 @@
     "updateSubject": "Ticket Update",
     "deactivate": {
       "update": "Diese Mails deaktivieren"
+    },
+    "ticket": {
+      "open": "Offen",
+      "inProgress": "In Arbeit",
+      "done": "Abgeschlossen"
     }
   }
 }
