@@ -9,8 +9,9 @@ datasource db {
 }
 
 enum Role {
-  USER
-  ADMIN
+  USER // Arbeiter
+  ADMIN // Arbeitgeber
+  CUSTOMER // Kunden Konto
 
   @@map("roles")
 }
@@ -24,23 +25,44 @@ model User {
   password String
   role     Role   @default(USER)
 
-  language String @default("en")
+  language String @default("de")
 
-  email         String?
-  emailVerified DateTime? @map("email_verified")
+  email              String?
+  emailVerified      Boolean @default(false) // TODO
+  ticketUpdateMail   Boolean @default(true) @map("ticket_update_mail")
+  ticketCreationMail Boolean @default(false) @map("ticket_creation_mail")
+  historyExportMail  Boolean @default(true) @map("history_export_mail")
 
-  validJwtId String @default(uuid()) @map("valid_jwt_id")
+  customer     Customer? @relation(fields: [customerName], references: [name], onDelete: Cascade)
+  customerName String?
 
   times Time[]
   chips Chip[]
 
-  assignedTodos Todo[] @relation("assignee_to_todo")
-  createdTodos  Todo[] @relation("creator")
+  assignedTasks Ticket[] @relation("assignee_to_todo")
+  createdTasks  Ticket[] @relation("creator")
+
+  sessions Session[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+
+  createdAt DateTime @default(now())
+
+  ip         String
+  user_agent String
+
+  user User @relation(references: [id], fields: [userId], onDelete: Cascade)
+
+  @@map("sessions")
 }
 
 model Chip {
@@ -72,7 +94,7 @@ model Time {
 
   traveledDistance Int? @map("traveled_distance") // Stored in km
 
-  materials String @default("[]") // Array of materials used [{"name":_,"price":_}]
+  materials String @default("[]") // TODO: Array of materials used [{"name":_,"price":_}]
 
   project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
   projectName String?  @map("project_name")
@@ -80,17 +102,29 @@ model Time {
   @@map("times")
 }
 
+model Customer {
+  name String @id
+
+  projects Project[]
+  users    User[]
+
+  @@map("customers")
+}
+
 model Project {
   name        String  @id @unique
   description String?
 
-  todos Todo[] @relation("project_to_todo") // Related Todos
+  customer     Customer? @relation(fields: [customerName], references: [name], onDelete: SetNull)
+  customerName String?
+
+  todos Ticket[] @relation("project_to_todo") // Related Todos
   times Time[] // Related Times
 
   @@map("projects")
 }
 
-enum TodoPriority {
+enum TicketPriority {
   HIGH
   MEDIUM
   LOW
@@ -98,7 +132,7 @@ enum TodoPriority {
   @@map("todo_priorities")
 }
 
-enum TodoStatus {
+enum TicketStatus {
   TODO
   IN_PROGRESS
   DONE
@@ -106,20 +140,19 @@ enum TodoStatus {
   @@map("todo_statuses")
 }
 
-model Todo {
+model Ticket {
   id String @id @default(nanoid(12))
 
-  task        String       @db.MediumText
-  description String?      @db.Text
-  status      TodoStatus   @default(TODO)
-  archived    Boolean      @default(false)
-  hidden      Boolean      @default(false)
-  priority    TodoPriority @default(MEDIUM)
+  task        String         @db.MediumText
+  description String?        @db.Text
+  status      TicketStatus   @default(TODO)
+  archived    Boolean        @default(false)
+  hidden      Boolean        @default(false)
+  priority    TicketPriority @default(MEDIUM)
   deadline    DateTime?
 
-  relatedProjects Project[] @relation("project_to_todo") // Any related projects to this todo
-
-  assignees User[] @relation("assignee_to_todo") // Assigned users of the todo
+  projects  Project[] @relation("project_to_todo") // Any related projects to this todo
+  assignees User[]    @relation("assignee_to_todo") // Assigned users of the todo
 
   creator   User   @relation("creator", fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String @map("creator_id")

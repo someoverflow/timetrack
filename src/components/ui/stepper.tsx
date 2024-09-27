@@ -1,3 +1,4 @@
+/* eslint-disable */
 // See https://shadcn-stepper.vercel.app/
 
 "use client";
@@ -777,9 +778,9 @@ const StepButtonContainer = ({
 		styles,
 	} = useStepper();
 
-	const currentStepClickable = clickable || !!onClickStep;
+	const currentStepClickable = !!clickable || !!onClickStep;
 
-	const isLoading = isLoadingProp || isLoadingContext;
+	const isLoading = !!isLoadingProp || !!isLoadingContext;
 
 	if (variant === "line") {
 		return null;
