@@ -1,4 +1,4 @@
-FROM node:lts-alpine AS base
+FROM node:current-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
@@ -50,6 +50,8 @@ RUN mkdir /backups && chown nextjs:nodejs /backups
 USER root
 
 ENV AUTH_TRUST_HOST=true
+
+ENV URL=https://localhost:3000
 
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0

@@ -206,7 +206,7 @@ export const POST = api(
 
       if (receipents.length !== 0) {
         TicketCreated({
-          link: _request.nextUrl.origin + "/ticket?link=" + databaseResult.id,
+          link: process.env.URL + "/ticket?link=" + databaseResult.id,
           priority: databaseResult.priority.toLowerCase(),
           task: databaseResult.task,
           description: databaseResult.description,

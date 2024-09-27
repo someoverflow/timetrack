@@ -19,7 +19,7 @@ export async function login(
     typeof username !== "string" ||
     username.length < 3 ||
     username.length > 31 ||
-    !/^[a-z0-9_-]+$/.test(username)
+    !/^[a-z0-9._-]+$/.test(username)
   ) {
     return {
       update: new Date(),

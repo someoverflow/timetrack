@@ -23,8 +23,8 @@
           "customer": "Kunde",
           "role": "Rolle",
           "roles": {
-            "admin": "Administrator",
-            "user": "Arbeitnehmer"
+            "admin": "Admin",
+            "user": "User"
           },
           "title": "Benutzer hinzufügen",
           "username": "Benutzername",
@@ -45,8 +45,8 @@
           "preferences": "Einstellungen",
           "role": "Rolle",
           "roles": {
-            "admin": "Administrator",
-            "user": "Arbeitnehmer"
+            "admin": "Admin",
+            "user": "User"
           },
           "save": "Speichern",
           "title": "Benutzer bearbeiten",
@@ -259,7 +259,7 @@
   },
   "SignOut": {
     "buttonText": "Abmelden",
-    "description": "Sicher dass du dich abmelden willst?",
+    "description": "Sind sie sich sicher, dass sie sich abmelden wollen?",
     "Metadata": {
       "description": "Erfasse deine Zeiten",
       "title": "Time Track - Abmelden"

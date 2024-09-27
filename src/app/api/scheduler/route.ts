@@ -51,6 +51,7 @@ export const GET = api(
       where: {
         NOT: {
           email: null,
+          username: "admin",
         },
         ticketUpdateMail: true,
       },
@@ -152,7 +153,7 @@ export const GET = api(
 
       if (tickets.length == 0) continue;
 
-      const ticketLink = request.nextUrl.origin + "/ticket?link=";
+      const ticketLink = process.env.URL + "/ticket?link=";
 
       const groupedTickets = Object.groupBy(tickets, (ticket) => {
         return ticket.createdAt.getTime() == ticket.updatedAt.getTime()

@@ -8,7 +8,7 @@ const invalidPassword = "Password is invalid. (8-30 chars, a-z, A-Z, 0-9)";
 
 export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
 export const passwordRegex =
-  /^(?=.*[A-Za-z])(?=.*\d)[a-zA-Z0-9\d@$!%*#?&]{8,30}$/i;
+  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&\.])[A-Za-z\d@$!%*#?&\.]{8,30}$/;
 
 export const nanoIdValidation = // All nanoid ids
   z.string().trim().length(12, invalidId).regex(nanoidRegex, invalidId);
