@@ -209,7 +209,6 @@ export const GET = api(
               description: description ?? undefined,
             }) satisfies TicketInfo,
         ),
-        profileLink: request.nextUrl.origin + "/profile",
       } satisfies TicketCreatedMailData)
         .then(({ text, html }) => {
           return sendMail({

@@ -30,13 +30,11 @@ export type TicketInfo = {
 export type TicketCreatedMailData = {
   created?: TicketInfo[];
   updated?: TicketInfo[];
-  profileLink: string;
 };
 
 export default async function TicketCreatedMail({
   created,
   updated,
-  profileLink = "https://localhost:3000/profile",
 }: TicketCreatedMailData) {
   const t = await getTranslations("Mail");
 
@@ -193,7 +191,7 @@ export default async function TicketCreatedMail({
             )}
             <Hr />
             <Section className="text-center">
-              <Button href={profileLink}>
+              <Button href={`${process.env.URL}/profile`}>
                 <Text className="text-gray-600 underline">
                   {t("deactivate.update")}
                 </Text>
