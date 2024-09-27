@@ -11,6 +11,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 type PageType = (
   | {
@@ -38,9 +39,10 @@ export const ProjectSelection = ({
   changeProject,
 }: PageType) => {
   const t = useTranslations("Timer.Miscellaneous");
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover modal>
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         {button ?? (
           <Button
@@ -101,6 +103,7 @@ export const ProjectSelection = ({
                             project !== proj.name ? proj.name : undefined,
                           );
                         } else changeProject(proj.name);
+                        setOpen(false);
                       }}
                     >
                       <Check

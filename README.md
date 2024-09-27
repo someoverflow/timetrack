@@ -37,9 +37,7 @@ Built for [EBERT-Automation](https://ebert-automation.de/)
 
 ## Deployment
 
-Built to work smoothly with Docker.
-
-Requires a MySQL database for storing data.
+TimeTrack is designed to work seamlessly with Docker and requires a MySQL database for data storage.
 
 **Get the Docker Image:**
 
@@ -48,7 +46,7 @@ docker pull someoverflow/timetrack
 ```
 
 <details>
-<summary><i>DIY Docker Image</i></summary>
+<summary><i>Build Your Own Docker Image</i></summary>
 <br>
 <pre>
 docker buildx create --name somebuilder
@@ -72,25 +70,36 @@ docker run --name timetrack -p 3000:3000 \
 
 ## Environment Variables
 
-| Variable                  | Description                                         | Default         |
-| ------------------------- | --------------------------------------------------- | --------------- |
-| `INSTANCE_NAME`           | Shows a watermark at the bottom right corner if set | _(empty)_       |
-| `PORT`                    | The port number on which the application listens    | `3000`          |
-| `HOSTNAME`                | The hostname or IP address the server binds to      | `"0.0.0.0"`     |
-| `BACKUP`                  | Enables MySQL dumps to a mountable Docker volume    | `false`         |
-| `BACKUP_DELAY`            | Interval in seconds between backup executions       | `86400` (24h)   |
-| `DATABASE_HOST`           | Hostname or IP of the MySQL database                | `localhost`     |
-| `DATABASE_PORT`           | Port number of the MySQL database                   | `3306`          |
-| `DATABASE_USER`           | Username for connecting to the MySQL database       | `timetrack`     |
-| `DATABASE_PASSWORD`       | Password for the MySQL database user                | `timetrack`     |
-| `DATABASE_DB`             | Name of the MySQL database                          | `timetrack`     |
-| `TZ`                      | Time Zone                                           | `Europe/Berlin` |
-| `AUTH_SECRET`             | Secret key for encrypting Auth.js JWT               | _Generated_     |
-| `NEXT_PUBLIC_API_URL`     | The primary API URL used by the application         | _(empty)_       |
-| `NEXT_PUBLIC_LOGIN_IMAGE` | URL to an image which is shown on the login screen  | _(empty)_       |
-| `NEXT_PUBLIC_COMPANY`     | Company name                                        | _(empty)_       |
+| Variable                  | Description                                                   | Default         |
+| ------------------------- | ------------------------------------------------------------- | --------------- |
+| `URL`                     | Link to the instance (e.g., https://timetrack.example.com)    | _(empty)_       |
+| `DATABASE_HOST`           | MySQL database hostname or IP                                 | `localhost`     |
+| `DATABASE_PORT`           | MySQL database port                                           | `3306`          |
+| `DATABASE_USER`           | MySQL database username                                       | `timetrack`     |
+| `DATABASE_PASSWORD`       | MySQL database password                                       | `timetrack`     |
+| `DATABASE_DB`             | MySQL database name                                           | `timetrack`     |
+| `INSTANCE_NAME`           | Watermark shown at the bottom right corner if set             | _(empty)_       |
+| `NEXT_PUBLIC_LOGIN_IMAGE` | URL for login screen image                                    | _(empty)_       |
+| `NEXT_PUBLIC_COMPANY`     | Company name                                                  | _(empty)_       |
+| `SMTP_HOST`               | SMTP server hostname                                          | _(empty)_       |
+| `SMTP_PORT`               | SMTP server port                                              | _(empty)_       |
+| `SMTP_USER`               | SMTP server username                                          | _(empty)_       |
+| `SMTP_PASSWORD`           | SMTP server password                                          | _(empty)_       |
+| `SMTP_SENDER`             | Mail sender address (e.g., TimeTrack <timetrack@example.com>) | _(empty)_       |
+| `SMTP_SSL`                | Enable SSL for SMTP server                                    | `true`          |
+| `TZ`                      | Time Zone                                                     | `Europe/Berlin` |
+| `PORT`                    | Port on which the application listens                         | `3000`          |
+| `HOSTNAME`                | Server bind hostname or IP address                            | `"0.0.0.0"`     |
+
+**Note**: The following environment variables must be set for the application to run properly:
+
+- `URL`: The link to the deployed instance (e.g., https://timetrack.example.com)
+- `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_DB`: Database connection details
+- `NEXT_PUBLIC_COMPANY`: The name of your company or organization
 
 **Docker Volumes**
 | Name | Path |
 | ------ | -------- |
 | Backup | /backups |
+
+Backups are created daily at 3:00 AM as MySQL dumps and stored in the `/backups` volume.

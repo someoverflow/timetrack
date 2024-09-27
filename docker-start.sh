@@ -11,11 +11,6 @@ echo ""
     
     echo "DATABASE_URL=\"${DATABASE_URL}\"" >> ./.env;
     
-    if [ -z "$AUTH_SECRET" ]; then
-        export AUTH_SECRET="$(openssl rand -base64 32)"
-    fi
-    echo "AUTH_SECRET=\"$AUTH_SECRET\"" >> ./.env
-
     export SCHEDULER_SECRET="$(openssl rand -base64 32)"
     echo "SCHEDULER_SECRET=\"$SCHEDULER_SECRET\"" >> ./.env
     
