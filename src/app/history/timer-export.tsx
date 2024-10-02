@@ -163,9 +163,9 @@ export default function TimerExportDialog({
 
           // Duration
           const durationCell = row.getCell("duration");
-          durationCell.numFmt = '[h]"h" mm"min"';
+          durationCell.numFmt = '0,00"h"';
           durationCell.value = {
-            formula: `${endCell.address}-${startCell.address}`,
+            formula: `(${endCell.address}-${startCell.address})*24`,
           };
           durationCell.alignment = { vertical: "middle" };
 
@@ -185,7 +185,7 @@ export default function TimerExportDialog({
       // User Duration
       const row = sheet.getRow(rowIndex);
       const userDurationCell = row.getCell("duration");
-      userDurationCell.numFmt = '[h]"h" mm"min"';
+      userDurationCell.numFmt = '0,00"h"';
       durationCells.push(userDurationCell.address);
 
       const durationRow = userDurationCell.address.replace(/\d.*$/, "");
@@ -208,7 +208,7 @@ export default function TimerExportDialog({
     // Final Duration
     const lastRow = sheet.getRow(rowIndex);
     const lastDuration = lastRow.getCell("duration");
-    lastDuration.numFmt = 'hh"h" mm"min"';
+    lastDuration.numFmt = '0,00"h"';
 
     lastDuration.value = {
       formula: durationCells.join("+"),
