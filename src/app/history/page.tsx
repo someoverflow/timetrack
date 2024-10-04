@@ -131,11 +131,13 @@ export default async function History({
 
   let yearMonths = [
     ...new Set(
-      startTimes.map(({ start }) => {
-        const year = start.getFullYear();
-        const month = months[start.getMonth()];
-        return `${year} ${month}`;
-      }),
+      startTimes
+        .sort((a, b) => b.start.getTime() - a.start.getTime())
+        .map(({ start }) => {
+          const year = start.getFullYear();
+          const month = months[start.getMonth()];
+          return `${year} ${month}`;
+        }),
     ),
   ];
 
