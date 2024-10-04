@@ -1,10 +1,8 @@
 #!/bin/sh
 
-# date | cut does not work correctly on mac...
-
 while true;
 do
-    DATE=`date | cut -d' ' -f4`
+    DATE=$(date +"%H:%M:%S")
     if [[ $DATE == "18:00:00" ]]
     then
         echo "Sending update Mail"
