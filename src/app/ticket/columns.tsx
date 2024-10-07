@@ -86,7 +86,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
                 break;
             }
 
-            return fetch("/api/todo", {
+            return fetch("/api/ticket", {
               method: "PUT",
               body: JSON.stringify(request),
             });
@@ -299,7 +299,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
 
         const { status: archiveStatus, send: sendArchive } = useRequest(
           () =>
-            fetch("/api/todo?type=ARCHIVE", {
+            fetch("/api/ticket?type=ARCHIVE", {
               method: "PUT",
               body: JSON.stringify({ id: ticket.id }),
             }),
@@ -313,7 +313,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
 
         const { status: visibilityStatus, send: sendVisibility } = useRequest(
           () =>
-            fetch("/api/todo?type=VISIBILITY", {
+            fetch("/api/ticket?type=VISIBILITY", {
               method: "PUT",
               body: JSON.stringify({ id: ticket.id }),
             }),

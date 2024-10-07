@@ -98,7 +98,7 @@ export function TicketAdd({
   const { status, send } = useRequest(
     useCallback(
       () =>
-        fetch("/api/todo", {
+        fetch("/api/ticket", {
           method: "POST",
           body: JSON.stringify({
             task: data.task,

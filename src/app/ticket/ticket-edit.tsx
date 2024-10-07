@@ -191,7 +191,7 @@ export function TicketTableEdit({
           ticket.priority !== state.priority ? state.priority : undefined,
       } satisfies todoUpdateApiValidationType;
 
-      return fetch("/api/todo", {
+      return fetch("/api/ticket", {
         method: "PUT",
         body: JSON.stringify(request),
       });
@@ -215,7 +215,7 @@ export function TicketTableEdit({
         | undefined,
     ) => {
       if (passed) passed.setStep(passed.step);
-      return fetch("/api/todo", {
+      return fetch("/api/ticket", {
         method: "PUT",
         body: JSON.stringify({
           id: ticket.id,
