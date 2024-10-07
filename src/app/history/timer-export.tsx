@@ -144,26 +144,29 @@ export default function TimerExportDialog({
             row.getCell("person").alignment = { vertical: "middle" };
           }
 
+          const start = new Date(time.start.getTime() - (time.start.getTimezoneOffset() * 60_000));
+          const end = new Date(time.end.getTime() - (time.end.getTimezoneOffset() * 60_000));
+
           // Date
           const dateCell = row.getCell("date");
-          dateCell.value = time.start.toLocaleDateString();
+          dateCell.value = time.start.toLocaleDateString()
           dateCell.alignment = { horizontal: "center", vertical: "middle" };
 
           // Start
           const startCell = row.getCell("start");
           startCell.numFmt = "hh:mm:ss";
           startCell.alignment = { vertical: "middle" };
-          startCell.value = time.start;
+          startCell.value = start;
 
           // End
           const endCell = row.getCell("end");
           endCell.numFmt = "hh:mm:ss";
           endCell.alignment = { vertical: "middle" };
-          endCell.value = time.end;
+          endCell.value = end;
 
           // Duration
           const durationCell = row.getCell("duration");
-          durationCell.numFmt = '0,00"h"';
+          durationCell.numFmt = '0.00"h"';
           durationCell.value = {
             formula: `(${endCell.address}-${startCell.address})*24`,
           };
@@ -185,7 +188,7 @@ export default function TimerExportDialog({
       // User Duration
       const row = sheet.getRow(rowIndex);
       const userDurationCell = row.getCell("duration");
-      userDurationCell.numFmt = '0,00"h"';
+      userDurationCell.numFmt = '0.00"h"';
       durationCells.push(userDurationCell.address);
 
       const durationRow = userDurationCell.address.replace(/\d.*$/, "");
@@ -208,7 +211,7 @@ export default function TimerExportDialog({
     // Final Duration
     const lastRow = sheet.getRow(rowIndex);
     const lastDuration = lastRow.getCell("duration");
-    lastDuration.numFmt = '0,00"h"';
+    lastDuration.numFmt = '0.00"h"';
 
     lastDuration.value = {
       formula: durationCells.join("+"),
