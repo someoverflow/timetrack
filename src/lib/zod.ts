@@ -4,11 +4,15 @@ import { z } from "zod";
 //#region Utils
 const emptyId = "ID is empty.";
 const invalidId = "ID is invalid.";
-const invalidPassword = "Password is invalid. (8-30 chars, a-z, A-Z, 0-9)";
 
 export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
 export const passwordRegex =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&\.])[A-Za-z\d@$!%*#?&\.]{8,30}$/;
+  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*#?&\.]{8,30}$/;
+
+const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!.*+@#$%&-_]).+$/;
+const numberRegex = /\d/;
+const charRegexUpper = /[A-Z]/;
+const charRegexLower = /[a-z]/;
 
 export const nanoIdValidation = // All nanoid ids
   z.string().trim().length(12, invalidId).regex(nanoidRegex, invalidId);
@@ -26,9 +30,17 @@ export const mailValidation = z
 export const passwordValidation = z
   .string()
   .trim()
+  .regex(passRegex, "Password is invalid. (a-Z, 0-9, !.*+@#$%&-_)")
+
   .min(8, "Password is too short. (min. 8)")
   .max(30, "Password is too long. (max. 30)")
-  .regex(passwordRegex, invalidPassword);
+
+  .regex(numberRegex, "The password must include at least one digit.")
+  .regex(charRegexLower, "The password must include at least one letter.")
+  .regex(
+    charRegexUpper,
+    "The password must include at least one uppercase letter.",
+  );
 
 export const userArrayValidation = z.array(nameValidation).min(1);
 //#endregion
