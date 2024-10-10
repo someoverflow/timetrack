@@ -31,7 +31,11 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  CircleCheckBig,
+  CircleDot,
+  CircleDotDashed,
   Filter,
+  FilterX,
 } from "lucide-react";
 
 import React, { useTransition } from "react";
@@ -68,6 +72,11 @@ interface DataTableProps<TData, TValue> {
 
   filters: {
     archived: boolean;
+    status: {
+      todo: boolean;
+      in_progress: boolean;
+      done: boolean;
+    };
   };
 }
 
@@ -126,6 +135,12 @@ export function DataTable<TData, TValue>({
   const updateFilter = (data: {
     archived?: boolean;
 
+    status?: Partial<{
+      todo: boolean;
+      in_progress: boolean;
+      done: boolean;
+    }>;
+
     reset?: boolean;
   }) => {
     if (typeof document !== "undefined") {
@@ -138,10 +153,27 @@ export function DataTable<TData, TValue>({
         document.cookie = `ticket-filter-archived=${!filters.archived};max-age=${maxAge};path=/`;
       }
 
+      // Status
+      if (data.status != undefined) {
+        maxAge = "31536000";
+
+        if (data.status.todo !== undefined)
+          document.cookie = `ticket-filter-status-todo=${data.status.todo};max-age=${maxAge};path=/`;
+
+        if (data.status.in_progress !== undefined)
+          document.cookie = `ticket-filter-status-inProgress=${data.status.in_progress};max-age=${maxAge};path=/`;
+
+        if (data.status.done !== undefined)
+          document.cookie = `ticket-filter-status-done=${data.status.done};max-age=${maxAge};path=/`;
+      }
+
       if (data.reset === true) {
         cookie = "undefined";
         maxAge = "0";
         document.cookie = `ticket-filter-archived=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `ticket-filter-status-todo=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `ticket-filter-status-inProgress=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `ticket-filter-status-done=${cookie};max-age=${maxAge};path=/`;
       }
     }
 
@@ -201,8 +233,73 @@ export function DataTable<TData, TValue>({
                   <span className="hidden sm:block">{t("filter")}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full">
-                <div className="grid gap-2 p-2">
+              <PopoverContent className="w-56">
+                <div className="grid gap-4 p-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={() =>
+                      updateFilter({
+                        status: { todo: !filters.status.todo },
+                      })
+                    }
+                  >
+                    <CircleDot
+                      className={cn(
+                        "mr-2 size-4",
+                        filters.status.todo
+                          ? "text-blue-500"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    {t("steps.todo")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={() =>
+                      updateFilter({
+                        status: {
+                          in_progress: !filters.status.in_progress,
+                        },
+                      })
+                    }
+                  >
+                    <CircleDotDashed
+                      className={cn(
+                        "mr-2 size-4",
+                        filters.status.in_progress
+                          ? "text-amber-500"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    {t("steps.inProgress")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={() =>
+                      updateFilter({
+                        status: { done: !filters.status.done },
+                      })
+                    }
+                  >
+                    <CircleCheckBig
+                      className={cn(
+                        "mr-2 size-4",
+                        filters.status.done
+                          ? "text-emerald-500"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    {t("steps.done")}
+                  </Button>
+
+                  <Separator />
+
                   <div className="flex flex-row items-center gap-4">
                     <Checkbox
                       id="archivedSwitch"
@@ -213,6 +310,19 @@ export function DataTable<TData, TValue>({
                     <Label htmlFor="archivedSwitch" className="text-nowrap">
                       {t("archived")}
                     </Label>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => updateFilter({ reset: true })}
+                      className="w-full"
+                    >
+                      <FilterX className="size-4 mr-4" />
+                      {t("reset")}
+                    </Button>
                   </div>
                 </div>
               </PopoverContent>

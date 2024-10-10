@@ -29,11 +29,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function validatePassword(password: string): boolean {
-  const regex = /^(?=.*[0-9])[a-zA-Z0-9]{8,20}$/;
-  return regex.test(password);
-}
-
 export function getTimePassed(start: Date, end: Date): string {
   const msPassed = Math.abs(start.getTime() - end.getTime());
   const totalSeconds = Math.floor(msPassed / 1000);

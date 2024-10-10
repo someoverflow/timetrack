@@ -302,6 +302,7 @@
     "changed": "Erfolgreich geändert.",
     "hide": "Löschen",
     "visibleColumns": "Sichtbare Spalten",
+    "reset": "Zurücksetzen",
     "priorities": {
       "high": "Hoch",
       "low": "Nidrig",

@@ -295,6 +295,7 @@
     "search": "Search...",
     "filter": "Filter",
     "archived": "Archived",
+    "reset": "Reset",
     "noResults": "No Tickets found",
     "rowsPerPage": "Rows per Page",
     "currentPage": "Page {page} of {pages}",

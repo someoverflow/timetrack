@@ -55,9 +55,25 @@ export default async function Tickets({
   const cookieStore = cookies();
   const filterCookies = {
     archived: cookieStore.get("ticket-filter-archived")?.value,
+
+    status: {
+      todo: cookieStore.get("ticket-filter-status-todo")?.value,
+      in_progress: cookieStore.get("ticket-filter-status-inProgress")?.value,
+      done: cookieStore.get("ticket-filter-status-done")?.value,
+    },
   };
 
+  const status = {
+    todo: (filterCookies.status.todo ?? "true") === "true",
+    in_progress: (filterCookies.status.in_progress ?? "true") === "true",
+    done: (filterCookies.status.done ?? "false") === "true",
+  };
   const archived = filterCookies.archived === "true";
+
+  const statusFilter: TicketStatus[] = [];
+  if (status.todo) statusFilter.push("TODO");
+  if (status.in_progress) statusFilter.push("IN_PROGRESS");
+  if (status.done) statusFilter.push("DONE");
 
   /*
   let projectsFilter: string[] | undefined = undefined;
@@ -93,6 +109,10 @@ export default async function Tickets({
       },
       hidden: false,
 
+      status: {
+        in: statusFilter,
+      },
+
       archived: archived,
       projects:
         user.role === "CUSTOMER"
@@ -123,6 +143,10 @@ export default async function Tickets({
           contains: searchParams?.search,
         },
         hidden: false,
+
+        status: {
+          in: statusFilter,
+        },
 
         archived: archived,
         projects:
@@ -274,6 +298,7 @@ export default async function Tickets({
           users={users}
           filters={{
             archived: archived,
+            status,
           }}
         />
       </section>

@@ -45,14 +45,10 @@ export default async function SignOutPage() {
   );
 }
 
-async function logout() {
+async function logout(_formData: FormData) {
   "use server";
   const { session } = await validateRequest();
-  if (!session) {
-    return {
-      error: "Unauthorized",
-    };
-  }
+  if (!session) return;
 
   await lucia.invalidateSession(session.id);
 
