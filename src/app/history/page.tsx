@@ -179,6 +179,16 @@ export default async function History({
   if (!yearMonth || !yearMonths.includes(yearMonth))
     yearMonth = yearMonths[0] ?? currentYearMonth;
 
+  const yearMonthGrouped = Object.groupBy(
+    yearMonths.map((yearMonth, index) => ({
+      index,
+      yearMonth,
+      year: (/\d+/.exec(yearMonth) ?? "")[0],
+      month: yearMonth.split(" ")[1],
+    })),
+    (i) => i.year,
+  );
+
   const timeStrings = (historyData[yearMonth] ?? [])
     .filter((data) => data.time !== null)
     .map((e) => e.time ?? "");
@@ -197,10 +207,13 @@ export default async function History({
           currentHistory={historyData[yearMonth] ?? []}
           totalTime={sumTimes(timeStrings)}
           projects={projects}
-          yearMonth={{
-            current: yearMonth,
-            all: yearMonths,
-          }}
+          yearMonth={JSON.parse(
+            JSON.stringify({
+              current: yearMonth,
+              all: yearMonths,
+              grouped: yearMonthGrouped,
+            }),
+          )}
           filters={{
             projects: projectsFilter,
             users: filterCookies.users ? userFilter : undefined,

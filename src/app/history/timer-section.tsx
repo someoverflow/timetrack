@@ -81,6 +81,17 @@ export default function TimerSection({
   yearMonth: {
     current: string;
     all: string[];
+    grouped: Partial<
+      Record<
+        string,
+        {
+          index: number;
+          yearMonth: string;
+          year: string;
+          month: string | undefined;
+        }[]
+      >
+    >;
   };
 
   projects: Projects;
@@ -255,26 +266,30 @@ export default function TimerSection({
                   className="h-8 w-max"
                 />
                 <CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
-                <CommandGroup>
-                  {yearMonth.all.map((key) => (
-                    <CommandItem
-                      key={`history-${key}`}
-                      onSelect={() => changeYearMonth(key)}
-                      value={key}
-                      className="font-mono"
-                    >
-                      {`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
-                      <Check
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          yearMonth.current === key
-                            ? "opacity-100"
-                            : "opacity-0",
-                        )}
-                      />
-                    </CommandItem>
+                {Object.keys(yearMonth.grouped)
+                  .sort()
+                  .map((year) => (
+                    <CommandGroup key={year} heading={year}>
+                      {yearMonth.grouped[year]!.map((key) => (
+                        <CommandItem
+                          key={`history-${key}`}
+                          onSelect={() => changeYearMonth(key.yearMonth)}
+                          value={key.yearMonth}
+                          className="text-sm"
+                        >
+                          {t(`Miscellaneous.Months.${key.month}`)}
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              yearMonth.current === key.yearMonth
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
                   ))}
-                </CommandGroup>
               </Command>
 
               <div className="grid gap-2 p-1 w-full ">
