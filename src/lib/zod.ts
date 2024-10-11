@@ -152,12 +152,11 @@ export type timesPutApiValidation = z.infer<typeof timesPutApiValidation>;
 const todoTaskValidation = z
   .string()
   .trim()
-  .min(1, "Task is too short.")
+  .min(4, "Task is too short. (min. 4)")
   .max(100, "Task is too long. (max. 100)");
 const todoDescriptionValidation = z
   .string()
   .trim()
-  .min(1, "Description is too short.")
   .max(800, "Description is too long. (max. 800)");
 
 export const todoCreateApiValidation = z

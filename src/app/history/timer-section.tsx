@@ -269,7 +269,11 @@ export default function TimerSection({
                 {Object.keys(yearMonth.grouped)
                   .sort()
                   .map((year) => (
-                    <CommandGroup key={year} heading={year}>
+                    <CommandGroup
+                      key={year}
+                      heading={year}
+                      className="space-x-2"
+                    >
                       {yearMonth.grouped[year]!.map((key) => (
                         <CommandItem
                           key={`history-${key}`}

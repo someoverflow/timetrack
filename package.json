@@ -59,7 +59,9 @@
     "nodemailer": "^6.9.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
     "react-swipeable-list": "^1.9.3",
+    "remark-gfm": "^4.0.0",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
@@ -67,6 +69,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
     "@types/bcryptjs": "^2.4.6",
     "@types/eslint": "^8.56.10",
     "@types/exceljs": "^0.5.3",

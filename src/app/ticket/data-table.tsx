@@ -55,6 +55,9 @@ import { TicketAdd } from "./ticket-add";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Ticket } from "@prisma/client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import Image from "next/image";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
@@ -385,7 +388,7 @@ export function DataTable<TData, TValue>({
                       </PopoverTrigger>
                       <PopoverContent
                         side="bottom"
-                        className="text-muted-foreground w-96 max-w-[95vw]"
+                        className="border-secondary-foreground/20 dark:bg-secondary text-muted-foreground max-w-screen-sm w-[95vw]"
                       >
                         {ticket.archived && (
                           <div className="flex flex-row gap-2 pb-2">
@@ -399,6 +402,25 @@ export function DataTable<TData, TValue>({
 
                         <div className="flex flex-row items-center gap-2">
                           <Label className="flex flex-row">
+                            {t("creator")}:
+                          </Label>
+                          <p className="text-foreground">
+                            {(ticket as any).creator.name ??
+                              (ticket as any).creator.username}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-row items-center gap-2">
+                          <Label className="flex flex-row">
+                            {t("createdAt")}:
+                          </Label>
+                          <p className="text-foreground">
+                            {ticket.createdAt.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-row items-center gap-2">
+                          <Label className="flex flex-row">
                             {t("deadline")}:
                           </Label>
                           <p className="text-foreground">
@@ -409,15 +431,18 @@ export function DataTable<TData, TValue>({
                               : t("none")}
                           </p>
                         </div>
-                        <>
-                          <Separator className="w-full my-2" />
-                          <div className="flex flex-col">
-                            <Label className="pr-2">{t("description")}:</Label>
-                            <p className="text-foreground whitespace-pre-line">
-                              {ticket.description ?? t("none")}
-                            </p>
-                          </div>
-                        </>
+
+                        {(ticket.description ?? "").trim().length != 0 && (
+                          <>
+                            <Separator className="w-full my-2 bg-secondary-foreground/20" />
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              className="prose dark:prose-invert prose-neutral"
+                            >
+                              {ticket.description}
+                            </ReactMarkdown>
+                          </>
+                        )}
                       </PopoverContent>
                     </Popover>
                   );
