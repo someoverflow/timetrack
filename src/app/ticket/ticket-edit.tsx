@@ -39,13 +39,14 @@ import {
 import { toast } from "sonner";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import useRequest from "@/lib/hooks/useRequest";
 import { ProjectSelection } from "@/components/project-select";
+import { uploadFile } from "@/lib/upload-action";
 //#endregion
 
 const steps = [
@@ -233,6 +234,8 @@ export function TicketTableEdit({
     },
   );
 
+  const fileInput = useRef<HTMLInputElement>(null);
+
   const loading = stepStatus.loading || status.loading;
 
   useEffect(() => {
@@ -356,6 +359,9 @@ export function TicketTableEdit({
                 </TabsTrigger>
                 <TabsTrigger className="w-full" value="details">
                   {t("Dialogs.Edit.details")}
+                </TabsTrigger>
+                <TabsTrigger className="w-full" value="uploads">
+                  Uploads
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="status" className="h-full">
@@ -797,6 +803,23 @@ export function TicketTableEdit({
                         value={ticket.id}
                       />
                     </div>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="uploads" className="h-full">
+                <ScrollArea
+                  className="h-[50svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  type="always"
+                >
+                  <div>
+                    <form action={uploadFile} className="flex flex-col gap-4">
+                      <label>
+                        <span>Upload a file</span>
+                        <input type="file" name="file" ref={fileInput} />
+                      </label>
+                      <button type="submit">Submit</button>
+                    </form>
                   </div>
                 </ScrollArea>
               </TabsContent>
