@@ -433,101 +433,106 @@ export default function TimerInfo({
                   className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
                   type="always"
                 >
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Label
-                      htmlFor="projects-button"
+                  <div>
+                    <div className="h-full w-full grid p-1 gap-1.5">
+                      <Label
+                        htmlFor="projects-button"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          state.projectName !== timer.projectName
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.project")}
+                      </Label>
+                      <ProjectSelection
+                        project={state.projectName ?? undefined}
+                        changeProject={(e) =>
+                          setState({ projectName: e ?? null })
+                        }
+                        projects={projects}
+                      />
+                    </div>
+
+                    <div id="divider" className="h-4" />
+
+                    <div className="h-full w-full grid p-1 gap-1.5">
+                      <Label
+                        htmlFor={`timerModal-notes-${timer.id}`}
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          state.notes !== (timer.notes ?? "")
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.notes")}
+                      </Label>
+                      <Textarea
+                        id={`timerModal-notes-${timer.id}`}
+                        className="h-full min-h-[30svh] max-h-[50svh] border-2"
+                        spellCheck={true}
+                        value={state.notes}
+                        onChange={(e) => setState({ notes: e.target.value })}
+                      />
+                    </div>
+
+                    <div id="divider" className="h-2" />
+
+                    <div
                       className={cn(
-                        "pl-2 text-muted-foreground transition-colors",
-                        state.projectName !== timer.projectName
-                          ? "text-blue-500"
+                        "flex flex-row items-center gap-2 p-2 transition-all border-l-2",
+                        timer.invoiced !== state.invoiced
+                          ? "border-blue-500"
                           : "",
                       )}
                     >
-                      {t("Dialogs.Edit.project")}
-                    </Label>
-                    <ProjectSelection
-                      project={state.projectName ?? undefined}
-                      changeProject={(e) =>
-                        setState({ projectName: e ?? null })
-                      }
-                      projects={projects}
-                    />
-                  </div>
+                      <Checkbox
+                        id="invoiced"
+                        checked={state.invoiced}
+                        onCheckedChange={() =>
+                          setState({ invoiced: !state.invoiced })
+                        }
+                      />
+                      <Label
+                        htmlFor="invoiced"
+                        className="text-muted-foreground"
+                      >
+                        {t("Miscellaneous.invoicedSingular")}
+                      </Label>
+                    </div>
 
-                  <div id="divider" className="h-4" />
+                    <div id="divider" className="h-4" />
 
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Label
-                      htmlFor={`timerModal-notes-${timer.id}`}
-                      className={cn(
-                        "pl-2 text-muted-foreground transition-colors",
-                        state.notes !== (timer.notes ?? "")
-                          ? "text-blue-500"
-                          : "",
-                      )}
-                    >
-                      {t("Dialogs.Edit.notes")}
-                    </Label>
-                    <Textarea
-                      id={`timerModal-notes-${timer.id}`}
-                      className="h-full min-h-[30svh] max-h-[50svh] border-2"
-                      spellCheck={true}
-                      value={state.notes}
-                      onChange={(e) => setState({ notes: e.target.value })}
-                    />
-                  </div>
-
-                  <div id="divider" className="h-2" />
-
-                  <div
-                    className={cn(
-                      "flex flex-row items-center gap-2 p-2 transition-all border-l-2",
-                      timer.invoiced !== state.invoiced
-                        ? "border-blue-500"
-                        : "",
-                    )}
-                  >
-                    <Checkbox
-                      id="invoiced"
-                      checked={state.invoiced}
-                      onCheckedChange={() =>
-                        setState({ invoiced: !state.invoiced })
-                      }
-                    />
-                    <Label htmlFor="invoiced" className="text-muted-foreground">
-                      {t("Miscellaneous.invoicedSingular")}
-                    </Label>
-                  </div>
-
-                  <div id="divider" className="h-4" />
-
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Label
-                      htmlFor="distance-button"
-                      className={cn(
-                        "pl-2 text-muted-foreground transition-colors",
-                        state.traveledDistance !== timer.traveledDistance
-                          ? "text-blue-500"
-                          : "",
-                      )}
-                    >
-                      {t("Dialogs.Edit.distance")}
-                    </Label>
-                    <Input
-                      id="distance-button"
-                      type="number"
-                      min={0}
-                      className="w-full border-2"
-                      onChange={(change) => {
-                        const target = change.target.valueAsNumber;
-                        setState({
-                          traveledDistance: Number.isNaN(target)
-                            ? null
-                            : target,
-                        });
-                      }}
-                      value={state.traveledDistance ?? ""}
-                    />
+                    <div className="h-full w-full grid p-1 gap-1.5">
+                      <Label
+                        htmlFor="distance-button"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          state.traveledDistance !== timer.traveledDistance
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.distance")}
+                      </Label>
+                      <Input
+                        id="distance-button"
+                        type="number"
+                        min={0}
+                        className="w-full border-2"
+                        onChange={(change) => {
+                          const target = change.target.valueAsNumber;
+                          setState({
+                            traveledDistance: Number.isNaN(target)
+                              ? null
+                              : target,
+                          });
+                        }}
+                        value={state.traveledDistance ?? ""}
+                      />
+                    </div>
                   </div>
                 </ScrollArea>
               </TabsContent>

@@ -122,60 +122,64 @@ export default function TimerAdd({
                 className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
                 type="always"
               >
-                <div className="h-full w-full grid p-1 gap-1.5">
-                  <Label
-                    htmlFor="projects-button"
-                    className="pl-2 text-muted-foreground"
-                  >
-                    {t("Dialogs.Edit.project")}
-                  </Label>
-                  <ProjectSelection
-                    project={data.project ?? undefined}
-                    changeProject={(e) => setData({ project: e ?? null })}
-                    projects={projects}
-                  />
-                </div>
+                <div>
+                  <div className="h-full w-full grid p-1 gap-1.5">
+                    <Label
+                      htmlFor="projects-button"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      {t("Dialogs.Edit.project")}
+                    </Label>
+                    <ProjectSelection
+                      project={data.project ?? undefined}
+                      changeProject={(e) => setData({ project: e ?? null })}
+                      projects={projects}
+                    />
+                  </div>
 
-                <div id="divider" className="h-4" />
+                  <div id="divider" className="h-4" />
 
-                <div className="h-full w-full grid p-1 gap-1.5">
-                  <Label
-                    htmlFor="timerModal-notes-add"
-                    className="text-muted-foreground pl-2"
-                  >
-                    {t("Dialogs.Create.notes")}
-                  </Label>
-                  <Textarea
-                    id="timerModal-notes-add"
-                    className="h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300"
-                    spellCheck={true}
-                    onChange={(e) => setData({ notes: e.target.value })}
-                    value={data.notes}
-                  />
-                </div>
+                  <div className="h-full w-full grid p-1 gap-1.5">
+                    <Label
+                      htmlFor="timerModal-notes-add"
+                      className="text-muted-foreground pl-2"
+                    >
+                      {t("Dialogs.Create.notes")}
+                    </Label>
+                    <Textarea
+                      id="timerModal-notes-add"
+                      className="h-full min-h-[30svh] max-h-[50svh] border-2 transition duration-300"
+                      spellCheck={true}
+                      onChange={(e) => setData({ notes: e.target.value })}
+                      value={data.notes}
+                    />
+                  </div>
 
-                <div id="divider" className="h-4" />
+                  <div id="divider" className="h-4" />
 
-                <div className="h-full w-full grid p-1 gap-1.5">
-                  <Label
-                    htmlFor="distance-button"
-                    className="pl-2 text-muted-foreground"
-                  >
-                    {t("Dialogs.Create.distance")}
-                  </Label>
-                  <Input
-                    id="distance-button"
-                    type="number"
-                    min={0}
-                    className="w-full justify-between border-2 transition duration-300"
-                    onChange={(change) => {
-                      const target = change.target.valueAsNumber;
-                      setData({
-                        traveledDistance: Number.isNaN(target) ? null : target,
-                      });
-                    }}
-                    value={data.traveledDistance ?? ""}
-                  />
+                  <div className="h-full w-full grid p-1 gap-1.5">
+                    <Label
+                      htmlFor="distance-button"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      {t("Dialogs.Create.distance")}
+                    </Label>
+                    <Input
+                      id="distance-button"
+                      type="number"
+                      min={0}
+                      className="w-full justify-between border-2 transition duration-300"
+                      onChange={(change) => {
+                        const target = change.target.valueAsNumber;
+                        setData({
+                          traveledDistance: Number.isNaN(target)
+                            ? null
+                            : target,
+                        });
+                      }}
+                      value={data.traveledDistance ?? ""}
+                    />
+                  </div>
                 </div>
               </ScrollArea>
             </TabsContent>
