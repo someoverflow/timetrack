@@ -7,7 +7,6 @@ import {
   FORBIDDEN_RESPONSE,
   api,
 } from "@/lib/server-utils";
-import type { Prisma } from "@prisma/client";
 import {
   nanoIdValidation,
   timesGetApiValidation,
@@ -15,6 +14,7 @@ import {
   timesPutApiValidation,
 } from "@/lib/zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { type Prisma } from "@prisma/client";
 
 const timePassedErrorResult: APIResult = {
   status: 400,
@@ -22,6 +22,23 @@ const timePassedErrorResult: APIResult = {
   type: "error-message",
   result: { message: "The calculated time would be negative" },
 };
+
+function formatBreakTime(num?: number): number | undefined {
+  if (!num) return undefined;
+
+  // Round the number to 2 decimal places
+  const rounded = Math.ceil(num * 100) / 100;
+  // Convert the number to a string and format to 2 decimal places
+  let formatted = rounded.toFixed(2);
+
+  // Limit the digits before the decimal to a maximum of 6
+  const parts = formatted.split(".");
+  parts[0] = parts[0]!.slice(-6); // Keep only the last 6 digits before the decimal
+  formatted = parts.join(".");
+
+  // Convert back to a number
+  return parseFloat(formatted);
+}
 
 // Get time/times
 /*  
@@ -179,11 +196,13 @@ export const POST = api(async (_request, user, json) => {
     }
   }
 
+  const breakTime = formatBreakTime(data.breakTime) ?? 0;
+
   // Prepare passed time
   const timePassed = getTimePassed(
     new Date(data.start),
     new Date(data.end),
-    data.breakTime,
+    breakTime,
   );
 
   if (!timePassed) {
@@ -203,7 +222,7 @@ export const POST = api(async (_request, user, json) => {
         startType: data.startType ?? "API",
         endType: data.endType ?? "API",
 
-        breakTime: data.breakTime ?? 0,
+        breakTime,
 
         time: timePassed,
 
@@ -309,6 +328,8 @@ export const PUT = api(async (_request, user, json) => {
     return NextResponse.json(result, { status: result.status });
   }
 
+  const breakTime = formatBreakTime(data.breakTime ?? dbBreakTime);
+
   const updateData: Prisma.XOR<
     Prisma.TimeUpdateInput,
     Prisma.TimeUncheckedUpdateInput
@@ -317,7 +338,7 @@ export const PUT = api(async (_request, user, json) => {
     notes: data.notes,
     traveledDistance: data.traveledDistance,
     invoiced: data.invoiced,
-    breakTime: data.breakTime ?? dbBreakTime,
+    breakTime,
   };
 
   if (data.breakTime !== undefined && !data.start && !data.end) {
@@ -325,7 +346,7 @@ export const PUT = api(async (_request, user, json) => {
     updateData.time = getTimePassed(
       dbStarted,
       dbStopped ?? new Date(),
-      data.breakTime,
+      breakTime,
     );
 
     if (!updateData.time) {
@@ -349,7 +370,7 @@ export const PUT = api(async (_request, user, json) => {
       updateData.time = getTimePassed(
         new Date(data.start),
         dbStopped,
-        data.breakTime ?? dbBreakTime,
+        breakTime,
       );
 
       if (!updateData.time) {
@@ -367,11 +388,7 @@ export const PUT = api(async (_request, user, json) => {
 
     const startTime = data.start ? new Date(data.start) : dbStarted;
     // Calculate timePassed based on the given start (or dbStarted if not given)
-    updateData.time = getTimePassed(
-      startTime,
-      new Date(data.end),
-      data.breakTime ?? dbBreakTime,
-    );
+    updateData.time = getTimePassed(startTime, new Date(data.end), breakTime);
 
     if (!updateData.time) {
       return NextResponse.json(timePassedErrorResult, {

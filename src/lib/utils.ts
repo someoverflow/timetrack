@@ -43,7 +43,7 @@ export function getTimePassed(
   // Calculate hours, minutes, and seconds
   const hours = Math.floor(adjustedTotalSeconds / 3600);
   const minutes = Math.floor((adjustedTotalSeconds % 3600) / 60);
-  const seconds = adjustedTotalSeconds % 60;
+  const seconds = Math.round(adjustedTotalSeconds % 60);
 
   // Format as "HH:MM:SS"
   return [hours, minutes, seconds]

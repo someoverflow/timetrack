@@ -171,7 +171,7 @@ export default function TimerExportDialog({
 
           // End
           const breakCell = row.getCell("break");
-          breakCell.numFmt = '0.00"min"';
+          breakCell.numFmt = '0.0#"min"';
           breakCell.alignment = { vertical: "middle" };
           breakCell.value = time.breakTime;
 

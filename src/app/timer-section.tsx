@@ -160,7 +160,7 @@ const TimeSection = ({
             <div className="absolute -bottom-4 tabular-nums text-muted-foreground text-xs">
               <div className="flex flex-row items-center justify-center">
                 <Coffee className="size-3 mr-1" />
-                {timer.breakTime}
+                {timer.breakTime.toLocaleString()}
                 <sub className="ml-0.5">min</sub>
               </div>
             </div>

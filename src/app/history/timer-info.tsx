@@ -279,7 +279,7 @@ export default function TimerInfo({
     }
 
     // Check if breakTime has changed
-    if (state.breakTime !== timer.breakTime) {
+    if (state.breakTime != timer.breakTime) {
       return true;
     }
 
@@ -434,7 +434,7 @@ export default function TimerInfo({
                 <div className="absolute -top-5 text-muted-foreground font-sans text-xs">
                   <div className="flex flex-row items-center justify-center">
                     <Coffee className="size-4 mr-1" />
-                    {timer.breakTime}
+                    {timer.breakTime.toLocaleString()}
                     <sub className="ml-0.5">min</sub>
                   </div>
                 </div>
@@ -661,7 +661,7 @@ export default function TimerInfo({
                         htmlFor="break-input"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
-                          state.breakTime !== timer.breakTime
+                          timer.breakTime != state.breakTime
                             ? "text-blue-500"
                             : "",
                         )}
