@@ -38,7 +38,7 @@ const mono = JetBrains_Mono({
 });
 const fontSans = FontSans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--sans-font",
 });
 
 import "./globals.css";

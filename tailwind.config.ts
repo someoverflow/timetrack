@@ -12,6 +12,7 @@ const config = {
   theme: {
     fontFamily: {
       mono: "var(--mono-font)",
+      sans: "var(--sans-font)",
     },
     container: {
       center: true,

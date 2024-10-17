@@ -97,6 +97,8 @@ export const timesPostApiValidation = z
     start: z.coerce.string().datetime(),
     end: z.coerce.string().datetime(),
 
+    breakTime: z.coerce.number().min(0),
+
     invoiced: z.coerce.boolean(),
 
     traveledDistance: z.coerce.number(),
@@ -125,6 +127,8 @@ export const timesPutApiValidation = z
     traveledDistance: z.coerce.number().nullable(),
 
     invoiced: z.coerce.boolean(),
+
+    breakTime: z.coerce.number().min(0),
 
     start: z.coerce.string().datetime(),
     end: z.coerce.string().datetime(),
@@ -157,7 +161,7 @@ const todoTaskValidation = z
 const todoDescriptionValidation = z
   .string()
   .trim()
-  .max(800, "Description is too long. (max. 800)");
+  .max(10e6, "Description is too long. (max. 800)");
 
 export const todoCreateApiValidation = z
   .object({

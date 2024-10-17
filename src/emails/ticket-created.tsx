@@ -7,6 +7,7 @@ import {
   Heading,
   Hr,
   Html,
+  Markdown,
   Preview,
   render,
   Row,
@@ -104,7 +105,11 @@ export default async function TicketCreatedMail({
             )}
             <Hr />
             <Heading style={codeTitle}>{task}</Heading>
-            <Text style={codeDescription}>{description}</Text>
+            {description && (
+              <Markdown markdownContainerStyles={{ textAlign: "start" }}>
+                {description}
+              </Markdown>
+            )}
             <Hr />
             <Section className="text-center">
               <Button href={link} target="_blank" className="text-center">
@@ -155,9 +160,5 @@ const company = {
 };
 
 const codeTitle = {
-  textAlign: "center" as const,
-};
-
-const codeDescription = {
   textAlign: "center" as const,
 };

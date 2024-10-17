@@ -7,7 +7,6 @@ import {
   FORBIDDEN_RESPONSE,
   api,
 } from "@/lib/server-utils";
-import type { Prisma } from "@prisma/client";
 import {
   nanoIdValidation,
   timesGetApiValidation,
@@ -15,6 +14,31 @@ import {
   timesPutApiValidation,
 } from "@/lib/zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { type Prisma } from "@prisma/client";
+
+const timePassedErrorResult: APIResult = {
+  status: 400,
+  success: false,
+  type: "error-message",
+  result: { message: "The calculated time would be negative" },
+};
+
+function formatBreakTime(num?: number): number | undefined {
+  if (num === undefined) return undefined;
+
+  // Round the number to 2 decimal places
+  const rounded = Math.ceil(num * 100) / 100;
+  // Convert the number to a string and format to 2 decimal places
+  let formatted = rounded.toFixed(2);
+
+  // Limit the digits before the decimal to a maximum of 6
+  const parts = formatted.split(".");
+  parts[0] = parts[0]!.slice(-6); // Keep only the last 6 digits before the decimal
+  formatted = parts.join(".");
+
+  // Convert back to a number
+  return parseFloat(formatted);
+}
 
 // Get time/times
 /*  
@@ -130,7 +154,7 @@ export const GET = api(
       return NextResponse.json(result, { status: result.status });
     }
   },
-  { parseJson: false }
+  { parseJson: false },
 );
 
 // Create timer
@@ -141,23 +165,7 @@ export const POST = api(async (_request, user, json) => {
   const result = defaultResult("created", 201);
 
   // Validate request
-  const validationResult = timesPostApiValidation.safeParse({
-    userId: json.userId,
-
-    notes: json.notes,
-
-    project: json.project,
-
-    traveledDistance: json.traveledDistance,
-
-    invoiced: json.invoiced,
-
-    start: json.start,
-    end: json.end,
-
-    startType: json.startType,
-    endType: json.endType,
-  });
+  const validationResult = timesPostApiValidation.safeParse(json);
   if (!validationResult.success)
     return badRequestResponse(validationResult.error.issues, "validation");
   const data = validationResult.data;
@@ -183,13 +191,25 @@ export const POST = api(async (_request, user, json) => {
           id: data.project,
           message: "Project not found.",
         },
-        "not-found"
+        "not-found",
       );
     }
   }
 
+  const breakTime = formatBreakTime(data.breakTime) ?? 0;
+
   // Prepare passed time
-  const timePassed = getTimePassed(new Date(data.start), new Date(data.end));
+  const timePassed = getTimePassed(
+    new Date(data.start),
+    new Date(data.end),
+    breakTime,
+  );
+
+  if (!timePassed) {
+    return NextResponse.json(timePassedErrorResult, {
+      status: timePassedErrorResult.status,
+    });
+  }
 
   // Create the time entry
   try {
@@ -201,6 +221,8 @@ export const POST = api(async (_request, user, json) => {
         end: data.end,
         startType: data.startType ?? "API",
         endType: data.endType ?? "API",
+
+        breakTime,
 
         time: timePassed,
 
@@ -235,45 +257,31 @@ export const PUT = api(async (_request, user, json) => {
   const result = defaultResult("updated");
 
   // Validate request
-  const validationResult = timesPutApiValidation.safeParse({
-    id: json.id,
-
-    notes: json.notes,
-
-    project: json.project,
-
-    traveledDistance: json.traveledDistance,
-
-    invoiced: json.invoiced,
-
-    start: json.start,
-    end: json.end,
-
-    startType: json.startType,
-    endType: json.endType,
-  });
+  const validationResult = timesPutApiValidation.safeParse(json);
   if (!validationResult.success)
     return badRequestResponse(validationResult.error.issues, "validation");
   const data = validationResult.data;
 
+  const relevantFields: (keyof typeof data)[] = [
+    "notes",
+    "invoiced",
+    "project",
+    "start",
+    "end",
+    "startType",
+    "endType",
+    "traveledDistance",
+    "breakTime",
+  ];
+
   if (
-    !(
-      !!data.notes ||
-      data.notes === "" ||
-      data.invoiced !== undefined ||
-      data.project !== undefined ||
-      !!data.start ||
-      !!data.end ||
-      !!data.startType ||
-      !!data.endType ||
-      !!data.traveledDistance
+    !relevantFields.some(
+      (field) => data[field] !== undefined && data[field] !== "",
     )
   )
     return NextResponse.json(result, { status: result.status });
 
   // Check the time entry
-  let dbStarted: Date | undefined = undefined;
-  let dbStopped: Date | undefined = undefined;
   try {
     const databaseResult = await prisma.time.findUnique({
       where: {
@@ -284,11 +292,15 @@ export const PUT = api(async (_request, user, json) => {
     if (!databaseResult)
       return badRequestResponse(
         "Entry with the given id not found",
-        "not-found"
+        "not-found",
       );
 
-    dbStarted = databaseResult.start;
-    dbStopped = databaseResult.end ?? undefined;
+    // eslint-disable-next-line no-var
+    var dbStarted = databaseResult.start;
+    // eslint-disable-next-line no-var
+    var dbStopped = databaseResult.end ?? undefined;
+    // eslint-disable-next-line no-var
+    var dbBreakTime = databaseResult.breakTime ?? undefined;
 
     if (data.project) {
       const projectDatabaseResult = await prisma.project
@@ -302,7 +314,7 @@ export const PUT = api(async (_request, user, json) => {
       if (data.project && projectDatabaseResult == null)
         return badRequestResponse(
           "Project with the given id not found",
-          "not-found"
+          "not-found",
         );
     }
   } catch (e) {
@@ -316,6 +328,10 @@ export const PUT = api(async (_request, user, json) => {
     return NextResponse.json(result, { status: result.status });
   }
 
+  const breakTime = formatBreakTime(data.breakTime ?? dbBreakTime);
+  console.log(data.breakTime);
+  console.log(breakTime);
+
   const updateData: Prisma.XOR<
     Prisma.TimeUpdateInput,
     Prisma.TimeUncheckedUpdateInput
@@ -324,33 +340,63 @@ export const PUT = api(async (_request, user, json) => {
     notes: data.notes,
     traveledDistance: data.traveledDistance,
     invoiced: data.invoiced,
+    breakTime,
   };
 
-  if (data.start && !data.end) {
-    if (dbStopped)
-      updateData.time = getTimePassed(new Date(data.start), dbStopped);
+  if (data.breakTime !== undefined && !data.start && !data.end) {
+    // Case: No start or end, but breakTime is given
+    updateData.time = getTimePassed(
+      dbStarted,
+      dbStopped ?? new Date(),
+      breakTime,
+    );
 
-    updateData.start = data.start;
-    updateData.startType = data.startType ?? "API";
+    if (!updateData.time) {
+      return NextResponse.json(timePassedErrorResult, {
+        status: timePassedErrorResult.status,
+      });
+    }
+
+    if (!dbStopped) {
+      updateData.time = undefined;
+    }
   }
 
-  if (data.end && !data.start) {
-    const timePassed = getTimePassed(dbStarted, new Date(data.end));
+  if (data.start) {
+    // Case: Start is given
+    updateData.start = data.start;
+    updateData.startType = data.startType ?? "API";
 
-    updateData.end = data.end;
-    updateData.time = timePassed;
-    updateData.endType = data.endType ?? "API";
+    if (dbStopped && !data.end) {
+      // Case: Start is given, end is missing, dbStopped is given
+      updateData.time = getTimePassed(
+        new Date(data.start),
+        dbStopped,
+        breakTime,
+      );
+
+      if (!updateData.time) {
+        return NextResponse.json(timePassedErrorResult, {
+          status: timePassedErrorResult.status,
+        });
+      }
+    }
   }
 
-  if (data.start && data.end) {
-    const timePassed = getTimePassed(new Date(data.start), new Date(data.end));
-
-    updateData.start = data.start;
+  if (data.end) {
+    // Case: End is given
     updateData.end = data.end;
-    updateData.time = timePassed;
-
-    updateData.startType = data.startType ?? "API";
     updateData.endType = data.endType ?? "API";
+
+    const startTime = data.start ? new Date(data.start) : dbStarted;
+    // Calculate timePassed based on the given start (or dbStarted if not given)
+    updateData.time = getTimePassed(startTime, new Date(data.end), breakTime);
+
+    if (!updateData.time) {
+      return NextResponse.json(timePassedErrorResult, {
+        status: timePassedErrorResult.status,
+      });
+    }
   }
 
   // Update the entry
@@ -401,7 +447,7 @@ export const DELETE = api(async (_request, user, json) => {
     if (!databaseResult)
       return badRequestResponse(
         "Entry with the given id not found",
-        "not-found"
+        "not-found",
       );
 
     if (databaseResult.userId !== user.id && user.role !== "ADMIN")

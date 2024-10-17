@@ -253,7 +253,7 @@ export function TicketAdd({
                     name="Name"
                     id="description"
                     autoComplete="off"
-                    maxLength={800}
+                    maxLength={10e6}
                     value={data.description}
                     onChange={(e) => setData({ description: e.target.value })}
                   />
