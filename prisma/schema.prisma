@@ -30,7 +30,7 @@ model User {
   email              String?
   emailVerified      Boolean @default(false) // TODO
   ticketUpdateMail   Boolean @default(true) @map("ticket_update_mail")
-  ticketCreationMail Boolean @default(false) @map("ticket_creation_mail")
+  ticketCreationMail Boolean @default(true) @map("ticket_creation_mail")
   historyExportMail  Boolean @default(true) @map("history_export_mail")
 
   customer     Customer? @relation(fields: [customerName], references: [name], onDelete: Cascade)
@@ -87,6 +87,8 @@ model Time {
   startType String?   @map("start_type") @db.Text
   end       DateTime? @db.DateTime(2)
   endType   String?   @map("end_type") @db.Text
+
+  breakTime Int @default(0) @map("break_time")
 
   time     String? // Passed time from start to end
   notes    String? @db.MediumText

@@ -88,7 +88,8 @@
         "notes": "Notizen",
         "start": "Start",
         "time": "Zeit",
-        "title": "Eintrag hinzufügen"
+        "title": "Eintrag hinzufügen",
+        "breakTime": "Pausenzeit (Minuten)"
       },
       "Edit": {
         "delete": "Löschen",
@@ -124,6 +125,7 @@
     "Miscellaneous": {
       "created": "Neuen Eintrag erfolgreich erstellt",
       "deleted": "Eintrag erfolgreich gelöscht",
+      "errorUndo": "Eintrag konnte nicht wiederhergestellt werden",
       "invoiced": "Berechnete Zeiten",
       "invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
       "invoicedSingular": "Berechnet",

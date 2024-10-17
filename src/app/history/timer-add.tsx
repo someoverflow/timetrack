@@ -21,6 +21,7 @@ import { useTranslations } from "next-intl";
 import useRequest from "@/lib/hooks/useRequest";
 
 import { ProjectSelection } from "@/components/project-select";
+import { formatDate } from "@/lib/utils";
 //#endregion
 
 interface timerAddState {
@@ -29,6 +30,7 @@ interface timerAddState {
   notes: string;
   traveledDistance: number | null;
   project: string | null;
+  breakTime: number;
 }
 
 export default function TimerAdd({
@@ -51,13 +53,12 @@ export default function TimerAdd({
       ...next,
     }),
     {
-      start: new Date().toLocaleString("sv").replace(" ", "T"),
-      end: new Date(new Date().setHours(new Date().getHours() + 2))
-        .toLocaleString("sv")
-        .replace(" ", "T"),
+      start: formatDate(new Date()),
+      end: formatDate(new Date(new Date().setHours(new Date().getHours() + 2))),
       traveledDistance: null,
       notes: "",
       project: null,
+      breakTime: 0,
     },
   );
 
@@ -66,12 +67,13 @@ export default function TimerAdd({
       fetch("/api/times", {
         method: "POST",
         body: JSON.stringify({
-          userId: user,
+          user,
           notes: data.notes,
           traveledDistance:
             data.traveledDistance === 0 ? null : data.traveledDistance,
           start: new Date(data.start).toISOString(),
           end: new Date(data.end).toISOString(),
+          breakTime: data.breakTime,
           startType: "Website",
           endType: "Website",
           project: data.project ?? undefined,
@@ -80,10 +82,10 @@ export default function TimerAdd({
     (_result) => {
       setVisible(false);
       setData({
-        start: new Date().toLocaleString("sv").replace(" ", "T"),
-        end: new Date(new Date().setHours(new Date().getHours() + 2))
-          .toLocaleString("sv")
-          .replace(" ", "T"),
+        start: formatDate(new Date()),
+        end: formatDate(
+          new Date(new Date().setHours(new Date().getHours() + 2)),
+        ),
         notes: "",
       });
 
@@ -221,6 +223,28 @@ export default function TimerAdd({
                       step={1}
                       value={data.end}
                       onChange={(e) => setData({ end: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="h-full w-full grid p-1 gap-1.5">
+                    <Label
+                      htmlFor="break-input"
+                      className="pl-2 text-muted-foreground"
+                    >
+                      {t("Dialogs.Create.breakTime")}
+                    </Label>
+                    <Input
+                      id="break-input"
+                      type="number"
+                      min={0}
+                      className="w-full justify-between border-2 transition duration-300"
+                      onChange={(change) => {
+                        const target = change.target.valueAsNumber;
+                        setData({
+                          breakTime: Number.isNaN(target) ? 0 : target,
+                        });
+                      }}
+                      value={data.breakTime ?? ""}
                     />
                   </div>
                 </div>

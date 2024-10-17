@@ -57,7 +57,6 @@ import { Separator } from "@/components/ui/separator";
 import type { Ticket } from "@prisma/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import Image from "next/image";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
