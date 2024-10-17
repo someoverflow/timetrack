@@ -164,6 +164,17 @@
         "September": "September"
       }
     },
+    "Export": {
+      "project": "Project",
+      "person": "Person",
+      "date": "Date",
+      "start": "Start",
+      "end": "End",
+      "break": "Pause",
+      "duration": "Duration",
+      "notes": "Notes",
+      "distance": "Distance"
+    },
     "PageTitle": "History"
   },
   "Login": {

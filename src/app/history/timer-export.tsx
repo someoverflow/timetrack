@@ -92,22 +92,23 @@ export default function TimerExportDialog({
     if (visualisation.showProject)
       sheet.columns = [
         ...sheet.columns,
-        { header: "Projekt", key: "project", width: 20 },
+        { header: t("Export.project"), key: "project", width: 20 },
       ];
     if (visualisation.showPerson)
       sheet.columns = [
         ...sheet.columns,
-        { header: "Person", key: "person", width: 30 },
+        { header: t("Export.person"), key: "person", width: 30 },
       ];
 
     sheet.columns = [
       ...sheet.columns,
-      { header: "Datum", key: "date", width: 12 },
-      { header: "Start", key: "start", width: 12 },
-      { header: "Ende", key: "end", width: 12 },
-      { header: "Dauer", key: "duration", width: 12 },
-      { header: "Notizen", key: "notes", width: 32 },
-      { header: "Distanz", key: "distance", width: 10 },
+      { header: t("Export.date"), key: "date", width: 12 },
+      { header: t("Export.start"), key: "start", width: 12 },
+      { header: t("Export.end"), key: "end", width: 12 },
+      { header: t("Export.break"), key: "break", width: 12 },
+      { header: t("Export.duration"), key: "duration", width: 12 },
+      { header: t("Export.notes"), key: "notes", width: 32 },
+      { header: t("Export.distance"), key: "distance", width: 10 },
     ];
 
     // Center Header Row
@@ -144,12 +145,16 @@ export default function TimerExportDialog({
             row.getCell("person").alignment = { vertical: "middle" };
           }
 
-          const start = new Date(time.start.getTime() - (time.start.getTimezoneOffset() * 60_000));
-          const end = new Date(time.end.getTime() - (time.end.getTimezoneOffset() * 60_000));
+          const start = new Date(
+            time.start.getTime() - time.start.getTimezoneOffset() * 60_000,
+          );
+          const end = new Date(
+            time.end.getTime() - time.end.getTimezoneOffset() * 60_000,
+          );
 
           // Date
           const dateCell = row.getCell("date");
-          dateCell.value = time.start.toLocaleDateString()
+          dateCell.value = time.start.toLocaleDateString();
           dateCell.alignment = { horizontal: "center", vertical: "middle" };
 
           // Start
@@ -164,11 +169,17 @@ export default function TimerExportDialog({
           endCell.alignment = { vertical: "middle" };
           endCell.value = end;
 
+          // End
+          const breakCell = row.getCell("break");
+          breakCell.numFmt = '0.00"min"';
+          breakCell.alignment = { vertical: "middle" };
+          breakCell.value = time.breakTime;
+
           // Duration
           const durationCell = row.getCell("duration");
           durationCell.numFmt = '0.00"h"';
           durationCell.value = {
-            formula: `(${endCell.address}-${startCell.address})*24`,
+            formula: `(${endCell.address}-${startCell.address}-(${breakCell.address}/1440))*24`,
           };
           durationCell.alignment = { vertical: "middle" };
 
@@ -205,6 +216,14 @@ export default function TimerExportDialog({
         formula: `SUM(${distanceRow}${rowIndex - sortedTimes.length}:${distanceRow}${rowIndex - 1})`,
       };
 
+      const userBreakCell = row.getCell("break");
+      userBreakCell.numFmt = '0.00"min"';
+      const breakRow = userBreakCell.address.replace(/\d.*$/, "");
+
+      userBreakCell.value = {
+        formula: `SUM(${breakRow}${rowIndex - sortedTimes.length}:${breakRow}${rowIndex - 1})`,
+      };
+
       rowIndex += 2;
     });
 
@@ -223,7 +242,10 @@ export default function TimerExportDialog({
     workbook.xlsx
       .writeBuffer()
       .then((buffer) =>
-        FileSaver.saveAs(new Blob([buffer]), `Zeiten Export ${yearMonth}.xlsx`),
+        FileSaver.saveAs(
+          new Blob([buffer]),
+          `TimeTrack Export ${yearMonth}.xlsx`,
+        ),
       )
       .catch((err) => console.log("Error writing excel export", err));
   };
