@@ -75,7 +75,7 @@
     "@types/exceljs": "^0.5.3",
     "@types/file-saver": "^2.0.7",
     "@types/negotiator": "^0.6.3",
-    "@types/node": "^22.7.5",
+    "@types/node": "^22.7.6",
     "@types/nodemailer": "^6.4.16",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
