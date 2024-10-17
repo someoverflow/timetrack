@@ -27,21 +27,25 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MailCheck, MailMinus, SaveAll, Trash, Trash2 } from "lucide-react";
+import {
+  Coffee,
+  MailCheck,
+  MailMinus,
+  SaveAll,
+  Trash,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { cn, getTimePassed } from "@/lib/utils";
+import { cn, formatDate, getTimePassed } from "@/lib/utils";
 import useRequest from "@/lib/hooks/useRequest";
 import { ProjectSelection } from "@/components/project-select";
 //#endregion
 
-type Timer = Prisma.TimeGetPayload<{
-  include: { project: true };
-}>;
 interface timerInfoState {
   notes: string;
   start: string;
@@ -51,32 +55,41 @@ interface timerInfoState {
 
   traveledDistance: number | null;
 
+  breakTime: number;
+
   projectSelectionOpen: boolean;
   projectName: string | null;
 }
+
 export default function TimerInfo({
   timer,
   projects,
-  edit,
+  edit = false,
   user,
 }: {
-  timer: Timer;
+  timer: Prisma.TimeGetPayload<{
+    include: { project: true };
+  }>;
   projects: Projects;
-  edit: boolean;
+  edit?: boolean;
   user: string | undefined;
 }) {
   const t = useTranslations("History");
   const router = useRouter();
 
+  const [blockVisible, setBlockVisible] = useState(false);
+  const [dragProgress, setDragProgress] = useState(0);
+  const [visible, setVisible] = useState(edit);
+
   const generateReducer = (): timerInfoState => {
     return {
       notes: timer.notes ?? "",
-      start: timer.start.toLocaleString("sv").replace(" ", "T"),
-      end: timer.end
-        ? timer.end.toLocaleString("sv").replace(" ", "T")
-        : new Date().toLocaleString("sv").replace(" ", "T"),
+      start: formatDate(timer.start),
+      end: formatDate(timer.end ?? new Date()),
 
       invoiced: timer.invoiced,
+
+      breakTime: timer.breakTime,
 
       traveledDistance: timer.traveledDistance ?? null,
 
@@ -84,7 +97,6 @@ export default function TimerInfo({
       projectName: timer.projectName,
     };
   };
-
   const [state, setState] = useReducer(
     (prev: timerInfoState, next: Partial<timerInfoState>) => ({
       ...prev,
@@ -92,11 +104,6 @@ export default function TimerInfo({
     }),
     generateReducer(),
   );
-
-  const [blockVisible, setBlockVisible] = useState(false);
-  const [dragProgress, setDragProgress] = useState(0);
-  const [visible, setVisible] = useState(edit);
-
   useEffect(() => {
     // Reset everything when opening/closing
     if (visible) setState(generateReducer());
@@ -106,13 +113,12 @@ export default function TimerInfo({
   useEffect(() => {
     if (timer.end === null && !visible) {
       const interval = setInterval(
-        () =>
-          setState({ end: new Date().toLocaleString("sv").replace(" ", "T") }),
+        () => setState({ end: formatDate(new Date()) }),
         1000,
       );
       return () => clearInterval(interval);
     }
-  });
+  }, [timer.end, visible]);
 
   const { status: updateStatus, send: sendUpdate } = useRequest(
     useCallback(
@@ -122,33 +128,36 @@ export default function TimerInfo({
           notes: state.notes,
           invoiced:
             timer.invoiced !== state.invoiced ? state.invoiced : undefined,
+          breakTime: state.breakTime,
         };
 
-        const startChanged =
-          state.start !== timer.start.toLocaleString("sv").replace(" ", "T");
-        if (startChanged) {
+        // Handle start change
+        if (state.start !== formatDate(timer.start)) {
           request.startType = "Website";
           request.start = new Date(state.start).toISOString();
         }
 
-        if (passed?.stop) {
-          const endChanged =
-            state.end !== timer.end?.toLocaleString("sv").replace(" ", "T");
-
-          if (endChanged) {
-            request.endType = "Website";
-            request.end = new Date(state.end).toISOString();
-          }
+        // Handle stop and end change
+        if (passed?.stop && state.end !== formatDate(timer.end!)) {
+          request.endType = "Website";
+          request.end = new Date(state.end).toISOString();
         }
 
-        if (state.projectName !== timer.projectName)
+        // Only add project if it has changed
+        if (state.projectName !== timer.projectName) {
           request.project = state.projectName;
+        }
 
-        if (state.traveledDistance !== timer.traveledDistance)
+        // Only add traveledDistance if it has changed
+        if (state.traveledDistance !== timer.traveledDistance) {
           request.traveledDistance = state.traveledDistance;
+        }
 
         return fetch("/api/times", {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(request),
         });
       },
@@ -156,7 +165,6 @@ export default function TimerInfo({
     ),
     (_result) => {
       setVisible(false);
-
       toast.success(t("Miscellaneous.updated"), {
         duration: 3_000,
       });
@@ -172,6 +180,9 @@ export default function TimerInfo({
 
       return fetch("/api/times", {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(request),
       });
     },
@@ -188,6 +199,9 @@ export default function TimerInfo({
     () =>
       fetch("/api/times", {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           id: timer.id,
         }),
@@ -200,75 +214,113 @@ export default function TimerInfo({
       const start = new Date(undoTime.start);
       const end = undoTime.end ? new Date(undoTime.end) : undefined;
 
+      const toastDescription = `${start.toLocaleDateString()} • ${start.toLocaleTimeString()} → ${end ? end.toLocaleTimeString() : "--:--:--"}`;
+
       toast.success(t("Miscellaneous.deleted"), {
-        description: `${start.toLocaleDateString()} • ${start.toLocaleTimeString()} → ${end ? end.toLocaleTimeString() : "--:--:--"}`,
+        description: toastDescription,
         duration: 30_000,
         action: undoTime.end
           ? {
               label: t("Miscellaneous.undo"),
               onClick: () => {
-                fetch("/api/times", {
-                  method: "POST",
-                  body: JSON.stringify({
-                    userId: timer.userId,
-                    notes: undoTime.notes ?? "",
-                    traveledDistance:
-                      undoTime.traveledDistance !== 0
-                        ? undoTime.traveledDistance
-                        : null,
-                    start: undoTime.start,
-                    end: undoTime.end,
-                    startType: undoTime.startType ?? undefined,
-                    endType: undoTime.endType ?? undefined,
-                    project: undoTime.projectName ?? undefined,
-                  }),
-                }).then((_res) => {
-                  console.log("Undo:", result);
-                  router.refresh();
-                });
+                async () => {
+                  try {
+                    const response = await fetch("/api/times", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        userId: timer.userId,
+                        start: undoTime.start,
+                        end: undoTime.end,
+                        startType: undoTime.startType ?? undefined,
+                        endType: undoTime.endType ?? undefined,
+                        breakTime: undoTime.breakTime,
+                        project: undoTime.projectName ?? undefined,
+                        notes: undoTime.notes ?? "",
+                        traveledDistance: undoTime.traveledDistance ?? null,
+                      }),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error(`Error: ${response.statusText}`);
+                    }
+
+                    router.refresh();
+                  } catch (error) {
+                    console.error("Failed to undo:", error);
+                    toast.error(t("Miscellaneous.errorUndo"), {
+                      duration: 5000,
+                    });
+                  }
+                };
               },
             }
           : undefined,
       });
+
       router.refresh();
     },
   );
 
   const preventClosing = useCallback(() => {
-    let prevent = false;
-
-    if (deleteStatus.loading || updateStatus.loading || invoicedStatus.loading)
-      prevent = true;
-
-    if (state.notes !== (timer.notes ?? "")) prevent = true;
-
-    if (state.start !== timer.start.toLocaleString("sv").replace(" ", "T"))
-      prevent = true;
     if (
-      timer.end &&
-      state.end !== timer.end.toLocaleString("sv").replace(" ", "T")
-    )
-      prevent = true;
+      deleteStatus.loading ||
+      updateStatus.loading ||
+      invoicedStatus.loading
+    ) {
+      return true; // Prevent closing if any of the loading states are true
+    }
 
-    if (state.traveledDistance !== (timer.traveledDistance ?? null))
-      prevent = true;
+    // Check if notes have changed
+    if (state.notes !== (timer.notes ?? "")) {
+      return true;
+    }
 
-    if (state.projectName !== timer.projectName || state.projectSelectionOpen)
-      prevent = true;
+    // Check if breakTime has changed
+    if (state.breakTime != timer.breakTime) {
+      return true;
+    }
 
-    return prevent;
+    // Check if start time has changed
+    if (state.start != formatDate(timer.start)) {
+      return true;
+    }
+
+    // Check if end time has changed (if end is defined)
+    if (timer.end && state.end != formatDate(timer.end)) {
+      return true;
+    }
+
+    // Check if traveledDistance has changed
+    if (state.traveledDistance !== (timer.traveledDistance ?? null)) {
+      return true;
+    }
+
+    // Check if project name has changed or project selection is open
+    if (state.projectName !== timer.projectName || state.projectSelectionOpen) {
+      return true;
+    }
+
+    return false; // No changes detected, allow closing
   }, [timer, state, updateStatus, deleteStatus, invoicedStatus]);
 
-  const changeVisibility = () => {
-    if (!blockVisible) setVisible(true);
-  };
+  const notes = (() => {
+    const lines = timer.notes?.split("\n") ?? []; // Split notes into lines
+    const firstLine = lines[0]; // Get the first line
 
-  const notesSplit = timer.notes?.split("\n")[0];
-  const notes = notesSplit
-    ? notesSplit.startsWith("- ")
-      ? `${notesSplit.replace("- ", "")} …`
-      : notesSplit
-    : undefined;
+    if (!firstLine) return undefined; // Return undefined if no first line
+
+    const hasMultipleLines = lines.length > 1; // Check if there are multiple lines
+
+    // Format the first line based on its content
+    if (firstLine.startsWith("- ")) {
+      return `${firstLine.replace("- ", "")}${hasMultipleLines ? " …" : ""}`; // Add ellipsis if there are more lines
+    }
+
+    return hasMultipleLines ? `${firstLine} …` : firstLine; // Add ellipsis if there are more lines
+  })();
 
   return (
     <>
@@ -343,8 +395,8 @@ export default function TimerInfo({
             "w-full font-mono p-2 select-none rounded-sm border-border border-2 hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft",
             timer.invoiced && "border-border/50",
           )}
-          onClick={changeVisibility}
-          onKeyDown={changeVisibility}
+          onClick={() => setVisible(blockVisible ? visible : true)}
+          onKeyDown={() => setVisible(blockVisible ? visible : true)}
         >
           <div className="flex items-center justify-between pb-2">
             {timer.project ? (
@@ -366,21 +418,36 @@ export default function TimerInfo({
               onKeyDown={(e) => e.stopPropagation()}
             >
               <Checkbox
-                checked={data.invoiced}
-                onCheckedChange={() =>
-                  sendInvoiced({ invoiced: !data.invoiced })
-                }
-                disabled={invoicedStatus.loading}
+                checked
+                onCheckedChange
+                disabled
               />
             </div> */}
           </div>
 
           <div className="flex flex-row justify-evenly items-center text-lg">
-            <p>{timer.start.toLocaleTimeString()}</p>
+            <p className="flex flex-row items-center">
+              {timer.start.toLocaleTimeString()}
+            </p>
             <div className="relative flex flex-col items-center">
+              {!!timer.breakTime && (
+                <div className="absolute -top-5 text-muted-foreground font-sans text-xs">
+                  <div className="flex flex-row items-center justify-center">
+                    <Coffee className="size-4 mr-1" />
+                    {timer.breakTime.toLocaleString()}
+                    <sub className="ml-0.5">min</sub>
+                  </div>
+                </div>
+              )}
               <Separator orientation="horizontal" className="w-10" />
               <p className="text-xs text-muted-foreground/80 absolute -bottom-5">
-                {timer.time ?? getTimePassed(timer.start, new Date(state.end))}
+                {timer.time ??
+                  getTimePassed(
+                    timer.start,
+                    new Date(state.end),
+                    timer.breakTime,
+                  ) ??
+                  "00:00:00"}
               </p>
             </div>
             <p className={timer.end ? "" : "opacity-50"}>
@@ -390,10 +457,10 @@ export default function TimerInfo({
 
           <p
             className={cn(
-              "text-xs text-muted-foreground/90 truncate max-w-52 text-start p-2 pt-4",
+              "text-xs font-sans text-muted-foreground/90 truncate max-w-52 text-start p-2 pt-4",
             )}
           >
-            {timer.notes && notes}
+            {notes}
           </p>
         </div>
       </SwipeableListItem>
@@ -547,8 +614,7 @@ export default function TimerInfo({
                         htmlFor="start"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
-                          state.start !==
-                            timer.start.toLocaleString("sv").replace(" ", "T")
+                          state.start !== formatDate(timer.start)
                             ? "text-blue-500"
                             : "",
                         )}
@@ -570,12 +636,7 @@ export default function TimerInfo({
                         htmlFor="end"
                         className={cn(
                           "pl-2 text-muted-foreground transition-colors",
-                          state.end !==
-                            (timer.end
-                              ? timer.end.toLocaleString("sv").replace(" ", "T")
-                              : new Date()
-                                  .toLocaleString("sv")
-                                  .replace(" ", "T"))
+                          state.end !== formatDate(timer.end ?? new Date())
                             ? "text-blue-500"
                             : "",
                         )}
@@ -590,6 +651,35 @@ export default function TimerInfo({
                         step={1}
                         value={state.end}
                         onChange={(e) => setState({ end: e.target.value })}
+                      />
+                    </div>
+
+                    <div id="divider" className="h-1" />
+
+                    <div className="h-full w-full grid p-1 gap-1.5">
+                      <Label
+                        htmlFor="break-input"
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          timer.breakTime != state.breakTime
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Create.breakTime")}
+                      </Label>
+                      <Input
+                        id="break-input"
+                        type="number"
+                        min={0}
+                        className="w-full border-2 appearance-none"
+                        onChange={(change) => {
+                          const target = change.target.valueAsNumber;
+                          setState({
+                            breakTime: Number.isNaN(target) ? 0 : target,
+                          });
+                        }}
+                        value={state.breakTime}
                       />
                     </div>
 

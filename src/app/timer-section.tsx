@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import { ProjectSelection } from "@/components/project-select";
 
-import { PlayCircle, RefreshCw, StopCircle } from "lucide-react";
+import { Coffee, PlayCircle, RefreshCw, StopCircle } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 import useLiveTimer from "@/lib/hooks/useLiveTimer";
@@ -34,47 +34,44 @@ export default function TimerSection({ projects }: { projects: Projects }) {
   };
 
   return (
-    <>
-      <div>
-        <Card className="w-[95vw] max-w-[350px] border-2 shadow-2xl">
-          <CardContent>
-            <div
-              className={cn(
-                "w-full rounded-lg bg-secondary/5 shadow-md hover:shadow-lg border border-border/50 hover:border-border transition-all duration-300 cursor-pointer pt-2 mt-6 pb-6 mb-4",
-                state.error && "blur-sm",
-                state.loading && "!cursor-wait",
-              )}
-              onClick={onClick}
-              onKeyUp={onClick}
-            >
-              <CardHeader className="pt-4">
-                <div className="w-full flex justify-center items-center flex-row gap-2">
-                  <ToggleSection
-                    running={state.running}
-                    loading={state.loading}
-                    startType={timer?.startType ?? "loading..."}
-                    toggle={toggle}
-                  />
-                </div>
-              </CardHeader>
-              <div className="w-full h-full flex flex-col items-center gap-6">
-                <h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
-                  {state.running && timer?.time ? timer.time : "00:00:00"}
-                </h1>
-                <TimeSection timer={timer} running={state.running} />
-              </div>
+    <Card className="w-[90vw] max-w-[350px] border-2 shadow-2xl">
+      <CardContent>
+        <div
+          className={cn(
+            "w-full rounded-lg bg-secondary/5 shadow-md hover:shadow-lg border border-border/50 transition-all duration-300 pt-2 mt-6 pb-6 mb-4",
+            !state.running && "hover:border-border cursor-pointer",
+            state.error && "blur-sm",
+            state.loading && "!cursor-wait",
+          )}
+          onClick={onClick}
+          onKeyUp={onClick}
+        >
+          <CardHeader className="pt-4">
+            <div className="w-full flex justify-center items-center flex-row gap-2">
+              <ToggleSection
+                running={state.running}
+                loading={state.loading}
+                startType={timer?.startType ?? "loading..."}
+                toggle={toggle}
+              />
             </div>
+          </CardHeader>
+          <div className="w-full h-full flex flex-col items-center gap-6">
+            <h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
+              {state.running && timer?.time ? timer.time : "00:00:00"}
+            </h1>
+            <TimeSection timer={timer} running={state.running} />
+          </div>
+        </div>
 
-            <ProjectSelection
-              project={project}
-              changeProject={changeProject}
-              projects={projects}
-              buttonDisabled={state.error || state.loading}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </>
+        <ProjectSelection
+          project={project}
+          changeProject={changeProject}
+          projects={projects}
+          buttonDisabled={state.error || state.loading}
+        />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -147,15 +144,29 @@ const TimeSection = ({
 }) => {
   if (running && timer) {
     return (
-      <div className="flex w-full justify-center items-center gap-4">
-        <p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
-          {timer.start.toLocaleTimeString()}
-        </p>
-        <Separator orientation="horizontal" className="w-5" />
-        <p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
-          {(timer.end ?? new Date()).toLocaleTimeString()}
-        </p>
-      </div>
+      <>
+        <div className="relative flex w-full justify-center items-center gap-4">
+          <p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
+            {timer.start.toLocaleTimeString()}
+          </p>
+          <div className="relative">
+            <Separator orientation="horizontal" className="w-5" />
+          </div>
+          <p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
+            {(timer.end ?? new Date()).toLocaleTimeString()}
+          </p>
+
+          {!!timer.breakTime && (
+            <div className="absolute -bottom-4 tabular-nums text-muted-foreground text-xs">
+              <div className="flex flex-row items-center justify-center">
+                <Coffee className="size-3 mr-1" />
+                {timer.breakTime.toLocaleString()}
+                <sub className="ml-0.5">min</sub>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
     );
   }
 

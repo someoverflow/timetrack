@@ -49,6 +49,8 @@ const generateTimer = (project: string | undefined): Time => {
     id: "string",
     userId: null,
 
+    breakTime: 0,
+
     start: new Date(),
     startType: "Website",
 
@@ -134,7 +136,8 @@ export default function useLiveTimer({ projects }: { projects: Projects }) {
     const currentDate = new Date();
     currentDate.setMilliseconds(0);
 
-    const timePassed = getTimePassed(startDate, currentDate);
+    const timePassed =
+      getTimePassed(startDate, currentDate, timer.breakTime) ?? null;
 
     setTimer({
       ...timer,

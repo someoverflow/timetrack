@@ -88,7 +88,8 @@
         "notes": "Notes",
         "start": "Start",
         "time": "Time",
-        "title": "Create entry"
+        "title": "Create entry",
+        "breakTime": "Break time (Minutes)"
       },
       "Edit": {
         "delete": "Delete",
@@ -125,6 +126,7 @@
       "created": "Successfully created new entry",
       "deleted": "Successfully deleted entry",
       "invoiced": "Invoiced Times",
+      "errorUndo": "Entry could not be restored",
       "invoicedDescription": "are {invoiced, select, true {only visible} false {hidden} other {visible}}",
       "invoicedSingular": "Invoiced",
       "newEntry": "Add a new entry",
@@ -161,6 +163,17 @@
         "October": "October",
         "September": "September"
       }
+    },
+    "Export": {
+      "project": "Project",
+      "person": "Person",
+      "date": "Date",
+      "start": "Start",
+      "end": "End",
+      "break": "Pause",
+      "duration": "Duration",
+      "notes": "Notes",
+      "distance": "Distance"
     },
     "PageTitle": "History"
   },

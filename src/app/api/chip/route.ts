@@ -71,105 +71,111 @@ export const POST = api(
 );
 
 // Change the user of a chip
-export const PUT = api(async (_request, _user, json) => {
-  if (!json) throw Error("Request is undefined");
+export const PUT = api(
+  async (_request, _user, json) => {
+    if (!json) throw Error("Request is undefined");
 
-  // Prepare data
-  const result = defaultResult("updated");
+    // Prepare data
+    const result = defaultResult("updated");
 
-  // Validate request
-  const validationResult = chipApiValidation.safeParse({
-    id: json.id,
-    userId: json.userId,
-  });
-  if (!validationResult.success) {
-    const validationError = validationResult.error;
-    return badRequestResponse(validationError.issues, "validation");
-  }
-  const data = validationResult.data;
-
-  // Update the user
-  try {
-    const databaseResult = await prisma.chip.update({
-      where: {
-        id: data.id,
-      },
-      data: {
-        userId: data.userId,
-      },
+    // Validate request
+    const validationResult = chipApiValidation.safeParse({
+      id: json.id,
+      userId: json.userId,
     });
+    if (!validationResult.success) {
+      const validationError = validationResult.error;
+      return badRequestResponse(validationError.issues, "validation");
+    }
+    const data = validationResult.data;
 
-    result.result = databaseResult;
-    return NextResponse.json(result, { status: result.status });
-  } catch (e) {
-    if (e instanceof PrismaClientKnownRequestError) {
-      switch (e.code) {
-        case "P2025":
-          return badRequestResponse(
-            {
-              id: data.id,
-              message: "Chip does not exist.",
-            },
-            "not-found",
-          );
-      }
+    // Update the user
+    try {
+      const databaseResult = await prisma.chip.update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          userId: data.userId,
+        },
+      });
 
-      result.result = `Server issue occurred ${e.code}`;
-    } else result.result = "Server issue occurred";
+      result.result = databaseResult;
+      return NextResponse.json(result, { status: result.status });
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        switch (e.code) {
+          case "P2025":
+            return badRequestResponse(
+              {
+                id: data.id,
+                message: "Chip does not exist.",
+              },
+              "not-found",
+            );
+        }
 
-    result.success = false;
-    result.status = 500;
-    result.type = "unknown";
-    console.warn(e);
-    return NextResponse.json(result, { status: result.status });
-  }
-});
+        result.result = `Server issue occurred ${e.code}`;
+      } else result.result = "Server issue occurred";
+
+      result.success = false;
+      result.status = 500;
+      result.type = "unknown";
+      console.warn(e);
+      return NextResponse.json(result, { status: result.status });
+    }
+  },
+  { adminOnly: true },
+);
 
 // Delete a chip
-export const DELETE = api(async (_request, _user, json) => {
-  if (!json) throw Error("Request is undefined");
+export const DELETE = api(
+  async (_request, _user, json) => {
+    if (!json) throw Error("Request is undefined");
 
-  // Prepare data
-  const result = defaultResult("deleted");
+    // Prepare data
+    const result = defaultResult("deleted");
 
-  // Validate request
-  const validationResult = chipIdValidation.safeParse(json.id);
-  if (!validationResult.success) {
-    const validationError = validationResult.error;
-    return badRequestResponse(validationError.issues, "validation");
-  }
-  const id = validationResult.data;
+    // Validate request
+    const validationResult = chipIdValidation.safeParse(json.id);
+    if (!validationResult.success) {
+      const validationError = validationResult.error;
+      return badRequestResponse(validationError.issues, "validation");
+    }
+    const id = validationResult.data;
 
-  // Delete the chip
-  try {
-    const databaseResult = await prisma.chip.delete({
-      where: {
-        id: id,
-      },
-    });
+    // Delete the chip
+    try {
+      const databaseResult = await prisma.chip.delete({
+        where: {
+          id: id,
+        },
+      });
 
-    result.result = databaseResult;
-    return NextResponse.json(result, { status: result.status });
-  } catch (e) {
-    if (e instanceof PrismaClientKnownRequestError) {
-      switch (e.code) {
-        case "P2025":
-          return badRequestResponse(
-            {
-              id: id,
-              message: "Chip does not exist.",
-            },
-            "not-found",
-          );
-      }
+      result.result = databaseResult;
+      return NextResponse.json(result, { status: result.status });
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        switch (e.code) {
+          case "P2025":
+            return badRequestResponse(
+              {
+                id: id,
+                message: "Chip does not exist.",
+              },
+              "not-found",
+            );
+        }
 
-      result.result = `Server issue occurred ${e.code}`;
-    } else result.result = "Server issue occurred";
+        result.result = `Server issue occurred ${e.code}`;
+      } else result.result = "Server issue occurred";
 
-    result.success = false;
-    result.status = 500;
-    result.type = "unknown";
-    console.warn(e);
-    return NextResponse.json(result, { status: result.status });
-  }
-});
+      result.success = false;
+      result.status = 500;
+      result.type = "unknown";
+      console.warn(e);
+      return NextResponse.json(result, { status: result.status });
+    }
+  },
+  { adminOnly: true },
+);
