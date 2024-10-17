@@ -24,7 +24,7 @@ const timePassedErrorResult: APIResult = {
 };
 
 function formatBreakTime(num?: number): number | undefined {
-  if (!num) return undefined;
+  if (num === undefined) return undefined;
 
   // Round the number to 2 decimal places
   const rounded = Math.ceil(num * 100) / 100;
@@ -329,6 +329,8 @@ export const PUT = api(async (_request, user, json) => {
   }
 
   const breakTime = formatBreakTime(data.breakTime ?? dbBreakTime);
+  console.log(data.breakTime);
+  console.log(breakTime);
 
   const updateData: Prisma.XOR<
     Prisma.TimeUpdateInput,
