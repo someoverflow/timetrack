@@ -221,7 +221,7 @@ export const DELETE = api(
         where: { id: id },
         select: {
           username: true,
-          createdTasks: {
+          createdTickets: {
             select: {
               id: true,
               assignees: {
