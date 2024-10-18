@@ -19,7 +19,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Step, Stepper, type StepItem } from "@/components/ui/stepper";
 import { Badge } from "@/components/ui/badge";
@@ -34,19 +34,25 @@ import {
   CircleCheckBig,
   CircleDot,
   CircleDotDashed,
+  File,
+  LoaderCircle,
   SaveAll,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import axois, { type AxiosProgressEvent } from "axios";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { cn } from "@/lib/utils";
+import { cn, formatDuration, humanFileSize } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import useRequest from "@/lib/hooks/useRequest";
 import { ProjectSelection } from "@/components/project-select";
-import { uploadFile } from "@/lib/upload-action";
+import { Progress } from "@/components/ui/progress";
+import { AnimatePresence, motion } from "framer-motion";
 //#endregion
 
 const steps = [
@@ -85,6 +91,13 @@ export function TicketTableEdit({
   const t = useTranslations("Tickets");
 
   const [visible, setVisible] = useState(false);
+
+  const [uploadProgress, onUploadProgress] = useState<
+    AxiosProgressEvent | undefined
+  >();
+  const [uploadDrag, setUploadDrag] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState<FileList | null>(null);
 
   const getDefaultReducerState = useCallback((): ticketInfoState => {
     return {
@@ -270,16 +283,16 @@ export function TicketTableEdit({
           <DialogTitle>Title</DialogTitle>
         </VisuallyHidden>
         <DialogContent
-          className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+          className="flex w-[95vw] max-w-xl flex-col justify-between rounded-lg"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex flex-row gap-1 absolute top-2 left-2">
+          <div className="absolute left-2 top-2 flex flex-row gap-1">
             {ticket.archived && (
               <Badge variant="destructive">{t("archived")}</Badge>
             )}
           </div>
 
-          <div className="w-full flex flex-col gap-2">
+          <div className="flex w-full flex-col gap-2">
             <div className="flex w-full flex-col gap-4 pb-4 pt-6">
               <Stepper
                 initialStep={
@@ -366,17 +379,17 @@ export function TicketTableEdit({
               </TabsList>
               <TabsContent value="status" className="h-full">
                 <ScrollArea
-                  className="h-[50svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  className="h-[50svh] w-full overflow-hidden rounded-sm p-2.5"
                   type="always"
                 >
-                  <div className="grid gap-2 p-1 w-full">
+                  <div className="grid w-full gap-2 p-1">
                     <Label className="pl-2 text-muted-foreground" asChild>
                       <legend>{t("priority")}</legend>
                     </Label>
                     <RadioGroup
                       id="priority"
                       className={cn(
-                        "flex flex-row items-center justify-evenly pt-1 px-2 transition-all border-l-2",
+                        "flex flex-row items-center justify-evenly border-l-2 px-2 pt-1 transition-all",
                         ticket.priority !== state.priority
                           ? "border-blue-500"
                           : "",
@@ -392,7 +405,7 @@ export function TicketTableEdit({
                         <RadioGroupItem value="HIGH" id="r1" />
                         <Label
                           htmlFor="r1"
-                          className="h-5 flex flex-row items-center"
+                          className="flex h-5 flex-row items-center"
                         >
                           <ChevronsUp className="h-5 w-5 text-red-500" />{" "}
                           {t("priorities.high")}
@@ -402,7 +415,7 @@ export function TicketTableEdit({
                         <RadioGroupItem value="MEDIUM" id="r2" />
                         <Label
                           htmlFor="r2"
-                          className="h-5 flex flex-row items-center"
+                          className="flex h-5 flex-row items-center"
                         >
                           {t("priorities.medium")}
                         </Label>
@@ -411,7 +424,7 @@ export function TicketTableEdit({
                         <RadioGroupItem value="LOW" id="r3" />
                         <Label
                           htmlFor="r3"
-                          className="h-5 flex flex-row items-center"
+                          className="flex h-5 flex-row items-center"
                         >
                           <ChevronDown className="h-5 w-5 text-blue-500" />{" "}
                           {t("priorities.low")}
@@ -458,7 +471,7 @@ export function TicketTableEdit({
                         {t("description")}
                       </Label>
                       <Textarea
-                        className="!w-full border-2 min-h-32"
+                        className="min-h-32 !w-full border-2"
                         name="Description"
                         id="description"
                         autoComplete="off"
@@ -473,7 +486,7 @@ export function TicketTableEdit({
 
                     <div id="divider" className="h-1" />
 
-                    <div className="h-full w-full grid p-1 gap-1.5">
+                    <div className="grid h-full w-full gap-1.5 p-1">
                       <Label
                         htmlFor="projects-button"
                         className={cn(
@@ -555,7 +568,7 @@ export function TicketTableEdit({
                         }
                       />
                     </div>
-                    <div className="h-full w-full grid p-1 gap-1.5">
+                    <div className="grid h-full w-full gap-1.5 p-1">
                       <Popover modal>
                         <Label
                           htmlFor="assignees-button"
@@ -657,7 +670,7 @@ export function TicketTableEdit({
                                               : "opacity-0",
                                           )}
                                         />
-                                        <div className="w-full flex flex-row items-center">
+                                        <div className="flex w-full flex-row items-center">
                                           {user.name}
                                           <Badge
                                             variant="default"
@@ -725,10 +738,10 @@ export function TicketTableEdit({
               </TabsContent>
               <TabsContent value="details" className="h-full">
                 <ScrollArea
-                  className="h-[50svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  className="h-[50svh] w-full overflow-hidden rounded-sm p-2.5"
                   type="always"
                 >
-                  <div className="grid gap-4 p-1 w-full">
+                  <div className="grid w-full gap-4 p-1">
                     <div className="grid w-full items-center gap-1.5">
                       <Label
                         htmlFor="creator"
@@ -809,23 +822,175 @@ export function TicketTableEdit({
 
               <TabsContent value="uploads" className="h-full">
                 <ScrollArea
-                  className="h-[50svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  className="h-[50svh] w-full overflow-hidden rounded-sm p-2.5"
                   type="always"
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setUploadDrag(false);
+
+                    const file = e.dataTransfer.files[0];
+
+                    const list = new DataTransfer();
+                    if (file) list.items.add(file);
+
+                    setFiles(file ? list.files : null);
+                    fileInput.current!.files = file ? list.files : null;
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setUploadDrag(true);
+                  }}
+                  onDragLeave={() => {
+                    setUploadDrag(false);
+                  }}
+                  onDragEnd={(e) => {
+                    e.preventDefault();
+                    setUploadDrag(false);
+                  }}
                 >
-                  <div>
-                    <form action={uploadFile} className="flex flex-col gap-4">
-                      <label>
-                        <span>Upload a file</span>
-                        <input type="file" name="file" ref={fileInput} />
-                      </label>
-                      <button type="submit">Submit</button>
-                    </form>
+                  <div className="grid h-full w-full">
+                    <AnimatePresence>
+                      {uploadDrag && (
+                        <motion.div
+                          exit={{
+                            opacity: 0,
+                            backdropFilter: "blur(0px)",
+                          }}
+                          initial={{
+                            opacity: 0,
+                            backdropFilter: "blur(0px)",
+                          }}
+                          animate={{
+                            opacity: 1,
+                            backdropFilter: "blur(20px)",
+                          }}
+                          className="z-50 grid h-full w-full place-items-center rounded-md border-2 border-dashed border-red-500 bg-transparent [grid-column:1;] [grid-row:1]"
+                        >
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Upload className="size-12" />
+                            <h1 className="text-2xl">Drop Files</h1>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <div className="h-full w-full overflow-hidden p-2 [grid-column:1;] [grid-row:1]">
+                      <ScrollArea type="always">
+                        <div className="flex w-max space-x-4 p-4">
+                          {ticket.uploads.map((upload) => (
+                            <div
+                              key={upload.id}
+                              className="grid w-full place-items-center gap-2 rounded-md border border-border p-2"
+                            >
+                              <File className="size-6" />
+                              <p className="">{humanFileSize(upload.size)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {upload.name}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
+
+                      <form
+                        action={async (formData) => {
+                          setUploading(true);
+
+                          axois
+                            .post("/api/files/upload", formData, {
+                              onUploadProgress,
+                            })
+                            .then(() => {
+                              fileInput.current!.value = "";
+                              fileInput.current!.files = null;
+                              setFiles(null);
+
+                              toast.success("Upload complete.");
+
+                              setUploading(false);
+                              router.refresh();
+                            });
+                        }}
+                        className="mt-4 flex flex-col gap-4 p-4"
+                      >
+                        <label className="hidden">
+                          <input
+                            type="text"
+                            name="ticket"
+                            value={ticket.id}
+                            readOnly
+                          />
+                        </label>
+
+                        <div className="space-y-2 text-sm">
+                          <Label htmlFor="file" className="text-sm font-medium">
+                            File
+                            <span className="block text-xs text-muted-foreground">
+                              Click to select a file or drag and drop it here
+                            </span>
+                          </Label>
+                          <Input
+                            id="file"
+                            name="file"
+                            type="file"
+                            ref={fileInput}
+                            onChange={(e) => setFiles(e.target.files)}
+                          />
+                        </div>
+
+                        <Button
+                          type="submit"
+                          size="lg"
+                          disabled={uploading || !files}
+                        >
+                          {uploading && (
+                            <LoaderCircle className="mr-2 size-4 animate-spin" />
+                          )}
+                          Upload
+                        </Button>
+
+                        <AnimatePresence>
+                          {uploadProgress?.progress && (
+                            <motion.div
+                              initial={{
+                                opacity: 0,
+                              }}
+                              animate={{
+                                opacity: 1,
+                              }}
+                              className="flex flex-col items-center justify-center font-mono tabular-nums"
+                            >
+                              <div className="flex w-full flex-row items-center gap-4">
+                                <Progress
+                                  value={Math.round(
+                                    uploadProgress.progress * 100,
+                                  )}
+                                />
+                                <p>
+                                  {Math.round(uploadProgress!.progress * 100)}%
+                                </p>
+                              </div>
+
+                              <p className="text-sm">
+                                {`${humanFileSize(BigInt(uploadProgress!.loaded ?? 0))} / ${humanFileSize(BigInt(uploadProgress!.total ?? 0))} `}
+                                ({" "}
+                                {formatDuration(
+                                  (uploadProgress?.estimated ?? 0) * 1000,
+                                  { ms: false },
+                                )}{" "}
+                                )
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </form>
+                    </div>
                   </div>
                 </ScrollArea>
               </TabsContent>
             </Tabs>
 
-            <div className="w-full gap-2 flex flex-row justify-end">
+            <div className="flex w-full flex-row justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => send()}

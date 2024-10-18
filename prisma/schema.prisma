@@ -154,9 +154,10 @@ enum TicketStatus {
 model TicketUpload {
   id String @id @default(nanoid(12))
 
-  type String
-  size Int
-  name String
+  type      String
+  extension String
+  size      BigInt
+  name      String
 
   creator   User   @relation(fields: [creatorId], references: [id])
   creatorId String

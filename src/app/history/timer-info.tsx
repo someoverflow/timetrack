@@ -138,7 +138,10 @@ export default function TimerInfo({
         }
 
         // Handle stop and end change
-        if (passed?.stop && state.end !== formatDate(timer.end!)) {
+        if (
+          passed?.stop &&
+          (!timer.end || state.end !== formatDate(timer.end))
+        ) {
           request.endType = "Website";
           request.end = new Date(state.end).toISOString();
         }
@@ -340,23 +343,23 @@ export default function TimerInfo({
                 }, 500)
               }
             >
-              <div className="flex flex-row items-center justify-between w-full h-full p-2">
+              <div className="flex h-full w-full flex-row items-center justify-between p-2">
                 {timer.invoiced ? (
                   <MailMinus
                     className={cn(
-                      "text-destructive h-1/2 w-1/2 transition-all duration-200",
+                      "h-1/2 w-1/2 text-destructive transition-all duration-200",
                       dragProgress > 50
                         ? "text-blue-800"
-                        : "text-indigo-500 scale-50",
+                        : "scale-50 text-indigo-500",
                     )}
                   />
                 ) : (
                   <MailCheck
                     className={cn(
-                      "text-destructive h-1/2 w-1/2 transition-all duration-200",
+                      "h-1/2 w-1/2 text-destructive transition-all duration-200",
                       dragProgress > 50
                         ? "text-blue-800"
-                        : "text-indigo-500 scale-50",
+                        : "scale-50 text-indigo-500",
                     )}
                   />
                 )}
@@ -374,13 +377,13 @@ export default function TimerInfo({
                 }, 500)
               }
             >
-              <div className="flex flex-row items-center justify-between w-full h-full p-2">
+              <div className="flex h-full w-full flex-row items-center justify-between p-2">
                 <Trash2
                   className={cn(
-                    "text-destructive h-1/2 w-1/2 transition-all duration-200",
+                    "h-1/2 w-1/2 text-destructive transition-all duration-200",
                     dragProgress > 50
                       ? "text-red-800"
-                      : "text-red-500 scale-50",
+                      : "scale-50 text-red-500",
                   )}
                 />
               </div>
@@ -392,7 +395,7 @@ export default function TimerInfo({
       >
         <div
           className={cn(
-            "w-full font-mono p-2 select-none rounded-sm border-border border-2 hover:border-ring cursor-pointer transition-all duration-300 animate__animated animate__slideInLeft",
+            "animate__animated animate__slideInLeft w-full cursor-pointer select-none rounded-sm border-2 border-border p-2 font-mono transition-all duration-300 hover:border-ring",
             timer.invoiced && "border-border/50",
           )}
           onClick={() => setVisible(blockVisible ? visible : true)}
@@ -400,7 +403,7 @@ export default function TimerInfo({
         >
           <div className="flex items-center justify-between pb-2">
             {timer.project ? (
-              <Badge variant="secondary" className="text-xs gap-2">
+              <Badge variant="secondary" className="gap-2 text-xs">
                 {timer.project.customerName && (
                   <span className="text-muted-foreground">
                     {timer.project.customerName}
@@ -425,22 +428,22 @@ export default function TimerInfo({
             </div> */}
           </div>
 
-          <div className="flex flex-row justify-evenly items-center text-lg">
+          <div className="flex flex-row items-center justify-evenly text-lg">
             <p className="flex flex-row items-center">
               {timer.start.toLocaleTimeString()}
             </p>
             <div className="relative flex flex-col items-center">
               {!!timer.breakTime && (
-                <div className="absolute -top-5 text-muted-foreground font-sans text-xs">
+                <div className="absolute -top-5 font-sans text-xs text-muted-foreground">
                   <div className="flex flex-row items-center justify-center">
-                    <Coffee className="size-4 mr-1" />
+                    <Coffee className="mr-1 size-4" />
                     {timer.breakTime.toLocaleString()}
                     <sub className="ml-0.5">min</sub>
                   </div>
                 </div>
               )}
               <Separator orientation="horizontal" className="w-10" />
-              <p className="text-xs text-muted-foreground/80 absolute -bottom-5">
+              <p className="absolute -bottom-5 text-xs text-muted-foreground/80">
                 {timer.time ??
                   getTimePassed(
                     timer.start,
@@ -457,7 +460,7 @@ export default function TimerInfo({
 
           <p
             className={cn(
-              "text-xs font-sans text-muted-foreground/90 truncate max-w-52 text-start p-2 pt-4",
+              "max-w-52 truncate p-2 pt-4 text-start font-sans text-xs text-muted-foreground/90",
             )}
           >
             {notes}
@@ -471,7 +474,7 @@ export default function TimerInfo({
         onOpenChange={(e) => setVisible(e)}
       >
         <DialogContent
-          className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+          className="flex w-[95vw] max-w-xl flex-col justify-between rounded-lg"
           onPointerDownOutside={(e) => {
             if (preventClosing()) e.preventDefault();
           }}
@@ -485,7 +488,7 @@ export default function TimerInfo({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full flex flex-col gap-2">
+          <div className="flex w-full flex-col gap-2">
             <Tabs defaultValue="details">
               <TabsList className="flex w-full">
                 <TabsTrigger className="w-full" value="details">
@@ -497,11 +500,11 @@ export default function TimerInfo({
               </TabsList>
               <TabsContent value="details">
                 <ScrollArea
-                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  className="h-[60svh] w-full overflow-hidden rounded-sm p-2.5"
                   type="always"
                 >
                   <div>
-                    <div className="h-full w-full grid p-1 gap-1.5">
+                    <div className="grid h-full w-full gap-1.5 p-1">
                       <Label
                         htmlFor="projects-button"
                         className={cn(
@@ -524,7 +527,7 @@ export default function TimerInfo({
 
                     <div id="divider" className="h-4" />
 
-                    <div className="h-full w-full grid p-1 gap-1.5">
+                    <div className="grid h-full w-full gap-1.5 p-1">
                       <Label
                         htmlFor={`timerModal-notes-${timer.id}`}
                         className={cn(
@@ -538,7 +541,7 @@ export default function TimerInfo({
                       </Label>
                       <Textarea
                         id={`timerModal-notes-${timer.id}`}
-                        className="h-full min-h-[30svh] max-h-[50svh] border-2"
+                        className="h-full max-h-[50svh] min-h-[30svh] border-2"
                         spellCheck={true}
                         value={state.notes}
                         onChange={(e) => setState({ notes: e.target.value })}
@@ -549,7 +552,7 @@ export default function TimerInfo({
 
                     <div
                       className={cn(
-                        "flex flex-row items-center gap-2 p-2 transition-all border-l-2",
+                        "flex flex-row items-center gap-2 border-l-2 p-2 transition-all",
                         timer.invoiced !== state.invoiced
                           ? "border-blue-500"
                           : "",
@@ -572,7 +575,7 @@ export default function TimerInfo({
 
                     <div id="divider" className="h-4" />
 
-                    <div className="h-full w-full grid p-1 gap-1.5">
+                    <div className="grid h-full w-full gap-1.5 p-1">
                       <Label
                         htmlFor="distance-button"
                         className={cn(
@@ -605,10 +608,10 @@ export default function TimerInfo({
               </TabsContent>
               <TabsContent value="time" className="h-full">
                 <ScrollArea
-                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  className="h-[60svh] w-full overflow-hidden rounded-sm p-2.5"
                   type="always"
                 >
-                  <div className="grid gap-4 p-1 w-full">
+                  <div className="grid w-full gap-4 p-1">
                     <div className="grid w-full items-center gap-1.5">
                       <Label
                         htmlFor="start"
@@ -622,7 +625,7 @@ export default function TimerInfo({
                         {t("Dialogs.Edit.start")}
                       </Label>
                       <Input
-                        className="w-full font-mono border-2 appearance-none"
+                        className="w-full appearance-none border-2 font-mono"
                         type="datetime-local"
                         name="Start"
                         id="start"
@@ -644,7 +647,7 @@ export default function TimerInfo({
                         {t("Dialogs.Edit.end")}
                       </Label>
                       <Input
-                        className="w-full font-mono border-2 appearance-none"
+                        className="w-full appearance-none border-2 font-mono"
                         type="datetime-local"
                         name="End"
                         id="end"
@@ -656,7 +659,7 @@ export default function TimerInfo({
 
                     <div id="divider" className="h-1" />
 
-                    <div className="h-full w-full grid p-1 gap-1.5">
+                    <div className="grid h-full w-full gap-1.5 p-1">
                       <Label
                         htmlFor="break-input"
                         className={cn(
@@ -672,7 +675,7 @@ export default function TimerInfo({
                         id="break-input"
                         type="number"
                         min={0}
-                        className="w-full border-2 appearance-none"
+                        className="w-full appearance-none border-2"
                         onChange={(change) => {
                           const target = change.target.valueAsNumber;
                           setState({
@@ -694,7 +697,7 @@ export default function TimerInfo({
                       </Label>
                       <Input
                         disabled
-                        className="w-full font-mono appearance-none"
+                        className="w-full appearance-none font-mono"
                         type="text"
                         name="started-with"
                         id="start-w"
@@ -741,7 +744,7 @@ export default function TimerInfo({
               </TabsContent>
             </Tabs>
 
-            <div className="w-full gap-2 flex flex-row justify-end">
+            <div className="flex w-full flex-row justify-end gap-2">
               {timer.end && (
                 <Button
                   variant="destructive"
