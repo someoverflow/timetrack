@@ -329,8 +329,6 @@ export const PUT = api(async (_request, user, json) => {
   }
 
   const breakTime = formatBreakTime(data.breakTime ?? dbBreakTime);
-  console.log(data.breakTime);
-  console.log(breakTime);
 
   const updateData: Prisma.XOR<
     Prisma.TimeUpdateInput,

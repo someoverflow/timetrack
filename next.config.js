@@ -9,5 +9,4 @@ const nextConfig = {
     serverComponentsExternalPackages: ["@node-rs/argon2"],
   },
 };
-
 module.exports = withNextIntl(nextConfig);

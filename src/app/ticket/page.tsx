@@ -12,6 +12,8 @@ import prisma from "@/lib/prisma";
 import { authCheck } from "@/lib/auth";
 //#endregion
 
+const maxFileSize = Math.pow(1024, 2) * Number(process.env.UPLOAD_LIMIT);
+
 const statusOrder = {
   [TicketStatus.TODO]: 2,
   [TicketStatus.IN_PROGRESS]: 1,
@@ -186,6 +188,17 @@ export default async function Tickets({
             name: true,
           },
         },
+        uploads: {
+          include: {
+            creator: {
+              select: {
+                name: true,
+                username: true,
+                id: true,
+              },
+            },
+          },
+        },
         projects: {
           where: {
             customer: user.role === "CUSTOMER" ? customerFilter : undefined,
@@ -285,12 +298,13 @@ export default async function Tickets({
 
   return (
     <Navigation>
-      <section className="w-full max-h-[95svh] flex flex-col items-center gap-2 p-4">
-        <div className="w-full font-mono text-center pt-2">
-          <p className="text-2xl font-mono">{t("title")}</p>
+      <section className="flex max-h-[95svh] w-full flex-col items-center gap-2 p-4">
+        <div className="w-full pt-2 text-center font-mono">
+          <p className="font-mono text-2xl">{t("title")}</p>
         </div>
 
         <DataTable
+          user={user}
           data={tickets}
           columns={columns}
           paginationData={{ page: page, pages: pages, pageSize: pageSize }}
@@ -300,6 +314,7 @@ export default async function Tickets({
             archived: archived,
             status,
           }}
+          maxFileSize={maxFileSize}
         />
       </section>
     </Navigation>

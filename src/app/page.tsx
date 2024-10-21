@@ -28,9 +28,9 @@ export default async function Home() {
 
   return (
     <Navigation>
-      <section className="min-h-[70svh] flex flex-col items-center justify-center gap-4">
+      <section className="flex min-h-[70svh] flex-col items-center justify-center gap-4">
         {auth.user.name && (
-          <h1 className="text-2xl font-mono text-content3">{auth.user.name}</h1>
+          <h1 className="text-content3 font-mono text-2xl">{auth.user.name}</h1>
         )}
         <TimerSection projects={JSON.parse(JSON.stringify(projects))} />
       </section>

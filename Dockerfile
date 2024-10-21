@@ -61,6 +61,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/
 
 RUN mkdir /backups && chown nextjs:nodejs /backups
+RUN mkdir /uploads && chown nextjs:nodejs /uploads
 
 USER root
 
@@ -70,6 +71,7 @@ ENV URL=https://localhost:3000
 
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV UPLOADS_PATH=/uploads
 
 ENV DATABASE_HOST=localhost
 ENV DATABASE_USER=timetrack
@@ -77,6 +79,8 @@ ENV DATABASE_PASSWORD=timetrack
 ENV DATABASE_PORT=3306
 ENV DATABASE_DB=timetrack
 
+ENV UPLOAD_LIMIT=1000
+
 EXPOSE 3000
-VOLUME ["/backups"]
+VOLUME ["/backups", "/uploads"]
 CMD ["/bin/sh", "./docker-start.sh"]

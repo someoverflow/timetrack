@@ -8,6 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// #region User
 enum Role {
   USER // Arbeiter
   ADMIN // Arbeitgeber
@@ -39,8 +40,10 @@ model User {
   times Time[]
   chips Chip[]
 
-  assignedTasks Ticket[] @relation("assignee_to_todo")
-  createdTasks  Ticket[] @relation("creator")
+  assignedTickets Ticket[] @relation("assignee_to_todo")
+  createdTickets  Ticket[] @relation("creator")
+
+  ticketUploads TicketUpload[]
 
   sessions Session[]
 
@@ -77,6 +80,33 @@ model Chip {
   @@map("chips")
 }
 
+// #endregion
+
+// #region Customer & Project
+model Customer {
+  name String @id
+
+  projects Project[]
+  users    User[]
+
+  @@map("customers")
+}
+
+model Project {
+  name        String  @id @unique
+  description String?
+
+  customer     Customer? @relation(fields: [customerName], references: [name], onDelete: SetNull)
+  customerName String?
+
+  todos Ticket[] @relation("project_to_todo") // Related Todos
+  times Time[] // Related Times
+
+  @@map("projects")
+}
+
+// #endregion
+
 model Time {
   id String @id @default(nanoid(12))
 
@@ -104,28 +134,7 @@ model Time {
   @@map("times")
 }
 
-model Customer {
-  name String @id
-
-  projects Project[]
-  users    User[]
-
-  @@map("customers")
-}
-
-model Project {
-  name        String  @id @unique
-  description String?
-
-  customer     Customer? @relation(fields: [customerName], references: [name], onDelete: SetNull)
-  customerName String?
-
-  todos Ticket[] @relation("project_to_todo") // Related Todos
-  times Time[] // Related Times
-
-  @@map("projects")
-}
-
+// #region Ticket
 enum TicketPriority {
   HIGH
   MEDIUM
@@ -142,6 +151,21 @@ enum TicketStatus {
   @@map("todo_statuses")
 }
 
+model TicketUpload {
+  id String @id @default(nanoid(12))
+
+  type      String
+  extension String
+  size      BigInt
+  name      String
+
+  creator   User   @relation(fields: [creatorId], references: [id])
+  creatorId String
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  ticketId String
+}
+
 model Ticket {
   id String @id @default(nanoid(12))
 
@@ -152,6 +176,8 @@ model Ticket {
   hidden      Boolean        @default(false)
   priority    TicketPriority @default(MEDIUM)
   deadline    DateTime?
+
+  uploads TicketUpload[]
 
   projects  Project[] @relation("project_to_todo") // Any related projects to this todo
   assignees User[]    @relation("assignee_to_todo") // Assigned users of the todo
@@ -164,3 +190,5 @@ model Ticket {
 
   @@map("todos")
 }
+
+// #endregion

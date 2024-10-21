@@ -315,6 +315,19 @@
     "changed": "Erfolgreich geändert.",
     "hide": "Löschen",
     "visibleColumns": "Sichtbare Spalten",
+
+    "dropFile": "Datei Ablegen",
+
+    "open": "Öffnen",
+
+    "fileInfo": "Datei {supported, select, true {{oversized, select, true {ist größer als {maxFileSize}} false {} other {}}} false {wird nicht unterstützt} other {}}",
+    "fileInfoDescription": "Klicken Sie, um eine Datei auszuwählen oder ziehen Sie sie hierher",
+
+    "upload": "Hochladen",
+    "uploads": "Uploads:",
+
+    "deleted": "Eintrag gelöscht",
+
     "reset": "Zurücksetzen",
     "priorities": {
       "high": "Hoch",

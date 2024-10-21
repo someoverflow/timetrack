@@ -56,7 +56,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
             <Button
               variant="ghost"
               size="sm"
-              className="-ml-3 h-8 data-[state=open]:bg-accent w-full"
+              className="-ml-3 h-8 w-full data-[state=open]:bg-accent"
             >
               <span>{t("task")}</span>
             </Button>
@@ -103,7 +103,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
           <div className="flex flex-row items-center gap-2">
             <div
               className={cn(
-                "flex flex-col justify-between gap-1 h-10",
+                "flex h-10 flex-col justify-between gap-1",
                 ticket.priority == "MEDIUM" && "justify-center",
               )}
             >
@@ -146,8 +146,8 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
                     <div className="text-muted-foreground">
                       {t("steps.todo")}
                       <br />
-                      <span className="text-primary flex flex-row items-center gap-1">
-                        <MousePointerClick className="h-4 w-4 inline-flex" />{" "}
+                      <span className="flex flex-row items-center gap-1 text-primary">
+                        <MousePointerClick className="inline-flex h-4 w-4" />{" "}
                         {t("stepsNext.todo")}
                       </span>
                     </div>
@@ -156,8 +156,8 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
                     <div className="text-muted-foreground">
                       {t("steps.inProgress")}
                       <br />
-                      <span className="text-primary flex flex-row items-center gap-1">
-                        <MousePointerClick className="h-4 w-4 inline-flex" />{" "}
+                      <span className="flex flex-row items-center gap-1 text-primary">
+                        <MousePointerClick className="inline-flex h-4 w-4" />{" "}
                         {t("stepsNext.inProgress")}
                       </span>
                     </div>
@@ -166,8 +166,8 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
                     <div className="text-muted-foreground">
                       {t("steps.done")}
                       <br />
-                      <span className="text-primary flex flex-row items-center gap-1">
-                        <MousePointerClick className="h-4 w-4 inline-flex" />{" "}
+                      <span className="flex flex-row items-center gap-1 text-primary">
+                        <MousePointerClick className="inline-flex h-4 w-4" />{" "}
                         {t("stepsNext.done")}
                       </span>
                     </div>
@@ -179,7 +179,9 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
             <Separator orientation="vertical" className="ml-2 h-10" />
 
             <TicketTableEdit
+              maxFileSize={table.options.meta?.data.maxFileSize ?? 0}
               ticket={ticket}
+              user={table.options.meta?.data.user}
               projects={
                 table.options.meta?.data.projects ??
                 ({ single: [], grouped: {} } satisfies Projects)
@@ -188,13 +190,13 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
                 table.options.meta?.data.users ?? { single: [], grouped: {} }
               }
             >
-              <p className="flex flex-col justify-center text-xs text-muted-foreground/80 space-x-2 w-full bg-background/25 rounded-sm p-2">
+              <p className="flex w-full flex-col justify-center space-x-2 rounded-sm bg-background/25 p-2 text-xs text-muted-foreground/80">
                 {ticket.projects.map(
                   (project, index) =>
                     project.name +
                     (index !== ticket.projects.length - 1 ? " • " : ""),
                 )}
-                <span className="text-primary text-base">
+                <span className="text-base text-primary">
                   <ChevronRight className="inline-block size-3 text-muted-foreground" />
                   {ticket.task}
                 </span>
@@ -219,7 +221,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
               <Badge
                 variant="secondary"
                 key={assignee.id}
-                className="px-4 text-center text-xs text-nowrap w-full"
+                className="w-full text-nowrap px-4 text-center text-xs"
               >
                 <p className="w-full">{assignee.name}</p>
               </Badge>
@@ -250,7 +252,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
       cell: ({ row }) => {
         const ticket = row.original;
         return (
-          <div className="font-medium text-nowrap">
+          <div className="text-nowrap font-medium">
             {ticket.createdAt.toLocaleString()}
           </div>
         );
