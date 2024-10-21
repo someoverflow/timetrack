@@ -79,6 +79,8 @@ ENV DATABASE_PASSWORD=timetrack
 ENV DATABASE_PORT=3306
 ENV DATABASE_DB=timetrack
 
+ENV UPLOAD_LIMIT=1000
+
 EXPOSE 3000
 VOLUME ["/backups", "/uploads"]
 CMD ["/bin/sh", "./docker-start.sh"]

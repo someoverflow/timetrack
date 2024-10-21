@@ -64,6 +64,7 @@ declare module "@tanstack/table-core" {
       projects?: Projects;
       users?: Users;
       customers?: string[];
+      maxFileSize?: number;
     };
   }
 }
@@ -128,13 +129,13 @@ export function DataTable<TData, TValue>({
     <>
       <div
         className={cn(
-          "animate-pulse w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
+          "h-0.5 w-[10%] animate-pulse rounded-xl bg-primary opacity-0 transition-all duration-700",
           isPending && "opacity-100",
         )}
       />
 
       <div>
-        <div className="w-full flex flex-row items-center justify-between gap-2 p-2">
+        <div className="flex w-full flex-row items-center justify-between gap-2 p-2">
           <div className="w-full">
             <Input
               id="searchInput"
@@ -154,11 +155,11 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
         <ScrollArea
-          className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"
+          className="relative h-[calc(95svh-82px-68px-56px-40px)] w-[95vw] max-w-2xl rounded-md border"
           type="always"
         >
-          <Table className="table-auto w-full">
-            <TableHeader className="sticky top-0 bg-secondary/40 z-10">
+          <Table className="w-full table-auto">
+            <TableHeader className="sticky top-0 z-10 bg-secondary/40">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -221,8 +222,8 @@ export function DataTable<TData, TValue>({
             </TableBody>
           </Table>
         </ScrollArea>
-        <div className="flex items-center justify-evenly sm:justify-end space-x-4 p-2 sm:py-4 w-full">
-          <div className="flex flex-col sm:flex-row items-center space-x-2">
+        <div className="flex w-full items-center justify-evenly space-x-4 p-2 sm:justify-end sm:py-4">
+          <div className="flex flex-col items-center space-x-2 sm:flex-row">
             <p className="text-sm font-medium">{t("rowsPerPage")}</p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
@@ -248,8 +249,8 @@ export function DataTable<TData, TValue>({
             </Select>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center sm:gap-2">
-            <p className="flex w-full sm:w-[100px] justify-center text-center text-sm font-medium">
+          <div className="flex flex-col items-center justify-center sm:flex-row sm:gap-2">
+            <p className="flex w-full justify-center text-center text-sm font-medium sm:w-[100px]">
               {t("currentPage", {
                 page: paginationData.page,
                 pages: paginationData.pages,
@@ -259,29 +260,29 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={async () => {
                   await changePage(1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
-                <ChevronsLeft className="w-4 h-4" />
+                <ChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={async () => {
                   await changePage(paginationData.page - 1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={async () => {
                   await changePage(paginationData.page + 1);
                 }}
@@ -289,12 +290,12 @@ export function DataTable<TData, TValue>({
                   paginationData.page >= paginationData.pages || isPending
                 }
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={async () => {
                   await changePage(paginationData.pages);
                 }}
@@ -302,7 +303,7 @@ export function DataTable<TData, TValue>({
                   paginationData.page >= paginationData.pages || isPending
                 }
               >
-                <ChevronsRight className="w-4 h-4" />
+                <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

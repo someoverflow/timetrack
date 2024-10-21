@@ -30,7 +30,17 @@ type Users = {
 
 type TicketPagePayload = {
   include: {
-    uploads: {};
+    uploads: {
+      include: {
+        creator: {
+          select: {
+            name: true;
+            username: true;
+            id: true;
+          };
+        };
+      };
+    };
     assignees: {
       select: {
         id: true;

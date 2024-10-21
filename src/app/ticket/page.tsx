@@ -12,6 +12,8 @@ import prisma from "@/lib/prisma";
 import { authCheck } from "@/lib/auth";
 //#endregion
 
+const maxFileSize = Math.pow(1024, 2) * Number(process.env.UPLOAD_LIMIT);
+
 const statusOrder = {
   [TicketStatus.TODO]: 2,
   [TicketStatus.IN_PROGRESS]: 1,
@@ -186,7 +188,17 @@ export default async function Tickets({
             name: true,
           },
         },
-        uploads: {},
+        uploads: {
+          include: {
+            creator: {
+              select: {
+                name: true,
+                username: true,
+                id: true,
+              },
+            },
+          },
+        },
         projects: {
           where: {
             customer: user.role === "CUSTOMER" ? customerFilter : undefined,
@@ -301,6 +313,7 @@ export default async function Tickets({
             archived: archived,
             status,
           }}
+          maxFileSize={maxFileSize}
         />
       </section>
     </Navigation>

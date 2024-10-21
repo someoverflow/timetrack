@@ -3,42 +3,62 @@ import { revalidatePath } from "next/cache";
 import { extname } from "node:path";
 import { authCheck } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { nanoIdValidation } from "@/lib/zod";
-import { badRequestResponse } from "@/lib/server-utils";
+import {
+  badRequestResponse,
+  createErrorResponse,
+  defaultResult,
+  NO_AUTH_RESPONSE,
+} from "@/lib/server-utils";
 import { headers } from "next/headers";
 import { humanFileSize } from "@/lib/utils";
+import { isMimeTypeSupported } from "@/lib/file-utils";
+import { getTranslations } from "next-intl/server";
 
 const uploadsPath = process.env.UPLOADS_PATH ?? "./uploads";
 
+const maxFileSize = Math.pow(1024, 2) * Number(process.env.UPLOAD_LIMIT);
+
 export async function POST(req: NextRequest) {
-  // TODO: Translation
+  const t = await getTranslations("Tickets");
 
-  const contentType = headers().get("content-type");
-  console.log(contentType);
+  const head = headers();
 
-  const contentLength = headers().get("content-length");
-  if (!contentLength)
+  const contentLength = head.get("content-length");
+  if (!contentLength || Number(contentLength) > maxFileSize)
     return badRequestResponse(
-      { message: "Content length missing" },
+      {
+        message: t("fileInfo", {
+          supported: contentLength != null,
+          oversized: Number(contentLength) > maxFileSize,
+          maxFileSize: humanFileSize(BigInt(maxFileSize)),
+        }),
+      },
       "error-message",
     );
-
-  console.log(humanFileSize(BigInt(contentLength)));
-  // TOOD: Limit size
 
   try {
     const formData = await req.formData();
 
     const { user } = await authCheck();
-    if (!user) throw new Error("Not signed in");
+    if (!user) return NO_AUTH_RESPONSE;
 
-    // TODO: Multiple
     const file = formData.get("file") as File;
     if (!file || !(file instanceof File))
       return badRequestResponse({ message: "No file given" }, "error-message");
 
-    // TODO: Check Limit again
+    if (!isMimeTypeSupported(file.type) || Number(file.size) > maxFileSize)
+      return badRequestResponse(
+        {
+          message: t("fileInfo", {
+            supported: isMimeTypeSupported(file.type),
+            oversized: Number(file.size) > maxFileSize,
+            maxFileSize: humanFileSize(BigInt(maxFileSize)),
+          }),
+        },
+        "error-message",
+      );
 
     const ticketId = formData.get("ticket");
     const ticket = nanoIdValidation.safeParse(ticketId);
@@ -60,13 +80,17 @@ export async function POST(req: NextRequest) {
     const folder = `${uploadsPath}/${ticketId}/`;
     const path = `${folder}${dbUpload.id}${dbUpload.extension}`;
 
-    console.debug("Upload Folder", folder);
-    console.debug("Upload Path", path);
+    req.signal.addEventListener("abort", () => {
+      abort(dbUpload.id, path);
+    });
 
     try {
       // eslint-disable-next-line no-var
       var controller = new AbortController();
       const { signal } = controller;
+      signal.addEventListener("abort", () => {
+        abort(dbUpload.id, path);
+      });
 
       const arrayBuffer = await file.arrayBuffer();
       const buffer = new Uint8Array(arrayBuffer);
@@ -77,19 +101,21 @@ export async function POST(req: NextRequest) {
       revalidatePath("/");
     } catch (e) {
       console.warn(e);
-      controller!.abort();
-
-      const fileStats = fs.statSync(path);
-      if (fileStats) {
-        fs.rmSync(path);
-      }
-
-      await prisma.ticketUpload.delete({ where: { id: dbUpload.id } });
     }
 
-    return NextResponse.json({ status: "success" });
+    const result = defaultResult("created");
+    result.result = { ...dbUpload, size: dbUpload.size.toString() };
+    return NextResponse.json(result, {
+      status: result.status,
+    });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ status: "fail", error: e });
+    return createErrorResponse(500, "Internal Server Error", "unknown");
   }
+}
+
+async function abort(id: string, path: string) {
+  fs.rmSync(path, { force: false });
+
+  await prisma.ticketUpload.delete({ where: { id } });
 }

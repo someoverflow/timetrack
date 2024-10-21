@@ -344,6 +344,15 @@
     "hide": "Delete",
     "visibleColumns": "Visible Columns",
 
+    "dropFile": "Drop File",
+
+    "open": "Open",
+
+    "fileInfo": "File {supported, select, true {{oversized, select, true {is larger than {maxFileSize}} false {} other {}}} false {is unsupported} other {}}",
+    "fileInfoDescription": "Click to select a file or drag and drop it here",
+
+    "upload": "Upload",
+
     "Dialogs": {
       "Add": {
         "buttonToolTip": "Create a new ticket",

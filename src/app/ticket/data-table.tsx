@@ -72,6 +72,8 @@ interface DataTableProps<TData, TValue> {
     pageSize: number;
   };
 
+  maxFileSize: number;
+
   filters: {
     archived: boolean;
     status: {
@@ -89,6 +91,7 @@ export function DataTable<TData, TValue>({
   users,
   paginationData,
   filters,
+  maxFileSize,
 }: DataTableProps<TData, TValue>) {
   //#region Hooks
   const router = useRouter();
@@ -105,6 +108,7 @@ export function DataTable<TData, TValue>({
       data: {
         projects,
         users,
+        maxFileSize,
       },
     },
     initialState: {
@@ -202,13 +206,13 @@ export function DataTable<TData, TValue>({
     <>
       <div
         className={cn(
-          "animate-pulse w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
+          "h-0.5 w-[10%] animate-pulse rounded-xl bg-primary opacity-0 transition-all duration-700",
           isPending && "opacity-100",
         )}
       />
 
       <div>
-        <div className="w-full flex flex-row items-center justify-between gap-2 p-2">
+        <div className="flex w-full flex-row items-center justify-between gap-2 p-2">
           <div className="w-full">
             <Input
               id="searchTaskInput"
@@ -231,7 +235,7 @@ export function DataTable<TData, TValue>({
                   size="sm"
                   className="h-10 w-10 sm:w-fit sm:px-3"
                 >
-                  <Filter className="sm:mr-2 h-4 w-4" />
+                  <Filter className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:block">{t("filter")}</span>
                 </Button>
               </PopoverTrigger>
@@ -322,7 +326,7 @@ export function DataTable<TData, TValue>({
                       onClick={() => updateFilter({ reset: true })}
                       className="w-full"
                     >
-                      <FilterX className="size-4 mr-4" />
+                      <FilterX className="mr-4 size-4" />
                       {t("reset")}
                     </Button>
                   </div>
@@ -333,11 +337,11 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
         <ScrollArea
-          className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"
+          className="relative h-[calc(95svh-82px-68px-56px-40px)] w-[95vw] max-w-2xl rounded-md border"
           type="always"
         >
           <Table>
-            <TableHeader className="sticky top-0 bg-secondary/40 z-10">
+            <TableHeader className="sticky top-0 z-10 bg-secondary/40 backdrop-blur-xl">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -387,7 +391,7 @@ export function DataTable<TData, TValue>({
                       </PopoverTrigger>
                       <PopoverContent
                         side="bottom"
-                        className="border-secondary-foreground/20 dark:bg-secondary text-muted-foreground max-w-screen-sm w-[95vw]"
+                        className="w-[95vw] max-w-screen-sm border-secondary-foreground/20 text-muted-foreground dark:bg-secondary"
                       >
                         {ticket.archived && (
                           <div className="flex flex-row gap-2 pb-2">
@@ -433,10 +437,10 @@ export function DataTable<TData, TValue>({
 
                         {(ticket.description ?? "").trim().length != 0 && (
                           <>
-                            <Separator className="w-full my-2 bg-secondary-foreground/20" />
+                            <Separator className="my-2 w-full bg-secondary-foreground/20" />
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
-                              className="prose dark:prose-invert prose-neutral"
+                              className="prose prose-neutral dark:prose-invert"
                             >
                               {ticket.description}
                             </ReactMarkdown>
@@ -459,8 +463,8 @@ export function DataTable<TData, TValue>({
             </TableBody>
           </Table>
         </ScrollArea>
-        <div className="flex items-center justify-evenly sm:justify-end space-x-4 p-2 sm:py-4 w-full">
-          <div className="flex flex-col sm:flex-row items-center space-x-2">
+        <div className="flex w-full items-center justify-evenly space-x-4 p-2 sm:justify-end sm:py-4">
+          <div className="flex flex-col items-center space-x-2 sm:flex-row">
             <p className="text-sm font-medium">{t("rowsPerPage")}</p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
@@ -487,8 +491,8 @@ export function DataTable<TData, TValue>({
             </Select>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center sm:gap-2">
-            <p className="flex w-full sm:w-[100px] justify-center text-center text-sm font-medium">
+          <div className="flex flex-col items-center justify-center sm:flex-row sm:gap-2">
+            <p className="flex w-full justify-center text-center text-sm font-medium sm:w-[100px]">
               {t("currentPage", {
                 page: paginationData.page,
                 pages: paginationData.pages,
@@ -498,29 +502,29 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
-                <ChevronsLeft className="w-4 h-4" />
+                <ChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(paginationData.page - 1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(paginationData.page + 1);
                 }}
@@ -528,12 +532,12 @@ export function DataTable<TData, TValue>({
                   paginationData.page >= paginationData.pages || isPending
                 }
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(paginationData.pages);
                 }}
@@ -541,7 +545,7 @@ export function DataTable<TData, TValue>({
                   paginationData.page >= paginationData.pages || isPending
                 }
               >
-                <ChevronsRight className="w-4 h-4" />
+                <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

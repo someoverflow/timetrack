@@ -90,7 +90,7 @@ docker run --name timetrack -p 3000:3000 \
 | `TZ`                  | Time Zone                                                     | `Europe/Berlin` |
 | `PORT`                | Port on which the application listens                         | `3000`          |
 | `HOSTNAME`            | Server bind hostname or IP address                            | `"0.0.0.0"`     |
-| `UPLOAD_LIMIT`        | Max file upload size                                          | `"0.0.0.0"`     |
+| `UPLOAD_LIMIT`        | Max file upload size in MB                                    | `1000`          |
 
 **Note**: The following environment variables must be set for the application to run properly:
 

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authCheck, type userData } from "./auth";
 
-const createErrorResponse = (
+export const createErrorResponse = (
   status: number,
   message: string,
   type: APIResultType = "unknown",
