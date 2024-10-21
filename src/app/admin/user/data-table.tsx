@@ -42,6 +42,7 @@ import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
 import { cn } from "@/lib/utils";
+import { type User } from "@prisma/client";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
@@ -65,6 +66,7 @@ declare module "@tanstack/table-core" {
       users?: Users;
       customers?: string[];
       maxFileSize?: number;
+      user?: Partial<User>;
     };
   }
 }

@@ -1,6 +1,11 @@
 //#region Imports
 import type { todoUpdateApiValidationType } from "@/lib/zod";
-import type { Prisma, TicketPriority, TicketStatus } from "@prisma/client";
+import type {
+  Prisma,
+  TicketPriority,
+  TicketStatus,
+  User,
+} from "@prisma/client";
 
 import {
   Popover,
@@ -87,12 +92,14 @@ export function TicketTableEdit({
   ticket,
   projects,
   users,
+  user,
   children,
   maxFileSize,
 }: {
   ticket: Prisma.TicketGetPayload<TicketPagePayload>;
   projects: Projects;
   users: Users;
+  user?: Partial<User>;
   children: JSX.Element;
   maxFileSize: number;
 }) {
@@ -809,6 +816,7 @@ export function TicketTableEdit({
               ticket={ticket}
               router={router}
               maxFileSize={maxFileSize}
+              user={user}
             />
           </Tabs>
 
@@ -828,10 +836,12 @@ const FileUploadTab = ({
   ticket,
   maxFileSize,
   router,
+  user,
 }: {
   ticket: Prisma.TicketGetPayload<TicketPagePayload>;
   maxFileSize: number;
   router: AppRouterInstance;
+  user?: Partial<User>;
 }) => {
   const t = useTranslations("Tickets");
 
@@ -865,12 +875,19 @@ const FileUploadTab = ({
         router.refresh();
       });
   };
-  const deleteUpload = (id: string) => {
-    // TODO
-    fetch(`/api/files/${id}`, {
-      method: "DELETE",
-    }).then(() => router.refresh());
-  };
+
+  const { send: sendDelete } = useRequest(
+    (passed: { id: string } | undefined) => {
+      if (!passed) throw new Error();
+      return fetch(`/api/files/${passed.id}`, {
+        method: "DELETE",
+      });
+    },
+    (_res) => {
+      toast.success(t("deleted"));
+      router.refresh();
+    },
+  );
 
   const onDrop = (files: FileList) => {
     setUploadDrag(false);
@@ -958,16 +975,19 @@ const FileUploadTab = ({
                       >
                         <Button>{t("open")}</Button>
                       </Link>
-                      <Button
-                        type="submit"
-                        size="icon"
-                        variant="destructive"
-                        onClick={() => {
-                          deleteUpload(upload.id);
-                        }}
-                      >
-                        <Trash className="size-4" />
-                      </Button>
+                      {(user?.role === "ADMIN" ||
+                        user?.id === upload.creatorId) && (
+                        <Button
+                          type="submit"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => {
+                            sendDelete({ id: upload.id });
+                          }}
+                        >
+                          <Trash className="size-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

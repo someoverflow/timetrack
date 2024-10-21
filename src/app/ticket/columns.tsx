@@ -181,6 +181,7 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
             <TicketTableEdit
               maxFileSize={table.options.meta?.data.maxFileSize ?? 0}
               ticket={ticket}
+              user={table.options.meta?.data.user}
               projects={
                 table.options.meta?.data.projects ??
                 ({ single: [], grouped: {} } satisfies Projects)

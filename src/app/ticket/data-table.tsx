@@ -60,7 +60,7 @@ import {
 import { TicketAdd } from "./ticket-add";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import type { Ticket, TicketUpload } from "@prisma/client";
+import type { Ticket, TicketUpload, User } from "@prisma/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { mimeTypes } from "@/lib/file-utils";
@@ -78,6 +78,7 @@ interface DataTableProps<TData, TValue> {
 
   projects: Projects;
   users: Users;
+  user: Partial<User>;
 
   paginationData: {
     pages: number;
@@ -105,6 +106,7 @@ export function DataTable<TData, TValue>({
   paginationData,
   filters,
   maxFileSize,
+  user,
 }: DataTableProps<TData, TValue>) {
   //#region Hooks
   const router = useRouter();
@@ -122,6 +124,7 @@ export function DataTable<TData, TValue>({
         projects,
         users,
         maxFileSize,
+        user,
       },
     },
     initialState: {

@@ -304,6 +304,7 @@ export default async function Tickets({
         </div>
 
         <DataTable
+          user={user}
           data={tickets}
           columns={columns}
           paginationData={{ page: page, pages: pages, pageSize: pageSize }}
