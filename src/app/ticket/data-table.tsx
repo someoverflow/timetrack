@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   ChevronLeft,
   ChevronRight,
@@ -34,8 +34,14 @@ import {
   CircleCheckBig,
   CircleDot,
   CircleDotDashed,
+  File,
+  FileArchive,
+  FileAudio,
+  FileImage,
+  FileVideo,
   Filter,
   FilterX,
+  type LucideProps,
 } from "lucide-react";
 
 import React, { useTransition } from "react";
@@ -54,9 +60,16 @@ import {
 import { TicketAdd } from "./ticket-add";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import type { Ticket } from "@prisma/client";
+import type { Ticket, TicketUpload } from "@prisma/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { mimeTypes } from "@/lib/file-utils";
+import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
@@ -371,7 +384,10 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => {
-                  const ticket = row.original as Ticket;
+                  const ticket = row.original as Ticket & {
+                    creator: { name: any; username: string };
+                    uploads: TicketUpload[];
+                  };
 
                   return (
                     <Popover key={row.id}>
@@ -393,59 +409,116 @@ export function DataTable<TData, TValue>({
                         side="bottom"
                         className="w-[95vw] max-w-screen-sm border-secondary-foreground/20 text-muted-foreground dark:bg-secondary"
                       >
-                        {ticket.archived && (
-                          <div className="flex flex-row gap-2 pb-2">
-                            {ticket.archived && (
-                              <Badge variant="destructive">
-                                {t("archived")}
-                              </Badge>
-                            )}
+                        <ScrollArea className="h-[50dvh]">
+                          {ticket.archived && (
+                            <div className="flex flex-row gap-2 pb-2">
+                              {ticket.archived && (
+                                <Badge variant="destructive">
+                                  {t("archived")}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="flex flex-row items-center gap-2">
+                            <Label className="flex flex-row">
+                              {t("creator")}:
+                            </Label>
+                            <p className="text-foreground">
+                              {ticket.creator.name ?? ticket.creator.username}
+                            </p>
                           </div>
-                        )}
 
-                        <div className="flex flex-row items-center gap-2">
-                          <Label className="flex flex-row">
-                            {t("creator")}:
-                          </Label>
-                          <p className="text-foreground">
-                            {(ticket as any).creator.name ??
-                              (ticket as any).creator.username}
-                          </p>
-                        </div>
+                          <div className="flex flex-row items-center gap-2">
+                            <Label className="flex flex-row">
+                              {t("createdAt")}:
+                            </Label>
+                            <p className="text-foreground">
+                              {ticket.createdAt.toLocaleString()}
+                            </p>
+                          </div>
 
-                        <div className="flex flex-row items-center gap-2">
-                          <Label className="flex flex-row">
-                            {t("createdAt")}:
-                          </Label>
-                          <p className="text-foreground">
-                            {ticket.createdAt.toLocaleString()}
-                          </p>
-                        </div>
+                          <div className="flex flex-row items-center gap-2">
+                            <Label className="flex flex-row">
+                              {t("deadline")}:
+                            </Label>
+                            <p className="text-foreground">
+                              {ticket.deadline
+                                ? new Intl.DateTimeFormat().format(
+                                    ticket.deadline,
+                                  )
+                                : t("none")}
+                            </p>
+                          </div>
 
-                        <div className="flex flex-row items-center gap-2">
-                          <Label className="flex flex-row">
-                            {t("deadline")}:
-                          </Label>
-                          <p className="text-foreground">
-                            {ticket.deadline
-                              ? new Intl.DateTimeFormat().format(
-                                  ticket.deadline,
-                                )
-                              : t("none")}
-                          </p>
-                        </div>
+                          {ticket.uploads.length !== 0 && (
+                            <>
+                              <Separator className="my-2 w-full bg-secondary-foreground/20" />
 
-                        {(ticket.description ?? "").trim().length != 0 && (
-                          <>
-                            <Separator className="my-2 w-full bg-secondary-foreground/20" />
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              className="prose prose-neutral dark:prose-invert"
-                            >
-                              {ticket.description}
-                            </ReactMarkdown>
-                          </>
-                        )}
+                              <Label className="flex flex-row">
+                                {t("uploads")}
+                              </Label>
+                              <ScrollArea className="w-full rounded-md p-1">
+                                <div className="flex flex-row gap-2 p-2">
+                                  {ticket.uploads.map((upload) => (
+                                    <Tooltip key={upload.id}>
+                                      <TooltipTrigger asChild>
+                                        <Link
+                                          href={`/api/files/${upload.id}/${upload.name}`}
+                                          target="_blank"
+                                        >
+                                          <Button className="gap-2 text-nowrap">
+                                            <FileTypeIcon type={upload.type} />
+                                            {upload.name.replace(
+                                              upload.extension,
+                                              "",
+                                            )}
+                                          </Button>
+                                        </Link>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="bottom">
+                                        <div className="rounded-md blur-[1px]">
+                                          {(mimeTypes.documents.includes(
+                                            upload.type,
+                                          ) ||
+                                            mimeTypes.images.includes(
+                                              upload.type,
+                                            )) && (
+                                            <iframe
+                                              src={`/api/files/${upload.id}/${upload.name}`}
+                                            />
+                                          )}
+                                          {mimeTypes.videos.includes(
+                                            upload.type,
+                                          ) && (
+                                            <video
+                                              className="h-[20dvw]"
+                                              src={`/api/files/${upload.id}/${upload.name}`}
+                                            />
+                                          )}
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  ))}
+                                </div>
+
+                                <ScrollBar orientation="horizontal" />
+                              </ScrollArea>
+                            </>
+                          )}
+
+                          {(ticket.description ?? "").trim().length != 0 && (
+                            <>
+                              <Separator className="my-2 w-full bg-secondary-foreground/20" />
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                className="prose prose-neutral w-full dark:prose-invert"
+                              >
+                                {ticket.description}
+                              </ReactMarkdown>
+                            </>
+                          )}
+                        </ScrollArea>
                       </PopoverContent>
                     </Popover>
                   );
@@ -554,3 +627,26 @@ export function DataTable<TData, TValue>({
     </>
   );
 }
+
+const FileTypeIcon = ({ type }: { type: string }) => {
+  const typeIconMap: Record<
+    string,
+    React.ForwardRefExoticComponent<
+      Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
+    >
+  > = {
+    images: FileImage,
+    videos: FileVideo,
+    audios: FileAudio,
+    archives: FileArchive,
+    documents: File,
+  };
+
+  const category = Object.entries(mimeTypes).find(([, mimeList]) =>
+    mimeList.includes(type),
+  )?.[0] as keyof typeof typeIconMap | undefined;
+
+  const IconComponent = category ? typeIconMap[category] : null;
+
+  return IconComponent ? <IconComponent className="size-5" /> : null;
+};
