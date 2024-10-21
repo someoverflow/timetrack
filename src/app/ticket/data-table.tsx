@@ -412,115 +412,124 @@ export function DataTable<TData, TValue>({
                         side="bottom"
                         className="w-[95vw] max-w-screen-sm border-secondary-foreground/20 text-muted-foreground dark:bg-secondary"
                       >
-                        <ScrollArea className="h-[50dvh]">
-                          {ticket.archived && (
-                            <div className="flex flex-row gap-2 pb-2">
-                              {ticket.archived && (
-                                <Badge variant="destructive">
-                                  {t("archived")}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
+                        <ScrollArea className="">
+                          <div className="max-h-[50dvh]">
+                            {ticket.archived && (
+                              <div className="flex flex-row gap-2 pb-2">
+                                {ticket.archived && (
+                                  <Badge variant="destructive">
+                                    {t("archived")}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
 
-                          <div className="flex flex-row items-center gap-2">
-                            <Label className="flex flex-row">
-                              {t("creator")}:
-                            </Label>
-                            <p className="text-foreground">
-                              {ticket.creator.name ?? ticket.creator.username}
-                            </p>
-                          </div>
-
-                          <div className="flex flex-row items-center gap-2">
-                            <Label className="flex flex-row">
-                              {t("createdAt")}:
-                            </Label>
-                            <p className="text-foreground">
-                              {ticket.createdAt.toLocaleString()}
-                            </p>
-                          </div>
-
-                          <div className="flex flex-row items-center gap-2">
-                            <Label className="flex flex-row">
-                              {t("deadline")}:
-                            </Label>
-                            <p className="text-foreground">
-                              {ticket.deadline
-                                ? new Intl.DateTimeFormat().format(
-                                    ticket.deadline,
-                                  )
-                                : t("none")}
-                            </p>
-                          </div>
-
-                          {ticket.uploads.length !== 0 && (
-                            <>
-                              <Separator className="my-2 w-full bg-secondary-foreground/20" />
-
+                            <div className="flex flex-row items-center gap-2">
                               <Label className="flex flex-row">
-                                {t("uploads")}
+                                {t("creator")}:
                               </Label>
-                              <ScrollArea className="w-full rounded-md p-1">
-                                <div className="flex flex-row gap-2 p-2">
-                                  {ticket.uploads.map((upload) => (
-                                    <Tooltip key={upload.id}>
-                                      <TooltipTrigger asChild>
-                                        <Link
-                                          href={`/api/files/${upload.id}/${upload.name}`}
-                                          target="_blank"
+                              <p className="text-foreground">
+                                {ticket.creator.name ?? ticket.creator.username}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-row items-center gap-2">
+                              <Label className="flex flex-row">
+                                {t("createdAt")}:
+                              </Label>
+                              <p className="text-foreground">
+                                {ticket.createdAt.toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-row items-center gap-2">
+                              <Label className="flex flex-row">
+                                {t("deadline")}:
+                              </Label>
+                              <p className="text-foreground">
+                                {ticket.deadline
+                                  ? new Intl.DateTimeFormat().format(
+                                      ticket.deadline,
+                                    )
+                                  : t("none")}
+                              </p>
+                            </div>
+
+                            {ticket.uploads.length !== 0 && (
+                              <>
+                                <Separator className="my-2 w-full bg-secondary-foreground/20" />
+
+                                <Label className="flex flex-row">
+                                  {t("uploads")}
+                                </Label>
+                                <ScrollArea className="w-full rounded-md p-1">
+                                  <div className="flex flex-row gap-2 p-2">
+                                    {ticket.uploads.map((upload) => (
+                                      <Tooltip key={upload.id}>
+                                        <TooltipTrigger
+                                          asChild
+                                          onFocusCapture={(e) => {
+                                            e.stopPropagation();
+                                          }}
                                         >
-                                          <Button className="gap-2 text-nowrap">
-                                            <FileTypeIcon type={upload.type} />
-                                            {upload.name.replace(
-                                              upload.extension,
-                                              "",
-                                            )}
-                                          </Button>
-                                        </Link>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="bottom">
-                                        <div className="rounded-md blur-[1px]">
-                                          {(mimeTypes.documents.includes(
-                                            upload.type,
-                                          ) ||
-                                            mimeTypes.images.includes(
+                                          <Link
+                                            href={`/api/files/${upload.id}/${upload.name}`}
+                                            target="_blank"
+                                          >
+                                            <Button className="gap-2 text-nowrap">
+                                              <FileTypeIcon
+                                                type={upload.type}
+                                              />
+                                              {upload.name.replace(
+                                                upload.extension,
+                                                "",
+                                              )}
+                                            </Button>
+                                          </Link>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                          <div className="rounded-md blur-[1px]">
+                                            {(mimeTypes.documents.includes(
                                               upload.type,
-                                            )) && (
-                                            <iframe
-                                              src={`/api/files/${upload.id}/${upload.name}`}
-                                            />
-                                          )}
-                                          {mimeTypes.videos.includes(
-                                            upload.type,
-                                          ) && (
-                                            <video
-                                              className="h-[20dvw]"
-                                              src={`/api/files/${upload.id}/${upload.name}`}
-                                            />
-                                          )}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ))}
-                                </div>
+                                            ) ||
+                                              mimeTypes.images.includes(
+                                                upload.type,
+                                              )) && (
+                                              <iframe
+                                                src={`/api/files/${upload.id}/${upload.name}`}
+                                              />
+                                            )}
+                                            {mimeTypes.videos.includes(
+                                              upload.type,
+                                            ) && (
+                                              <video
+                                                className="h-[20dvw]"
+                                                src={`/api/files/${upload.id}/${upload.name}`}
+                                              />
+                                            )}
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    ))}
+                                  </div>
 
-                                <ScrollBar orientation="horizontal" />
-                              </ScrollArea>
-                            </>
-                          )}
+                                  <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
+                              </>
+                            )}
 
-                          {(ticket.description ?? "").trim().length != 0 && (
-                            <>
-                              <Separator className="my-2 w-full bg-secondary-foreground/20" />
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                className="prose prose-neutral w-full dark:prose-invert"
-                              >
-                                {ticket.description}
-                              </ReactMarkdown>
-                            </>
-                          )}
+                            {(ticket.description ?? "").trim().length != 0 && (
+                              <>
+                                <Separator className="my-2 w-full bg-secondary-foreground/20" />
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  className="prose prose-neutral w-full dark:prose-invert"
+                                >
+                                  {ticket.description}
+                                </ReactMarkdown>
+                              </>
+                            )}
+                          </div>
                         </ScrollArea>
                       </PopoverContent>
                     </Popover>
