@@ -76,5 +76,5 @@ export const PUT = api(
       return NextResponse.json(result, { status: result.status });
     }
   },
-  { parseJson: false }
+  { parseJson: false },
 );

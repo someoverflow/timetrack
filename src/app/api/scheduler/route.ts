@@ -7,7 +7,6 @@ import { sendMail } from "@/lib/mail";
 import prisma from "@/lib/prisma";
 import { defaultResult, api } from "@/lib/server-utils";
 import { getTranslations } from "next-intl/server";
-import { headers } from "next/headers";
 import { NextResponse, userAgent } from "next/server";
 
 export const GET = api(
@@ -16,21 +15,17 @@ export const GET = api(
 
     // Check curl
     const agent = userAgent({ headers: request.headers });
+    console.log("Scheduler AGENT", agent.ua);
     if (!agent.ua.startsWith("curl/"))
       return NextResponse.json(result, { status: result.status });
 
     // Check IP
-    const head = headers();
-    let ipAddress = head.get("x-real-ip");
-
-    const forwardedFor = head.get("x-forwarded-for");
-    if (!ipAddress && forwardedFor)
-      ipAddress = forwardedFor?.split(",").at(0) ?? "Unknown";
-
-    if (ipAddress !== "127.0.0.1")
+    console.log("Scheduler HOST", request.nextUrl.hostname);
+    if (request.nextUrl.hostname !== "0.0.0.0")
       return NextResponse.json(result, { status: result.status });
 
     const secret = request.nextUrl.searchParams.get("DUH");
+    console.log("Scheduler SECRET", secret);
     if (secret != process.env.SCHEDULER_SECRET)
       return NextResponse.json(result, { status: result.status });
 

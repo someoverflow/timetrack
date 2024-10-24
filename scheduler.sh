@@ -7,7 +7,7 @@ do
     then
         echo "Sending update Mail"
         source .env
-        curl localhost:$PORT/api/scheduler?DUH=$SCHEDULER_SECRET
+        curl -G -v "127.0.0.1:$PORT/api/scheduler" --data-urlencode "DUH=$SCHEDULER_SECRET"
         sleep 1s
     fi
 
