@@ -244,7 +244,7 @@ export function DataTable<TData, TValue>({
             />
           </div>
           <div className="flex flex-row gap-2">
-            <Popover>
+            <Popover modal>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -393,7 +393,7 @@ export function DataTable<TData, TValue>({
                   };
 
                   return (
-                    <Popover key={row.id}>
+                    <Popover key={row.id} modal>
                       <PopoverTrigger asChild>
                         <TableRow
                           data-state={row.getIsSelected() && "selected"}

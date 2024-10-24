@@ -124,6 +124,7 @@ export const POST = api(
         : undefined,
 
       creatorId: user.id,
+      updatedById: user.id,
     };
 
     // Create the todo
@@ -387,7 +388,9 @@ export const PUT = api(
       Prisma.TicketUpdateInput,
       Prisma.TicketUncheckedUpdateInput
     > &
-      Prisma.TicketUncheckedUpdateInput = {};
+      Prisma.TicketUncheckedUpdateInput = {
+      updatedById: user.id,
+    };
 
     switch (type) {
       case "UPDATE":

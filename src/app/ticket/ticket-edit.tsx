@@ -711,7 +711,7 @@ export function TicketTableEdit({
                       />
                     </div>
                     <Input
-                      className={`!w-full border-2 transition-opacity duration-150 ${
+                      className={`!w-full appearance-none border-2 transition-opacity duration-150 ${
                         state.deadlineEnabled ? "opacity-100" : ""
                       }`}
                       disabled={!state.deadlineEnabled}
@@ -765,7 +765,7 @@ export function TicketTableEdit({
                     </Label>
                     <Input
                       disabled
-                      className="w-full font-mono"
+                      className="w-full appearance-none font-mono"
                       type="datetime-local"
                       name="Updated At"
                       id="updatedAt"
@@ -783,7 +783,7 @@ export function TicketTableEdit({
                     </Label>
                     <Input
                       disabled
-                      className="w-full font-mono"
+                      className="w-full appearance-none font-mono"
                       type="datetime-local"
                       name="Created At"
                       id="createdAt"

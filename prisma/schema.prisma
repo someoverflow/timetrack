@@ -42,6 +42,7 @@ model User {
 
   assignedTickets Ticket[] @relation("assignee_to_todo")
   createdTickets  Ticket[] @relation("creator")
+  updatedTickets  Ticket[]
 
   ticketUploads TicketUpload[]
 
@@ -187,6 +188,9 @@ model Ticket {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  updatedBy   User?   @relation(fields: [updatedById], references: [id])
+  updatedById String?
 
   @@map("todos")
 }

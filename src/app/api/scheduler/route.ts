@@ -1,6 +1,5 @@
 import {
   type TicketCreatedMailData,
-  type TicketInfo,
   TicketUpdate,
 } from "@/emails/ticket-update";
 import { sendMail } from "@/lib/mail";
@@ -21,7 +20,10 @@ export const GET = api(
 
     // Check IP
     console.log("Scheduler HOST", request.nextUrl.hostname);
-    if (request.nextUrl.hostname !== "0.0.0.0")
+    if (
+      request.nextUrl.hostname !== "0.0.0.0" &&
+      process.env.NODE_ENV != "development"
+    )
       return NextResponse.json(result, { status: result.status });
 
     const secret = request.nextUrl.searchParams.get("DUH");
@@ -64,6 +66,7 @@ export const GET = api(
         email: true,
         role: true,
         customerName: true,
+        language: true,
       },
     });
 
@@ -114,6 +117,18 @@ export const GET = api(
           ],
         },
         include: {
+          creator: {
+            select: {
+              name: true,
+              username: true,
+            },
+          },
+          updatedBy: {
+            select: {
+              name: true,
+              username: true,
+            },
+          },
           assignees: {
             where:
               user.role == "CUSTOMER"
@@ -127,7 +142,7 @@ export const GET = api(
                       { role: { not: "CUSTOMER" } },
                     ],
                   }
-                : undefined,
+                : {},
             select: {
               name: true,
               username: true,
@@ -176,6 +191,8 @@ export const GET = api(
             description,
             assignees,
             projects,
+            createdAt,
+            creator,
           }) => ({
             link: ticketLink + id,
             assignees:
@@ -190,19 +207,37 @@ export const GET = api(
             status,
             task,
             description: description ?? undefined,
+            createdAt: createdAt.toLocaleString(user.language),
+            createdBy: creator.name ?? creator.username,
           }),
         ),
         updated: updatedTickets.map(
-          ({ id, priority, status, task, description, assignees, projects }) =>
-            ({
-              link: ticketLink + id,
-              assignees: assignees.map((a) => a.name ?? a.username).join(", "),
-              projects: projects.map((p) => p.name).join(", "),
-              priority: priority.toString(),
-              status,
-              task,
-              description: description ?? undefined,
-            }) satisfies TicketInfo,
+          ({
+            id,
+            priority,
+            status,
+            task,
+            description,
+            assignees,
+            projects,
+            updatedAt,
+            updatedBy,
+            creator,
+          }) => ({
+            link: ticketLink + id,
+            assignees: assignees.map((a) => a.name ?? a.username).join(", "),
+            projects: projects.map((p) => p.name).join(", "),
+            priority: priority.toString(),
+            status,
+            task,
+            description: description ?? undefined,
+            updatedAt: updatedAt.toLocaleString(user.language),
+            updatedBy:
+              updatedBy?.name ??
+              updatedBy?.username ??
+              creator.name ??
+              creator.username,
+          }),
         ),
       } satisfies TicketCreatedMailData)
         .then(({ text, html }) => {

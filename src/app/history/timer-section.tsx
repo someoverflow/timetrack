@@ -219,22 +219,22 @@ export default function TimerSection({
     <>
       <div
         className={cn(
-          "animate-pulse w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
+          "h-0.5 w-[10%] animate-pulse rounded-xl bg-primary opacity-0 transition-all duration-700",
           isPending && "opacity-100",
         )}
       />
 
       <section
-        className="w-full max-w-xl max-h-[90svh] flex flex-col items-start"
+        className="flex max-h-[90svh] w-full max-w-xl flex-col items-start"
         key={yearMonth.current}
       >
-        <div className="p-2 px-4 font-bold w-full flex flex-row items-center justify-stretch gap-2">
-          <Popover>
+        <div className="flex w-full flex-row items-center justify-stretch gap-2 p-2 px-4 font-bold">
+          <Popover modal>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
-                className="w-full justify-between relative"
+                className="relative w-full justify-between"
               >
                 <div className="flex flex-row items-center justify-start gap-2">
                   {yearMonthString}
@@ -247,7 +247,7 @@ export default function TimerSection({
                 {(filters.projects != undefined ||
                   filters.users != undefined ||
                   filters.invoiced != undefined) && (
-                  <span className="absolute text-xs -top-6 -right-2 flex flex-row gap-2 border bg-background p-2 rounded-sm">
+                  <span className="absolute -right-2 -top-6 flex flex-row gap-2 rounded-sm border bg-background p-2 text-xs">
                     {filters.projects != undefined && (
                       <Folder className="size-4" />
                     )}
@@ -259,8 +259,8 @@ export default function TimerSection({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="grid grid-flow-col gap-2 p-2 w-[95vw] max-w-lg border-2">
-              <Command className="w-full col-span-5">
+            <PopoverContent className="grid w-[95vw] max-w-lg grid-flow-col gap-2 border-2 p-2">
+              <Command className="col-span-5 w-full">
                 <CommandInput
                   placeholder={t("Miscellaneous.searchYearMonth")}
                   className="h-8 w-max"
@@ -296,8 +296,8 @@ export default function TimerSection({
                   ))}
               </Command>
 
-              <div className="grid gap-2 p-1 w-full ">
-                <div className="grid p-1 gap-1.5">
+              <div className="grid w-full gap-2 p-1">
+                <div className="grid gap-1.5 p-1">
                   <Label
                     htmlFor="projects-button"
                     className="pl-2 text-muted-foreground"
@@ -361,8 +361,8 @@ export default function TimerSection({
                   />
                 </div>
                 {user.role === "ADMIN" && users && (
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Popover>
+                  <div className="grid h-full w-full gap-1.5 p-1">
+                    <Popover modal>
                       <Label
                         htmlFor="userFilter-button"
                         className="pl-2 text-muted-foreground"
@@ -442,7 +442,7 @@ export default function TimerSection({
                                       : "opacity-0",
                                   )}
                                 />
-                                <div className="w-full flex flex-row items-center">
+                                <div className="flex w-full flex-row items-center">
                                   <p>{user.name}</p>
                                   <Badge variant="default" className="scale-75">
                                     @{user.username}
@@ -492,7 +492,7 @@ export default function TimerSection({
                     onClick={() => updateFilter({ reset: true })}
                     className="w-full"
                   >
-                    <FilterX className="size-4 mr-4" />
+                    <FilterX className="mr-4 size-4" />
                     {t("Miscellaneous.reset")}
                   </Button>
 
@@ -507,10 +507,10 @@ export default function TimerSection({
           </Popover>
         </div>
         <ScrollArea
-          className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border-2 p-1.5 overflow-hidden"
+          className="h-[calc(95svh-82px-56px-40px)] w-full overflow-hidden rounded-sm border-2 p-1.5"
           type="scroll"
         >
-          <div className="sticky top-1 z-50 w-full grid place-items-center mt-4 mb-6">
+          <div className="sticky top-1 z-50 mb-6 mt-4 grid w-full place-items-center">
             <Tooltip delayDuration={500}>
               <TooltipTrigger asChild>
                 <Button
@@ -542,9 +542,9 @@ export default function TimerSection({
                 key={`day-${day}`}
                 className={index === 0 ? "mt-2" : "mt-6"}
               >
-                <div className="flex flex-row items-center justify-center gap-2 mb-2 transition-all duration-300 animate__animated animate__slideInLeft">
+                <div className="animate__animated animate__slideInLeft mb-2 flex flex-row items-center justify-center gap-2 transition-all duration-300">
                   <div className="w-1/2" />
-                  <Badge className="justify-center w-full font-semibold text-sm">
+                  <Badge className="w-full justify-center text-sm font-semibold">
                     {`${day.getDate().toString().padStart(2, "0")}.${(
                       day.getMonth() + 1
                     )

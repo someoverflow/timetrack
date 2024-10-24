@@ -163,18 +163,27 @@ export default async function Tickets({
 
       include: {
         assignees: {
-          where: {
-            OR: [
-              {
-                customer: user.role === "CUSTOMER" ? customerFilter : undefined,
-              },
-              {
-                role: {
-                  notIn: ["CUSTOMER"],
+          where:
+            user.role !== "CUSTOMER"
+              ? {}
+              : {
+                  OR: [
+                    {
+                      customer: {
+                        users: {
+                          some: {
+                            id: user.id,
+                          },
+                        },
+                      },
+                    },
+                    {
+                      role: {
+                        not: "CUSTOMER",
+                      },
+                    },
+                  ],
                 },
-              },
-            ],
-          },
           select: {
             id: true,
             username: true,
