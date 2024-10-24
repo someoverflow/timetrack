@@ -316,6 +316,10 @@
     "hide": "Löschen",
     "visibleColumns": "Sichtbare Spalten",
 
+    "projects": "Projekte",
+    "noFilter": "Kein Filter",
+    "projectsEmpty": "Ohne Projekt",
+
     "dropFile": "Datei Ablegen",
 
     "open": "Öffnen",

@@ -27,10 +27,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ChevronsUpDown,
   CircleCheckBig,
   CircleDot,
   CircleDotDashed,
@@ -70,6 +72,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ProjectSelection } from "@/components/project-select";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
@@ -95,6 +104,9 @@ interface DataTableProps<TData, TValue> {
       in_progress: boolean;
       done: boolean;
     };
+
+    projects: string[] | undefined;
+    assignees: string[] | undefined;
   };
 }
 
@@ -157,6 +169,9 @@ export function DataTable<TData, TValue>({
   const updateFilter = (data: {
     archived?: boolean;
 
+    assigneesFilter?: string[];
+    projectsFilter?: string[];
+
     status?: Partial<{
       todo: boolean;
       in_progress: boolean;
@@ -173,6 +188,30 @@ export function DataTable<TData, TValue>({
       if (data.archived === true) {
         maxAge = "31536000";
         document.cookie = `ticket-filter-archived=${!filters.archived};max-age=${maxAge};path=/`;
+      }
+
+      // Projects
+      if (data.projectsFilter) {
+        cookie = "undefined";
+        maxAge = "31536000";
+
+        if (user.role != "CUSTOMER" && data.projectsFilter.length !== 0)
+          cookie = JSON.stringify(data.projectsFilter);
+
+        if (cookie == "undefined") maxAge = "0";
+        document.cookie = `ticket-filter-projects=${cookie};max-age=${maxAge};path=/`;
+      }
+
+      // Assignees
+      if (data.assigneesFilter) {
+        cookie = "undefined";
+        maxAge = "31536000";
+
+        if (user.role != "CUSTOMER" && data.assigneesFilter.length !== 0)
+          cookie = JSON.stringify(data.assigneesFilter);
+
+        if (cookie == "undefined") maxAge = "0";
+        document.cookie = `ticket-filter-assignees=${cookie};max-age=${maxAge};path=/`;
       }
 
       // Status
@@ -218,6 +257,9 @@ export function DataTable<TData, TValue>({
     });
   }, 300);
 
+  const assigneesFilter = filters.assignees ?? [];
+  const projectsFilter = filters.projects ?? [];
+
   return (
     <>
       <div
@@ -255,7 +297,7 @@ export function DataTable<TData, TValue>({
                   <span className="hidden sm:block">{t("filter")}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56">
+              <PopoverContent className="w-[90vw] max-w-72">
                 <div className="grid gap-4 p-2">
                   <Button
                     size="sm"
@@ -321,6 +363,178 @@ export function DataTable<TData, TValue>({
                   </Button>
 
                   <Separator />
+
+                  {user.role != "CUSTOMER" && (
+                    <>
+                      <div className="grid gap-1.5 p-1">
+                        {/* TODO: Allow for customers */}
+                        <Label
+                          htmlFor="projects-button"
+                          className="pl-2 text-muted-foreground"
+                        >
+                          {t("projects")}
+                        </Label>
+                        <ProjectSelection
+                          project={projectsFilter}
+                          changeProject={(project) => {
+                            if (!project)
+                              throw new Error(
+                                "Project is undefined in selection",
+                              );
+                            const tempProjectsFilter = projectsFilter;
+
+                            if (tempProjectsFilter.includes(project))
+                              tempProjectsFilter.splice(
+                                tempProjectsFilter.indexOf(project),
+                                1,
+                              );
+                            else tempProjectsFilter.push(project);
+
+                            updateFilter({
+                              projectsFilter: tempProjectsFilter,
+                            });
+                          }}
+                          projects={projects}
+                          multiSelect
+                          button={
+                            <Button
+                              id="projects-button"
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              <div className="flex flex-row gap-1">
+                                {filters.projects === undefined &&
+                                  t("noFilter")}
+                                {filters.projects?.length === 0 &&
+                                  t("projectsEmpty")}
+                                {filters.projects?.length !== 0 &&
+                                  projectsFilter.map((value, index) => {
+                                    if (index !== 0) return undefined;
+                                    return (
+                                      <Badge
+                                        key={`project-${value}`}
+                                        variant="outline"
+                                      >
+                                        {value}
+                                      </Badge>
+                                    );
+                                  })}
+
+                                {projectsFilter.length > 1 && (
+                                  <Badge variant="secondary">
+                                    +{projectsFilter.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          }
+                        />
+                      </div>
+
+                      <div className="grid h-full w-full gap-1.5 p-1">
+                        <Popover modal>
+                          {/* TODO: Grouped Users */}
+                          <Label
+                            htmlFor="userFilter-button"
+                            className="pl-2 text-muted-foreground"
+                          >
+                            {t("assignees")}
+                          </Label>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id="userFilter-button"
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              <div className="flex flex-row gap-1">
+                                {filters.assignees === undefined &&
+                                  t("noFilter")}
+
+                                {assigneesFilter?.map((value, index) => {
+                                  if (index !== 0) return undefined;
+                                  const user = users.single.find(
+                                    (u) => u.username === value,
+                                  );
+                                  if (!user) return undefined;
+
+                                  return (
+                                    <Badge
+                                      key={`userFiltered-${value}`}
+                                      variant="outline"
+                                    >
+                                      {user.name ?? user.username}
+                                    </Badge>
+                                  );
+                                })}
+                                {assigneesFilter.length > 1 && (
+                                  <Badge variant="secondary">
+                                    +{assigneesFilter.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-2">
+                            <Command>
+                              <CommandInput
+                                placeholder={t("search")}
+                                className="h-8"
+                              />
+                              <CommandGroup>
+                                {users.single.map((user) => (
+                                  <CommandItem
+                                    key={`user-${user.username}`}
+                                    className="text-nowrap"
+                                    value={user.username}
+                                    onSelect={() => {
+                                      const value = user.username;
+
+                                      const tempUsersFilter = assigneesFilter;
+
+                                      if (tempUsersFilter.includes(value))
+                                        tempUsersFilter.splice(
+                                          tempUsersFilter.indexOf(value),
+                                          1,
+                                        );
+                                      else tempUsersFilter.push(value);
+
+                                      updateFilter({
+                                        assigneesFilter: tempUsersFilter,
+                                      });
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        assigneesFilter.includes(user.username)
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    <div className="flex w-full flex-row items-center">
+                                      <p>{user.name}</p>
+                                      <Badge
+                                        variant="default"
+                                        className="scale-75"
+                                      >
+                                        @{user.username}
+                                      </Badge>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <Separator />
+                    </>
+                  )}
 
                   <div className="flex flex-row items-center gap-4">
                     <Checkbox

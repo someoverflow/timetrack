@@ -42,7 +42,7 @@ export const passwordValidation = z
     "The password must include at least one uppercase letter.",
   );
 
-export const userArrayValidation = z.array(nameValidation).min(1);
+export const nameArrayValidation = z.array(nameValidation).min(1);
 //#endregion
 
 //#region User API

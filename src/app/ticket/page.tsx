@@ -10,6 +10,7 @@ import { cookies } from "next/headers";
 import { TicketPriority, TicketStatus } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { authCheck } from "@/lib/auth";
+import { nameArrayValidation } from "@/lib/zod";
 //#endregion
 
 const maxFileSize = Math.pow(1024, 2) * Number(process.env.UPLOAD_LIMIT);
@@ -63,6 +64,9 @@ export default async function Tickets({
       in_progress: cookieStore.get("ticket-filter-status-inProgress")?.value,
       done: cookieStore.get("ticket-filter-status-done")?.value,
     },
+
+    projects: cookieStore.get("ticket-filter-projects")?.value,
+    assignees: cookieStore.get("ticket-filter-assignees")?.value,
   };
 
   const status = {
@@ -77,19 +81,24 @@ export default async function Tickets({
   if (status.in_progress) statusFilter.push("IN_PROGRESS");
   if (status.done) statusFilter.push("DONE");
 
-  /*
   let projectsFilter: string[] | undefined = undefined;
+  let assigneesFilter: string[] | undefined = undefined;
 
   try {
-    if (filterCookies.projects)
-      projectsFilter = userArrayValidation.safeParse(
+    if (filterCookies.projects && user.role != "CUSTOMER")
+      projectsFilter = nameArrayValidation.safeParse(
         JSON.parse(filterCookies.projects),
+      ).data;
+
+    if (filterCookies.assignees && user.role != "CUSTOMER")
+      assigneesFilter = nameArrayValidation.safeParse(
+        JSON.parse(filterCookies.assignees),
       ).data;
   } catch (e) {
     console.warn(e);
-    cookieStore.delete("ticket-filter-archived");
+    cookieStore.delete("ticket-filter-projects");
+    cookieStore.delete("ticket-filter-assignees");
   }
- */
 
   const customerFilter =
     user.role === "CUSTOMER"
@@ -123,7 +132,22 @@ export default async function Tickets({
                 customer: customerFilter,
               },
             }
-          : undefined,
+          : projectsFilter
+            ? {
+                some: {
+                  name: {
+                    in: projectsFilter,
+                  },
+                },
+              }
+            : undefined,
+      assignees: assigneesFilter
+        ? {
+            some: {
+              username: { in: assigneesFilter },
+            },
+          }
+        : {},
     },
   });
 
@@ -158,7 +182,22 @@ export default async function Tickets({
                   customer: customerFilter,
                 },
               }
-            : undefined,
+            : projectsFilter
+              ? {
+                  some: {
+                    name: {
+                      in: projectsFilter,
+                    },
+                  },
+                }
+              : undefined,
+        assignees: assigneesFilter
+          ? {
+              some: {
+                username: { in: assigneesFilter },
+              },
+            }
+          : {},
       },
 
       include: {
@@ -322,6 +361,8 @@ export default async function Tickets({
           filters={{
             archived: archived,
             status,
+            projects: projectsFilter,
+            assignees: assigneesFilter,
           }}
           maxFileSize={maxFileSize}
         />

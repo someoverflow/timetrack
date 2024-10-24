@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 import { sumTimes, months } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
-import { userArrayValidation } from "@/lib/zod";
+import { nameArrayValidation } from "@/lib/zod";
 //#endregion
 
 type Timer = Prisma.TimeGetPayload<{
@@ -80,12 +80,12 @@ export default async function History({
 
   try {
     if (filterCookies.projects)
-      projectsFilter = userArrayValidation.safeParse(
+      projectsFilter = nameArrayValidation.safeParse(
         JSON.parse(filterCookies.projects),
       ).data;
 
     if (filterCookies.users)
-      userFilter = userArrayValidation.safeParse(
+      userFilter = nameArrayValidation.safeParse(
         JSON.parse(filterCookies.users),
       ).data;
   } catch (e) {
@@ -195,9 +195,9 @@ export default async function History({
 
   return (
     <Navigation>
-      <section className="w-full max-h-[95svh] flex flex-col items-center gap-1 p-4">
-        <div className="w-full font-mono text-center pt-2">
-          <p className="text-2xl font-mono">{t("PageTitle")}</p>
+      <section className="flex max-h-[95svh] w-full flex-col items-center gap-1 p-4">
+        <div className="w-full pt-2 text-center font-mono">
+          <p className="font-mono text-2xl">{t("PageTitle")}</p>
         </div>
 
         <TimerSection

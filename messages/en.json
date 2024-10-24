@@ -314,6 +314,11 @@
     "currentPage": "Page {page} of {pages}",
     "task": "Task",
     "changed": "Successfully changed",
+
+    "projects": "Projects",
+    "noFilter": "No Filter",
+    "projectsEmpty": "Without Project",
+
     "priorities": {
       "high": "High",
       "low": "Low",
@@ -350,7 +355,7 @@
 
     "open": "Open",
 
-    "deleted":"Deleted entry",
+    "deleted": "Deleted entry",
 
     "fileInfo": "File {supported, select, true {{oversized, select, true {is larger than {maxFileSize}} false {} other {}}} false {is unsupported} other {}}",
     "fileInfoDescription": "Click to select a file or drag and drop it here",
