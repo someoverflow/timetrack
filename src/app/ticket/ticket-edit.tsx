@@ -500,6 +500,7 @@ export function TicketTableEdit({
                       {t("Dialogs.Edit.projects")}
                     </Label>
                     <ProjectSelection
+                      singleCustomer
                       multiSelect
                       project={state.projects}
                       projects={projects}
@@ -564,7 +565,7 @@ export function TicketTableEdit({
                     />
                   </div>
                   <div className="grid h-full w-full gap-1.5 p-1">
-                    <Popover modal>
+                    <Popover>
                       <Label
                         htmlFor="assignees-button"
                         className={cn(

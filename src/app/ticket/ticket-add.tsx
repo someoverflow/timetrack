@@ -270,6 +270,7 @@ export function TicketAdd({
                   </Label>
                   <ProjectSelection
                     multiSelect
+                    singleCustomer
                     project={data.projects}
                     projects={projects}
                     button={
