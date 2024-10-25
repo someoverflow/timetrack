@@ -407,8 +407,6 @@ export const PUT = api(
         );
     }
 
-    console.log(data.projects);
-
     let tempProjects = todo.projects;
     if (data.projects?.remove)
       tempProjects = tempProjects.filter(
