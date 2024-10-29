@@ -235,6 +235,8 @@ export function DataTable<TData, TValue>({
         document.cookie = `ticket-filter-status-todo=${cookie};max-age=${maxAge};path=/`;
         document.cookie = `ticket-filter-status-inProgress=${cookie};max-age=${maxAge};path=/`;
         document.cookie = `ticket-filter-status-done=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `ticket-filter-assignees=${cookie};max-age=${maxAge};path=/`;
+        document.cookie = `ticket-filter-projects=${cookie};max-age=${maxAge};path=/`;
       }
     }
 

@@ -1,26 +1,19 @@
 {
   "Admin": {
     "Users": {
-      "addDuplicate": "Benutzer existiert bereits.",
-      "chipAdded": "Chip erfolgreich verknüpft",
-      "chipRemoved": "Chip erfolgreich entfernt",
-      "created": "Benutzer erfolgreich erstellt",
-      "currentPage": "Seite {page} von {pages}",
-      "deleted": "Benutzer erfolgreich gelöscht",
-      "search": "Suchen...",
-      "username": "Benutzername",
-      "name": "Name",
       "Dialogs": {
         "Add": {
           "buttonToolTip": "Erstelle einen Benutzer",
           "create": "Hinzufügen",
+          "customer": "Kunde",
           "mail": "Mail",
           "mailPlaceholder": "max@example.com",
           "name": "Name",
           "namePlaceholder": "Max Mustermann",
+          "noCustomers": "Keine Kunden gefunden",
+          "noCustomersDescription": "Kunden verwalten",
           "password": "Passwort",
           "passwordPlaceholder": "",
-          "customer": "Kunde",
           "role": "Rolle",
           "roles": {
             "admin": "Admin",
@@ -28,9 +21,7 @@
           },
           "title": "Benutzer hinzufügen",
           "username": "Benutzername",
-          "usernamePlaceholder": "maxmust",
-          "noCustomers": "Keine Kunden gefunden",
-          "noCustomersDescription": "Kunden verwalten"
+          "usernamePlaceholder": "maxmust"
         },
         "Edit": {
           "addChip": "Chip Hinzufügen",
@@ -50,7 +41,7 @@
           },
           "save": "Speichern",
           "title": "Benutzer bearbeiten",
-          "updated": "Aktuallisiert",
+          "updated": "Aktualisiert",
           "username": "Benutzer"
         }
       },
@@ -58,14 +49,35 @@
         "description": "Track your Time",
         "title": "Time Track - Benutzer"
       },
+      "addDuplicate": "Benutzer existiert bereits.",
+      "chipAdded": "Chip erfolgreich verknüpft",
+      "chipRemoved": "Chip erfolgreich entfernt",
+      "created": "Benutzer erfolgreich erstellt",
+      "currentPage": "Seite {page} von {pages}",
+      "deleted": "Benutzer erfolgreich gelöscht",
+      "name": "Name",
       "noResults": "Keine Ergebnisse",
       "rowsPerPage": "Zeilen pro Seite",
+      "search": "Suchen...",
       "searchName": "Suche nach Namen...",
       "title": "Benutzer",
+      "updateDuplicate": "Benutzer mit diesem Benutzername existiert bereits.",
+      "updateNotFound": "Benutzer nicht gefunden.",
       "updated": "Benutzer erfolgreich aktualisiert",
-      "updateDuplicate": "Benutzer mit diesem username existiert bereits.",
-      "updateNotFound": "Benutzer nicht gefunden."
+      "username": "Benutzername"
     }
+  },
+  "Customers": {
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Kunden"
+    },
+    "created": "Kunde erfolgreich erstellt.",
+    "customerAccounts": "Zugänge: {amount}",
+    "customerProjects": "Projekte: {amount}",
+    "deleted": "Kunde erfolgreich gelöscht.",
+    "searchPlaceholder": "Suche oder erstelle",
+    "title": "Kunden"
   },
   "Error": {
     "message": "Ein Fehler ist aufgetreten",
@@ -81,6 +93,7 @@
   "History": {
     "Dialogs": {
       "Create": {
+        "breakTime": "Pausenzeit (Minuten)",
         "create": "Hinzufügen",
         "details": "Details",
         "distance": "Zurückgelegte Entfernung (km)",
@@ -88,8 +101,7 @@
         "notes": "Notizen",
         "start": "Start",
         "time": "Zeit",
-        "title": "Eintrag hinzufügen",
-        "breakTime": "Pausenzeit (Minuten)"
+        "title": "Eintrag hinzufügen"
       },
       "Edit": {
         "delete": "Löschen",
@@ -97,13 +109,13 @@
         "distance": "Zurückgelegte Entfernung (km)",
         "end": "Ende",
         "notes": "Notizen",
-        "save": "Speichern",
         "project": "Projekt",
+        "save": "Speichern",
+        "saveDetails": "Speichern + Stoppen",
         "start": "Start",
         "startedWith": "Gestartet mit",
         "stoppedWith": "Gestoppt mit",
         "time": "Zeit",
-        "saveDetails": "Speichern + Stoppen",
         "title": "Eintrag bearbeiten"
       },
       "Export": {
@@ -111,35 +123,29 @@
         "title": "Verlauf Exportieren",
         "visualisation": {
           "dateSpecificColumn": "Datum Spalte",
-          "personSpecificColumn": "Personen Spalte",
           "description": "Passe die zu exportierende Tabelle an.",
+          "personSpecificColumn": "Personen Spalte",
           "projectSpecificColumn": "Projekt Spalte",
           "title": "Visualisierung"
         }
       }
+    },
+    "Export": {
+      "break": "Pause",
+      "date": "Datum",
+      "distance": "Distanz",
+      "duration": "Dauer",
+      "end": "Ende",
+      "notes": "Notizen",
+      "person": "Person",
+      "project": "Projekt",
+      "start": "Start"
     },
     "Metadata": {
       "description": "Erfasse deine Zeiten",
       "title": "Time Track - Verlauf"
     },
     "Miscellaneous": {
-      "created": "Neuen Eintrag erfolgreich erstellt",
-      "deleted": "Eintrag erfolgreich gelöscht",
-      "errorUndo": "Eintrag konnte nicht wiederhergestellt werden",
-      "invoiced": "Berechnete Zeiten",
-      "invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
-      "invoicedSingular": "Berechnet",
-      "newEntry": "Neuen Eintrag hinzufügen",
-      "noFilter": "Kein Filter",
-      "nothingFound": "Nichts gefunden.",
-      "projects": "Projekte",
-      "projectsEmpty": "Ohne Projekt",
-      "reset": "Zurücksetzen",
-      "search": "Suchen...",
-      "searchYearMonth": "Suche Jahr/Monat...",
-      "undo": "Zurücksetzen",
-      "updated": "Eintrag erfolgreich aktualisiert",
-      "users": "Benutzer",
       "Days": {
         "0": "Sonntag",
         "1": "Montag",
@@ -162,93 +168,105 @@
         "November": "November",
         "October": "Oktober",
         "September": "September"
-      }
-    },
-    "Export": {
-      "project": "Projekt",
-      "person": "Person",
-      "date": "Datum",
-      "start": "Start",
-      "end": "Ende",
-      "break": "Pause",
-      "duration": "Dauer",
-      "notes": "Notizen",
-      "distance": "Distanz"
+      },
+      "created": "Neuen Eintrag erfolgreich erstellt",
+      "deleted": "Eintrag erfolgreich gelöscht",
+      "errorUndo": "Eintrag konnte nicht wiederhergestellt werden",
+      "invoiced": "Berechnete Zeiten",
+      "invoicedDescription": "sind {invoiced, select, true {nur sichtbar} false {versteckt} other {sichtbar}}",
+      "invoicedSingular": "Berechnet",
+      "newEntry": "Neuen Eintrag hinzufügen",
+      "noFilter": "Kein Filter",
+      "nothingFound": "Nichts gefunden.",
+      "projects": "Projekte",
+      "projectsEmpty": "Ohne Projekt",
+      "reset": "Zurücksetzen",
+      "search": "Suchen...",
+      "searchYearMonth": "Suche Jahr/Monat...",
+      "undo": "Zurücksetzen",
+      "updated": "Eintrag erfolgreich aktualisiert",
+      "users": "Benutzer"
     },
     "PageTitle": "Verlauf"
   },
   "Login": {
-    "buttonText": "Anmelden",
     "Metadata": {
       "description": "Erfasse deine Zeiten",
       "title": "Time Track - Anmelden"
     },
+    "buttonText": "Anmelden",
     "password": "Passwort",
     "passwordPlaceholder": "Passwort",
     "title": "Anmelden",
     "username": "Benutzer",
     "usernamePlaceholder": "Benutzer"
   },
+  "Mail": {
+    "assignees": "{count, plural, =0 {?} =1 {Ansprechpartner} other {Ansprechpartner}}",
+    "dailyUpdate": "Tägliches Ticket-Update",
+    "deactivate": {
+      "update": "Diese Mails deaktivieren"
+    },
+    "important": "Wichtig",
+    "link": "Ticket anzeigen",
+    "newTicket": "Neues Ticket",
+    "newTickets": "Neue Tickets",
+    "open": "anzeigen",
+    "projects": "{count, plural, =0 {?} =1 {Projekt} other {Projekte}}",
+    "subject": "Neues Ticket erstellt von {name}{projectsCount, plural, =0 {} other { - {projects}}}",
+    "ticket": {
+      "done": "Abgeschlossen",
+      "inProgress": "In Arbeit",
+      "open": "Offen"
+    },
+    "updateAssigneees": "Ansprechpartner: ",
+    "updateProjects": "Projekte: ",
+    "updateSubject": "Ticket-Update",
+    "updatedTickets": "Aktualisierte Tickets"
+  },
   "Navigation": {
-    "history": "Verlauf",
-    "home": "Timer",
-    "profile": "Profil",
-    "projects": "Projekte",
-    "customers": "Kunden",
-    "signOut": "Abmelden",
     "Theme": {
       "dark": "Dunkel",
       "light": "Hell",
       "system": "System",
       "title": "Theme"
     },
+    "customers": "Kunden",
+    "history": "Verlauf",
+    "home": "Timer",
+    "profile": "Profil",
+    "projects": "Projekte",
+    "signOut": "Abmelden",
     "ticket": "Tickets",
     "users": "Benutzer"
   },
   "Profile": {
-    "sessions": "Angemeldete Geräte",
-    "buttonContent": "Speichern",
-    "language": "Sprache",
-    "languages": {
-      "de": "Deutsch",
-      "en": "English"
-    },
-    "languageUpdate": "Sprache geändert.",
-    "mail": "Mail",
-    "mailPlaceholder": "max@example.com",
-    "passwordPlaceholder": "",
     "Metadata": {
       "description": "Erfasse deine Zeiten",
       "title": "Time Track - Profil"
     },
+    "buttonContent": "Speichern",
+    "language": "Sprache",
+    "languageUpdate": "Sprache geändert.",
+    "languages": {
+      "de": "Deutsch",
+      "en": "English"
+    },
+    "mail": "Mail",
+    "mailPlaceholder": "max@example.com",
     "name": "Name",
     "namePlaceholder": "Max Mustermann",
     "password": "Neues Passwort",
+    "passwordPlaceholder": "",
     "passwordUpdate": "Passwort geändert. Bitte erneut anmelden.",
     "sessionUpdate": "Die Sitzung wird aktualisiert.",
-    "title": "Profil",
-    "updated": "Profil erfolgreich aktualisiert",
+    "sessions": "Angemeldete Geräte",
     "ticketCreationMail": "eMail bei neuem Ticket",
-    "ticketUpdateMail": "eMail bei Ticket Update"
+    "ticketUpdateMail": "eMail bei Ticket Update",
+    "title": "Profil",
+    "updated": "Profil erfolgreich aktualisiert"
   },
   "Projects": {
-    "Metadata": {
-      "description": "Erfasse deine Zeiten",
-      "title": "Time Track - Projekte"
-    },
-    "customer": "Kunde",
-    "noCustomer": "Kein Kunde",
-    "noCustomerFound": "Keine Kunden gefunden.",
-    "withoutCustomer": "Projekte ohne Kunden",
-    "created": "Projekt erfolgreich erstellt.",
-    "deleted": "Projekt erfolgreich gelöscht.",
-    "noProjects": "Keine Projekte gefunden.",
-    "saved": "Erfolgreich gespeichert.",
-    "searchPlaceholder": "Suche oder erstelle",
-    "search": "Suchen...",
-    "times": "Zeiten: {times}",
-    "title": "Projekte",
-    "todos": "Todos: {todos}",
     "Dialogs": {
       "Edit": {
         "description": "Beschreibung",
@@ -256,89 +274,94 @@
         "name": "Name",
         "title": "Projekt bearbeiten"
       }
-    }
-  },
-  "Customers": {
+    },
     "Metadata": {
       "description": "Erfasse deine Zeiten",
-      "title": "Time Track - Kunden"
+      "title": "Time Track - Projekte"
     },
-    "title": "Kunden",
-    "created": "Kunde erfolgreich erstellt.",
-    "deleted": "Kunde erfolgreich gelöscht.",
+    "created": "Projekt erfolgreich erstellt.",
+    "customer": "Kunde",
+    "deleted": "Projekt erfolgreich gelöscht.",
+    "noCustomer": "Kein Kunde",
+    "noCustomerFound": "Keine Kunden gefunden.",
+    "noProjects": "Keine Projekte gefunden.",
+    "saved": "Erfolgreich gespeichert.",
+    "search": "Suchen...",
     "searchPlaceholder": "Suche oder erstelle",
-    "customerProjects": "Projekte: {amount}",
-    "customerAccounts": "Zugänge: {amount}"
+    "times": "Zeiten: {times}",
+    "title": "Projekte",
+    "todos": "Todos: {todos}",
+    "withoutCustomer": "Projekte ohne Kunden"
   },
   "SignOut": {
-    "buttonText": "Abmelden",
-    "description": "Sind sie sich sicher, dass sie sich abmelden wollen?",
     "Metadata": {
       "description": "Erfasse deine Zeiten",
       "title": "Time Track - Abmelden"
     },
+    "buttonText": "Abmelden",
+    "description": "Sind Sie sich sicher, dass Sie sich abmelden wollen?",
     "title": "Abmelden"
   },
-  "Timer": {
-    "Metadata": {
-      "description": "Erfasse deine Zeiten",
-      "title": "Time Track"
-    },
-    "Miscellaneous": {
-      "projects": {
-        "none": "Kein Projekt",
-        "noneFound": "Keine Projekte gefunden",
-        "noneFoundDescription": "Klicke um Projekte zu verwalten",
-        "search": "Suchen..."
-      },
-      "withoutCustomer": "Ohne Kunde",
-      "start": "Start",
-      "startedWith": "Gestartet mit {startType}",
-      "startWithWebsite": "Starte jetzt durch die Website",
-      "stop": "Stop",
-      "updating": "Aktuallisiere"
-    }
-  },
   "Tickets": {
+    "Dialogs": {
+      "Add": {
+        "buttonToolTip": "Neues Ticket erstellen",
+        "create": "Hinzufügen",
+        "noAssignees": "Keine Ansprechpartner",
+        "noRelatedProjects": "Keine zugehörigen Projekte",
+        "projects": "Projekte",
+        "searchUser": "Nach Benutzer suchen...",
+        "title": "Ticket hinzufügen"
+      },
+      "Edit": {
+        "created": "Erstellt",
+        "creator": "Ersteller",
+        "details": "Details",
+        "noAssignees": "Keine Ansprechpartner",
+        "noRelatedProjects": "Keine zugehörigen Projekte",
+        "projects": "Projekte",
+        "save": "Speichern",
+        "status": "Status",
+        "updated": "Aktualisiert"
+      }
+    },
     "Metadata": {
       "description": "Track your Time",
       "title": "Time Track - Tickets"
     },
-    "title": "Tickets",
-    "search": "Suchen...",
-    "filter": "Filter",
+    "actions": "Aktionen",
+    "archive": "Archivieren",
     "archived": "Archiviert",
-    "noResults": "Keine Tickets gefunden",
-    "rowsPerPage": "Zeilen pro Seite",
-    "currentPage": "Seite {page} von {pages}",
-    "task": "Auftrag",
+    "assignees": "Ansprechpartner",
     "changed": "Erfolgreich geändert.",
-    "hide": "Löschen",
-    "visibleColumns": "Sichtbare Spalten",
-
-    "projects": "Projekte",
-    "noFilter": "Kein Filter",
-    "projectsEmpty": "Ohne Projekt",
-
-    "dropFile": "Datei Ablegen",
-
-    "open": "Öffnen",
-
+    "copyLink": "Link kopieren",
+    "created": "Neuen Eintrag erfolgreich erstellt",
+    "createdAt": "Erstellt",
+    "creator": "Ersteller",
+    "currentPage": "Seite {page} von {pages}",
+    "deadline": "Deadline",
+    "deleted": "Eintrag gelöscht",
+    "description": "Beschreibung",
+    "dropFile": "Datei ablegen",
     "fileInfo": "Datei {supported, select, true {{oversized, select, true {ist größer als {maxFileSize}} false {} other {}}} false {wird nicht unterstützt} other {}}",
     "fileInfoDescription": "Klicken Sie, um eine Datei auszuwählen oder ziehen Sie sie hierher",
-
-    "upload": "Hochladen",
-    "uploads": "Uploads:",
-
-    "deleted": "Eintrag gelöscht",
-
-    "reset": "Zurücksetzen",
+    "filter": "Filter",
+    "hide": "Löschen",
+    "noFilter": "Kein Filter",
+    "noResults": "Keine Tickets gefunden",
+    "none": "Keine",
+    "open": "Öffnen",
     "priorities": {
       "high": "Hoch",
-      "low": "Nidrig",
+      "low": "Niedrig",
       "medium": "Normal"
     },
     "priority": "Priorität",
+    "projects": "Projekte",
+    "projectsEmpty": "Ohne Projekt",
+    "reset": "Zurücksetzen",
+    "rowsPerPage": "Zeilen pro Seite",
+    "search": "Suchen...",
     "steps": {
       "done": "Abgeschlossen",
       "inProgress": "In Arbeit",
@@ -349,63 +372,31 @@
       "inProgress": "Abschließen",
       "todo": "Starten"
     },
-    "none": "Keine",
-    "deadline": "Deadline",
-    "description": "Beschreibung",
-    "assignees": "Ansprechpartner",
-    "creator": "Ersteller",
-    "createdAt": "Erstellt",
-    "actions": "Aktionen",
-    "copyLink": "Link Kopieren",
-    "archive": "Archivieren",
-    "created": "Neuen Eintrag erfolgreich erstellt",
+    "task": "Auftrag",
+    "title": "Tickets",
     "updated": "Eintrag erfolgreich aktualisiert",
-
-    "Dialogs": {
-      "Add": {
-        "buttonToolTip": "Neues Ticket erstellen",
-        "title": "Ticket hinzufügen",
-
-        "create": "Hinzufügen",
-        "noAssignees": "Keine Ansprechpartner",
-        "noRelatedProjects": "Keine zugehörige Projekte",
-        "projects": "Projekte",
-        "searchUser": "Nach Benutzer suchen..."
-      },
-      "Edit": {
-        "created": "Erstellt",
-        "creator": "Ersteller",
-        "details": "Details",
-        "noAssignees": "Keine Ansprechpartner",
-        "noRelatedProjects": "Keine zugehörige Projekte",
-        "projects": "Projekte",
-        "save": "Speichern",
-        "status": "Status",
-        "updated": "Aktuallisiert"
-      }
-    }
+    "upload": "Hochladen",
+    "uploads": "Uploads:",
+    "visibleColumns": "Sichtbare Spalten"
   },
-  "Mail": {
-    "newTicket": "Neues Ticket",
-    "important": "Wichtig",
-    "projects": "{count, plural, =0 {?} =1 {Projekt} other {Projekte}}",
-    "assignees": "{count, plural, =0 {?} =1 {Ansprechpartner} other {Ansprechpartner}}",
-    "link": "Ticket anzeigen",
-    "subject": "Neues Ticket erstellt von {name}{projectsCount, plural, =0 {} other { - {projects}}}",
-    "dailyUpdate": "Daily Ticket Update",
-    "newTickets": "Neue Tickets",
-    "updatedTickets": "Aktualisierte Tickets",
-    "open": "anzeigen",
-    "updateAssigneees": "Ansprechpartner: ",
-    "updateProjects": "Projekte: ",
-    "updateSubject": "Ticket Update",
-    "deactivate": {
-      "update": "Diese Mails deaktivieren"
+  "Timer": {
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track"
     },
-    "ticket": {
-      "open": "Offen",
-      "inProgress": "In Arbeit",
-      "done": "Abgeschlossen"
+    "Miscellaneous": {
+      "projects": {
+        "none": "Kein Projekt",
+        "noneFound": "Keine Projekte gefunden",
+        "noneFoundDescription": "Klicken Sie, um Projekte zu verwalten",
+        "search": "Suchen..."
+      },
+      "start": "Start",
+      "startWithWebsite": "Starte jetzt durch die Website",
+      "startedWith": "Gestartet mit {startType}",
+      "stop": "Stopp",
+      "updating": "Aktualisiere",
+      "withoutCustomer": "Ohne Kunde"
     }
   }
 }
