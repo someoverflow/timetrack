@@ -1,7 +1,7 @@
 import { getRequestConfig } from "next-intl/server";
-import { authCheck } from "./lib/auth";
 import { headers as nextHeaders } from "next/headers";
 import Negotiator from "negotiator";
+import { authCheck } from "@/lib/auth";
 
 export default getRequestConfig(async () => {
   let locale = process.env.DEFAULT_LANG ?? "de";
@@ -27,6 +27,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
+    messages: (await import(`@/../messages/${locale}.json`)).default,
   };
 });
