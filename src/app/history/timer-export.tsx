@@ -25,7 +25,6 @@ import * as FileSaver from "file-saver";
 type Timer = Prisma.TimeGetPayload<{
   include: { project: true };
 }>;
-type Data = Record<string, Timer[]>;
 
 interface visualisationState {
   showProject: boolean;
@@ -37,7 +36,7 @@ export default function TimerExportDialog({
   yearMonth,
   users,
 }: {
-  history: Data;
+  history: Timer[];
   yearMonth: string;
   users: { id: string; username: string; name: string | null }[] | undefined;
 }) {
@@ -70,7 +69,7 @@ export default function TimerExportDialog({
   }, []);
 
   const downloadCSV = async () => {
-    const filteredData = (history[yearMonth] ?? [])
+    const filteredData = history
       .filter((e) => e.end != null)
       .sort((a, b) => {
         const aName = users?.find((u) => u.id == a.userId)?.name ?? "";
@@ -261,7 +260,7 @@ export default function TimerExportDialog({
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <DialogContent className="w-[95vw] top-[25%] max-w-md rounded-lg flex flex-col justify-between">
+        <DialogContent className="top-[25%] flex w-[95vw] max-w-md flex-col justify-between rounded-lg">
           <DialogHeader>
             <DialogTitle>
               <div>{t("Dialogs.Export.title")}</div>

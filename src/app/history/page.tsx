@@ -1,6 +1,4 @@
 //#region Imports
-import type { Prisma } from "@prisma/client";
-
 import Navigation from "@/components/navigation";
 import TimerSection from "./timer-section";
 
@@ -13,27 +11,6 @@ import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { nameArrayValidation } from "@/lib/zod";
 //#endregion
-
-type Timer = Prisma.TimeGetPayload<{
-  include: { project: true };
-}>;
-type Data = Record<string, Timer[]>;
-
-function formatHistory(data: Timer[]): Data {
-  const result: Data = {};
-
-  for (const item of data) {
-    const date = new Date(item.start);
-    const year = date.getFullYear();
-    const month = months[date.getMonth()];
-
-    const str = `${year} ${month}`;
-    if (!result[str]) result[str] = [];
-    result[str].push(item);
-  }
-
-  return result;
-}
 
 export async function generateMetadata() {
   const t = await getTranslations({ namespace: "History.Metadata" });
@@ -95,85 +72,65 @@ export default async function History({
   }
   //#endregion
 
-  // HISTORY
-  const history = await prisma.time.findMany({
-    orderBy: {
-      start: "desc",
-    },
-    where: {
-      invoiced: invoiced,
-      user: {
-        username: {
-          in: userFilter,
+  // DB
+  const [dbHistory, dbTimes, dbUsers, dbProjects] = await prisma.$transaction([
+    prisma.time.findMany({
+      orderBy: {
+        start: "desc",
+      },
+      where: {
+        invoiced: invoiced,
+        user: {
+          username: {
+            in: userFilter,
+          },
+        },
+        project: projectsFilter
+          ? {
+              name: {
+                in: projectsFilter,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        project: true,
+      },
+    }),
+    prisma.time.groupBy({
+      orderBy: { start: "desc" },
+      by: ["start"],
+    }),
+    prisma.user.findMany({
+      select: { id: true, name: true, username: true },
+      where: {
+        role: {
+          not: "CUSTOMER",
         },
       },
-      project: projectsFilter
-        ? {
-            name: {
-              in: projectsFilter,
-            },
-          }
-        : undefined,
-    },
-    include: {
-      project: true,
-    },
-  });
+    }),
+    prisma.project.findMany({
+      select: {
+        customerName: true,
+        name: true,
+      },
+    }),
+  ]);
 
   //#region Year / Month
   const currentYearMonth =
     new Date().getFullYear() + " " + months[new Date().getMonth()];
 
-  const startTimes = await prisma.time.groupBy({
-    by: ["start"],
-    where: { userId: userIsAdmin ? user.id : undefined },
-  });
-
   let yearMonths = [
     ...new Set(
-      startTimes
-        .sort((a, b) => b.start.getTime() - a.start.getTime())
-        .map(({ start }) => {
-          const year = start.getFullYear();
-          const month = months[start.getMonth()];
-          return `${year} ${month}`;
-        }),
+      dbTimes.map(({ start }) => {
+        const year = start.getFullYear();
+        const month = months[start.getMonth()];
+        return `${year} ${month}`;
+      }),
     ),
   ];
-
   if (yearMonths.length === 0) yearMonths = [currentYearMonth];
-  //#endregion
-
-  //#region Projects
-  const projectsResult = await prisma.project.findMany({
-    select: {
-      customerName: true,
-      name: true,
-    },
-  });
-  const projects = {
-    single: projectsResult,
-    grouped: JSON.parse(
-      JSON.stringify(
-        Object.groupBy(projectsResult, (project) => project.customerName ?? ""),
-      ),
-    ),
-  };
-  //#endregion
-
-  const users = userIsAdmin
-    ? await prisma.user.findMany({
-        select: { id: true, name: true, username: true },
-        where: {
-          role: {
-            not: "CUSTOMER",
-          },
-        },
-      })
-    : [{ id: user.id, name: user.name, username: user.username }];
-
-  // TODO: Use Object.groupBy
-  const historyData = formatHistory(history);
 
   let yearMonth = searchParams?.ym;
   if (!yearMonth || !yearMonths.includes(yearMonth))
@@ -188,10 +145,45 @@ export default async function History({
     })),
     (i) => i.year,
   );
+  //#endregion
 
-  const timeStrings = (historyData[yearMonth] ?? [])
-    .filter((data) => data.time !== null)
-    .map((e) => e.time ?? "");
+  //#region Data
+  const yearMonthData = JSON.parse(
+    JSON.stringify({
+      current: yearMonth,
+      all: yearMonths,
+      grouped: yearMonthGrouped,
+    }),
+  );
+
+  const projects = JSON.parse(
+    JSON.stringify({
+      single: dbProjects,
+      grouped: Object.groupBy(
+        dbProjects,
+        (project) => project.customerName ?? "",
+      ),
+    }),
+  );
+  //#endregion
+
+  const groupedHistory = Object.groupBy(dbHistory, (a) => {
+    const date = new Date(a.start);
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
+
+    const str = `${year} ${month}`;
+    return str;
+  });
+
+  const history = groupedHistory[yearMonth] ?? [];
+  const totalTimes = sumTimes(
+    history.filter((data) => data.time !== null).map((e) => e.time ?? ""),
+  );
+
+  const historyDays = Array.from(
+    new Set(history.map((entry) => entry.start.toDateString())),
+  ).map((dateString) => new Date(dateString));
 
   return (
     <Navigation>
@@ -202,18 +194,16 @@ export default async function History({
 
         <TimerSection
           user={user}
-          users={users}
-          history={historyData}
-          currentHistory={historyData[yearMonth] ?? []}
-          totalTime={sumTimes(timeStrings)}
+          users={
+            userIsAdmin
+              ? dbUsers
+              : [{ id: user.id, name: user.name, username: user.username }]
+          }
+          history={history}
+          historyDays={historyDays}
           projects={projects}
-          yearMonth={JSON.parse(
-            JSON.stringify({
-              current: yearMonth,
-              all: yearMonths,
-              grouped: yearMonthGrouped,
-            }),
-          )}
+          totalTime={totalTimes}
+          yearMonth={yearMonthData}
           filters={{
             projects: projectsFilter,
             users: filterCookies.users ? userFilter : undefined,

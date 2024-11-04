@@ -168,75 +168,81 @@ export function DataTable<TData, TValue>({
 
   const updateFilter = (data: {
     archived?: boolean;
-
     assigneesFilter?: string[];
     projectsFilter?: string[];
-
     status?: Partial<{
       todo: boolean;
       in_progress: boolean;
       done: boolean;
     }>;
-
     reset?: boolean;
   }) => {
     if (typeof document !== "undefined") {
-      let cookie = "undefined";
-      let maxAge = "31536000";
+      const setCookie = (name: string, value = "undefined", maxAge = "0") => {
+        document.cookie = encodeURI(
+          `${name}=${value};max-age=${maxAge};path=/`,
+        );
+      };
 
-      // Archived
-      if (data.archived === true) {
-        maxAge = "31536000";
-        document.cookie = `ticket-filter-archived=${!filters.archived};max-age=${maxAge};path=/`;
-      }
+      // Reset Filter
+      if (data.reset) {
+        setCookie("ticket-filter-archived");
+        setCookie("ticket-filter-status-todo");
+        setCookie("ticket-filter-status-inProgress");
+        setCookie("ticket-filter-status-done");
+        setCookie("ticket-filter-assignees");
+        setCookie("ticket-filter-projects");
+      } else {
+        // Archived
+        if (data.archived !== undefined) {
+          setCookie(
+            "ticket-filter-archived",
+            `${!filters.archived}`,
+            "31536000",
+          );
+        }
 
-      // Projects
-      if (data.projectsFilter) {
-        cookie = "undefined";
-        maxAge = "31536000";
+        // Projects
+        if (data.projectsFilter && user.role !== "CUSTOMER") {
+          const projectsCookie = data.projectsFilter.length
+            ? JSON.stringify(data.projectsFilter)
+            : "undefined";
+          setCookie(
+            "ticket-filter-projects",
+            projectsCookie,
+            projectsCookie === "undefined" ? "0" : "31536000",
+          );
+        }
 
-        if (user.role != "CUSTOMER" && data.projectsFilter.length !== 0)
-          cookie = JSON.stringify(data.projectsFilter);
+        // Assignees
+        if (data.assigneesFilter && user.role !== "CUSTOMER") {
+          const assigneesCookie = data.assigneesFilter.length
+            ? JSON.stringify(data.assigneesFilter)
+            : "undefined";
+          setCookie(
+            "ticket-filter-assignees",
+            assigneesCookie,
+            assigneesCookie === "undefined" ? "0" : "31536000",
+          );
+        }
 
-        if (cookie == "undefined") maxAge = "0";
-        document.cookie = `ticket-filter-projects=${cookie};max-age=${maxAge};path=/`;
-      }
-
-      // Assignees
-      if (data.assigneesFilter) {
-        cookie = "undefined";
-        maxAge = "31536000";
-
-        if (user.role != "CUSTOMER" && data.assigneesFilter.length !== 0)
-          cookie = JSON.stringify(data.assigneesFilter);
-
-        if (cookie == "undefined") maxAge = "0";
-        document.cookie = `ticket-filter-assignees=${cookie};max-age=${maxAge};path=/`;
-      }
-
-      // Status
-      if (data.status != undefined) {
-        maxAge = "31536000";
-
-        if (data.status.todo !== undefined)
-          document.cookie = `ticket-filter-status-todo=${data.status.todo};max-age=${maxAge};path=/`;
-
-        if (data.status.in_progress !== undefined)
-          document.cookie = `ticket-filter-status-inProgress=${data.status.in_progress};max-age=${maxAge};path=/`;
-
-        if (data.status.done !== undefined)
-          document.cookie = `ticket-filter-status-done=${data.status.done};max-age=${maxAge};path=/`;
-      }
-
-      if (data.reset === true) {
-        cookie = "undefined";
-        maxAge = "0";
-        document.cookie = `ticket-filter-archived=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `ticket-filter-status-todo=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `ticket-filter-status-inProgress=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `ticket-filter-status-done=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `ticket-filter-assignees=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `ticket-filter-projects=${cookie};max-age=${maxAge};path=/`;
+        // Status
+        if (data.status) {
+          const statusKeys: Array<keyof typeof data.status> = [
+            "todo",
+            "in_progress",
+            "done",
+          ];
+          statusKeys.forEach((key) => {
+            if (data.status![key] !== undefined) {
+              setCookie(
+                `ticket-filter-status-${key}`,
+                `${data.status![key]}`,
+                "31536000",
+              );
+            }
+          });
+        }
       }
     }
 
@@ -772,7 +778,9 @@ export function DataTable<TData, TValue>({
               onValueChange={(value) => {
                 table.setPageSize(Number(value));
                 if (typeof document !== "undefined")
-                  document.cookie = `pageSize=${value};max-age=31536000;path=/`;
+                  document.cookie = encodeURI(
+                    `pageSize=${value};max-age=31536000;path=/`,
+                  );
                 router.refresh();
               }}
             >

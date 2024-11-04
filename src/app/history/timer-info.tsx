@@ -1,5 +1,3 @@
-"use client";
-
 //#region Imports
 import type { Prisma, Time } from "@prisma/client";
 import type { timesPutApiValidation } from "@/lib/zod";
@@ -37,7 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { memo, useCallback, useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -61,7 +59,7 @@ interface timerInfoState {
   projectName: string | null;
 }
 
-export default function TimerInfo({
+export const TimerInfo = memo(function TimerInfo({
   timer,
   projects,
   edit = false,
@@ -782,4 +780,4 @@ export default function TimerInfo({
       </Dialog>
     </>
   );
-}
+});

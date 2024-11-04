@@ -8,7 +8,7 @@ const statusReducer = (
   action:
     | { type: "reset_error" }
     | { type: "error"; toast?: string | undefined }
-    | { type: "loading" | "running"; value: boolean }
+    | { type: "loading" | "running"; value: boolean },
 ) => {
   switch (action.type) {
     case "error":
@@ -41,8 +41,8 @@ export default function useRequest<T extends object>(
   successFn: (result: APIResult) => Promise<void> | void,
   errorFn?: (
     result: APIResult,
-    type: APIResultType
-  ) => Promise<boolean> | boolean
+    type: APIResultType,
+  ) => Promise<boolean> | boolean,
 ) {
   const t = useTranslations("Error");
   const [status, dispatch] = useReducer(statusReducer, {
@@ -59,7 +59,6 @@ export default function useRequest<T extends object>(
         .catch(() => {
           toast.error(t("message"), {
             description: t("resultProcessing"),
-            important: true,
             duration: 8_000,
           });
           return;
@@ -94,9 +93,8 @@ export default function useRequest<T extends object>(
                   code: issue.code,
                   message: issue.message,
                 }),
-                important: true,
                 duration: 10_000,
-              }
+              },
             );
           }
           break;
@@ -104,7 +102,6 @@ export default function useRequest<T extends object>(
         case "error-message":
         case "duplicate-found":
           toast.warning(result.result?.message, {
-            important: true,
             duration: 5_000,
           });
           break;
@@ -115,14 +112,13 @@ export default function useRequest<T extends object>(
             }),
             {
               description: "Error could not be identified. You can try again.",
-              important: true,
               duration: 8_000,
-            }
+            },
           );
           break;
       }
     },
-    [request, successFn, errorFn, t]
+    [request, successFn, errorFn, t],
   );
 
   return { status, send };
