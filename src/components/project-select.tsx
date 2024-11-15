@@ -119,7 +119,7 @@ export const ProjectSelection = ({
                           customerFilter !== undefined &&
                           customer !== customerFilter
                         }
-                        value={proj.name}
+                        value={`${proj.customerName ? proj.customerName + " " : ""}${proj.name}`}
                         onSelect={() => {
                           if (
                             multiSelect === false ||
