@@ -260,15 +260,17 @@ export function TicketTableEdit({
 
   useEffect(() => {
     if (visible) setState(getDefaultReducerState());
+    if (visible) localStorage.setItem("ticket-open", ticket.id);
+    else localStorage.removeItem("ticket-open");
   }, [ticket, visible, getDefaultReducerState]);
 
   useEffect(() => {
     setVisible(linkedTodo === ticket.id);
     setState(getDefaultReducerState());
+    if (linkedTodo === ticket.id)
+      localStorage.setItem("ticket-open", ticket.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedTodo, stepStatus.loading]);
-
-  const company = process.env.NEXT_PUBLIC_COMPANY ?? "";
 
   return (
     <>
@@ -565,7 +567,7 @@ export function TicketTableEdit({
                     />
                   </div>
                   <div className="grid h-full w-full gap-1.5 p-1">
-                    <Popover>
+                    <Popover modal>
                       <Label
                         htmlFor="assignees-button"
                         className={cn(
@@ -630,15 +632,13 @@ export function TicketTableEdit({
                               return (
                                 <CommandGroup
                                   key={group}
-                                  heading={
-                                    group == "" ? (company ?? "") : group
-                                  }
+                                  heading={group == "" ? "Intern" : group}
                                 >
                                   {customer.map((user) => (
                                     <CommandItem
                                       key={`user-selection-add-${user.username}`}
                                       className="text-nowrap"
-                                      value={user.username}
+                                      value={`${user.username} ${user.name} ${group}`}
                                       onSelect={() => {
                                         const value = user.username;
                                         const stateAssignees = state.assignees;
@@ -665,15 +665,7 @@ export function TicketTableEdit({
                                             : "opacity-0",
                                         )}
                                       />
-                                      <div className="flex w-full flex-row items-center">
-                                        {user.name}
-                                        <Badge
-                                          variant="default"
-                                          className="scale-75"
-                                        >
-                                          @{user.username}
-                                        </Badge>
-                                      </div>
+                                      {user.name}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>

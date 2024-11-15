@@ -137,8 +137,6 @@ export function TicketAdd({
     },
   );
 
-  const company = process.env.NEXT_PUBLIC_COMPANY ?? "";
-
   return (
     <>
       <Tooltip delayDuration={500}>
@@ -392,13 +390,13 @@ export function TicketAdd({
                             return (
                               <CommandGroup
                                 key={group}
-                                heading={group == "" ? company : group}
+                                heading={group == "" ? "Intern" : group}
                               >
                                 {customer.map((user) => (
                                   <CommandItem
                                     key={`user-selection-add-${user.username}`}
                                     className="text-nowrap"
-                                    value={user.username}
+                                    value={`${user.username} ${user.name} ${group}`}
                                     onSelect={() => {
                                       const value = user.username;
                                       const currentAssignees = data.assignees;
@@ -422,15 +420,7 @@ export function TicketAdd({
                                           : "opacity-0",
                                       )}
                                     />
-                                    <div className="flex w-full flex-row items-center">
-                                      {user.name}
-                                      <Badge
-                                        variant="default"
-                                        className="scale-75"
-                                      >
-                                        @{user.username}
-                                      </Badge>
-                                    </div>
+                                    {user.name}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>

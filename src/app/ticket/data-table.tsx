@@ -616,7 +616,13 @@ export function DataTable<TData, TValue>({
 
                   return (
                     <Popover key={row.id} modal>
-                      <PopoverTrigger asChild>
+                      <PopoverTrigger
+                        asChild
+                        onClick={(e) => {
+                          const open = localStorage.getItem("ticket-open");
+                          if (open) e.preventDefault();
+                        }}
+                      >
                         <TableRow
                           data-state={row.getIsSelected() && "selected"}
                         >
