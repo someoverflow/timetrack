@@ -497,7 +497,7 @@ export function DataTable<TData, TValue>({
                                   <CommandItem
                                     key={`user-${user.username}`}
                                     className="text-nowrap"
-                                    value={user.username}
+                                    value={`${user.username} ${user.name}`}
                                     onSelect={() => {
                                       const value = user.username;
 
@@ -523,15 +523,7 @@ export function DataTable<TData, TValue>({
                                           : "opacity-0",
                                       )}
                                     />
-                                    <div className="flex w-full flex-row items-center">
-                                      <p>{user.name}</p>
-                                      <Badge
-                                        variant="default"
-                                        className="scale-75"
-                                      >
-                                        @{user.username}
-                                      </Badge>
-                                    </div>
+                                    {user.name}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
