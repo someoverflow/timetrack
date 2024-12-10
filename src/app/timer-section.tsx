@@ -38,8 +38,8 @@ export default function TimerSection({ projects }: { projects: Projects }) {
       <CardContent>
         <div
           className={cn(
-            "w-full rounded-lg bg-secondary/5 shadow-md hover:shadow-lg border border-border/50 transition-all duration-300 pt-2 mt-6 pb-6 mb-4",
-            !state.running && "hover:border-border cursor-pointer",
+            "mb-4 mt-6 w-full rounded-lg border border-border/50 bg-secondary/5 pb-6 pt-2 shadow-md transition-all duration-300 hover:shadow-lg",
+            !state.running && "cursor-pointer hover:border-border",
             state.error && "blur-sm",
             state.loading && "!cursor-wait",
           )}
@@ -47,7 +47,7 @@ export default function TimerSection({ projects }: { projects: Projects }) {
           onKeyUp={onClick}
         >
           <CardHeader className="pt-4">
-            <div className="w-full flex justify-center items-center flex-row gap-2">
+            <div className="flex w-full flex-row items-center justify-center gap-2">
               <ToggleSection
                 running={state.running}
                 loading={state.loading}
@@ -56,8 +56,8 @@ export default function TimerSection({ projects }: { projects: Projects }) {
               />
             </div>
           </CardHeader>
-          <div className="w-full h-full flex flex-col items-center gap-6">
-            <h1 className="text-5xl font-bold font-mono select-none animate__animated animate__fadeIn">
+          <div className="flex h-full w-full flex-col items-center gap-6">
+            <h1 className="animate__animated animate__fadeIn select-none font-mono text-5xl font-bold">
               {state.running && timer?.time ? timer.time : "00:00:00"}
             </h1>
             <TimeSection timer={timer} running={state.running} />
@@ -106,7 +106,7 @@ const ToggleSection = ({
             className="font-mono"
             onClick={(e) => {
               e.stopPropagation();
-              toggle(true);
+              toggle(false);
             }}
           >
             <StopCircle className="mr-2 h-4 w-4" />
@@ -145,21 +145,21 @@ const TimeSection = ({
   if (running && timer) {
     return (
       <>
-        <div className="relative flex w-full justify-center items-center gap-4">
-          <p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn">
+        <div className="relative flex w-full items-center justify-center gap-4">
+          <p className="animate__animated animate__fadeIn h-6 w-1/4 rounded-md text-center tabular-nums text-muted-foreground">
             {timer.start.toLocaleTimeString()}
           </p>
           <div className="relative">
             <Separator orientation="horizontal" className="w-5" />
           </div>
-          <p className="text-muted-foreground text-center tabular-nums h-6 w-1/4 rounded-md animate__animated animate__fadeIn select-none">
+          <p className="animate__animated animate__fadeIn h-6 w-1/4 select-none rounded-md text-center tabular-nums text-muted-foreground">
             {(timer.end ?? new Date()).toLocaleTimeString()}
           </p>
 
           {!!timer.breakTime && (
-            <div className="absolute -bottom-4 tabular-nums text-muted-foreground text-xs">
+            <div className="absolute -bottom-4 text-xs tabular-nums text-muted-foreground">
               <div className="flex flex-row items-center justify-center">
-                <Coffee className="size-4 mr-1" />
+                <Coffee className="mr-1 size-4" />
                 {timer.breakTime.toLocaleString()}
                 <sub className="ml-0.5">min</sub>
               </div>
@@ -171,10 +171,10 @@ const TimeSection = ({
   }
 
   return (
-    <div className="flex w-full justify-center items-center gap-4">
-      <Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
+    <div className="flex w-full items-center justify-center gap-4">
+      <Skeleton className="animate__animated animate__fadeIn h-6 w-1/4 rounded-md" />
       <Separator orientation="horizontal" className="w-5" />
-      <Skeleton className="h-6 w-1/4 rounded-md animate__animated animate__fadeIn" />
+      <Skeleton className="animate__animated animate__fadeIn h-6 w-1/4 rounded-md" />
     </div>
   );
 };

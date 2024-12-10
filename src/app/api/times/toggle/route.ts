@@ -45,7 +45,7 @@ export const PUT = api(
             projectName: data.project ?? null,
           },
         });
-        result.result = createResult;
+        result.result = createResult.id;
       } else {
         const changeDate = data.fixTime ? new Date(data.fixTime) : new Date();
         const timePassed = getTimePassed(databaseResult.start, changeDate);
@@ -61,7 +61,7 @@ export const PUT = api(
             id: databaseResult.id,
           },
         });
-        result.result = updateResult;
+        result.result = updateResult.id;
       }
 
       return NextResponse.json(result, { status: result.status });

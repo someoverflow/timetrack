@@ -191,11 +191,28 @@ export const columns: ColumnDef<Prisma.TicketGetPayload<TicketPagePayload>>[] =
               }
             >
               <p className="flex w-full flex-col justify-center space-x-2 rounded-sm bg-background/25 p-2 text-xs text-muted-foreground/80">
-                {ticket.projects.map(
-                  (project, index) =>
-                    project.name +
-                    (index !== ticket.projects.length - 1 ? " • " : ""),
-                )}
+                {Object.keys(
+                  table.options.meta?.data.projects?.grouped ?? {},
+                ).map((group, index) => {
+                  const projects = table.options.meta?.data.projects?.grouped[
+                    group
+                  ]?.filter(
+                    (project) =>
+                      ticket.projects.find((p) => p.name == project.name) !==
+                      undefined,
+                  );
+                  if (!projects || projects.length == 0) return null;
+                  return (
+                    <span key={index}>
+                      {group.length !== 0 && <sup>{group} </sup>}
+                      {projects.map(
+                        (project, index) =>
+                          project.name +
+                          (index !== ticket.projects.length - 1 ? " • " : ""),
+                      )}
+                    </span>
+                  );
+                })}
                 <span className="text-base text-primary">
                   <ChevronRight className="inline-block size-3 text-muted-foreground" />
                   {ticket.task}

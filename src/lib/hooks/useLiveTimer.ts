@@ -3,6 +3,7 @@ import {
   useCallback,
   useDebugValue,
   useEffect,
+  useLayoutEffect,
   useReducer,
   useState,
 } from "react";
@@ -20,8 +21,14 @@ const stateReducer = (
   switch (action.type) {
     case "error":
       toast.error(action.toast ?? "An error occurred while updating", {
-        description: "Reloading the page could solve the problem",
+        id: "error",
+        description:
+          "The page will refresh in about 30 seconds. You can also reload it now by pressing the button.",
         duration: Infinity,
+        action: {
+          label: "Refresh",
+          onClick: () => window.location.reload(),
+        },
       });
       return {
         ...state,
@@ -224,13 +231,13 @@ export default function useLiveTimer({ projects }: { projects: Projects }) {
     [state.running, state.loading, timer?.id, debouncedLoading, fetchLatest],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     fetchLatest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculation Interval
-  useEffect(() => {
+  useLayoutEffect(() => {
     const intervalId = setInterval(() => {
       if (!state.error && state.running) calculate();
     }, 250);
@@ -239,10 +246,8 @@ export default function useLiveTimer({ projects }: { projects: Projects }) {
   // Fetch Interval
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (!state.error) {
-        fetchLatest();
-        console.log("fetch", "new data");
-      }
+      if (!state.error) fetchLatest();
+      else window.location.reload();
     }, 30 * 1000);
     return () => clearInterval(intervalId);
   }, [state.error, fetchLatest]);
