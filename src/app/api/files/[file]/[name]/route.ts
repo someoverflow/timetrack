@@ -2,7 +2,7 @@ import { authCheck } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import fs from "fs";
 import { notFound } from "next/navigation";
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
 
 const uploadsPath = process.env.UPLOADS_PATH ?? "./uploads";
 
@@ -48,7 +48,7 @@ export async function GET(
   headers.set("Content-Type", upload.type);
   headers.set("Content-Length", upload.size + "");
 
-  return new NextResponse(file.buffer, {
+  return new Response((file.buffer as any), {
     headers,
   });
 }
