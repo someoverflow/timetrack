@@ -14,7 +14,7 @@ do
     if [[ $DATE == "03:00:00" ]]
     then
         echo "BACKUP Database"
-        /usr/bin/mysqldump --opt -h $DATABASE_HOST -u $DATABASE_USER -p$DATABASE_PASSWORD $DATABASE_DB >> /backups/$(date +"%Y-%m-%d_%H-%M-%S")_timetrack.sql
+        /usr/bin/mariadb-dump --opt -h $DATABASE_HOST -u $DATABASE_USER -p$DATABASE_PASSWORD $DATABASE_DB >> /backups/$(date +"%Y-%m-%d_%H-%M-%S")_timetrack.sql --skip-ssl
         sleep 1s
     fi
 done

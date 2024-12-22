@@ -56,9 +56,9 @@ export default function useRequest<T extends object>(
 
       const result: APIResult = await (await request(passToRequest))
         .json()
-        .catch(() => {
+        .catch((e) => {
           toast.error(t("message"), {
-            description: t("resultProcessing"),
+            description: t("resultProcessing") + "\n" + e,
             duration: 8_000,
           });
           return;
