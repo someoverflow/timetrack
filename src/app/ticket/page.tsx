@@ -35,17 +35,18 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Tickets({
-  searchParams,
-}: {
-  searchParams?: {
-    query?: string;
-    page?: string;
-    search?: string;
-    link?: string;
-    archived?: string;
-  };
-}) {
+export default async function Tickets(
+  props: {
+    searchParams?: Promise<{
+      query?: string;
+      page?: string;
+      search?: string;
+      link?: string;
+      archived?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   // AUTH
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
@@ -55,7 +56,7 @@ export default async function Tickets({
   const t = await getTranslations("Tickets");
 
   //#region Filter
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const filterCookies = {
     archived: cookieStore.get("ticket-filter-archived")?.value,
 

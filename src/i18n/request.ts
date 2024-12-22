@@ -11,7 +11,7 @@ export default getRequestConfig(async () => {
   else {
     const languages = new Negotiator({
       headers: {
-        "accept-language": nextHeaders().get("accept-language") ?? undefined,
+        "accept-language": (await nextHeaders()).get("accept-language") ?? undefined,
       },
     }).languages();
 

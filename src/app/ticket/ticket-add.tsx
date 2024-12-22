@@ -92,7 +92,6 @@ export function TicketAdd({
       assignees: [],
       projects: [],
     },
-    undefined,
   );
 
   const { status, send } = useRequest(

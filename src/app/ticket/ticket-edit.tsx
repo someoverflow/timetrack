@@ -53,7 +53,7 @@ import { toast } from "sonner";
 import axois, { type AxiosProgressEvent } from "axios";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState, type JSX } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn, formatDuration, humanFileSize } from "@/lib/utils";

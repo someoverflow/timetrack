@@ -7,10 +7,8 @@ import { createErrorResponse, defaultResult } from "@/lib/server-utils";
 
 const uploadsPath = process.env.UPLOADS_PATH ?? "./uploads";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { file: string } },
-) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ file: string }> }) {
+  const params = await props.params;
   const auth = await authCheck();
   const user = auth.user;
   if (!user) notFound();
@@ -42,10 +40,8 @@ export async function GET(
   redirect(`/api/files/${upload.id}/${upload.name}`);
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { file: string } },
-) {
+export async function DELETE(_req: NextRequest, props: { params: Promise<{ file: string }> }) {
+  const params = await props.params;
   const auth = await authCheck();
   const user = auth.user;
   if (!user) notFound();

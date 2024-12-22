@@ -11,7 +11,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, type JSX } from "react";
 
 type PageType = (
   | {

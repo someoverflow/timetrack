@@ -23,7 +23,7 @@ const maxFileSize = Math.pow(1024, 2) * Number(process.env.UPLOAD_LIMIT);
 export async function POST(req: NextRequest) {
   const t = await getTranslations("Tickets");
 
-  const head = headers();
+  const head = await headers();
 
   const contentLength = head.get("content-length");
   if (!contentLength || Number(contentLength) > maxFileSize)

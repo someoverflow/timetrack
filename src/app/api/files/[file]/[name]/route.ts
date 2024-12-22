@@ -8,8 +8,9 @@ const uploadsPath = process.env.UPLOADS_PATH ?? "./uploads";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { file: string; name: string } },
+  props: { params: Promise<{ file: string; name: string }> }
 ) {
+  const params = await props.params;
   const auth = await authCheck();
   const user = auth.user;
   if (!user) notFound();

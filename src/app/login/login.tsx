@@ -6,10 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useActionState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { useFormState } from "react-dom";
 import {
   Menubar,
   MenubarContent,
@@ -22,7 +21,7 @@ import { useTheme } from "next-themes";
 //#endregion
 
 export default function LoginPage({ image }: { image: string | undefined }) {
-  const [state, action, isPending] = useFormState<any, any>(login, {});
+  const [state, action, isPending] = useActionState<any, any>(login, {});
   const { theme, setTheme } = useTheme();
 
   const tNav = useTranslations("Navigation");

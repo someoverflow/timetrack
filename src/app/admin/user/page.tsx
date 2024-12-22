@@ -20,22 +20,23 @@ export async function generateMetadata() {
   };
 }
 
-export default async function AdminUserPage({
-  searchParams,
-}: {
-  searchParams?: {
-    query?: string;
-    page?: string;
-    search?: string;
-  };
-}) {
+export default async function AdminUserPage(
+  props: {
+    searchParams?: Promise<{
+      query?: string;
+      page?: string;
+      search?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
   if (auth.user.role !== "ADMIN") redirect("/");
-  
+
   const t = await getTranslations("Admin.Users");
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   const usersCount = await prisma.user.count({
     where: {

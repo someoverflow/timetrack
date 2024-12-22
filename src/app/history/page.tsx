@@ -21,14 +21,15 @@ export async function generateMetadata() {
   };
 }
 
-export default async function History({
-  searchParams,
-}: {
-  searchParams?: {
-    query?: string;
-    ym?: string;
-  };
-}) {
+export default async function History(
+  props: {
+    searchParams?: Promise<{
+      query?: string;
+      ym?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   // AUTH
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
@@ -40,7 +41,7 @@ export default async function History({
   const t = await getTranslations("History");
 
   //#region Filter
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const filterCookies = {
     invoiced: cookieStore.get("history-filter-invoiced")?.value,
     projects: cookieStore.get("history-filter-projects")?.value,
