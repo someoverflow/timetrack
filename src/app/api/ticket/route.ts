@@ -26,46 +26,53 @@ export const POST = api(
     const result = defaultResult("created", 201);
 
     // Validate request
-    const validationResult = todoCreateApiValidation.safeParse({
-      task: json.task,
-      description: json.description,
-      deadline: json.deadline,
-      assignees: json.assignees,
-      projects: json.projects,
-      priority: json.priority,
-    });
+    const validationResult = todoCreateApiValidation.safeParse(json);
     if (!validationResult.success)
       return badRequestResponse(validationResult.error.issues, "validation");
     const data = validationResult.data;
 
     // Check if user can see ALL given projects
-    if (user.role === "CUSTOMER") {
+    if (user.role === "CUSTOMER")
       if (!data.projects)
         return badRequestResponse(
           { message: "No Projects given." },
           "error-message",
         );
 
-      const projectsCheck = await prisma.project.count({
+    if (data.projects) {
+      const projectsCheck = await prisma.project.findMany({
         where: {
           name: {
             in: data.projects,
           },
-          customer: {
-            users: {
-              some: {
-                id: user.id,
-              },
-            },
-          },
+          customer:
+            user.role == "CUSTOMER"
+              ? {
+                  users: {
+                    some: {
+                      id: user.id,
+                    },
+                  },
+                }
+              : undefined,
         },
       });
 
-      if (projectsCheck != data.projects.length)
+      if (projectsCheck.length !== data.projects.length)
         return badRequestResponse(
           { message: "Project not found." },
           "error-message",
         );
+
+      const customer = projectsCheck[0]?.customerName;
+
+      for (const projects of projectsCheck) {
+        if (projects.customerName !== (customer ?? null))
+          return badRequestResponse(
+            { message: "Projects are invalid." },
+            "error-message",
+          );
+      }
     }
 
     // Check if user can see ALL given users
@@ -124,6 +131,7 @@ export const POST = api(
         : undefined,
 
       creatorId: user.id,
+      updatedById: user.id,
     };
 
     // Create the todo
@@ -162,6 +170,7 @@ export const POST = api(
       });
 
       //#region Mail
+      // TODO: Upgrade to NEXT15 and use after
       if (process.env.SMTP_HOST) {
         const mailT = await getTranslations("Mail");
         const receipents: any[] = [];
@@ -296,16 +305,7 @@ export const PUT = api(
     const type = (searchParams.get("type") ?? "UPDATE").toUpperCase();
 
     // Validate request
-    const validationResult = todoUpdateApiValidation.safeParse({
-      id: json.id,
-      status: json.status,
-      priority: json.priority,
-      task: json.task,
-      description: json.description,
-      deadline: json.deadline,
-      assignees: json.assignees,
-      projects: json.projects,
-    });
+    const validationResult = todoUpdateApiValidation.safeParse(json);
     if (!validationResult.success)
       return badRequestResponse(validationResult.error.issues, "validation");
     const data = validationResult.data;
@@ -340,7 +340,7 @@ export const PUT = api(
         include: {
           projects: {
             select: {
-              customer: true,
+              customerName: true,
               name: true,
             },
           },
@@ -380,6 +380,57 @@ export const PUT = api(
         "error-message",
       );
 
+    let projectsToAdd = undefined;
+    if (data.projects?.add && data.projects?.add.length !== 0) {
+      projectsToAdd = await prisma.project.findMany({
+        where: {
+          name: {
+            in: data.projects.add,
+          },
+          customer:
+            user.role === "CUSTOMER"
+              ? {
+                  users: {
+                    some: {
+                      id: user.id,
+                    },
+                  },
+                }
+              : undefined,
+        },
+      });
+
+      if (projectsToAdd.length !== data.projects.add.length)
+        return badRequestResponse(
+          { message: "Projects invalid." },
+          "error-message",
+        );
+    }
+
+    let tempProjects = todo.projects;
+    if (data.projects?.remove)
+      tempProjects = tempProjects.filter(
+        (p) => !data.projects?.remove?.includes(p.name),
+      );
+
+    if (projectsToAdd) projectsToAdd.forEach((p) => tempProjects.push(p));
+
+    if (user.role === "CUSTOMER" && tempProjects.length == 0)
+      return badRequestResponse(
+        { message: "No Projects is not possible." },
+        "error-message",
+      );
+
+    const customer = tempProjects[0]?.customerName;
+
+    for (const projects of tempProjects) {
+      if (projects.customerName !== (customer ?? null))
+        return badRequestResponse(
+          { message: "Projects are invalid." },
+          "error-message",
+        );
+    }
+
     // Prepare data
     const isByCreator = todo.creatorId === user.id;
 
@@ -387,7 +438,9 @@ export const PUT = api(
       Prisma.TicketUpdateInput,
       Prisma.TicketUncheckedUpdateInput
     > &
-      Prisma.TicketUncheckedUpdateInput = {};
+      Prisma.TicketUncheckedUpdateInput = {
+      updatedById: user.id,
+    };
 
     switch (type) {
       case "UPDATE":
@@ -423,22 +476,9 @@ export const PUT = api(
         }
 
         if (data.projects) {
-          if (data.projects.add) {
-            updateData.projects = {
-              ...updateData.projects,
-              connect: data.projects.add.map((name) => ({
-                name: name,
-              })),
-            };
-          }
-          if (data.projects.remove) {
-            updateData.projects = {
-              ...updateData.projects,
-              disconnect: data.projects.remove.map((name) => ({
-                name: name,
-              })),
-            };
-          }
+          updateData.projects = {
+            set: tempProjects,
+          };
         }
         break;
       case "ARCHIVE":

@@ -131,16 +131,16 @@ export function ProjectEdit({
     <>
       <CommandItem
         key={`projects-${project.name}`}
-        className="font-mono rounded-md aria-selected:!bg-accent/20 border my-2 p-4 outline-none group hover:border-border/50 transition-all duration-300"
+        className="group my-2 rounded-md border p-4 font-mono outline-none transition-all duration-300 hover:border-border/50 aria-selected:!bg-accent/20"
       >
         <div
-          className="w-full flex flex-row items-center justify-between"
+          className="flex w-full flex-row items-center justify-between"
           onClick={() => setVisible(!visible)}
         >
           <div className="w-full">
             <h4 className="text-sm font-semibold">{project.name}</h4>
             {project.description && (
-              <p className="text-xs text-muted-foreground flex flex-col">
+              <p className="flex flex-col text-xs text-muted-foreground">
                 {project.description.split("\n").map((line) => (
                   <span key={line}>{line}</span>
                 ))}
@@ -159,18 +159,18 @@ export function ProjectEdit({
           </div>
 
           {role === "ADMIN" && (
-            <div className="flex flex-col w-min gap-1 pr-1">
+            <div className="flex w-min flex-col gap-1 pr-1">
               <Button
                 size="icon"
                 variant="destructive"
-                className="transition-all duration-150 opacity-0 group-hover:opacity-100"
+                className="opacity-0 transition-all duration-150 group-hover:opacity-100"
                 disabled={updateStatus.loading || deleteStatus.loading}
                 onClick={(e) => {
                   e.stopPropagation();
                   sendDelete();
                 }}
               >
-                <Trash className="w-4 h-4" />
+                <Trash className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -184,7 +184,7 @@ export function ProjectEdit({
       >
         <DialogContent
           onKeyDown={(e) => e.stopPropagation()}
-          className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+          className="flex w-[95vw] max-w-xl flex-col justify-between rounded-lg"
         >
           <DialogHeader>
             <DialogTitle>
@@ -192,7 +192,7 @@ export function ProjectEdit({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full flex flex-col gap-2">
+          <div className="flex w-full flex-col gap-2">
             <Tabs defaultValue="details">
               <TabsList className="flex w-full">
                 <TabsTrigger className="w-full" value="details">
@@ -201,122 +201,126 @@ export function ProjectEdit({
               </TabsList>
               <TabsContent value="details">
                 <ScrollArea
-                  className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+                  className="h-[60svh] w-full overflow-hidden rounded-sm p-2.5"
                   type="always"
                 >
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Popover>
-                      <Label
-                        htmlFor="customer-button"
-                        className="pl-2 text-muted-foreground"
-                      >
-                        {t("customer")}
-                      </Label>
-                      <PopoverTrigger asChild>
-                        <Button
-                          id="customer-button"
-                          variant="outline"
-                          role="combobox"
-                          className="w-full justify-between border-2 transition duration-300"
+                  <div>
+                    <div className="grid h-full w-full gap-1.5 p-1">
+                      <Popover>
+                        <Label
+                          htmlFor="customer-button"
+                          className="pl-2 text-muted-foreground"
                         >
-                          <p>{project.customerName ?? t("noCustomer")}</p>
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-2">
-                        <Command>
-                          <CommandInput
-                            placeholder={t("search")}
-                            className="h-8"
-                          />
-                          {customers.length === 0 ? (
-                            <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
-                              <p>{t("noCustomerFound")}</p>
-                            </div>
-                          ) : (
-                            <CommandGroup>
-                              {customers.map((customer) => (
-                                <CommandItem
-                                  key={`customer-${customer.name}`}
-                                  value={customer.name}
-                                  onSelect={() => {
-                                    sendUpdate({
-                                      customer:
-                                        project.customerName != customer.name
-                                          ? customer.name
-                                          : null,
-                                    });
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      customer.name == project.customerName
-                                        ? "opacity-100"
-                                        : "opacity-0",
-                                    )}
-                                  />
-                                  {customer.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                          {t("customer")}
+                        </Label>
+                        <PopoverTrigger asChild>
+                          <Button
+                            id="customer-button"
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between border-2 transition duration-300"
+                          >
+                            <p>{project.customerName ?? t("noCustomer")}</p>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-2">
+                          <Command>
+                            <CommandInput
+                              placeholder={t("search")}
+                              className="h-8"
+                            />
+                            {customers.length === 0 ? (
+                              <div className="items-center justify-center pt-4 text-center text-sm text-muted-foreground">
+                                <p>{t("noCustomerFound")}</p>
+                              </div>
+                            ) : (
+                              <CommandGroup>
+                                {customers.map((customer) => (
+                                  <CommandItem
+                                    key={`customer-${customer.name}`}
+                                    value={customer.name}
+                                    onSelect={() => {
+                                      sendUpdate({
+                                        customer:
+                                          project.customerName != customer.name
+                                            ? customer.name
+                                            : null,
+                                      });
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        customer.name == project.customerName
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {customer.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            )}
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
 
-                  <div className="h-1" />
+                    <div className="h-1" />
 
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Label
-                      htmlFor={`name-${project.name}`}
-                      className={cn(
-                        "pl-2 text-muted-foreground transition-colors",
-                        data.name !== project.name ? "text-blue-500" : "",
-                      )}
-                    >
-                      {t("Dialogs.Edit.name")}
-                    </Label>
-                    <Input
-                      id={`name-${project.name}`}
-                      type="text"
-                      className="h-full border-2"
-                      spellCheck={true}
-                      value={data.name ?? ""}
-                      onChange={(e) => setData({ name: e.target.value })}
-                      onBlur={() => {
-                        if (data.name !== project.name)
-                          sendUpdate({ name: true });
-                      }}
-                    />
-                  </div>
+                    <div className="grid h-full w-full gap-1.5 p-1">
+                      <Label
+                        htmlFor={`name-${project.name}`}
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          data.name !== project.name ? "text-blue-500" : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.name")}
+                      </Label>
+                      <Input
+                        id={`name-${project.name}`}
+                        type="text"
+                        className="h-full border-2"
+                        spellCheck={true}
+                        value={data.name ?? ""}
+                        onChange={(e) => setData({ name: e.target.value })}
+                        onBlur={() => {
+                          if (data.name !== project.name)
+                            sendUpdate({ name: true });
+                        }}
+                      />
+                    </div>
 
-                  <div className="h-1" />
+                    <div className="h-1" />
 
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Label
-                      htmlFor={`description-${project.name}`}
-                      className={cn(
-                        "pl-2 text-muted-foreground transition-colors",
-                        data.description !== (project.description ?? "")
-                          ? "text-blue-500"
-                          : "",
-                      )}
-                    >
-                      {t("Dialogs.Edit.description")}
-                    </Label>
-                    <Textarea
-                      id={`description-${project.name}`}
-                      className="h-full min-h-[20svh] max-h-[50svh] border-2"
-                      spellCheck={true}
-                      value={data.description}
-                      onChange={(e) => setData({ description: e.target.value })}
-                      onBlur={() => {
-                        if (data.description !== (project.description ?? ""))
-                          sendUpdate({ description: true });
-                      }}
-                    />
+                    <div className="grid h-full w-full gap-1.5 p-1">
+                      <Label
+                        htmlFor={`description-${project.name}`}
+                        className={cn(
+                          "pl-2 text-muted-foreground transition-colors",
+                          data.description !== (project.description ?? "")
+                            ? "text-blue-500"
+                            : "",
+                        )}
+                      >
+                        {t("Dialogs.Edit.description")}
+                      </Label>
+                      <Textarea
+                        id={`description-${project.name}`}
+                        className="h-full max-h-[50svh] min-h-[20svh] border-2"
+                        spellCheck={true}
+                        value={data.description}
+                        onChange={(e) =>
+                          setData({ description: e.target.value })
+                        }
+                        onBlur={() => {
+                          if (data.description !== (project.description ?? ""))
+                            sendUpdate({ description: true });
+                        }}
+                      />
+                    </div>
                   </div>
                 </ScrollArea>
               </TabsContent>

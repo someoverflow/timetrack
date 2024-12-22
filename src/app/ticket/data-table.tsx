@@ -25,13 +25,25 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ChevronsUpDown,
+  CircleCheckBig,
+  CircleDot,
+  CircleDotDashed,
+  File,
+  FileArchive,
+  FileAudio,
+  FileImage,
+  FileVideo,
   Filter,
+  FilterX,
+  type LucideProps,
 } from "lucide-react";
 
 import React, { useTransition } from "react";
@@ -50,7 +62,23 @@ import {
 import { TicketAdd } from "./ticket-add";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import type { Ticket } from "@prisma/client";
+import type { Ticket, TicketUpload, User } from "@prisma/client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { mimeTypes } from "@/lib/file-utils";
+import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ProjectSelection } from "@/components/project-select";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 //#endregion
 
 interface DataTableProps<TData, TValue> {
@@ -59,6 +87,7 @@ interface DataTableProps<TData, TValue> {
 
   projects: Projects;
   users: Users;
+  user: Partial<User>;
 
   paginationData: {
     pages: number;
@@ -66,8 +95,18 @@ interface DataTableProps<TData, TValue> {
     pageSize: number;
   };
 
+  maxFileSize: number;
+
   filters: {
     archived: boolean;
+    status: {
+      todo: boolean;
+      in_progress: boolean;
+      done: boolean;
+    };
+
+    projects: string[] | undefined;
+    assignees: string[] | undefined;
   };
 }
 
@@ -78,6 +117,8 @@ export function DataTable<TData, TValue>({
   users,
   paginationData,
   filters,
+  maxFileSize,
+  user,
 }: DataTableProps<TData, TValue>) {
   //#region Hooks
   const router = useRouter();
@@ -94,6 +135,8 @@ export function DataTable<TData, TValue>({
       data: {
         projects,
         users,
+        maxFileSize,
+        user,
       },
     },
     initialState: {
@@ -125,23 +168,81 @@ export function DataTable<TData, TValue>({
 
   const updateFilter = (data: {
     archived?: boolean;
-
+    assigneesFilter?: string[];
+    projectsFilter?: string[];
+    status?: Partial<{
+      todo: boolean;
+      in_progress: boolean;
+      done: boolean;
+    }>;
     reset?: boolean;
   }) => {
     if (typeof document !== "undefined") {
-      let cookie = "undefined";
-      let maxAge = "31536000";
+      const setCookie = (name: string, value = "undefined", maxAge = "0") => {
+        document.cookie = encodeURI(
+          `${name}=${value};max-age=${maxAge};path=/`,
+        );
+      };
 
-      // Archived
-      if (data.archived === true) {
-        maxAge = "31536000";
-        document.cookie = `ticket-filter-archived=${!filters.archived};max-age=${maxAge};path=/`;
-      }
+      // Reset Filter
+      if (data.reset) {
+        setCookie("ticket-filter-archived");
+        setCookie("ticket-filter-status-todo");
+        setCookie("ticket-filter-status-inProgress");
+        setCookie("ticket-filter-status-done");
+        setCookie("ticket-filter-assignees");
+        setCookie("ticket-filter-projects");
+      } else {
+        // Archived
+        if (data.archived !== undefined) {
+          setCookie(
+            "ticket-filter-archived",
+            `${!filters.archived}`,
+            "31536000",
+          );
+        }
 
-      if (data.reset === true) {
-        cookie = "undefined";
-        maxAge = "0";
-        document.cookie = `ticket-filter-archived=${cookie};max-age=${maxAge};path=/`;
+        // Projects
+        if (data.projectsFilter && user.role !== "CUSTOMER") {
+          const projectsCookie = data.projectsFilter.length
+            ? JSON.stringify(data.projectsFilter)
+            : "undefined";
+          setCookie(
+            "ticket-filter-projects",
+            projectsCookie,
+            projectsCookie === "undefined" ? "0" : "31536000",
+          );
+        }
+
+        // Assignees
+        if (data.assigneesFilter && user.role !== "CUSTOMER") {
+          const assigneesCookie = data.assigneesFilter.length
+            ? JSON.stringify(data.assigneesFilter)
+            : "undefined";
+          setCookie(
+            "ticket-filter-assignees",
+            assigneesCookie,
+            assigneesCookie === "undefined" ? "0" : "31536000",
+          );
+        }
+
+        // Status
+        if (data.status) {
+          const statusKeys: Array<keyof typeof data.status> = [
+            "todo",
+            "in_progress",
+            "done",
+          ];
+          statusKeys.forEach((key) => {
+            if (data.status![key] !== undefined) {
+              setCookie(
+                `ticket-filter-status-${key}`,
+                `${data.status![key]}`,
+                "31536000",
+              );
+            }
+          });
+        }
       }
     }
 
@@ -164,17 +265,20 @@ export function DataTable<TData, TValue>({
     });
   }, 300);
 
+  const assigneesFilter = filters.assignees ?? [];
+  const projectsFilter = filters.projects ?? [];
+
   return (
     <>
       <div
         className={cn(
-          "animate-pulse w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
+          "h-0.5 w-[10%] animate-pulse rounded-xl bg-primary opacity-0 transition-all duration-700",
           isPending && "opacity-100",
         )}
       />
 
       <div>
-        <div className="w-full flex flex-row items-center justify-between gap-2 p-2">
+        <div className="flex w-full flex-row items-center justify-between gap-2 p-2">
           <div className="w-full">
             <Input
               id="searchTaskInput"
@@ -190,19 +294,248 @@ export function DataTable<TData, TValue>({
             />
           </div>
           <div className="flex flex-row gap-2">
-            <Popover>
+            <Popover modal>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
                   className="h-10 w-10 sm:w-fit sm:px-3"
                 >
-                  <Filter className="sm:mr-2 h-4 w-4" />
+                  <Filter className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:block">{t("filter")}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full">
-                <div className="grid gap-2 p-2">
+              <PopoverContent className="w-[90vw] max-w-72">
+                <div className="grid gap-4 p-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={() =>
+                      updateFilter({
+                        status: { todo: !filters.status.todo },
+                      })
+                    }
+                  >
+                    <CircleDot
+                      className={cn(
+                        "mr-2 size-4",
+                        filters.status.todo
+                          ? "text-blue-500"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    {t("steps.todo")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={() =>
+                      updateFilter({
+                        status: {
+                          in_progress: !filters.status.in_progress,
+                        },
+                      })
+                    }
+                  >
+                    <CircleDotDashed
+                      className={cn(
+                        "mr-2 size-4",
+                        filters.status.in_progress
+                          ? "text-amber-500"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    {t("steps.inProgress")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={() =>
+                      updateFilter({
+                        status: { done: !filters.status.done },
+                      })
+                    }
+                  >
+                    <CircleCheckBig
+                      className={cn(
+                        "mr-2 size-4",
+                        filters.status.done
+                          ? "text-emerald-500"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    {t("steps.done")}
+                  </Button>
+
+                  <Separator />
+
+                  {user.role != "CUSTOMER" && (
+                    <>
+                      <div className="grid gap-1.5 p-1">
+                        {/* TODO: Allow for customers */}
+                        <Label
+                          htmlFor="projects-button"
+                          className="pl-2 text-muted-foreground"
+                        >
+                          {t("projects")}
+                        </Label>
+                        <ProjectSelection
+                          project={projectsFilter}
+                          changeProject={(project) => {
+                            if (!project)
+                              throw new Error(
+                                "Project is undefined in selection",
+                              );
+                            const tempProjectsFilter = projectsFilter;
+
+                            if (tempProjectsFilter.includes(project))
+                              tempProjectsFilter.splice(
+                                tempProjectsFilter.indexOf(project),
+                                1,
+                              );
+                            else tempProjectsFilter.push(project);
+
+                            updateFilter({
+                              projectsFilter: tempProjectsFilter,
+                            });
+                          }}
+                          projects={projects}
+                          multiSelect
+                          button={
+                            <Button
+                              id="projects-button"
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              <div className="flex flex-row gap-1">
+                                {filters.projects === undefined &&
+                                  t("noFilter")}
+                                {filters.projects?.length === 0 &&
+                                  t("projectsEmpty")}
+                                {filters.projects?.length !== 0 &&
+                                  projectsFilter.map((value, index) => {
+                                    if (index !== 0) return undefined;
+                                    return (
+                                      <Badge
+                                        key={`project-${value}`}
+                                        variant="outline"
+                                      >
+                                        {value}
+                                      </Badge>
+                                    );
+                                  })}
+
+                                {projectsFilter.length > 1 && (
+                                  <Badge variant="secondary">
+                                    +{projectsFilter.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          }
+                        />
+                      </div>
+
+                      <div className="grid h-full w-full gap-1.5 p-1">
+                        <Popover modal>
+                          {/* TODO: Grouped Users */}
+                          <Label
+                            htmlFor="userFilter-button"
+                            className="pl-2 text-muted-foreground"
+                          >
+                            {t("assignees")}
+                          </Label>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id="userFilter-button"
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              <div className="flex flex-row gap-1">
+                                {filters.assignees === undefined &&
+                                  t("noFilter")}
+
+                                {assigneesFilter?.map((value, index) => {
+                                  if (index !== 0) return undefined;
+                                  const user = users.single.find(
+                                    (u) => u.username === value,
+                                  );
+                                  if (!user) return undefined;
+
+                                  return (
+                                    <Badge
+                                      key={`userFiltered-${value}`}
+                                      variant="outline"
+                                    >
+                                      {user.name ?? user.username}
+                                    </Badge>
+                                  );
+                                })}
+                                {assigneesFilter.length > 1 && (
+                                  <Badge variant="secondary">
+                                    +{assigneesFilter.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-2">
+                            <Command>
+                              <CommandInput
+                                placeholder={t("search")}
+                                className="h-8"
+                              />
+                              <CommandGroup>
+                                {users.single.map((user) => (
+                                  <CommandItem
+                                    key={`user-${user.username}`}
+                                    className="text-nowrap"
+                                    value={`${user.username} ${user.name}`}
+                                    onSelect={() => {
+                                      const value = user.username;
+
+                                      const tempUsersFilter = assigneesFilter;
+
+                                      if (tempUsersFilter.includes(value))
+                                        tempUsersFilter.splice(
+                                          tempUsersFilter.indexOf(value),
+                                          1,
+                                        );
+                                      else tempUsersFilter.push(value);
+
+                                      updateFilter({
+                                        assigneesFilter: tempUsersFilter,
+                                      });
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        assigneesFilter.includes(user.username)
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {user.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <Separator />
+                    </>
+                  )}
+
                   <div className="flex flex-row items-center gap-4">
                     <Checkbox
                       id="archivedSwitch"
@@ -214,6 +547,19 @@ export function DataTable<TData, TValue>({
                       {t("archived")}
                     </Label>
                   </div>
+
+                  <Separator />
+
+                  <div className="flex flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => updateFilter({ reset: true })}
+                      className="w-full"
+                    >
+                      <FilterX className="mr-4 size-4" />
+                      {t("reset")}
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -221,11 +567,11 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
         <ScrollArea
-          className="relative w-[95vw] max-w-2xl h-[calc(95svh-82px-68px-56px-40px)] rounded-md border"
+          className="relative h-[calc(95svh-82px-68px-56px-40px)] w-[95vw] max-w-2xl rounded-md border"
           type="always"
         >
           <Table>
-            <TableHeader className="sticky top-0 bg-secondary/40 z-10">
+            <TableHeader className="sticky top-0 z-10 bg-secondary/40 backdrop-blur-xl">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -255,11 +601,20 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => {
-                  const ticket = row.original as Ticket;
+                  const ticket = row.original as Ticket & {
+                    creator: { name: any; username: string };
+                    uploads: TicketUpload[];
+                  };
 
                   return (
-                    <Popover key={row.id}>
-                      <PopoverTrigger asChild>
+                    <Popover key={row.id} modal>
+                      <PopoverTrigger
+                        asChild
+                        onClick={(e) => {
+                          const open = localStorage.getItem("ticket-open");
+                          if (open) e.preventDefault();
+                        }}
+                      >
                         <TableRow
                           data-state={row.getIsSelected() && "selected"}
                         >
@@ -275,39 +630,127 @@ export function DataTable<TData, TValue>({
                       </PopoverTrigger>
                       <PopoverContent
                         side="bottom"
-                        className="text-muted-foreground w-96 max-w-[95vw]"
+                        className="w-[95vw] max-w-screen-sm border-secondary-foreground/20 text-muted-foreground dark:bg-secondary"
                       >
-                        {ticket.archived && (
-                          <div className="flex flex-row gap-2 pb-2">
+                        <ScrollArea className="">
+                          <div className="max-h-[50dvh]">
                             {ticket.archived && (
-                              <Badge variant="destructive">
-                                {t("archived")}
-                              </Badge>
+                              <div className="flex flex-row gap-2 pb-2">
+                                {ticket.archived && (
+                                  <Badge variant="destructive">
+                                    {t("archived")}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="flex flex-row items-center gap-2">
+                              <Label className="flex flex-row">
+                                {t("creator")}:
+                              </Label>
+                              <p className="text-foreground">
+                                {ticket.creator.name ?? ticket.creator.username}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-row items-center gap-2">
+                              <Label className="flex flex-row">
+                                {t("createdAt")}:
+                              </Label>
+                              <p className="text-foreground">
+                                {ticket.createdAt.toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-row items-center gap-2">
+                              <Label className="flex flex-row">
+                                {t("deadline")}:
+                              </Label>
+                              <p className="text-foreground">
+                                {ticket.deadline
+                                  ? new Intl.DateTimeFormat().format(
+                                      ticket.deadline,
+                                    )
+                                  : t("none")}
+                              </p>
+                            </div>
+
+                            {ticket.uploads.length !== 0 && (
+                              <>
+                                <Separator className="my-2 w-full bg-secondary-foreground/20" />
+
+                                <Label className="flex flex-row">
+                                  {t("uploads")}
+                                </Label>
+                                <ScrollArea className="w-full rounded-md p-1">
+                                  <div className="flex flex-row gap-2 p-2">
+                                    {ticket.uploads.map((upload) => (
+                                      <Tooltip key={upload.id}>
+                                        <TooltipTrigger
+                                          asChild
+                                          onFocusCapture={(e) => {
+                                            e.stopPropagation();
+                                          }}
+                                        >
+                                          <Link
+                                            href={`/api/files/${upload.id}/${upload.name}`}
+                                            target="_blank"
+                                          >
+                                            <Button className="gap-2 text-nowrap">
+                                              <FileTypeIcon
+                                                type={upload.type}
+                                              />
+                                              {upload.name.replace(
+                                                upload.extension,
+                                                "",
+                                              )}
+                                            </Button>
+                                          </Link>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                          <div className="rounded-md blur-[1px]">
+                                            {(mimeTypes.documents.includes(
+                                              upload.type,
+                                            ) ||
+                                              mimeTypes.images.includes(
+                                                upload.type,
+                                              )) && (
+                                              <iframe
+                                                src={`/api/files/${upload.id}/${upload.name}`}
+                                              />
+                                            )}
+                                            {mimeTypes.videos.includes(
+                                              upload.type,
+                                            ) && (
+                                              <video
+                                                className="h-[20dvw]"
+                                                src={`/api/files/${upload.id}/${upload.name}`}
+                                              />
+                                            )}
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    ))}
+                                  </div>
+
+                                  <ScrollBar orientation="horizontal" />
+                                </ScrollArea>
+                              </>
+                            )}
+
+                            {(ticket.description ?? "").trim().length != 0 && (
+                              <>
+                                <Separator className="my-2 w-full bg-secondary-foreground/20" />
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  className="prose prose-neutral w-full dark:prose-invert"
+                                >
+                                  {ticket.description}
+                                </ReactMarkdown>
+                              </>
                             )}
                           </div>
-                        )}
-
-                        <div className="flex flex-row items-center gap-2">
-                          <Label className="flex flex-row">
-                            {t("deadline")}:
-                          </Label>
-                          <p className="text-foreground">
-                            {ticket.deadline
-                              ? new Intl.DateTimeFormat().format(
-                                  ticket.deadline,
-                                )
-                              : t("none")}
-                          </p>
-                        </div>
-                        <>
-                          <Separator className="w-full my-2" />
-                          <div className="flex flex-col">
-                            <Label className="pr-2">{t("description")}:</Label>
-                            <p className="text-foreground whitespace-pre-line">
-                              {ticket.description ?? t("none")}
-                            </p>
-                          </div>
-                        </>
+                        </ScrollArea>
                       </PopoverContent>
                     </Popover>
                   );
@@ -325,15 +768,17 @@ export function DataTable<TData, TValue>({
             </TableBody>
           </Table>
         </ScrollArea>
-        <div className="flex items-center justify-evenly sm:justify-end space-x-4 p-2 sm:py-4 w-full">
-          <div className="flex flex-col sm:flex-row items-center space-x-2">
+        <div className="flex w-full items-center justify-evenly space-x-4 p-2 sm:justify-end sm:py-4">
+          <div className="flex flex-col items-center space-x-2 sm:flex-row">
             <p className="text-sm font-medium">{t("rowsPerPage")}</p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
                 table.setPageSize(Number(value));
                 if (typeof document !== "undefined")
-                  document.cookie = `pageSize=${value};max-age=31536000;path=/`;
+                  document.cookie = encodeURI(
+                    `pageSize=${value};max-age=31536000;path=/`,
+                  );
                 router.refresh();
               }}
             >
@@ -353,8 +798,8 @@ export function DataTable<TData, TValue>({
             </Select>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center sm:gap-2">
-            <p className="flex w-full sm:w-[100px] justify-center text-center text-sm font-medium">
+          <div className="flex flex-col items-center justify-center sm:flex-row sm:gap-2">
+            <p className="flex w-full justify-center text-center text-sm font-medium sm:w-[100px]">
               {t("currentPage", {
                 page: paginationData.page,
                 pages: paginationData.pages,
@@ -364,29 +809,29 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
-                <ChevronsLeft className="w-4 h-4" />
+                <ChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(paginationData.page - 1);
                 }}
                 disabled={paginationData.page === 1 || isPending}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(paginationData.page + 1);
                 }}
@@ -394,12 +839,12 @@ export function DataTable<TData, TValue>({
                   paginationData.page >= paginationData.pages || isPending
                 }
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="w-9 h-9"
+                className="h-9 w-9"
                 onClick={() => {
                   changePage(paginationData.pages);
                 }}
@@ -407,7 +852,7 @@ export function DataTable<TData, TValue>({
                   paginationData.page >= paginationData.pages || isPending
                 }
               >
-                <ChevronsRight className="w-4 h-4" />
+                <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -416,3 +861,26 @@ export function DataTable<TData, TValue>({
     </>
   );
 }
+
+const FileTypeIcon = ({ type }: { type: string }) => {
+  const typeIconMap: Record<
+    string,
+    React.ForwardRefExoticComponent<
+      Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
+    >
+  > = {
+    images: FileImage,
+    videos: FileVideo,
+    audios: FileAudio,
+    archives: FileArchive,
+    documents: File,
+  };
+
+  const category = Object.entries(mimeTypes).find(([, mimeList]) =>
+    mimeList.includes(type),
+  )?.[0] as keyof typeof typeIconMap | undefined;
+
+  const IconComponent = category ? typeIconMap[category] : null;
+
+  return IconComponent ? <IconComponent className="size-5" /> : null;
+};

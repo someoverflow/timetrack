@@ -89,7 +89,7 @@ const StepperProvider = ({ value, children }: StepperContextProviderProps) => {
 // <---------- HOOKS ---------->
 
 function usePrevious<T>(value: T): T | undefined {
-	const ref = React.useRef<T>();
+	const ref = React.useRef<T>(undefined);
 
 	React.useEffect(() => {
 		ref.current = value;
@@ -233,7 +233,7 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
 
 		const childArr = React.Children.toArray(children);
 
-		const items = [] as React.ReactElement[];
+		const items = [] as React.ReactElement<any>[];
 
 		const footer = childArr.map((child, _index) => {
 			if (!React.isValidElement(child)) {
@@ -312,7 +312,7 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
 	},
 );
 
-Stepper.defaultProps = {
+(Stepper as any).defaultProps = {
 	size: "md",
 	orientation: "horizontal",
 	responsive: true,
@@ -365,7 +365,7 @@ const HorizontalContent = ({ children }: { children: React.ReactNode }) => {
 					return null;
 				}
 				return React.Children.map(
-					node.props.children,
+					(node.props as any).children,
 					(childNode) => childNode,
 				);
 			})}

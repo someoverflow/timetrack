@@ -25,7 +25,6 @@ import * as FileSaver from "file-saver";
 type Timer = Prisma.TimeGetPayload<{
   include: { project: true };
 }>;
-type Data = Record<string, Timer[]>;
 
 interface visualisationState {
   showProject: boolean;
@@ -37,7 +36,7 @@ export default function TimerExportDialog({
   yearMonth,
   users,
 }: {
-  history: Data;
+  history: Timer[];
   yearMonth: string;
   users: { id: string; username: string; name: string | null }[] | undefined;
 }) {
@@ -70,7 +69,7 @@ export default function TimerExportDialog({
   }, []);
 
   const downloadCSV = async () => {
-    const filteredData = (history[yearMonth] ?? [])
+    const filteredData = history
       .filter((e) => e.end != null)
       .sort((a, b) => {
         const aName = users?.find((u) => u.id == a.userId)?.name ?? "";
@@ -92,22 +91,23 @@ export default function TimerExportDialog({
     if (visualisation.showProject)
       sheet.columns = [
         ...sheet.columns,
-        { header: "Projekt", key: "project", width: 20 },
+        { header: t("Export.project"), key: "project", width: 20 },
       ];
     if (visualisation.showPerson)
       sheet.columns = [
         ...sheet.columns,
-        { header: "Person", key: "person", width: 30 },
+        { header: t("Export.person"), key: "person", width: 30 },
       ];
 
     sheet.columns = [
       ...sheet.columns,
-      { header: "Datum", key: "date", width: 12 },
-      { header: "Start", key: "start", width: 12 },
-      { header: "Ende", key: "end", width: 12 },
-      { header: "Dauer", key: "duration", width: 12 },
-      { header: "Notizen", key: "notes", width: 32 },
-      { header: "Distanz", key: "distance", width: 10 },
+      { header: t("Export.date"), key: "date", width: 12 },
+      { header: t("Export.start"), key: "start", width: 12 },
+      { header: t("Export.end"), key: "end", width: 12 },
+      { header: t("Export.break"), key: "break", width: 12 },
+      { header: t("Export.duration"), key: "duration", width: 12 },
+      { header: t("Export.notes"), key: "notes", width: 32 },
+      { header: t("Export.distance"), key: "distance", width: 10 },
     ];
 
     // Center Header Row
@@ -144,6 +144,13 @@ export default function TimerExportDialog({
             row.getCell("person").alignment = { vertical: "middle" };
           }
 
+          const start = new Date(
+            time.start.getTime() - time.start.getTimezoneOffset() * 60_000,
+          );
+          const end = new Date(
+            time.end.getTime() - time.end.getTimezoneOffset() * 60_000,
+          );
+
           // Date
           const dateCell = row.getCell("date");
           dateCell.value = time.start.toLocaleDateString();
@@ -153,19 +160,25 @@ export default function TimerExportDialog({
           const startCell = row.getCell("start");
           startCell.numFmt = "hh:mm:ss";
           startCell.alignment = { vertical: "middle" };
-          startCell.value = time.start;
+          startCell.value = start;
 
           // End
           const endCell = row.getCell("end");
           endCell.numFmt = "hh:mm:ss";
           endCell.alignment = { vertical: "middle" };
-          endCell.value = time.end;
+          endCell.value = end;
+
+          // End
+          const breakCell = row.getCell("break");
+          breakCell.numFmt = '0.0#"min"';
+          breakCell.alignment = { vertical: "middle" };
+          breakCell.value = time.breakTime;
 
           // Duration
           const durationCell = row.getCell("duration");
-          durationCell.numFmt = 'hh"h" mm"min"';
+          durationCell.numFmt = '0.00"h"';
           durationCell.value = {
-            formula: `${endCell.address}-${startCell.address}`,
+            formula: `(${endCell.address}-${startCell.address}-(${breakCell.address}/1440))*24`,
           };
           durationCell.alignment = { vertical: "middle" };
 
@@ -185,7 +198,7 @@ export default function TimerExportDialog({
       // User Duration
       const row = sheet.getRow(rowIndex);
       const userDurationCell = row.getCell("duration");
-      userDurationCell.numFmt = 'hh"h" mm"min"';
+      userDurationCell.numFmt = '0.00"h"';
       durationCells.push(userDurationCell.address);
 
       const durationRow = userDurationCell.address.replace(/\d.*$/, "");
@@ -202,13 +215,21 @@ export default function TimerExportDialog({
         formula: `SUM(${distanceRow}${rowIndex - sortedTimes.length}:${distanceRow}${rowIndex - 1})`,
       };
 
+      const userBreakCell = row.getCell("break");
+      userBreakCell.numFmt = '0.00"min"';
+      const breakRow = userBreakCell.address.replace(/\d.*$/, "");
+
+      userBreakCell.value = {
+        formula: `SUM(${breakRow}${rowIndex - sortedTimes.length}:${breakRow}${rowIndex - 1})`,
+      };
+
       rowIndex += 2;
     });
 
     // Final Duration
     const lastRow = sheet.getRow(rowIndex);
     const lastDuration = lastRow.getCell("duration");
-    lastDuration.numFmt = 'hh"h" mm"min"';
+    lastDuration.numFmt = '0.00"h"';
 
     lastDuration.value = {
       formula: durationCells.join("+"),
@@ -220,7 +241,10 @@ export default function TimerExportDialog({
     workbook.xlsx
       .writeBuffer()
       .then((buffer) =>
-        FileSaver.saveAs(new Blob([buffer]), `Zeiten Export ${yearMonth}.xlsx`),
+        FileSaver.saveAs(
+          new Blob([buffer]),
+          `TimeTrack Export ${yearMonth}.xlsx`,
+        ),
       )
       .catch((err) => console.log("Error writing excel export", err));
   };
@@ -236,7 +260,7 @@ export default function TimerExportDialog({
         open={visible}
         onOpenChange={(e) => setVisible(e)}
       >
-        <DialogContent className="w-[95vw] top-[25%] max-w-md rounded-lg flex flex-col justify-between">
+        <DialogContent className="top-[25%] flex w-[95vw] max-w-md flex-col justify-between rounded-lg">
           <DialogHeader>
             <DialogTitle>
               <div>{t("Dialogs.Export.title")}</div>

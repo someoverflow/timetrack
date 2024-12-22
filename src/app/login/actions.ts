@@ -12,7 +12,7 @@ export async function login(
   error: string;
   update: Date;
 }> {
-  const head = headers();
+  const head = await headers();
 
   const username = formData.get("username");
   if (
@@ -83,7 +83,7 @@ export async function login(
     ip: ip,
   });
   const sessionCookie = lucia.createSessionCookie(session.id);
-  cookies().set(
+  (await cookies()).set(
     sessionCookie.name,
     sessionCookie.value,
     sessionCookie.attributes,

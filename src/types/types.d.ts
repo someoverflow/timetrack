@@ -30,6 +30,17 @@ type Users = {
 
 type TicketPagePayload = {
   include: {
+    uploads: {
+      include: {
+        creator: {
+          select: {
+            name: true;
+            username: true;
+            id: true;
+          };
+        };
+      };
+    };
     assignees: {
       select: {
         id: true;
@@ -82,6 +93,13 @@ type APIResultType =
   | "created"
   | "updated";
 
+type ErrorResultType =
+  | "unknown"
+  | "error-message"
+  | "duplicate-found"
+  | "not-found"
+  | "json-parsing";
+
 type APIResult = {
   success: boolean;
   status: number;
@@ -89,14 +107,15 @@ type APIResult = {
   | {
       type: "unknown" | "ok" | "deleted" | "created" | "updated";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      result?: any;
+      result?: any; // Keep this flexible for success scenarios
     }
   | {
       type: "validation";
       result?: ZodIssue[];
     }
   | {
-      type: "error-message" | "duplicate-found" | "not-found" | "json-parsing";
+      type: ErrorResultType;
+      // Allow string or object for errors
       result?: { message: string; [key: string]: unknown };
     }
 );

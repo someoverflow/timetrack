@@ -92,13 +92,12 @@ export function TicketAdd({
       assignees: [],
       projects: [],
     },
-    undefined,
   );
 
   const { status, send } = useRequest(
     useCallback(
       () =>
-        fetch("/api/todo", {
+        fetch("/api/ticket", {
           method: "POST",
           body: JSON.stringify({
             task: data.task,
@@ -137,8 +136,6 @@ export function TicketAdd({
     },
   );
 
-  const company = process.env.NEXT_PUBLIC_COMPANY ?? "";
-
   return (
     <>
       <Tooltip delayDuration={500}>
@@ -162,7 +159,7 @@ export function TicketAdd({
         onOpenChange={(e) => setVisible(e)}
       >
         <DialogContent
-          className="w-[95vw] max-w-xl rounded-lg flex flex-col justify-between"
+          className="flex w-[95vw] max-w-xl flex-col justify-between rounded-lg"
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
         >
@@ -172,12 +169,12 @@ export function TicketAdd({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full flex flex-col gap-2">
+          <div className="flex w-full flex-col gap-2">
             <ScrollArea
-              className="h-[60svh] w-full rounded-sm p-2.5 overflow-hidden"
+              className="h-[60svh] w-full overflow-hidden rounded-sm p-2.5"
               type="always"
             >
-              <div className="grid gap-4 p-1 w-full">
+              <div className="grid w-full gap-4 p-1">
                 <Label asChild className="pl-2 text-muted-foreground">
                   <legend>{t("priority")}</legend>
                 </Label>
@@ -193,7 +190,7 @@ export function TicketAdd({
                     <RadioGroupItem value="HIGH" id="r1" />
                     <Label
                       htmlFor="r1"
-                      className="h-5 flex flex-row items-center"
+                      className="flex h-5 flex-row items-center"
                     >
                       <ChevronsUp className="h-5 w-5 text-red-500" />{" "}
                       {t("priorities.high")}
@@ -203,7 +200,7 @@ export function TicketAdd({
                     <RadioGroupItem value="MEDIUM" id="r2" />
                     <Label
                       htmlFor="r2"
-                      className="h-5 flex flex-row items-center"
+                      className="flex h-5 flex-row items-center"
                     >
                       {t("priorities.medium")}
                     </Label>
@@ -212,7 +209,7 @@ export function TicketAdd({
                     <RadioGroupItem value="LOW" id="r3" />
                     <Label
                       htmlFor="r3"
-                      className="h-5 flex flex-row items-center"
+                      className="flex h-5 flex-row items-center"
                     >
                       <ChevronDown className="h-5 w-5 text-blue-500" />{" "}
                       {t("priorities.low")}
@@ -253,7 +250,7 @@ export function TicketAdd({
                     name="Name"
                     id="description"
                     autoComplete="off"
-                    maxLength={800}
+                    maxLength={10e6}
                     value={data.description}
                     onChange={(e) => setData({ description: e.target.value })}
                   />
@@ -261,7 +258,7 @@ export function TicketAdd({
 
                 <div id="divider" className="h-1" />
 
-                <div className="h-full w-full grid p-1 gap-1.5">
+                <div className="grid h-full w-full gap-1.5 p-1">
                   <Label
                     htmlFor="projects-button"
                     className="pl-2 text-muted-foreground"
@@ -270,6 +267,7 @@ export function TicketAdd({
                   </Label>
                   <ProjectSelection
                     multiSelect
+                    singleCustomer
                     project={data.projects}
                     projects={projects}
                     button={
@@ -277,7 +275,7 @@ export function TicketAdd({
                         id="projects-button"
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between border-2 transition duration-300 overflow-hidden"
+                        className="w-full justify-between overflow-hidden border-2 transition duration-300"
                       >
                         <div className="flex flex-row gap-1">
                           {data.projects.length === 0
@@ -332,7 +330,7 @@ export function TicketAdd({
                   />
                 </div>
 
-                <div className="h-full w-full grid p-1 gap-1.5">
+                <div className="grid h-full w-full gap-1.5 p-1">
                   <Popover modal>
                     <Label
                       htmlFor="assignees-button"
@@ -345,7 +343,7 @@ export function TicketAdd({
                         id="assignees-button"
                         variant="outline"
                         role="combobox"
-                        className="w-full justify-between border-2 transition duration-300 overflow-hidden"
+                        className="w-full justify-between overflow-hidden border-2 transition duration-300"
                       >
                         <div className="flex flex-row gap-1">
                           {data.assignees.length === 0
@@ -391,13 +389,13 @@ export function TicketAdd({
                             return (
                               <CommandGroup
                                 key={group}
-                                heading={group == "" ? company : group}
+                                heading={group == "" ? "Intern" : group}
                               >
                                 {customer.map((user) => (
                                   <CommandItem
                                     key={`user-selection-add-${user.username}`}
                                     className="text-nowrap"
-                                    value={user.username}
+                                    value={`${user.username} ${user.name} ${group}`}
                                     onSelect={() => {
                                       const value = user.username;
                                       const currentAssignees = data.assignees;
@@ -421,15 +419,7 @@ export function TicketAdd({
                                           : "opacity-0",
                                       )}
                                     />
-                                    <div className="w-full flex flex-row items-center">
-                                      {user.name}
-                                      <Badge
-                                        variant="default"
-                                        className="scale-75"
-                                      >
-                                        @{user.username}
-                                      </Badge>
-                                    </div>
+                                    {user.name}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -459,7 +449,7 @@ export function TicketAdd({
                     />
                   </div>
                   <Input
-                    className={`!w-full border-2 transition-opacity duration-150 opacity-0 ${
+                    className={`!w-full appearance-none border-2 opacity-0 transition-opacity duration-150 ${
                       data.deadlineEnabled ? "opacity-100" : ""
                     }`}
                     disabled={!data.deadlineEnabled}
@@ -478,7 +468,7 @@ export function TicketAdd({
               </div>
             </ScrollArea>
 
-            <div className="w-full gap-2 flex flex-row justify-end">
+            <div className="flex w-full flex-row justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => send()}

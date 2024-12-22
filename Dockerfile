@@ -1,32 +1,48 @@
-FROM node:current-alpine AS base
+FROM node:22-alpine AS base
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
+# Install dependencies based on the preferred package manager
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN npm ci
+RUN \
+    if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci; \
+    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
 
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+ENV NEXT_PRIVATE_STANDALONE=true
+
+RUN apk add --no-cache libc6-compat openssl
 RUN npx prisma generate
-RUN npm run build
+
+RUN \
+    if [ -f yarn.lock ]; then yarn run build; \
+    elif [ -f package-lock.json ]; then npm run build; \
+    elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
 
 FROM base AS runner
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-
-RUN apk add --no-cache openssl mysql-client mariadb-connector-c curl
-
-RUN npm install -g npm@latest
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=deps /app/node_modules ./node_modules
+
+RUN apk add --no-cache openssl mysql-client mariadb-connector-c curl tzdata
 
 ENV TZ=Europe/Berlin
-RUN apk add --no-cache tzdata
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN addgroup --system --gid 1001 nodejs
@@ -46,6 +62,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/
 
 RUN mkdir /backups && chown nextjs:nodejs /backups
+RUN mkdir /uploads && chown nextjs:nodejs /uploads
 
 USER root
 
@@ -55,9 +72,7 @@ ENV URL=https://localhost:3000
 
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-
-ENV BACKUP=false
-ENV BACKUP_DELAY=86400
+ENV UPLOADS_PATH=/uploads
 
 ENV DATABASE_HOST=localhost
 ENV DATABASE_USER=timetrack
@@ -65,6 +80,8 @@ ENV DATABASE_PASSWORD=timetrack
 ENV DATABASE_PORT=3306
 ENV DATABASE_DB=timetrack
 
+ENV UPLOAD_LIMIT=1000
+
 EXPOSE 3000
-VOLUME ["/backups"]
+VOLUME ["/backups", "/uploads"]
 CMD ["/bin/sh", "./docker-start.sh"]

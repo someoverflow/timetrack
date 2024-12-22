@@ -11,7 +11,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, type JSX } from "react";
 
 type PageType = (
   | {
@@ -27,6 +27,8 @@ type PageType = (
   projects: Projects;
   buttonDisabled?: boolean;
 
+  singleCustomer?: boolean;
+
   changeProject: (project: string | undefined) => void;
 };
 
@@ -34,12 +36,23 @@ export const ProjectSelection = ({
   projects,
   button,
   buttonDisabled,
+  singleCustomer,
   multiSelect,
   project,
   changeProject,
 }: PageType) => {
   const t = useTranslations("Timer.Miscellaneous");
   const [open, setOpen] = useState(false);
+
+  const tempCustomerFilter = projects.single.find(
+    (p) => p.name == project?.[0],
+  )?.customerName;
+
+  const customerFilter = singleCustomer
+    ? tempCustomerFilter !== null
+      ? tempCustomerFilter
+      : ""
+    : undefined;
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal>
@@ -53,7 +66,7 @@ export const ProjectSelection = ({
             className="w-full justify-between"
           >
             <div className="flex flex-row items-center gap-1">
-              <span className="text-muted-foreground text-xs">
+              <span className="text-xs text-muted-foreground">
                 {
                   projects.single.find((proj) => proj.name == project)
                     ?.customerName
@@ -69,7 +82,7 @@ export const ProjectSelection = ({
         <Command className="max-h-[calc(32px+25svh)]">
           <CommandInput placeholder={t("projects.search")} className="h-8" />
           {projects.single.length === 0 ? (
-            <div className="items-center justify-center text-center text-sm text-muted-foreground pt-4">
+            <div className="items-center justify-center pt-4 text-center text-sm text-muted-foreground">
               <p>{t("projects.noneFound")}</p>
               <Link
                 href="/projects"
@@ -84,45 +97,59 @@ export const ProjectSelection = ({
             </div>
           ) : (
             <CommandList>
-              {Object.keys(projects.grouped).map((customer, index) => (
-                <CommandGroup
-                  heading={customer != "" ? customer : t("withoutCustomer")}
-                  key={index + customer}
-                  className="max-h-none"
-                >
-                  {projects.grouped[customer]?.map((proj) => (
-                    <CommandItem
-                      key={`project-select-${proj.name}`}
-                      value={proj.name}
-                      onSelect={() => {
-                        if (
-                          multiSelect === false ||
-                          multiSelect === undefined
-                        ) {
-                          changeProject(
-                            project !== proj.name ? proj.name : undefined,
-                          );
-                        } else changeProject(proj.name);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          (
-                            multiSelect === true
-                              ? project.includes(proj.name)
-                              : project === proj.name
-                          )
-                            ? "opacity-100"
-                            : "opacity-0",
-                        )}
-                      />
-                      {proj.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
+              {Object.keys(projects.grouped).map((customer, index) => {
+                if (
+                  singleCustomer &&
+                  customerFilter !== undefined &&
+                  customer !== customerFilter
+                )
+                  return null;
+
+                return (
+                  <CommandGroup
+                    heading={customer != "" ? customer : t("withoutCustomer")}
+                    key={index + customer}
+                    className="max-h-none"
+                  >
+                    {projects.grouped[customer]?.map((proj) => (
+                      <CommandItem
+                        key={`project-select-${proj.name}`}
+                        disabled={
+                          singleCustomer &&
+                          customerFilter !== undefined &&
+                          customer !== customerFilter
+                        }
+                        value={`${proj.customerName ? proj.customerName + " " : ""}${proj.name}`}
+                        onSelect={() => {
+                          if (
+                            multiSelect === false ||
+                            multiSelect === undefined
+                          ) {
+                            changeProject(
+                              project !== proj.name ? proj.name : undefined,
+                            );
+                          } else changeProject(proj.name);
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            (
+                              multiSelect === true
+                                ? project.includes(proj.name)
+                                : project === proj.name
+                            )
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                        />
+                        {proj.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                );
+              })}
             </CommandList>
           )}
         </Command>

@@ -70,26 +70,27 @@ docker run --name timetrack -p 3000:3000 \
 
 ## Environment Variables
 
-| Variable                  | Description                                                   | Default         |
-| ------------------------- | ------------------------------------------------------------- | --------------- |
-| `URL`                     | Link to the instance (e.g., https://timetrack.example.com)    | _(empty)_       |
-| `DATABASE_HOST`           | MySQL database hostname or IP                                 | `localhost`     |
-| `DATABASE_PORT`           | MySQL database port                                           | `3306`          |
-| `DATABASE_USER`           | MySQL database username                                       | `timetrack`     |
-| `DATABASE_PASSWORD`       | MySQL database password                                       | `timetrack`     |
-| `DATABASE_DB`             | MySQL database name                                           | `timetrack`     |
-| `INSTANCE_NAME`           | Watermark shown at the bottom right corner if set             | _(empty)_       |
-| `NEXT_PUBLIC_LOGIN_IMAGE` | URL for login screen image                                    | _(empty)_       |
-| `NEXT_PUBLIC_COMPANY`     | Company name                                                  | _(empty)_       |
-| `SMTP_HOST`               | SMTP server hostname                                          | _(empty)_       |
-| `SMTP_PORT`               | SMTP server port                                              | _(empty)_       |
-| `SMTP_USER`               | SMTP server username                                          | _(empty)_       |
-| `SMTP_PASSWORD`           | SMTP server password                                          | _(empty)_       |
-| `SMTP_SENDER`             | Mail sender address (e.g., TimeTrack <timetrack@example.com>) | _(empty)_       |
-| `SMTP_SSL`                | Enable SSL for SMTP server                                    | `true`          |
-| `TZ`                      | Time Zone                                                     | `Europe/Berlin` |
-| `PORT`                    | Port on which the application listens                         | `3000`          |
-| `HOSTNAME`                | Server bind hostname or IP address                            | `"0.0.0.0"`     |
+| Variable              | Description                                                   | Default         |
+| --------------------- | ------------------------------------------------------------- | --------------- |
+| `URL`                 | Link to the instance (e.g., https://timetrack.example.com)    | _(empty)_       |
+| `DATABASE_HOST`       | MySQL database hostname or IP                                 | `localhost`     |
+| `DATABASE_PORT`       | MySQL database port                                           | `3306`          |
+| `DATABASE_USER`       | MySQL database username                                       | `timetrack`     |
+| `DATABASE_PASSWORD`   | MySQL database password                                       | `timetrack`     |
+| `DATABASE_DB`         | MySQL database name                                           | `timetrack`     |
+| `INSTANCE_NAME`       | Watermark shown at the bottom right corner if set             | _(empty)_       |
+| `LOGIN_IMAGE`         | URL for login screen image                                    | _(empty)_       |
+| `NEXT_PUBLIC_COMPANY` | Company name                                                  | _(empty)_       |
+| `SMTP_HOST`           | SMTP server hostname                                          | _(empty)_       |
+| `SMTP_PORT`           | SMTP server port                                              | _(empty)_       |
+| `SMTP_USER`           | SMTP server username                                          | _(empty)_       |
+| `SMTP_PASSWORD`       | SMTP server password                                          | _(empty)_       |
+| `SMTP_SENDER`         | Mail sender address (e.g., TimeTrack <timetrack@example.com>) | _(empty)_       |
+| `SMTP_SSL`            | Enable SSL for SMTP server                                    | `true`          |
+| `TZ`                  | Time Zone                                                     | `Europe/Berlin` |
+| `PORT`                | Port on which the application listens                         | `3000`          |
+| `HOSTNAME`            | Server bind hostname or IP address                            | `"0.0.0.0"`     |
+| `UPLOAD_LIMIT`        | Max file upload size in MB                                    | `1000`          |
 
 **Note**: The following environment variables must be set for the application to run properly:
 

@@ -4,11 +4,15 @@ import { z } from "zod";
 //#region Utils
 const emptyId = "ID is empty.";
 const invalidId = "ID is invalid.";
-const invalidPassword = "Password is invalid. (8-30 chars, a-z, A-Z, 0-9)";
 
 export const nanoidRegex = /^[a-z0-9_-]{12}$/i;
 export const passwordRegex =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&\.])[A-Za-z\d@$!%*#?&\.]{8,30}$/;
+  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*#?&\.]{8,30}$/;
+
+const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!.*+@#$%&-_]).+$/;
+const numberRegex = /\d/;
+const charRegexUpper = /[A-Z]/;
+const charRegexLower = /[a-z]/;
 
 export const nanoIdValidation = // All nanoid ids
   z.string().trim().length(12, invalidId).regex(nanoidRegex, invalidId);
@@ -26,11 +30,19 @@ export const mailValidation = z
 export const passwordValidation = z
   .string()
   .trim()
+  .regex(passRegex, "Password is invalid. (a-Z, 0-9, !.*+@#$%&-_)")
+
   .min(8, "Password is too short. (min. 8)")
   .max(30, "Password is too long. (max. 30)")
-  .regex(passwordRegex, invalidPassword);
 
-export const userArrayValidation = z.array(nameValidation).min(1);
+  .regex(numberRegex, "The password must include at least one digit.")
+  .regex(charRegexLower, "The password must include at least one letter.")
+  .regex(
+    charRegexUpper,
+    "The password must include at least one uppercase letter.",
+  );
+
+export const nameArrayValidation = z.array(nameValidation).min(1);
 //#endregion
 
 //#region User API
@@ -85,6 +97,8 @@ export const timesPostApiValidation = z
     start: z.coerce.string().datetime(),
     end: z.coerce.string().datetime(),
 
+    breakTime: z.coerce.number().min(0),
+
     invoiced: z.coerce.boolean(),
 
     traveledDistance: z.coerce.number(),
@@ -114,6 +128,8 @@ export const timesPutApiValidation = z
 
     invoiced: z.coerce.boolean(),
 
+    breakTime: z.coerce.number().min(0),
+
     start: z.coerce.string().datetime(),
     end: z.coerce.string().datetime(),
 
@@ -140,13 +156,12 @@ export type timesPutApiValidation = z.infer<typeof timesPutApiValidation>;
 const todoTaskValidation = z
   .string()
   .trim()
-  .min(1, "Task is too short.")
+  .min(4, "Task is too short. (min. 4)")
   .max(100, "Task is too long. (max. 100)");
 const todoDescriptionValidation = z
   .string()
   .trim()
-  .min(1, "Description is too short.")
-  .max(800, "Description is too long. (max. 800)");
+  .max(10e6, "Description is too long. (max. 800)");
 
 export const todoCreateApiValidation = z
   .object({

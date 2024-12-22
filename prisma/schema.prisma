@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -8,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// #region User
 enum Role {
   USER // Arbeiter
   ADMIN // Arbeitgeber
@@ -30,7 +30,7 @@ model User {
   email              String?
   emailVerified      Boolean @default(false) // TODO
   ticketUpdateMail   Boolean @default(true) @map("ticket_update_mail")
-  ticketCreationMail Boolean @default(false) @map("ticket_creation_mail")
+  ticketCreationMail Boolean @default(true) @map("ticket_creation_mail")
   historyExportMail  Boolean @default(true) @map("history_export_mail")
 
   customer     Customer? @relation(fields: [customerName], references: [name], onDelete: Cascade)
@@ -39,8 +39,11 @@ model User {
   times Time[]
   chips Chip[]
 
-  assignedTasks Ticket[] @relation("assignee_to_todo")
-  createdTasks  Ticket[] @relation("creator")
+  assignedTickets Ticket[] @relation("assignee_to_todo")
+  createdTickets  Ticket[] @relation("creator")
+  updatedTickets  Ticket[]
+
+  ticketUploads TicketUpload[]
 
   sessions Session[]
 
@@ -77,31 +80,9 @@ model Chip {
   @@map("chips")
 }
 
-model Time {
-  id String @id @default(nanoid(12))
+// #endregion
 
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String? @map("user_id")
-
-  start     DateTime  @db.DateTime(2)
-  startType String?   @map("start_type") @db.Text
-  end       DateTime? @db.DateTime(2)
-  endType   String?   @map("end_type") @db.Text
-
-  time     String? // Passed time from start to end
-  notes    String? @db.MediumText
-  invoiced Boolean @default(false)
-
-  traveledDistance Int? @map("traveled_distance") // Stored in km
-
-  materials String @default("[]") // TODO: Array of materials used [{"name":_,"price":_}]
-
-  project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
-  projectName String?  @map("project_name")
-
-  @@map("times")
-}
-
+// #region Customer & Project
 model Customer {
   name String @id
 
@@ -124,6 +105,36 @@ model Project {
   @@map("projects")
 }
 
+// #endregion
+
+model Time {
+  id String @id @default(nanoid(12))
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
+
+  start     DateTime  @db.DateTime(2)
+  startType String?   @map("start_type") @db.Text
+  end       DateTime? @db.DateTime(2)
+  endType   String?   @map("end_type") @db.Text
+
+  breakTime Float @default(0) @map("break_time")
+
+  time     String? // Passed time from start to end
+  notes    String? @db.MediumText
+  invoiced Boolean @default(false)
+
+  traveledDistance Int? @map("traveled_distance") // Stored in km
+
+  materials String @default("[]") // TODO: Array of materials used [{"name":_,"price":_}]
+
+  project     Project? @relation(fields: [projectName], references: [name], onDelete: SetNull) // Related Project
+  projectName String?  @map("project_name")
+
+  @@map("times")
+}
+
+// #region Ticket
 enum TicketPriority {
   HIGH
   MEDIUM
@@ -140,6 +151,21 @@ enum TicketStatus {
   @@map("todo_statuses")
 }
 
+model TicketUpload {
+  id String @id @default(nanoid(12))
+
+  type      String
+  extension String
+  size      BigInt
+  name      String
+
+  creator   User   @relation(fields: [creatorId], references: [id])
+  creatorId String
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  ticketId String
+}
+
 model Ticket {
   id String @id @default(nanoid(12))
 
@@ -151,6 +177,8 @@ model Ticket {
   priority    TicketPriority @default(MEDIUM)
   deadline    DateTime?
 
+  uploads TicketUpload[]
+
   projects  Project[] @relation("project_to_todo") // Any related projects to this todo
   assignees User[]    @relation("assignee_to_todo") // Assigned users of the todo
 
@@ -160,5 +188,10 @@ model Ticket {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  updatedBy   User?   @relation(fields: [updatedById], references: [id])
+  updatedById String?
+
   @@map("todos")
 }
+
+// #endregion

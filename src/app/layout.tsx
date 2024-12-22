@@ -38,7 +38,7 @@ const mono = JetBrains_Mono({
 });
 const fontSans = FontSans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--sans-font",
 });
 
 import "./globals.css";
@@ -56,10 +56,17 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const locale = await getLocale();
+  const messages = await getMessages({ locale });
 
-  // Providing all messages to the client
-  // side is the easiest way to get started
-  const messages = await getMessages();
+  const instanceRender =
+    instance == undefined ? undefined : (
+      <div
+        className="[writing-mode:vertical-rl] fixed bottom-3 right-3 cursor-vertical-text p-0 m-0 text-muted-foreground/35 md:block text-xs"
+        style={{ transform: "rotate(180deg)" }}
+      >
+        {instance}
+      </div>
+    );
 
   return (
     <html
@@ -70,19 +77,14 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           <NextTopLoader showSpinner={false} />
+
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider delayDuration={100}>
-              {children}
-              <Toaster position="top-right" />
+              <Toaster position="top-right" expand />
 
-              {instance && (
-                <div
-                  className="[writing-mode:vertical-rl] fixed bottom-3 right-3 cursor-vertical-text p-0 m-0 text-muted-foreground/35 md:block text-xs"
-                  style={{ transform: "rotate(180deg)" }}
-                >
-                  {instance}
-                </div>
-              )}
+              {children}
+
+              {instanceRender}
             </TooltipProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

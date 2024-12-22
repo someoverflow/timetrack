@@ -46,22 +46,19 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
+import { TimerInfo } from "./timer-info";
 //#endregion
-
-const TimerInfo = dynamic(() => import("./timer-info"), { ssr: false });
 
 type Timer = Prisma.TimeGetPayload<{
   include: { project: true };
 }>;
-type Data = Record<string, Timer[]>;
 
 export default function TimerSection({
   user,
   users,
   history,
-  currentHistory,
+  historyDays,
   projects,
   yearMonth,
   totalTime,
@@ -74,13 +71,24 @@ export default function TimerSection({
   };
   users: { id: string; username: string; name: string | null }[] | undefined;
 
-  history: Data;
-  currentHistory: Timer[];
+  history: Timer[];
+  historyDays: Date[];
   totalTime: string;
 
   yearMonth: {
     current: string;
     all: string[];
+    grouped: Partial<
+      Record<
+        string,
+        {
+          index: number;
+          yearMonth: string;
+          year: string;
+          month: string | undefined;
+        }[]
+      >
+    >;
   };
 
   projects: Projects;
@@ -108,72 +116,70 @@ export default function TimerSection({
   }, [router]);
 
   const changeYearMonth = (change: string) => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    const current = new URLSearchParams(searchParams);
     current.set("ym", change);
-    const search = current.toString();
-    const query = search ? `?${search}` : "";
-    router.push(`${pathname}${query}`);
+
+    const query = current.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+
     startTransition(() => {
       router.refresh();
     });
   };
+
   const updateFilter = (data: {
     usersFilter?: string[];
     projectsFilter?: string[];
     invoiced?: boolean;
-
     reset?: boolean;
   }) => {
     if (typeof document !== "undefined") {
-      let cookie = "undefined";
-      let maxAge = "31536000";
+      const setCookie = (name: string, value = "undefined", maxAge = "0") => {
+        document.cookie = encodeURI(
+          `${name}=${value};max-age=${maxAge};path=/`,
+        );
+      };
 
-      // Invoiced
-      if (data.invoiced === true) {
-        cookie = "undefined";
-        maxAge = "31536000";
+      if (data.reset) {
+        setCookie("history-filter-users");
+        setCookie("history-filter-projects");
+        setCookie("history-filter-invoiced");
+      } else {
+        // Invoiced
+        if (data.invoiced !== undefined) {
+          let invoicedCookie = "undefined";
+          if (filters.invoiced === undefined) invoicedCookie = "true";
+          if (filters.invoiced === true) invoicedCookie = "false";
+          if (filters.invoiced === false) invoicedCookie = "undefined";
+          const invoicedMaxAge =
+            invoicedCookie === "undefined" ? "0" : "31536000";
+          setCookie("history-filter-invoiced", invoicedCookie, invoicedMaxAge);
+        }
 
-        if (filters.invoiced === undefined) cookie = "true";
-        if (filters.invoiced === true) cookie = "false";
-        if (filters.invoiced === false) cookie = "undefined";
+        // Projects
+        if (data.projectsFilter) {
+          const projectsCookie =
+            data.projectsFilter.length > 0
+              ? JSON.stringify(data.projectsFilter)
+              : "undefined";
+          const projectsMaxAge =
+            projectsCookie === "undefined" ? "0" : "31536000";
+          setCookie("history-filter-projects", projectsCookie, projectsMaxAge);
+        }
 
-        if (cookie == "undefined") maxAge = "0";
-        document.cookie = `history-filter-invoiced=${cookie};max-age=${maxAge};path=/`;
-      }
-
-      // Projects
-      if (data.projectsFilter) {
-        cookie = "undefined";
-        maxAge = "31536000";
-
-        if (data.projectsFilter.length !== 0)
-          cookie = JSON.stringify(data.projectsFilter);
-
-        if (cookie == "undefined") maxAge = "0";
-        document.cookie = `history-filter-projects=${cookie};max-age=${maxAge};path=/`;
-      }
-
-      // Users
-      if (data.usersFilter) {
-        cookie = "undefined";
-        maxAge = "31536000";
-
-        if (user.role == "ADMIN" && data.usersFilter.length !== 0)
-          cookie = JSON.stringify(data.usersFilter);
-
-        if (cookie == "undefined") maxAge = "0";
-        document.cookie = `history-filter-users=${cookie};max-age=${maxAge};path=/`;
-      }
-
-      if (data.reset === true) {
-        cookie = "undefined";
-        maxAge = "0";
-        document.cookie = `history-filter-users=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `history-filter-projects=${cookie};max-age=${maxAge};path=/`;
-        document.cookie = `history-filter-invoiced=${cookie};max-age=${maxAge};path=/`;
+        // Users
+        if (data.usersFilter && user.role === "ADMIN") {
+          const usersCookie =
+            data.usersFilter.length > 0
+              ? JSON.stringify(data.usersFilter)
+              : "undefined";
+          const usersMaxAge = usersCookie === "undefined" ? "0" : "31536000";
+          setCookie("history-filter-users", usersCookie, usersMaxAge);
+        }
       }
     }
 
+    // Remove 'edit' parameter if needed and update router
     if (editTime) {
       const current = new URLSearchParams(Array.from(searchParams.entries()));
       current.delete("edit");
@@ -187,43 +193,33 @@ export default function TimerSection({
     });
   };
 
-  const historyDays = currentHistory
-    .map((entry) => entry.start)
-    .filter(
-      (item, index, array) =>
-        array.indexOf(
-          array.find((v) => item.toDateString() === v.toDateString()) ??
-            new Date(),
-        ) === index,
-    );
+  const yearMonthString = `${yearMonth.current.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.current.replace(`${yearMonth.current.slice(0, 4)} `, "")}`)}`;
+  const timeString =
+    (history.find((e) => e.end === null) ? "~" : "") + totalTime;
 
   const usersFilter = filters.users ?? [];
   const projectsFilter = filters.projects ?? [];
-
-  const yearMonthString = `${yearMonth.current.slice(0, 4)} ${t(`Miscellaneous.Months.${yearMonth.current.replace(`${yearMonth.current.slice(0, 4)} `, "")}`)}`;
-  const timeString =
-    (currentHistory.find((e) => e.end === null) ? "~" : "") + totalTime;
 
   return (
     <>
       <div
         className={cn(
-          "animate-pulse w-[10%] h-0.5 bg-primary rounded-xl transition-all duration-700 opacity-0",
+          "h-0.5 w-[10%] animate-pulse rounded-xl bg-primary opacity-0 transition-all duration-700",
           isPending && "opacity-100",
         )}
       />
 
       <section
-        className="w-full max-w-xl max-h-[90svh] flex flex-col items-start"
+        className="flex max-h-[90svh] w-full max-w-xl flex-col items-start"
         key={yearMonth.current}
       >
-        <div className="p-2 px-4 font-bold w-full flex flex-row items-center justify-stretch gap-2">
-          <Popover>
+        <div className="flex w-full flex-row items-center justify-stretch gap-2 p-2 px-4 font-bold">
+          <Popover modal>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
-                className="w-full justify-between relative"
+                className="relative w-full justify-between"
               >
                 <div className="flex flex-row items-center justify-start gap-2">
                   {yearMonthString}
@@ -233,52 +229,63 @@ export default function TimerSection({
                 </div>
                 <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
 
-                {(filters.projects != undefined ||
-                  filters.users != undefined ||
-                  filters.invoiced != undefined) && (
-                  <span className="absolute text-xs -top-6 -right-2 flex flex-row gap-2 border bg-background p-2 rounded-sm">
-                    {filters.projects != undefined && (
-                      <Folder className="size-4" />
-                    )}
-                    {filters.users != undefined && <User className="size-4" />}
-                    {filters.invoiced != undefined && (
-                      <Mail className="size-4" />
-                    )}
+                {(filters.projects ?? filters.users ?? filters.invoiced) && (
+                  <span className="absolute -right-2 -top-6 flex flex-row gap-2 rounded-sm border bg-background p-2 text-xs">
+                    {[
+                      filters.projects ? (
+                        <Folder key="folder" className="size-4" />
+                      ) : null,
+                      filters.users ? (
+                        <User key="user" className="size-4" />
+                      ) : null,
+                      filters.invoiced ? (
+                        <Mail key="mail" className="size-4" />
+                      ) : null,
+                    ]}
                   </span>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="grid grid-flow-col gap-2 p-2 w-[95vw] max-w-lg border-2">
-              <Command className="w-full col-span-5">
+            <PopoverContent className="grid w-[95vw] max-w-lg grid-flow-col gap-2 border-2 p-2">
+              <Command className="col-span-5 w-full">
                 <CommandInput
                   placeholder={t("Miscellaneous.searchYearMonth")}
                   className="h-8 w-max"
                 />
                 <CommandEmpty>{t("Miscellaneous.nothingFound")}</CommandEmpty>
-                <CommandGroup>
-                  {yearMonth.all.map((key) => (
-                    <CommandItem
-                      key={`history-${key}`}
-                      onSelect={() => changeYearMonth(key)}
-                      value={key}
-                      className="font-mono"
+                {Object.keys(yearMonth.grouped)
+                  .sort()
+                  .reverse()
+                  .map((year) => (
+                    <CommandGroup
+                      key={year}
+                      heading={year}
+                      className="space-x-2"
                     >
-                      {`${key.slice(0, 4)} ${t(`Miscellaneous.Months.${key.replace(`${key.slice(0, 4)} `, "")}`)}`}
-                      <Check
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          yearMonth.current === key
-                            ? "opacity-100"
-                            : "opacity-0",
-                        )}
-                      />
-                    </CommandItem>
+                      {yearMonth.grouped[year]!.map((key) => (
+                        <CommandItem
+                          key={`historyMonth-${key.index}`}
+                          onSelect={() => changeYearMonth(key.yearMonth)}
+                          value={key.yearMonth}
+                          className="text-sm"
+                        >
+                          {t(`Miscellaneous.Months.${key.month}`)}
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              yearMonth.current === key.yearMonth
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
                   ))}
-                </CommandGroup>
               </Command>
 
-              <div className="grid gap-2 p-1 w-full ">
-                <div className="grid p-1 gap-1.5">
+              <div className="grid w-full gap-2 p-1">
+                <div className="grid gap-1.5 p-1">
                   <Label
                     htmlFor="projects-button"
                     className="pl-2 text-muted-foreground"
@@ -290,17 +297,19 @@ export default function TimerSection({
                     changeProject={(project) => {
                       if (!project)
                         throw new Error("Project is undefined in selection");
-                      const tempProjectsFilter = projectsFilter;
 
-                      if (tempProjectsFilter.includes(project))
-                        tempProjectsFilter.splice(
-                          tempProjectsFilter.indexOf(project),
-                          1,
-                        );
-                      else tempProjectsFilter.push(project);
+                      const updatedProjectsFilter = [...projectsFilter];
+                      const projectIndex =
+                        updatedProjectsFilter.indexOf(project);
+
+                      if (projectIndex > -1) {
+                        updatedProjectsFilter.splice(projectIndex, 1);
+                      } else {
+                        updatedProjectsFilter.push(project);
+                      }
 
                       updateFilter({
-                        projectsFilter: tempProjectsFilter,
+                        projectsFilter: updatedProjectsFilter,
                       });
                     }}
                     projects={projects}
@@ -313,23 +322,18 @@ export default function TimerSection({
                         className="w-full justify-between"
                       >
                         <div className="flex flex-row gap-1">
-                          {filters.projects === undefined &&
-                            t("Miscellaneous.noFilter")}
+                          {!filters.projects && t("Miscellaneous.noFilter")}
                           {filters.projects?.length === 0 &&
                             t("Miscellaneous.projectsEmpty")}
                           {filters.projects?.length !== 0 &&
-                            projectsFilter.map((value, index) => {
-                              if (index !== 0) return undefined;
-                              return (
-                                <Badge
-                                  key={`project-${value}`}
-                                  variant="outline"
-                                >
-                                  {value}
-                                </Badge>
-                              );
-                            })}
-
+                            projectsFilter.length > 0 && (
+                              <Badge
+                                key={`project-${projectsFilter[0]}`}
+                                variant="outline"
+                              >
+                                {projectsFilter[0]}
+                              </Badge>
+                            )}
                           {projectsFilter.length > 1 && (
                             <Badge variant="secondary">
                               +{projectsFilter.length - 1}
@@ -342,8 +346,8 @@ export default function TimerSection({
                   />
                 </div>
                 {user.role === "ADMIN" && users && (
-                  <div className="h-full w-full grid p-1 gap-1.5">
-                    <Popover>
+                  <div className="grid h-full w-full gap-1.5 p-1">
+                    <Popover modal>
                       <Label
                         htmlFor="userFilter-button"
                         className="pl-2 text-muted-foreground"
@@ -358,29 +362,26 @@ export default function TimerSection({
                           className="w-full justify-between"
                         >
                           <div className="flex flex-row gap-1">
-                            {filters.users === undefined &&
-                              t("Miscellaneous.noFilter")}
-
-                            {usersFilter?.map((value, index) => {
-                              if (index !== 0) return undefined;
-                              const user = users.find(
-                                (u) => u.username === value,
-                              );
-                              if (!user) return undefined;
-
-                              return (
-                                <Badge
-                                  key={`userFiltered-${value}`}
-                                  variant="outline"
-                                >
-                                  {user.name ?? user.username}
-                                </Badge>
-                              );
-                            })}
-                            {usersFilter.length > 1 && (
-                              <Badge variant="secondary">
-                                +{usersFilter.length - 1}
-                              </Badge>
+                            {filters.users === undefined ? (
+                              t("Miscellaneous.noFilter")
+                            ) : (
+                              <>
+                                {usersFilter.length > 0 && (
+                                  <Badge
+                                    key={`userFiltered-${usersFilter[0]}`}
+                                    variant="outline"
+                                  >
+                                    {users.find(
+                                      (u) => u.username === usersFilter[0],
+                                    )?.name ?? usersFilter[0]}
+                                  </Badge>
+                                )}
+                                {usersFilter.length > 1 && (
+                                  <Badge variant="secondary">
+                                    +{usersFilter.length - 1}
+                                  </Badge>
+                                )}
+                              </>
                             )}
                           </div>
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -401,14 +402,14 @@ export default function TimerSection({
                                 onSelect={() => {
                                   const value = user.username;
 
-                                  const tempUsersFilter = usersFilter;
+                                  const tempUsersFilter = [...usersFilter];
 
-                                  if (tempUsersFilter.includes(value))
-                                    tempUsersFilter.splice(
-                                      tempUsersFilter.indexOf(value),
-                                      1,
-                                    );
-                                  else tempUsersFilter.push(value);
+                                  const index = tempUsersFilter.indexOf(value);
+                                  if (index > -1) {
+                                    tempUsersFilter.splice(index, 1);
+                                  } else {
+                                    tempUsersFilter.push(value);
+                                  }
 
                                   updateFilter({
                                     usersFilter: tempUsersFilter,
@@ -423,7 +424,7 @@ export default function TimerSection({
                                       : "opacity-0",
                                   )}
                                 />
-                                <div className="w-full flex flex-row items-center">
+                                <div className="flex w-full flex-row items-center">
                                   <p>{user.name}</p>
                                   <Badge variant="default" className="scale-75">
                                     @{user.username}
@@ -473,7 +474,7 @@ export default function TimerSection({
                     onClick={() => updateFilter({ reset: true })}
                     className="w-full"
                   >
-                    <FilterX className="size-4 mr-4" />
+                    <FilterX className="mr-4 size-4" />
                     {t("Miscellaneous.reset")}
                   </Button>
 
@@ -488,17 +489,17 @@ export default function TimerSection({
           </Popover>
         </div>
         <ScrollArea
-          className="h-[calc(95svh-82px-56px-40px)] w-full rounded-sm border-2 p-1.5 overflow-hidden"
+          className="h-[calc(95svh-82px-56px-40px)] w-full overflow-hidden rounded-sm border-2 p-1.5"
           type="scroll"
         >
-          <div className="sticky top-1 z-50 w-full grid place-items-center mt-4 mb-6">
+          <div className="sticky top-1 z-50 mb-6 mt-4 grid w-full place-items-center">
             <Tooltip delayDuration={500}>
               <TooltipTrigger asChild>
                 <Button
                   variant="secondary"
                   size="icon"
                   onClick={() => setAddVisible(true)}
-                  className="rounded-full !border-2 border-white/20"
+                  className="rounded-full !border-2 border-white/20 bg-primary-foreground/20 backdrop-blur-md"
                 >
                   <Plus className="h-5 w-5" />
                 </Button>
@@ -516,16 +517,16 @@ export default function TimerSection({
           </div>
 
           {historyDays.map((day, index) => {
-            if (currentHistory.length == 0) return <></>;
+            if (history.length == 0) return <></>;
 
             return (
               <section
                 key={`day-${day}`}
                 className={index === 0 ? "mt-2" : "mt-6"}
               >
-                <div className="flex flex-row items-center justify-center gap-2 mb-2 transition-all duration-300 animate__animated animate__slideInLeft">
+                <div className="animate__animated animate__slideInLeft mb-2 flex flex-row items-center justify-center gap-2 transition-all duration-300">
                   <div className="w-1/2" />
-                  <Badge className="justify-center w-full font-semibold text-sm">
+                  <Badge className="w-full justify-center text-sm font-semibold">
                     {`${day.getDate().toString().padStart(2, "0")}.${(
                       day.getMonth() + 1
                     )
@@ -538,7 +539,7 @@ export default function TimerSection({
                   <div className="w-1/2" />
                 </div>
 
-                {currentHistory
+                {history
                   .filter((v) => v.start.toDateString() === day.toDateString())
                   .map((time) => (
                     <TimerInfo

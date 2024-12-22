@@ -10,7 +10,10 @@ import { cookies } from "next/headers";
 import { TicketPriority, TicketStatus } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { authCheck } from "@/lib/auth";
+import { nameArrayValidation } from "@/lib/zod";
 //#endregion
+
+const maxFileSize = Math.pow(1024, 2) * Number(process.env.UPLOAD_LIMIT);
 
 const statusOrder = {
   [TicketStatus.TODO]: 2,
@@ -32,17 +35,18 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Tickets({
-  searchParams,
-}: {
-  searchParams?: {
-    query?: string;
-    page?: string;
-    search?: string;
-    link?: string;
-    archived?: string;
-  };
-}) {
+export default async function Tickets(
+  props: {
+    searchParams?: Promise<{
+      query?: string;
+      page?: string;
+      search?: string;
+      link?: string;
+      archived?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   // AUTH
   const auth = await authCheck();
   if (!auth.user || !auth.data) return redirect("/login");
@@ -52,26 +56,50 @@ export default async function Tickets({
   const t = await getTranslations("Tickets");
 
   //#region Filter
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const filterCookies = {
     archived: cookieStore.get("ticket-filter-archived")?.value,
+
+    status: {
+      todo: cookieStore.get("ticket-filter-status-todo")?.value,
+      in_progress: cookieStore.get("ticket-filter-status-inProgress")?.value,
+      done: cookieStore.get("ticket-filter-status-done")?.value,
+    },
+
+    projects: cookieStore.get("ticket-filter-projects")?.value,
+    assignees: cookieStore.get("ticket-filter-assignees")?.value,
   };
 
+  const status = {
+    todo: (filterCookies.status.todo ?? "true") === "true",
+    in_progress: (filterCookies.status.in_progress ?? "true") === "true",
+    done: (filterCookies.status.done ?? "false") === "true",
+  };
   const archived = filterCookies.archived === "true";
 
-  /*
+  const statusFilter: TicketStatus[] = [];
+  if (status.todo) statusFilter.push("TODO");
+  if (status.in_progress) statusFilter.push("IN_PROGRESS");
+  if (status.done) statusFilter.push("DONE");
+
   let projectsFilter: string[] | undefined = undefined;
+  let assigneesFilter: string[] | undefined = undefined;
 
   try {
-    if (filterCookies.projects)
-      projectsFilter = userArrayValidation.safeParse(
+    if (filterCookies.projects && user.role != "CUSTOMER")
+      projectsFilter = nameArrayValidation.safeParse(
         JSON.parse(filterCookies.projects),
+      ).data;
+
+    if (filterCookies.assignees && user.role != "CUSTOMER")
+      assigneesFilter = nameArrayValidation.safeParse(
+        JSON.parse(filterCookies.assignees),
       ).data;
   } catch (e) {
     console.warn(e);
-    cookieStore.delete("ticket-filter-archived");
+    cookieStore.delete("ticket-filter-projects");
+    cookieStore.delete("ticket-filter-assignees");
   }
- */
 
   const customerFilter =
     user.role === "CUSTOMER"
@@ -93,6 +121,10 @@ export default async function Tickets({
       },
       hidden: false,
 
+      status: {
+        in: statusFilter,
+      },
+
       archived: archived,
       projects:
         user.role === "CUSTOMER"
@@ -101,7 +133,22 @@ export default async function Tickets({
                 customer: customerFilter,
               },
             }
-          : undefined,
+          : projectsFilter
+            ? {
+                some: {
+                  name: {
+                    in: projectsFilter,
+                  },
+                },
+              }
+            : undefined,
+      assignees: assigneesFilter
+        ? {
+            some: {
+              username: { in: assigneesFilter },
+            },
+          }
+        : {},
     },
   });
 
@@ -124,6 +171,10 @@ export default async function Tickets({
         },
         hidden: false,
 
+        status: {
+          in: statusFilter,
+        },
+
         archived: archived,
         projects:
           user.role === "CUSTOMER"
@@ -132,23 +183,47 @@ export default async function Tickets({
                   customer: customerFilter,
                 },
               }
-            : undefined,
+            : projectsFilter
+              ? {
+                  some: {
+                    name: {
+                      in: projectsFilter,
+                    },
+                  },
+                }
+              : undefined,
+        assignees: assigneesFilter
+          ? {
+              some: {
+                username: { in: assigneesFilter },
+              },
+            }
+          : {},
       },
 
       include: {
         assignees: {
-          where: {
-            OR: [
-              {
-                customer: user.role === "CUSTOMER" ? customerFilter : undefined,
-              },
-              {
-                role: {
-                  notIn: ["CUSTOMER"],
+          where:
+            user.role !== "CUSTOMER"
+              ? {}
+              : {
+                  OR: [
+                    {
+                      customer: {
+                        users: {
+                          some: {
+                            id: user.id,
+                          },
+                        },
+                      },
+                    },
+                    {
+                      role: {
+                        not: "CUSTOMER",
+                      },
+                    },
+                  ],
                 },
-              },
-            ],
-          },
           select: {
             id: true,
             username: true,
@@ -160,6 +235,17 @@ export default async function Tickets({
             id: true,
             username: true,
             name: true,
+          },
+        },
+        uploads: {
+          include: {
+            creator: {
+              select: {
+                name: true,
+                username: true,
+                id: true,
+              },
+            },
           },
         },
         projects: {
@@ -261,12 +347,13 @@ export default async function Tickets({
 
   return (
     <Navigation>
-      <section className="w-full max-h-[95svh] flex flex-col items-center gap-2 p-4">
-        <div className="w-full font-mono text-center pt-2">
-          <p className="text-2xl font-mono">{t("title")}</p>
+      <section className="flex max-h-[95svh] w-full flex-col items-center gap-2 p-4">
+        <div className="w-full pt-2 text-center font-mono">
+          <p className="font-mono text-2xl">{t("title")}</p>
         </div>
 
         <DataTable
+          user={user}
           data={tickets}
           columns={columns}
           paginationData={{ page: page, pages: pages, pageSize: pageSize }}
@@ -274,7 +361,11 @@ export default async function Tickets({
           users={users}
           filters={{
             archived: archived,
+            status,
+            projects: projectsFilter,
+            assignees: assigneesFilter,
           }}
+          maxFileSize={maxFileSize}
         />
       </section>
     </Navigation>

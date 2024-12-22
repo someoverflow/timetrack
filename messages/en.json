@@ -1,26 +1,19 @@
 {
   "Admin": {
     "Users": {
-      "addDuplicate": "User with the username exists.",
-      "chipAdded": "Successfully linked chip",
-      "chipRemoved": "Successfully removed chip",
-      "created": "Successfully created user",
-      "currentPage": "Page {page} of {pages}",
-      "deleted": "Successfully deleted entry",
-      "search": "Search...",
-      "username": "Username",
-      "name": "Name",
       "Dialogs": {
         "Add": {
           "buttonToolTip": "Create a new user",
           "create": "Create",
+          "customer": "Customer",
           "mail": "Mail",
           "mailPlaceholder": "max@example.com",
           "name": "Name",
           "namePlaceholder": "Max Mustermann",
+          "noCustomers": "No customers found",
+          "noCustomersDescription": "Manage Customers",
           "password": "Password",
           "passwordPlaceholder": "",
-          "customer": "Customer",
           "role": "Role",
           "roles": {
             "admin": "Admin",
@@ -28,9 +21,7 @@
           },
           "title": "Create user",
           "username": "Username",
-          "usernamePlaceholder": "maxmust",
-          "noCustomers": "No customers found",
-          "noCustomersDescription": "Manage Customers"
+          "usernamePlaceholder": "maxmust"
         },
         "Edit": {
           "addChip": "Add new Chip",
@@ -55,21 +46,42 @@
         }
       },
       "Metadata": {
-        "description": "Track your Time",
+        "description": "Track your time",
         "title": "Time Track - Users"
       },
-      "noResults": "No Results",
-      "rowsPerPage": "Rows per Page",
+      "addDuplicate": "User with the username exists.",
+      "chipAdded": "Successfully linked chip",
+      "chipRemoved": "Successfully removed chip",
+      "created": "Successfully created user",
+      "currentPage": "Page {page} of {pages}",
+      "deleted": "Successfully deleted entry",
+      "name": "Name",
+      "noResults": "No results",
+      "rowsPerPage": "Rows per page",
+      "search": "Search...",
       "searchName": "Search for name...",
       "title": "Users",
-      "updated": "Successfully updated user",
       "updateDuplicate": "User with the new username exists.",
-      "updateNotFound": "User not found."
+      "updateNotFound": "User not found.",
+      "updated": "Successfully updated user",
+      "username": "Username"
     }
+  },
+  "Customers": {
+    "Metadata": {
+      "description": "Track your time",
+      "title": "Time Track - Customers"
+    },
+    "created": "Successfully created new customer",
+    "customerAccounts": "Accounts: {amount}",
+    "customerProjects": "Projects: {amount}",
+    "deleted": "Successfully deleted customer",
+    "searchPlaceholder": "Search or add",
+    "title": "Customers"
   },
   "Error": {
     "message": "An error occurred",
-    "resultProcessing": "Result could not be proccessed",
+    "resultProcessing": "Result could not be processed",
     "unknown": {
       "message": "An unknown error occurred {type}"
     },
@@ -81,6 +93,7 @@
   "History": {
     "Dialogs": {
       "Create": {
+        "breakTime": "Break time (Minutes)",
         "create": "Create",
         "details": "Details",
         "distance": "Distance traveled (km)",
@@ -96,13 +109,13 @@
         "distance": "Distance traveled (km)",
         "end": "End",
         "notes": "Notes",
-        "save": "Save",
         "project": "Project",
+        "save": "Save",
+        "saveDetails": "Save + Stop",
         "start": "Start",
         "startedWith": "Started with",
         "stoppedWith": "Stopped with",
         "time": "Time",
-        "saveDetails": "Save + Stop",
         "title": "Edit entry"
       },
       "Export": {
@@ -110,34 +123,29 @@
         "title": "Export History",
         "visualisation": {
           "dateSpecificColumn": "Date column",
-          "personSpecificColumn": "Person column",
           "description": "Customize the table to export.",
+          "personSpecificColumn": "Person column",
           "projectSpecificColumn": "Project column",
           "title": "Visualisation"
         }
       }
     },
+    "Export": {
+      "break": "Pause",
+      "date": "Date",
+      "distance": "Distance",
+      "duration": "Duration",
+      "end": "End",
+      "notes": "Notes",
+      "person": "Person",
+      "project": "Project",
+      "start": "Start"
+    },
     "Metadata": {
-      "description": "Track your Time",
+      "description": "Track your time",
       "title": "Time Track - History"
     },
     "Miscellaneous": {
-      "created": "Successfully created new entry",
-      "deleted": "Successfully deleted entry",
-      "invoiced": "Invoiced Times",
-      "invoicedDescription": "are {invoiced, select, true {only visible} false {hidden} other {visible}}",
-      "invoicedSingular": "Invoiced",
-      "newEntry": "Add a new entry",
-      "noFilter": "No Filter",
-      "nothingFound": "Nothing found.",
-      "projects": "Projects",
-      "projectsEmpty": "Without Project",
-      "reset": "Reset",
-      "search": "Search...",
-      "searchYearMonth": "Search year/month...",
-      "undo": "Undo",
-      "updated": "Successfully updated entry",
-      "users": "Users",
       "Days": {
         "0": "Sunday",
         "1": "Monday",
@@ -160,82 +168,105 @@
         "November": "November",
         "October": "October",
         "September": "September"
-      }
+      },
+      "created": "Successfully created new entry",
+      "deleted": "Successfully deleted entry",
+      "errorUndo": "Entry could not be restored",
+      "invoiced": "Invoiced Times",
+      "invoicedDescription": "are {invoiced, select, true {only visible} false {hidden} other {visible}}",
+      "invoicedSingular": "Invoiced",
+      "newEntry": "Add a new entry",
+      "noFilter": "No filter",
+      "nothingFound": "Nothing found.",
+      "projects": "Projects",
+      "projectsEmpty": "Without project",
+      "reset": "Reset",
+      "search": "Search...",
+      "searchYearMonth": "Search year/month...",
+      "undo": "Undo",
+      "updated": "Successfully updated entry",
+      "users": "Users"
     },
     "PageTitle": "History"
   },
   "Login": {
-    "buttonText": "Sign In",
     "Metadata": {
-      "description": "Track your Time",
+      "description": "Track your time",
       "title": "Time Track - Sign In"
     },
+    "buttonText": "Sign In",
     "password": "Password",
-    "passwordPlaceholder": "Username",
+    "passwordPlaceholder": "Password",
     "title": "Sign In",
     "username": "Username",
     "usernamePlaceholder": "Username"
   },
+  "Mail": {
+    "assignees": "{count, plural, =0 {?} =1 {Contact Person} other {Contact Persons}}",
+    "dailyUpdate": "Daily Ticket Update",
+    "deactivate": {
+      "update": "Disable mails like this"
+    },
+    "important": "Important",
+    "link": "Open",
+    "newTicket": "New Ticket",
+    "newTickets": "New Tickets",
+    "open": "Open",
+    "projects": "{count, plural, =0 {?} =1 {Project} other {Projects}}",
+    "subject": "New Ticket created by {name}{projectsCount, plural, =0 {} other { - {projects}}}",
+    "ticket": {
+      "done": "Finished",
+      "inProgress": "In Progress",
+      "open": "Open"
+    },
+    "updateAssigneees": "Contact Person: ",
+    "updateProjects": "Projects: ",
+    "updateSubject": "Ticket Update",
+    "updatedTickets": "Updated Tickets"
+  },
   "Navigation": {
-    "history": "History",
-    "home": "Timer",
-    "profile": "Profile",
-    "projects": "Projects",
-    "signOut": "Sign Out",
-    "customers": "Customers",
     "Theme": {
       "dark": "Dark",
       "light": "Light",
       "system": "System",
       "title": "Theme"
     },
+    "customers": "Customers",
+    "history": "History",
+    "home": "Timer",
+    "profile": "Profile",
+    "projects": "Projects",
+    "signOut": "Sign Out",
     "ticket": "Tickets",
     "users": "Users"
   },
   "Profile": {
-    "sessions": "Devices",
+    "Metadata": {
+      "description": "Track your time",
+      "title": "Time Track - Profile"
+    },
     "buttonContent": "Save",
     "language": "Language",
-    "passwordPlaceholder": "",
+    "languageUpdate": "Language changed.",
     "languages": {
       "de": "Deutsch",
       "en": "English"
     },
-    "languageUpdate": "Language changed.",
     "mail": "Mail",
     "mailPlaceholder": "max@example.com",
-    "Metadata": {
-      "description": "Track your Time",
-      "title": "Time Track - Profile"
-    },
     "name": "Name",
     "namePlaceholder": "Max Mustermann",
     "password": "New Password",
+    "passwordPlaceholder": "",
     "passwordUpdate": "Password changed. Please sign in again.",
     "sessionUpdate": "Session is getting updated.",
-    "title": "Profile",
-    "updated": "Successfully updated your profile",
+    "sessions": "Devices",
     "ticketCreationMail": "Receive a mail when a ticket got created",
-    "ticketUpdateMail": "Receive a mail about changes every afternoon"
+    "ticketUpdateMail": "Receive a mail about changes every afternoon",
+    "title": "Profile",
+    "updated": "Successfully updated your profile"
   },
   "Projects": {
-    "Metadata": {
-      "description": "Track your Time",
-      "title": "Time Track - Projects"
-    },
-    "customer": "Customer",
-    "noCustomer": "No Customer",
-    "noCustomerFound": "No customer found.",
-    "withoutCustomer": "Project without a customer",
-    "created": "Successfully created project.",
-    "deleted": "Successfully deleted project.",
-    "noProjects": "No projects found.",
-    "saved": "Successfully saved.",
-    "searchPlaceholder": "Search or add",
-    "search": "Search...",
-    "times": "Times: {times}",
-    "title": "Projects",
-    "todos": "Todos: {todos}",
     "Dialogs": {
       "Edit": {
         "description": "Description",
@@ -243,28 +274,110 @@
         "name": "Name",
         "title": "Edit project"
       }
-    }
-  },
-  "Customers": {
+    },
     "Metadata": {
       "description": "Track your Time",
-      "title": "Time Track - Customers"
+      "title": "Time Track - Projects"
     },
-    "title": "Customers",
-    "created": "Successfully created new customer",
-    "deleted": "Successfully deleted customer",
+    "created": "Successfully created project.",
+    "customer": "Customer",
+    "deleted": "Successfully deleted project.",
+    "noCustomer": "No Customer",
+    "noCustomerFound": "No customer found.",
+    "noProjects": "No projects found.",
+    "saved": "Successfully saved.",
+    "search": "Search...",
     "searchPlaceholder": "Search or add",
-    "customerProjects": "Projects: {amount}",
-    "customerAccounts": "Accounts: {amount}"
+    "times": "Times: {times}",
+    "title": "Projects",
+    "todos": "Todos: {todos}",
+    "withoutCustomer": "Project without a customer"
   },
   "SignOut": {
-    "buttonText": "Sign Out",
-    "description": "Are you sure you want to sign out?",
     "Metadata": {
       "description": "Track your Time",
       "title": "Time Track - Sign Out"
     },
+    "buttonText": "Sign Out",
+    "description": "Are you sure you want to sign out?",
     "title": "Sign Out"
+  },
+  "Tickets": {
+    "Dialogs": {
+      "Add": {
+        "buttonToolTip": "Create a new ticket",
+        "create": "Create",
+        "noAssignees": "No Contact Person",
+        "noRelatedProjects": "No related projects",
+        "projects": "Projects",
+        "searchUser": "Search for a User...",
+        "title": "Create Ticket"
+      },
+      "Edit": {
+        "created": "Created",
+        "creator": "Creator",
+        "details": "Details",
+        "noAssignees": "No Contact Person",
+        "noRelatedProjects": "No related projects",
+        "projects": "Projects",
+        "save": "Save",
+        "status": "Status",
+        "updated": "Updated"
+      }
+    },
+    "Metadata": {
+      "description": "Erfasse deine Zeiten",
+      "title": "Time Track - Tickets"
+    },
+    "actions": "Actions",
+    "archive": "Archive",
+    "archived": "Archived",
+    "assignees": "Contact Persons",
+    "changed": "Successfully changed",
+    "copyLink": "Copy Link",
+    "created": "Successfully created new entry",
+    "createdAt": "Created at",
+    "creator": "Creator",
+    "currentPage": "Page {page} of {pages}",
+    "deadline": "Deadline",
+    "deleted": "Deleted entry",
+    "description": "Description",
+    "dropFile": "Drop File",
+    "fileInfo": "File {supported, select, true {{oversized, select, true {is larger than {maxFileSize}} false {} other {}}} false {is unsupported} other {}}",
+    "fileInfoDescription": "Click to select a file or drag and drop it here",
+    "filter": "Filter",
+    "hide": "Delete",
+    "noFilter": "No Filter",
+    "noResults": "No Tickets found",
+    "none": "None",
+    "open": "Open",
+    "priorities": {
+      "high": "High",
+      "low": "Low",
+      "medium": "Normal"
+    },
+    "priority": "Priority",
+    "projects": "Projects",
+    "projectsEmpty": "Without Project",
+    "reset": "Reset",
+    "rowsPerPage": "Rows per Page",
+    "search": "Search...",
+    "steps": {
+      "done": "Finished",
+      "inProgress": "In Progress",
+      "todo": "Open"
+    },
+    "stepsNext": {
+      "done": "Reset",
+      "inProgress": "Finish",
+      "todo": "Start"
+    },
+    "task": "Task",
+    "title": "Tickets",
+    "updated": "Successfully updated entry",
+    "upload": "Upload",
+    "uploads": "Uploads:",
+    "visibleColumns": "Visible Columns"
   },
   "Timer": {
     "Metadata": {
@@ -278,103 +391,12 @@
         "noneFoundDescription": "Click to manage projects",
         "search": "Search..."
       },
-      "withoutCustomer": "Without a customer",
       "start": "Start",
-      "startedWith": "Started with {startType}",
       "startWithWebsite": "Start now with Website",
+      "startedWith": "Started with {startType}",
       "stop": "Stop",
-      "updating": "Updating"
-    }
-  },
-  "Tickets": {
-    "Metadata": {
-      "description": "Erfasse deine Zeiten",
-      "title": "Time Track - Tickets"
-    },
-    "title": "Tickets",
-    "search": "Search...",
-    "filter": "Filter",
-    "archived": "Archived",
-    "noResults": "No Tickets found",
-    "rowsPerPage": "Rows per Page",
-    "currentPage": "Page {page} of {pages}",
-    "task": "Task",
-    "changed": "Successfully changed",
-    "priorities": {
-      "high": "High",
-      "low": "Low",
-      "medium": "Normal"
-    },
-    "priority": "Priority",
-    "steps": {
-      "done": "Finished",
-      "inProgress": "In Progress",
-      "todo": "Open"
-    },
-    "stepsNext": {
-      "done": "Reset",
-      "inProgress": "Finish",
-      "todo": "Start"
-    },
-    "none": "None",
-    "deadline": "Deadline",
-    "description": "Description",
-    "assignees": "Contact Persons",
-    "creator": "Creator",
-    "createdAt": "Created at",
-    "actions": "Actions",
-    "copyLink": "Copy Link",
-    "archive": "Archive",
-    "created": "Successfully created new entry",
-    "updated": "Successfully updated entry",
-    "hide": "Delete",
-    "visibleColumns": "Visible Columns",
-
-    "Dialogs": {
-      "Add": {
-        "buttonToolTip": "Create a new ticket",
-        "title": "Create Ticket",
-
-        "create": "Create",
-        "noAssignees": "No Contact Person",
-        "noRelatedProjects": "No related projects",
-        "projects": "Projects",
-        "searchUser": "Search for a User..."
-      },
-      "Edit": {
-        "created": "Created",
-        "creator": "Creator",
-        "details": "Details",
-        "noAssignees": "No Contact Person",
-        "noRelatedProjects": "No related projects",
-        "projects": "Projects",
-        "save": "Save",
-        "status": "Status",
-        "updated": "Updated"
-      }
-    }
-  },
-  "Mail": {
-    "newTicket": "New Ticket",
-    "important": "Important",
-    "projects": "{count, plural, =0 {?} =1 {Project} other {Projects}}",
-    "assignees": "{count, plural, =0 {?} =1 {Contact Person} other {Contact Persons}}",
-    "link": "Open",
-    "subject": "New Ticket created by {name}{projectsCount, plural, =0 {} other { - {projects}}}",
-    "dailyUpdate": "Daily Ticket Update",
-    "newTickets": "New Tickets",
-    "updatedTickets": "Updated Tickets",
-    "open": "Open",
-    "updateAssigneees": "Contact Person: ",
-    "updateProjects": "Projects: ",
-    "updateSubject": "Ticket Update",
-    "deactivate": {
-      "update": "Disable mails like this"
-    },
-    "ticket": {
-      "open": "Open",
-      "inProgress": "In Progress",
-      "done": "Finished"
+      "updating": "Updating",
+      "withoutCustomer": "Without a customer"
     }
   }
 }
